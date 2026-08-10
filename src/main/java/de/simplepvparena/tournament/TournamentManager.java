@@ -60,6 +60,7 @@ public final class TournamentManager implements MatchCompletionHandler {
         java.util.Collections.shuffle(teamNames, seedingRandom);
         bracket = Bracket.createSingleElimination(teamNames);
         state = TournamentState.RUNNING;
+        matchService.resumeRoundTimers();
 
         broadcast("The tournament has started with " + teamNames.size() + " teams in "
                 + bracket.getRoundCount() + " rounds");
@@ -74,11 +75,14 @@ public final class TournamentManager implements MatchCompletionHandler {
     public TournamentOperationResult togglePause() {
         if (state == TournamentState.RUNNING) {
             state = TournamentState.PAUSED;
-            broadcast("The tournament is paused, no further matches are started until it is resumed");
+            matchService.pauseRoundTimers();
+            broadcast("The tournament is paused, no further matches are started until it is resumed, "
+                    + "the round timers keep their remaining time");
             return TournamentOperationResult.success("Tournament paused");
         }
         if (state == TournamentState.PAUSED) {
             state = TournamentState.RUNNING;
+            matchService.resumeRoundTimers();
             broadcast("The tournament continues");
             dispatchPendingMatches();
             return TournamentOperationResult.success("Tournament resumed");
@@ -91,6 +95,7 @@ public final class TournamentManager implements MatchCompletionHandler {
             return TournamentOperationResult.failure("No tournament is in progress");
         }
         matchService.cancelAllMatches();
+        matchService.resumeRoundTimers();
         bracket = null;
         state = TournamentState.CANCELLED;
         broadcast("The tournament has been cancelled");

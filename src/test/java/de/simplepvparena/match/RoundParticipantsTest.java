@@ -51,6 +51,7 @@ class RoundParticipantsTest {
         Optional<RoundOutcome> outcome = participants.determineOutcome();
         assertTrue(outcome.isPresent());
         assertTrue(outcome.get().isDraw());
+        assertFalse(outcome.get().isSuddenDeathDraw());
     }
 
     @Test
@@ -77,6 +78,40 @@ class RoundParticipantsTest {
         assertEquals("bravo", participants.findTeamNameOfPlayer(secondTeamPlayerOne).orElseThrow());
         participants.eliminate(secondTeamPlayerOne);
         assertTrue(participants.findTeamNameOfPlayer(secondTeamPlayerOne).isEmpty());
+    }
+
+    @Test
+    void detectsFriendlyFireBetweenTwoActiveTeamMates() {
+        RoundParticipants participants = createParticipants();
+
+        assertTrue(participants.isSameActiveTeam(firstTeamPlayerOne, firstTeamPlayerTwo));
+        assertTrue(participants.isSameActiveTeam(secondTeamPlayerTwo, secondTeamPlayerOne));
+    }
+
+    @Test
+    void doesNotTreatDamageBetweenOpponentsAsFriendlyFire() {
+        RoundParticipants participants = createParticipants();
+
+        assertFalse(participants.isSameActiveTeam(firstTeamPlayerOne, secondTeamPlayerOne));
+    }
+
+    @Test
+    void doesNotTreatSelfInflictedOrForeignDamageAsFriendlyFire() {
+        RoundParticipants participants = createParticipants();
+
+        assertFalse(participants.isSameActiveTeam(firstTeamPlayerOne, firstTeamPlayerOne));
+        assertFalse(participants.isSameActiveTeam(UUID.randomUUID(), firstTeamPlayerOne));
+        assertFalse(participants.isSameActiveTeam(firstTeamPlayerOne, UUID.randomUUID()));
+        assertFalse(participants.isSameActiveTeam(null, firstTeamPlayerOne));
+    }
+
+    @Test
+    void stopsFriendlyFireProtectionForEliminatedPlayers() {
+        RoundParticipants participants = createParticipants();
+
+        participants.eliminate(firstTeamPlayerTwo);
+
+        assertFalse(participants.isSameActiveTeam(firstTeamPlayerOne, firstTeamPlayerTwo));
     }
 
     @Test

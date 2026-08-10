@@ -49,6 +49,16 @@ public final class RoundParticipants {
         return selectActivePlayers(teamName).isEmpty();
     }
 
+    public boolean isSameActiveTeam(UUID firstPlayerUniqueId, UUID secondPlayerUniqueId) {
+        if (firstPlayerUniqueId == null || secondPlayerUniqueId == null
+                || firstPlayerUniqueId.equals(secondPlayerUniqueId)) {
+            return false;
+        }
+        Optional<String> firstPlayerTeamName = findTeamNameOfPlayer(firstPlayerUniqueId);
+        Optional<String> secondPlayerTeamName = findTeamNameOfPlayer(secondPlayerUniqueId);
+        return firstPlayerTeamName.isPresent() && firstPlayerTeamName.equals(secondPlayerTeamName);
+    }
+
     public Optional<String> findTeamNameOfPlayer(UUID playerUniqueId) {
         if (firstTeamActivePlayers.contains(playerUniqueId)) {
             return Optional.of(firstTeamName);

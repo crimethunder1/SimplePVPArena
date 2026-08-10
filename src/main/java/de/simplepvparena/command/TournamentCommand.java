@@ -46,6 +46,7 @@ public final class TournamentCommand implements TabExecutor {
     private final MatchService matchService;
     private final SpectatorService spectatorService;
     private final Runnable arenaConfigurationSaver;
+    private final Runnable teamConfigurationSaver;
 
     public TournamentCommand(Server server,
                              TournamentManager tournamentManager,
@@ -53,7 +54,8 @@ public final class TournamentCommand implements TabExecutor {
                              ArenaRegistry arenaRegistry,
                              MatchService matchService,
                              SpectatorService spectatorService,
-                             Runnable arenaConfigurationSaver) {
+                             Runnable arenaConfigurationSaver,
+                             Runnable teamConfigurationSaver) {
         this.server = server;
         this.tournamentManager = tournamentManager;
         this.teamRegistry = teamRegistry;
@@ -61,6 +63,7 @@ public final class TournamentCommand implements TabExecutor {
         this.matchService = matchService;
         this.spectatorService = spectatorService;
         this.arenaConfigurationSaver = arenaConfigurationSaver;
+        this.teamConfigurationSaver = teamConfigurationSaver;
     }
 
     @Override
@@ -121,6 +124,7 @@ public final class TournamentCommand implements TabExecutor {
         }
         try {
             Team team = teamRegistry.registerTeam(arguments[1], firstMember.get(), secondMember.get());
+            teamConfigurationSaver.run();
             sender.sendMessage("Team " + team.getTeamName() + " registered with " + team.getMemberNamesJoined());
         } catch (IllegalArgumentException | IllegalStateException failure) {
             sender.sendMessage(failure.getMessage());
@@ -136,6 +140,7 @@ public final class TournamentCommand implements TabExecutor {
             return;
         }
         if (teamRegistry.removeTeam(arguments[1])) {
+            teamConfigurationSaver.run();
             sender.sendMessage("Team " + arguments[1] + " removed");
             return;
         }

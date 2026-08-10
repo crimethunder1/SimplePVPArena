@@ -1,5 +1,9 @@
 match:
   round-reset-delay-ticks: 100
+  round-timeout-seconds: 300
+  sudden-death-warning-seconds: 45
+  sudden-death-damage-per-second: 2.0
+  sudden-death-damage-increase-per-second: 1.0
 
 kit:
   armor:
