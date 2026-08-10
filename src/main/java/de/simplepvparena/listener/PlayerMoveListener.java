@@ -1,10 +1,10 @@
 package de.simplepvparena.listener;
 
-import de.simplepvparena.arena.ArenaRegionType;
+import de.simplepvparena.arena.ArenaMovementRule;
 import de.simplepvparena.arena.ArenaRegistry;
+import de.simplepvparena.arena.ArenaShape;
 import de.simplepvparena.arena.SpectatorMode;
 import de.simplepvparena.arena.SpectatorService;
-import de.simplepvparena.match.Match;
 import de.simplepvparena.match.MatchService;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
@@ -34,7 +34,7 @@ public final class PlayerMoveListener implements Listener {
         if (!hasChangedBlock(from, to)) {
             return;
         }
-        if (!isMovementAllowed(event.getPlayer(), to)) {
+        if (!isMovementAllowed(event.getPlayer(), from, to)) {
             event.setCancelled(true);
         }
     }
@@ -45,23 +45,27 @@ public final class PlayerMoveListener implements Listener {
                 || event.getCause() == PlayerTeleportEvent.TeleportCause.UNKNOWN) {
             return;
         }
-        if (!isMovementAllowed(event.getPlayer(), event.getTo())) {
+        if (!isMovementAllowed(event.getPlayer(), event.getFrom(), event.getTo())) {
             event.setCancelled(true);
         }
     }
 
-    private boolean isMovementAllowed(Player player, Location destination) {
-        Optional<Match> matchOfPlayer = matchService.findMatchOfPlayer(player.getUniqueId());
-        if (matchOfPlayer.isPresent() && matchService.isActiveFighter(player.getUniqueId())) {
-            return matchOfPlayer.get().getArena().containsInFightRegion(destination);
+    private boolean isMovementAllowed(Player player, Location origin, Location destination) {
+        Optional<ArenaShape> arenaShape = arenaRegistry.getArena().getShape();
+        if (arenaShape.isEmpty()) {
+            return true;
         }
-        Optional<SpectatorMode> spectatorMode = spectatorService.findSpectatorMode(player.getUniqueId());
-        if (spectatorMode.isPresent() && spectatorMode.get() == SpectatorMode.SPECTATOR_BOX) {
-            return arenaRegistry.getArena().getRegion(ArenaRegionType.SPECTATOR_BOX)
-                    .map(spectatorBox -> spectatorBox.contains(destination))
-                    .orElse(true);
+        return ArenaMovementRule.isMovementAllowed(belongsIntoArena(player),
+                arenaShape.get().contains(origin), arenaShape.get().contains(destination));
+    }
+
+    private boolean belongsIntoArena(Player player) {
+        if (matchService.isActiveFighter(player.getUniqueId())) {
+            return true;
         }
-        return !arenaRegistry.containsInFightRegion(destination);
+        return spectatorService.findSpectatorMode(player.getUniqueId())
+                .filter(spectatorMode -> spectatorMode == SpectatorMode.ARENA_FLIGHT)
+                .isPresent();
     }
 
     private boolean hasChangedBlock(Location from, Location to) {

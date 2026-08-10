@@ -17,6 +17,10 @@ import java.util.Random;
 
 public final class TournamentManager implements MatchCompletionHandler {
 
+    static final String ARENA_NOT_CONFIGURED_MESSAGE = "The arena is not fully configured, calculate its fight "
+            + "area with " + Arena.CALCULATE_COMMAND + " and set the tribune spawn with "
+            + Arena.TRIBUNE_SPAWN_COMMAND;
+
     private final Plugin plugin;
     private final TeamRegistry teamRegistry;
     private final ArenaRegistry arenaRegistry;
@@ -61,8 +65,7 @@ public final class TournamentManager implements MatchCompletionHandler {
             return TournamentOperationResult.failure("The team count is uneven, use /tournament forcestart to start anyway");
         }
         if (!arenaRegistry.isArenaFullyConfigured()) {
-            return TournamentOperationResult.failure("The arena is not fully configured, "
-                    + "set its regions with /tournament arena setpos");
+            return TournamentOperationResult.failure(ARENA_NOT_CONFIGURED_MESSAGE);
         }
 
         java.util.Collections.shuffle(teamNames, seedingRandom);
@@ -175,7 +178,7 @@ public final class TournamentManager implements MatchCompletionHandler {
 
     static Optional<String> findArenaRejection(boolean arenaFullyConfigured, Optional<String> runningMatchId) {
         if (!arenaFullyConfigured) {
-            return Optional.of("The arena is not fully configured, set its regions with /tournament arena setpos");
+            return Optional.of(ARENA_NOT_CONFIGURED_MESSAGE);
         }
         return runningMatchId.map(matchId -> "The arena is occupied by match " + matchId);
     }

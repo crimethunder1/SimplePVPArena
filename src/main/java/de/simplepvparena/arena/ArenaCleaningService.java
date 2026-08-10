@@ -6,9 +6,6 @@ import org.bukkit.block.Block;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.scheduler.BukkitTask;
 
-import java.util.ArrayDeque;
-import java.util.Deque;
-import java.util.List;
 import java.util.function.Consumer;
 
 public final class ArenaCleaningService {
@@ -18,14 +15,14 @@ public final class ArenaCleaningService {
     private static final long BATCH_PERIOD_TICKS = 1L;
 
     private final Plugin plugin;
-    private final CleanedRegionHandler cleanedRegionHandler;
+    private final CleanedArenaHandler cleanedArenaHandler;
 
     private int blocksPerTick = DEFAULT_BLOCKS_PER_TICK;
     private BukkitTask activeTask;
 
-    public ArenaCleaningService(Plugin plugin, CleanedRegionHandler cleanedRegionHandler) {
+    public ArenaCleaningService(Plugin plugin, CleanedArenaHandler cleanedArenaHandler) {
         this.plugin = plugin;
-        this.cleanedRegionHandler = cleanedRegionHandler;
+        this.cleanedArenaHandler = cleanedArenaHandler;
     }
 
     public void setBlocksPerTick(int blocksPerTick) {
@@ -36,47 +33,47 @@ public final class ArenaCleaningService {
         return activeTask != null;
     }
 
-    public static long countBlocks(List<RegionBoundary> regions) {
-        return regions.stream().mapToLong(region -> new RegionBlockCursor(region).getTotalBlockCount()).sum();
+    public static long countBlocks(ArenaShape shape) {
+        return shape.getBlockCount();
     }
 
-    public boolean startCleaning(List<RegionBoundary> regions, Consumer<ArenaCleaningReport> completionHandler) {
-        if (isCleaning() || regions.isEmpty()) {
+    public boolean startCleaning(ArenaShape shape, Consumer<ArenaCleaningReport> completionHandler) {
+        if (isCleaning()) {
             return false;
         }
-        Deque<RegionBlockCursor> remainingCursors = new ArrayDeque<>();
-        regions.forEach(region -> remainingCursors.add(new RegionBlockCursor(region)));
+        ArenaShapeBlockCursor cursor = new ArenaShapeBlockCursor(shape);
         CleaningProgress progress = new CleaningProgress();
         activeTask = plugin.getServer().getScheduler().runTaskTimer(plugin,
-                () -> cleanNextBatch(remainingCursors, progress, completionHandler),
+                () -> cleanNextBatch(cursor, progress, completionHandler),
                 BATCH_PERIOD_TICKS, BATCH_PERIOD_TICKS);
         return true;
     }
 
-    private void cleanNextBatch(Deque<RegionBlockCursor> remainingCursors, CleaningProgress progress,
+    private void cleanNextBatch(ArenaShapeBlockCursor cursor, CleaningProgress progress,
                                 Consumer<ArenaCleaningReport> completionHandler) {
+        ArenaShape shape = cursor.getShape();
+        World world = plugin.getServer().getWorld(shape.getWorldName());
+        if (world == null) {
+            plugin.getLogger().warning("The world " + shape.getWorldName()
+                    + " is not loaded, the arena cleaning is stopped");
+            finish(progress, completionHandler);
+            return;
+        }
         int remainingBlocksOfThisTick = blocksPerTick;
-        while (remainingBlocksOfThisTick > 0 && !remainingCursors.isEmpty()) {
-            RegionBlockCursor cursor = remainingCursors.peek();
-            World world = plugin.getServer().getWorld(cursor.getRegion().getWorldName());
-            if (world == null) {
-                plugin.getLogger().warning("The world " + cursor.getRegion().getWorldName()
-                        + " is not loaded, its region is skipped while cleaning the arena");
-                remainingCursors.poll();
-                continue;
-            }
+        while (remainingBlocksOfThisTick > 0 && cursor.hasRemainingBlocks()) {
             long[] batch = cursor.nextBatch(remainingBlocksOfThisTick);
             remainingBlocksOfThisTick -= batch.length;
             progress.checkedBlockCount += batch.length;
             progress.clearedBlockCount += clearBatch(world, batch);
-            if (!cursor.hasRemainingBlocks()) {
-                progress.clearedBorderMarkCount += cleanedRegionHandler.onRegionCleaned(world, cursor.getRegion());
-                remainingCursors.poll();
-            }
         }
-        if (!remainingCursors.isEmpty()) {
+        if (cursor.hasRemainingBlocks()) {
             return;
         }
+        progress.clearedBorderMarkCount += cleanedArenaHandler.onArenaCleaned(world, shape);
+        finish(progress, completionHandler);
+    }
+
+    private void finish(CleaningProgress progress, Consumer<ArenaCleaningReport> completionHandler) {
         stopCleaning();
         completionHandler.accept(new ArenaCleaningReport(progress.checkedBlockCount, progress.clearedBlockCount,
                 progress.clearedBorderMarkCount));

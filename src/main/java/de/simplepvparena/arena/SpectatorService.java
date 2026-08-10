@@ -37,15 +37,15 @@ public final class SpectatorService {
         return true;
     }
 
-    public boolean enterSpectatorBox(Player player) {
-        Optional<Location> spectatorBoxLocation = arenaRegistry.getArena().getSpectatorBoxSpawn()
+    public boolean enterArenaFlight(Player player) {
+        Optional<Location> arenaLocation = arenaRegistry.getArena().getSpectatorFlightSpawn()
                 .flatMap(PositionSnapshot::toLocation);
-        if (spectatorBoxLocation.isEmpty()) {
+        if (arenaLocation.isEmpty()) {
             return false;
         }
-        player.teleport(spectatorBoxLocation.get());
+        player.teleport(arenaLocation.get());
         player.setGameMode(GameMode.SPECTATOR);
-        spectatorModesByPlayer.put(player.getUniqueId(), SpectatorMode.SPECTATOR_BOX);
+        spectatorModesByPlayer.put(player.getUniqueId(), SpectatorMode.ARENA_FLIGHT);
         return true;
     }
 
@@ -55,7 +55,7 @@ public final class SpectatorService {
             return false;
         }
         if (spectatorMode.get() == SpectatorMode.TRIBUNE) {
-            return enterSpectatorBox(player);
+            return enterArenaFlight(player);
         }
         return sendToTribune(player);
     }

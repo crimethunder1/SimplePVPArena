@@ -1,33 +1,35 @@
 package de.simplepvparena.border;
 
-import de.simplepvparena.arena.BlockPositionCodec;
-import de.simplepvparena.arena.RegionBoundary;
+import de.simplepvparena.arena.ArenaShape;
+import de.simplepvparena.arena.BorderColumnReader;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.TextDecoration;
-import org.bukkit.Chunk;
 import org.bukkit.Location;
 import org.bukkit.NamespacedKey;
 import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
-import org.bukkit.persistence.PersistentDataContainer;
 import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.plugin.Plugin;
 
 import java.util.List;
+import java.util.Objects;
 
 public final class SpectatorBorderService {
 
     public static final String BORDER_KEY_NAME = "spectator_border";
 
     private static final String ITEM_MARKER_VALUE = "spectator-border";
-    private static final int CHUNK_SIZE = 16;
 
     private final NamespacedKey borderKey;
+    private final BorderMarkIndex borderMarks;
+    private final Runnable borderMarkSaver;
 
-    public SpectatorBorderService(Plugin plugin) {
+    public SpectatorBorderService(Plugin plugin, BorderMarkIndex borderMarks, Runnable borderMarkSaver) {
         this.borderKey = new NamespacedKey(plugin, BORDER_KEY_NAME);
+        this.borderMarks = Objects.requireNonNull(borderMarks, "borderMarks");
+        this.borderMarkSaver = Objects.requireNonNull(borderMarkSaver, "borderMarkSaver");
     }
 
     public NamespacedKey getBorderKey() {
@@ -54,74 +56,49 @@ public final class SpectatorBorderService {
     }
 
     public void markBlock(Block block) {
-        Chunk chunk = block.getChunk();
-        long encodedPosition = BlockPositionCodec.encode(block.getX(), block.getY(), block.getZ());
-        writeMarkedPositions(chunk, MarkedBlockPositions.add(readMarkedPositions(chunk), encodedPosition));
+        if (borderMarks.mark(block.getWorld().getName(), block.getX(), block.getY(), block.getZ())) {
+            borderMarkSaver.run();
+        }
     }
 
     public void clearBlockMark(Block block) {
-        Chunk chunk = block.getChunk();
-        long encodedPosition = BlockPositionCodec.encode(block.getX(), block.getY(), block.getZ());
-        writeMarkedPositions(chunk, MarkedBlockPositions.remove(readMarkedPositions(chunk), encodedPosition));
+        if (borderMarks.clearMark(block.getWorld().getName(), block.getX(), block.getY(), block.getZ())) {
+            borderMarkSaver.run();
+        }
     }
 
     public boolean isBorderBlock(Block block) {
-        long encodedPosition = BlockPositionCodec.encode(block.getX(), block.getY(), block.getZ());
-        return MarkedBlockPositions.contains(readMarkedPositions(block.getChunk()), encodedPosition);
+        return borderMarks.isMarkedBlock(block.getWorld().getName(), block.getX(), block.getY(), block.getZ());
     }
 
-    public boolean isMovementBlocked(boolean activeFighter, Location destination) {
-        if (activeFighter || destination == null || destination.getWorld() == null) {
-            return false;
+    public BorderMovementDecision decideMovement(boolean activeFighter, boolean operator,
+                                                 Location origin, Location destination) {
+        if (destination == null || destination.getWorld() == null) {
+            return BorderMovementDecision.ALLOWED;
         }
-        Chunk chunk = destination.getChunk();
-        long[] markedPositions = readMarkedPositions(chunk);
-        if (markedPositions.length == 0) {
-            return false;
+        String worldName = destination.getWorld().getName();
+        int originBlockX = destination.getBlockX();
+        int originBlockZ = destination.getBlockZ();
+        if (origin != null && origin.getWorld() != null && origin.getWorld().getName().equals(worldName)) {
+            originBlockX = origin.getBlockX();
+            originBlockZ = origin.getBlockZ();
         }
-        return SpectatorBorderMovementRule.isMovementBlocked(false, markedPositions,
-                destination.getBlockX(), destination.getBlockY(), destination.getBlockZ());
+        return SpectatorBorderMovementRule.decide(activeFighter, operator, borderMarks.lookupIn(worldName),
+                originBlockX, originBlockZ, destination.getBlockX(), destination.getBlockZ());
     }
 
-    public int clearMarksInRegion(World world, RegionBoundary region) {
-        if (!world.getName().equals(region.getWorldName())) {
+    public int clearMarksInShape(World world, ArenaShape shape) {
+        if (!world.getName().equals(shape.getWorldName())) {
             return 0;
         }
-        int clearedMarkCount = 0;
-        int minimumChunkX = Math.floorDiv(region.getMinimumX(), CHUNK_SIZE);
-        int maximumChunkX = Math.floorDiv(region.getMaximumX(), CHUNK_SIZE);
-        int minimumChunkZ = Math.floorDiv(region.getMinimumZ(), CHUNK_SIZE);
-        int maximumChunkZ = Math.floorDiv(region.getMaximumZ(), CHUNK_SIZE);
-        for (int chunkX = minimumChunkX; chunkX <= maximumChunkX; chunkX++) {
-            for (int chunkZ = minimumChunkZ; chunkZ <= maximumChunkZ; chunkZ++) {
-                Chunk chunk = world.getChunkAt(chunkX, chunkZ);
-                long[] markedPositions = readMarkedPositions(chunk);
-                if (markedPositions.length == 0) {
-                    continue;
-                }
-                long[] remainingPositions = MarkedBlockPositions.removeInsideRegion(markedPositions, region);
-                if (remainingPositions.length == markedPositions.length) {
-                    continue;
-                }
-                clearedMarkCount += markedPositions.length - remainingPositions.length;
-                writeMarkedPositions(chunk, remainingPositions);
-            }
+        int clearedMarkCount = borderMarks.removeInsideShape(shape);
+        if (clearedMarkCount > 0) {
+            borderMarkSaver.run();
         }
         return clearedMarkCount;
     }
 
-    private long[] readMarkedPositions(Chunk chunk) {
-        long[] markedPositions = chunk.getPersistentDataContainer()
-                .get(borderKey, PersistentDataType.LONG_ARRAY);
-        return markedPositions == null ? MarkedBlockPositions.EMPTY_POSITIONS : markedPositions;
-    }
-
-    private void writeMarkedPositions(Chunk chunk, long[] markedPositions) {
-        PersistentDataContainer chunkContainer = chunk.getPersistentDataContainer();
-        if (markedPositions.length == 0) {
-            chunkContainer.remove(borderKey);
-            return;
-        }
-        chunkContainer.set(borderKey, PersistentDataType.LONG_ARRAY, markedPositions);
+    public BorderColumnReader createColumnReader(World world) {
+        return borderMarks.createColumnReader(world.getName());
     }
 }

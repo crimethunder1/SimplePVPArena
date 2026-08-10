@@ -1,10 +1,14 @@
 package de.simplepvparena;
 
+import de.simplepvparena.arena.Arena;
 import de.simplepvparena.arena.ArenaCleaningService;
-import de.simplepvparena.arena.ArenaRegionType;
 import de.simplepvparena.arena.ArenaRegistry;
+import de.simplepvparena.arena.ArenaShapeFloodFill;
 import de.simplepvparena.arena.SpectatorItemFactory;
 import de.simplepvparena.arena.SpectatorService;
+import de.simplepvparena.border.BorderMarkIndex;
+import de.simplepvparena.border.BorderMarkStorage;
+import de.simplepvparena.border.OperatorBorderPassLog;
 import de.simplepvparena.border.SpectatorBorderService;
 import de.simplepvparena.command.TournamentCommand;
 import de.simplepvparena.kit.KitConfigurationLoader;
@@ -22,6 +26,7 @@ import de.simplepvparena.match.RoundTimeoutSettings;
 import de.simplepvparena.team.TeamRegistry;
 import de.simplepvparena.team.TeamStorage;
 import de.simplepvparena.tournament.OnlineOperatorNotifier;
+import de.simplepvparena.tournament.OperatorNotifier;
 import de.simplepvparena.tournament.TournamentManager;
 import org.bukkit.command.PluginCommand;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -38,14 +43,20 @@ public final class SimplePVPArenaPlugin extends JavaPlugin {
     private static final String SUDDEN_DEATH_DAMAGE_PER_SECOND_KEY = "match.sudden-death-damage-per-second";
     private static final String SUDDEN_DEATH_DAMAGE_INCREASE_KEY = "match.sudden-death-damage-increase-per-second";
     private static final String ARENA_BLOCKS_PER_TICK_KEY = "arena.clean-blocks-per-tick";
+    private static final String ARENA_MAXIMUM_CELLS_KEY = "arena.shape-maximum-cells";
     private static final String TEAMS_FILE_NAME = "teams.yml";
+    private static final String BORDERS_FILE_NAME = "borders.yml";
     private static final long DEFAULT_ROUND_RESET_DELAY_TICKS = 100L;
+    private static final long OPERATOR_BORDER_PASS_REPORT_PERIOD_TICKS = 20L * 120L;
 
     private ArenaRegistry arenaRegistry;
     private TeamRegistry teamRegistry;
     private TeamStorage teamStorage;
     private KitService kitService;
     private SpectatorService spectatorService;
+    private BorderMarkIndex borderMarkIndex;
+    private BorderMarkStorage borderMarkStorage;
+    private OperatorBorderPassLog operatorBorderPassLog;
     private SpectatorBorderService spectatorBorderService;
     private ArenaCleaningService arenaCleaningService;
     private MatchService matchService;
@@ -57,7 +68,9 @@ public final class SimplePVPArenaPlugin extends JavaPlugin {
 
         arenaRegistry = new ArenaRegistry();
         warnAboutLegacyMultiArenaConfiguration();
+        warnAboutLegacyRegionConfiguration();
         arenaRegistry.loadFromConfiguration(getConfig());
+        warnAboutUnreadableArenaShape();
         warnAboutIncompleteArena();
 
         teamRegistry = new TeamRegistry();
@@ -68,8 +81,14 @@ public final class SimplePVPArenaPlugin extends JavaPlugin {
         kitService.setKitDefinition(new KitConfigurationLoader(getLogger()).load(getConfig().getConfigurationSection(KIT_SECTION)));
 
         spectatorService = new SpectatorService(arenaRegistry, new SpectatorItemFactory(this));
-        spectatorBorderService = new SpectatorBorderService(this);
-        arenaCleaningService = new ArenaCleaningService(this, spectatorBorderService::clearMarksInRegion);
+
+        borderMarkIndex = new BorderMarkIndex();
+        borderMarkStorage = new BorderMarkStorage(new File(getDataFolder(), BORDERS_FILE_NAME), getLogger());
+        borderMarkStorage.load(borderMarkIndex);
+        operatorBorderPassLog = new OperatorBorderPassLog();
+        spectatorBorderService = new SpectatorBorderService(this, borderMarkIndex, this::saveBorderMarks);
+
+        arenaCleaningService = new ArenaCleaningService(this, spectatorBorderService::clearMarksInShape);
         arenaCleaningService.setBlocksPerTick(getConfig().getInt(ARENA_BLOCKS_PER_TICK_KEY,
                 ArenaCleaningService.DEFAULT_BLOCKS_PER_TICK));
 
@@ -82,6 +101,7 @@ public final class SimplePVPArenaPlugin extends JavaPlugin {
 
         registerCommand();
         registerListeners();
+        startOperatorBorderPassReport();
     }
 
     @Override
@@ -106,6 +126,18 @@ public final class SimplePVPArenaPlugin extends JavaPlugin {
         teamStorage.save(teamRegistry);
     }
 
+    public void saveBorderMarks() {
+        borderMarkStorage.save(borderMarkIndex);
+    }
+
+    private void startOperatorBorderPassReport() {
+        OperatorNotifier administratorNotifier = OnlineOperatorNotifier.administrators(getServer(),
+                TournamentCommand.ADMIN_PERMISSION);
+        getServer().getScheduler().runTaskTimer(this,
+                () -> operatorBorderPassLog.drainReport().ifPresent(administratorNotifier::notifyOperators),
+                OPERATOR_BORDER_PASS_REPORT_PERIOD_TICKS, OPERATOR_BORDER_PASS_REPORT_PERIOD_TICKS);
+    }
+
     public TournamentManager getTournamentManager() {
         return tournamentManager;
     }
@@ -117,7 +149,22 @@ public final class SimplePVPArenaPlugin extends JavaPlugin {
         getLogger().warning("The configuration still holds the entries " + ArenaRegistry.LEGACY_ARENAS_SECTION
                 + " and " + ArenaRegistry.LEGACY_FINAL_ARENA_KEY + " of the former multi arena setup. They are "
                 + "ignored and dropped with the next arena change, configure the single arena in the section "
-                + ArenaRegistry.ARENA_SECTION + " or with /tournament arena setpos");
+                + ArenaRegistry.ARENA_SECTION + " again with " + Arena.CALCULATE_COMMAND);
+    }
+
+    private void warnAboutLegacyRegionConfiguration() {
+        if (!ArenaRegistry.containsLegacyRegionConfiguration(getConfig())) {
+            return;
+        }
+        getLogger().warning("The configuration still holds the rectangle regions of the former arena setup in "
+                + ArenaRegistry.ARENA_SECTION + "." + ArenaRegistry.LEGACY_REGIONS_SECTION + ". They are ignored "
+                + "and dropped with the next arena change, calculate the fight area again with "
+                + Arena.CALCULATE_COMMAND);
+    }
+
+    private void warnAboutUnreadableArenaShape() {
+        arenaRegistry.getShapeLoadFailure().ifPresent(failure -> getLogger().warning(
+                "The stored fight area of the arena could not be read: " + failure));
     }
 
     private void warnAboutIncompleteArena() {
@@ -125,8 +172,18 @@ public final class SimplePVPArenaPlugin extends JavaPlugin {
             return;
         }
         getLogger().warning("The arena is not fully configured, it still misses: "
-                + arenaRegistry.getArena().getMissingRegionTypes().stream()
-                .map(ArenaRegionType::getCommandArgument).toList());
+                + String.join(", ", arenaRegistry.getArena().getMissingConfiguration()));
+    }
+
+    private int readMaximumArenaCellCount() {
+        int maximumCellCount = getConfig().getInt(ARENA_MAXIMUM_CELLS_KEY,
+                ArenaShapeFloodFill.DEFAULT_MAXIMUM_CELL_COUNT);
+        if (maximumCellCount >= 1) {
+            return maximumCellCount;
+        }
+        getLogger().warning(ARENA_MAXIMUM_CELLS_KEY + " must be at least one cell, falling back to "
+                + ArenaShapeFloodFill.DEFAULT_MAXIMUM_CELL_COUNT);
+        return ArenaShapeFloodFill.DEFAULT_MAXIMUM_CELL_COUNT;
     }
 
     private RoundTimeoutSettings readRoundTimeoutSettings() {
@@ -152,7 +209,7 @@ public final class SimplePVPArenaPlugin extends JavaPlugin {
         }
         TournamentCommand tournamentCommand = new TournamentCommand(getServer(), tournamentManager, teamRegistry,
                 arenaRegistry, matchService, spectatorService, spectatorBorderService, arenaCleaningService,
-                this::saveArenaConfiguration, this::saveTeamConfiguration);
+                readMaximumArenaCellCount(), this::saveArenaConfiguration, this::saveTeamConfiguration);
         pluginCommand.setExecutor(tournamentCommand);
         pluginCommand.setTabCompleter(tournamentCommand);
     }
@@ -166,7 +223,7 @@ public final class SimplePVPArenaPlugin extends JavaPlugin {
         getServer().getPluginManager().registerEvents(
                 new PlayerMoveListener(matchService, spectatorService, arenaRegistry), this);
         getServer().getPluginManager().registerEvents(
-                new SpectatorBorderListener(matchService, spectatorBorderService), this);
+                new SpectatorBorderListener(matchService, spectatorBorderService, operatorBorderPassLog), this);
         getServer().getPluginManager().registerEvents(new PlayerInteractListener(matchService, spectatorService), this);
         getServer().getPluginManager().registerEvents(new GlobalPvpLockListener(matchService), this);
         getServer().getPluginManager().registerEvents(new FriendlyFireListener(matchService), this);

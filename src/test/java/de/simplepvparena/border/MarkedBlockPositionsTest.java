@@ -1,7 +1,8 @@
 package de.simplepvparena.border;
 
+import de.simplepvparena.arena.ArenaShape;
 import de.simplepvparena.arena.BlockPositionCodec;
-import de.simplepvparena.arena.RegionBoundary;
+import de.simplepvparena.arena.HorizontalCellCodec;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
@@ -45,23 +46,28 @@ class MarkedBlockPositionsTest {
     }
 
     @Test
-    void removesEveryMarkInsideACleanedRegion() {
-        long insideRegion = BlockPositionCodec.encode(5, 64, 5);
-        long onTheRegionBorder = BlockPositionCodec.encode(0, 60, 10);
-        long outsideRegion = BlockPositionCodec.encode(5, 100, 5);
-        long[] positions = new long[] {insideRegion, onTheRegionBorder, outsideRegion};
+    void removesEveryMarkInsideACleanedArena() {
+        long insideTheArena = BlockPositionCodec.encode(5, 64, 5);
+        long onTheFloorOfTheArena = BlockPositionCodec.encode(6, 60, 5);
+        long aboveTheArena = BlockPositionCodec.encode(5, 100, 5);
+        long inTheWallOfTheArena = BlockPositionCodec.encode(7, 64, 5);
+        long[] positions = new long[] {insideTheArena, onTheFloorOfTheArena, aboveTheArena, inTheWallOfTheArena};
 
-        long[] remainingPositions = MarkedBlockPositions.removeInsideRegion(positions,
-                new RegionBoundary("world", 0, 60, 0, 10, 70, 10));
+        long[] remainingPositions = MarkedBlockPositions.removeInsideShape(positions, shape());
 
-        assertArrayEquals(new long[] {outsideRegion}, remainingPositions);
+        assertArrayEquals(new long[] {onTheFloorOfTheArena, aboveTheArena, inTheWallOfTheArena}, remainingPositions);
     }
 
     @Test
-    void keepsThePositionsWhenNothingIsInsideTheRegion() {
+    void keepsThePositionsWhenNothingIsInsideTheArena() {
         long[] positions = new long[] {BlockPositionCodec.encode(100, 64, 100)};
 
-        assertArrayEquals(positions, MarkedBlockPositions.removeInsideRegion(positions,
-                new RegionBoundary("world", 0, 0, 0, 10, 10, 10)));
+        assertArrayEquals(positions, MarkedBlockPositions.removeInsideShape(positions, shape()));
+    }
+
+    private ArenaShape shape() {
+        return new ArenaShape("world", 61, 70, new long[] {
+                HorizontalCellCodec.encode(5, 5),
+                HorizontalCellCodec.encode(6, 5)});
     }
 }

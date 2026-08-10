@@ -1,5 +1,7 @@
 package de.simplepvparena.listener;
 
+import de.simplepvparena.border.BorderMovementDecision;
+import de.simplepvparena.border.OperatorBorderPassLog;
 import de.simplepvparena.border.SpectatorBorderService;
 import de.simplepvparena.match.MatchService;
 import org.bukkit.Location;
@@ -15,10 +17,13 @@ public final class SpectatorBorderListener implements Listener {
 
     private final MatchService matchService;
     private final SpectatorBorderService spectatorBorderService;
+    private final OperatorBorderPassLog operatorBorderPassLog;
 
-    public SpectatorBorderListener(MatchService matchService, SpectatorBorderService spectatorBorderService) {
+    public SpectatorBorderListener(MatchService matchService, SpectatorBorderService spectatorBorderService,
+                                   OperatorBorderPassLog operatorBorderPassLog) {
         this.matchService = matchService;
         this.spectatorBorderService = spectatorBorderService;
+        this.operatorBorderPassLog = operatorBorderPassLog;
     }
 
     @EventHandler(ignoreCancelled = true)
@@ -27,8 +32,6 @@ public final class SpectatorBorderListener implements Listener {
             return;
         }
         spectatorBorderService.markBlock(event.getBlockPlaced());
-        event.getPlayer().sendMessage("The block is now a spectator border, everybody who is not fighting "
-                + "is stopped by it");
     }
 
     @EventHandler(ignoreCancelled = true)
@@ -43,13 +46,18 @@ public final class SpectatorBorderListener implements Listener {
         if (event instanceof PlayerTeleportEvent) {
             return;
         }
+        Location origin = event.getFrom();
         Location destination = event.getTo();
-        if (!hasChangedBlock(event.getFrom(), destination)) {
+        if (!hasChangedBlock(origin, destination)) {
             return;
         }
         Player player = event.getPlayer();
-        if (spectatorBorderService.isMovementBlocked(matchService.isActiveFighter(player.getUniqueId()), destination)) {
-            event.setCancelled(true);
+        BorderMovementDecision decision = spectatorBorderService.decideMovement(
+                matchService.isActiveFighter(player.getUniqueId()), player.isOp(), origin, destination);
+        switch (decision) {
+            case BLOCKED -> event.setCancelled(true);
+            case OPERATOR_PASS -> operatorBorderPassLog.recordPass(player.getName(), System.currentTimeMillis());
+            case ALLOWED -> { }
         }
     }
 

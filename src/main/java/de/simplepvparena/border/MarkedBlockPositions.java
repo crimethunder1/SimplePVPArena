@@ -1,7 +1,7 @@
 package de.simplepvparena.border;
 
+import de.simplepvparena.arena.ArenaShape;
 import de.simplepvparena.arena.BlockPositionCodec;
-import de.simplepvparena.arena.RegionBoundary;
 
 import java.util.Arrays;
 
@@ -44,23 +44,20 @@ public final class MarkedBlockPositions {
         return reducedPositions;
     }
 
-    public static long[] removeInsideRegion(long[] positions, RegionBoundary region) {
+    public static long[] removeInsideShape(long[] positions, ArenaShape shape) {
         long[] keptPositions = new long[positions.length];
         int targetIndex = 0;
         for (long position : positions) {
-            if (!isInsideRegion(position, region)) {
+            if (!isInsideShape(position, shape)) {
                 keptPositions[targetIndex++] = position;
             }
         }
         return targetIndex == positions.length ? positions : Arrays.copyOf(keptPositions, targetIndex);
     }
 
-    private static boolean isInsideRegion(long encodedPosition, RegionBoundary region) {
-        int blockX = BlockPositionCodec.decodeX(encodedPosition);
-        int blockY = BlockPositionCodec.decodeY(encodedPosition);
-        int blockZ = BlockPositionCodec.decodeZ(encodedPosition);
-        return blockX >= region.getMinimumX() && blockX <= region.getMaximumX()
-                && blockY >= region.getMinimumY() && blockY <= region.getMaximumY()
-                && blockZ >= region.getMinimumZ() && blockZ <= region.getMaximumZ();
+    private static boolean isInsideShape(long encodedPosition, ArenaShape shape) {
+        return shape.containsBlock(BlockPositionCodec.decodeX(encodedPosition),
+                BlockPositionCodec.decodeY(encodedPosition),
+                BlockPositionCodec.decodeZ(encodedPosition));
     }
 }
