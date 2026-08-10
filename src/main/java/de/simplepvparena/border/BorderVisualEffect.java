@@ -5,7 +5,9 @@ import org.bukkit.entity.Player;
 
 public interface BorderVisualEffect {
 
-    void showAt(Player player, Location borderBlockCenter);
+    void showAt(Player player, Location borderBlockCenter, BorderConnectivity connectivity);
+
+    void showColumnConnection(Player player, Location pointBetweenBorderColumns);
 
     void showConnection(Player player, Location pointBetweenBorderBlocks);
 }

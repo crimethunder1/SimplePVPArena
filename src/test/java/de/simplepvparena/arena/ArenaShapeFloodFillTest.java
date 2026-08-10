@@ -49,14 +49,14 @@ class ArenaShapeFloodFillTest {
     }
 
     @Test
-    void reportsALeakWhenTheWallHasAGap() {
+    void stopsAtTheCellLimitWhenTheWallHasAGap() {
         BorderWall wall = new BorderWall().addRectangleOutline(0, 0, 4, 4, SEED_HEIGHT).removeColumn(4, 2);
 
         ArenaShapeCalculation calculation = calculate(wall, 2, 2, 200);
 
-        assertEquals(ArenaShapeCalculation.Status.LEAKING, calculation.getStatus());
+        assertEquals(ArenaShapeCalculation.Status.CELL_LIMIT_REACHED, calculation.getStatus());
         assertTrue(calculation.getShape().isEmpty());
-        assertTrue(calculation.getRejectionMessage().orElseThrow().contains("not closed"));
+        assertTrue(calculation.getRejectionMessage().orElseThrow().contains("gap"));
     }
 
     @Test
@@ -65,8 +65,25 @@ class ArenaShapeFloodFillTest {
 
         ArenaShapeCalculation calculation = calculate(wall, 5, 5, 20);
 
-        assertEquals(ArenaShapeCalculation.Status.LEAKING, calculation.getStatus());
+        assertEquals(ArenaShapeCalculation.Status.CELL_LIMIT_REACHED, calculation.getStatus());
         assertTrue(calculation.getRejectionMessage().orElseThrow().contains("20 cells"));
+    }
+
+    @Test
+    void tellsTheAdminAboutBothReasonsAndTheSettingToRaise() {
+        BorderWall wallWithAGap = new BorderWall()
+                .addRectangleOutline(0, 0, 4, 4, SEED_HEIGHT).removeColumn(4, 2);
+        BorderWall closedWall = new BorderWall().addRectangleOutline(0, 0, 10, 10, SEED_HEIGHT);
+
+        String gapRejection = calculate(wallWithAGap, 2, 2, 20).getRejectionMessage().orElseThrow();
+        String limitRejection = calculate(closedWall, 5, 5, 20).getRejectionMessage().orElseThrow();
+
+        assertEquals(gapRejection, limitRejection, "the calculation cannot tell the two cases apart");
+        assertTrue(gapRejection.contains("gap"), "the wall may have a gap");
+        assertTrue(gapRejection.contains("larger than that limit"), "or the area may just be too large");
+        assertTrue(gapRejection.contains(ArenaShapeFloodFill.MAXIMUM_CELL_COUNT_CONFIGURATION_PATH),
+                "the setting to raise is named");
+        assertTrue(gapRejection.contains("20 cells"), "the configured value that stopped the fill is named");
     }
 
     @Test

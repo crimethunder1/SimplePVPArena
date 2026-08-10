@@ -1,6 +1,5 @@
 package de.simplepvparena.border;
 
-import de.simplepvparena.arena.BlockPositionCodec;
 import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.entity.Player;
@@ -18,7 +17,6 @@ public final class BorderWallPreview {
 
     private static final long REDRAW_PERIOD_TICKS = 20L;
     private static final int CONNECTION_POINT_COUNT = 2;
-    private static final double BLOCK_CENTER_OFFSET = 0.5D;
 
     private final Plugin plugin;
     private final BorderVisualEffect visualEffect;
@@ -82,17 +80,10 @@ public final class BorderWallPreview {
     }
 
     private void drawConnection(Player player, World world, BorderWallConnection connection) {
-        double fromX = BlockPositionCodec.decodeX(connection.firstPosition()) + BLOCK_CENTER_OFFSET;
-        double fromY = BlockPositionCodec.decodeY(connection.firstPosition()) + BLOCK_CENTER_OFFSET;
-        double fromZ = BlockPositionCodec.decodeZ(connection.firstPosition()) + BLOCK_CENTER_OFFSET;
-        double stepX = (BlockPositionCodec.decodeX(connection.secondPosition()) + BLOCK_CENTER_OFFSET - fromX);
-        double stepY = (BlockPositionCodec.decodeY(connection.secondPosition()) + BLOCK_CENTER_OFFSET - fromY);
-        double stepZ = (BlockPositionCodec.decodeZ(connection.secondPosition()) + BLOCK_CENTER_OFFSET - fromZ);
-        for (int point = 1; point <= CONNECTION_POINT_COUNT; point++) {
-            double progress = (double) point / (CONNECTION_POINT_COUNT + 1);
-            visualEffect.showConnection(player, new Location(world,
-                    fromX + stepX * progress, fromY + stepY * progress, fromZ + stepZ * progress));
-        }
+        BorderLinePoints.walk(connection.firstPosition(), connection.secondPosition(),
+                BorderLinePoints.BLOCK_CENTER_OFFSET, CONNECTION_POINT_COUNT,
+                (pointX, pointY, pointZ) -> visualEffect.showConnection(player,
+                        new Location(world, pointX, pointY, pointZ)));
     }
 
     private static final class RedrawProgress {

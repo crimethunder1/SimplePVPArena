@@ -7,7 +7,7 @@ public final class ArenaShapeCalculation {
     public enum Status {
         FILLED,
         SEED_INSIDE_BORDER,
-        LEAKING
+        CELL_LIMIT_REACHED
     }
 
     private final Status status;
@@ -30,11 +30,16 @@ public final class ArenaShapeCalculation {
                         + "wall encloses");
     }
 
-    public static ArenaShapeCalculation leaking(int visitedCellCount) {
-        return new ArenaShapeCalculation(Status.LEAKING, null,
-                "The border wall is not closed or too large, the arena could not be calculated. The "
-                        + "calculation was stopped after " + visitedCellCount + " cells, close the wall "
-                        + "around your position and run the command again");
+    public static ArenaShapeCalculation stoppedAtCellLimit(int maximumCellCount) {
+        return new ArenaShapeCalculation(Status.CELL_LIMIT_REACHED, null,
+                "The fight area could not be calculated, the flood fill was stopped at " + maximumCellCount
+                        + " cells, the limit of " + ArenaShapeFloodFill.MAXIMUM_CELL_COUNT_CONFIGURATION_PATH
+                        + ". Either your border wall has a gap the fill ran through, or the area you "
+                        + "enclosed is larger than that limit - the calculation cannot tell the two apart, "
+                        + "it would have to keep filling to do so. Walk along your wall and look for a "
+                        + "missing green connection line between two border blocks, and if the wall is "
+                        + "closed everywhere raise " + ArenaShapeFloodFill.MAXIMUM_CELL_COUNT_CONFIGURATION_PATH
+                        + " in config.yml and run " + Arena.CALCULATE_COMMAND + " again");
     }
 
     public Status getStatus() {

@@ -1,6 +1,7 @@
 package de.simplepvparena.border;
 
 import de.simplepvparena.arena.BlockPositionCodec;
+import de.simplepvparena.arena.BorderColumnReader;
 import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.entity.Player;
@@ -13,7 +14,12 @@ public final class BorderParticleService {
 
     public static final int DEFAULT_VIEW_RADIUS = 12;
     public static final int DEFAULT_MAXIMUM_BLOCKS_PER_PLAYER = 24;
+
+    public static final int DEFAULT_MAXIMUM_LINES_PER_PLAYER = 2 * DEFAULT_MAXIMUM_BLOCKS_PER_PLAYER;
+
     public static final long DEFAULT_PERIOD_TICKS = 30L;
+
+    private static final int CONNECTION_LINE_POINT_COUNT = 3;
 
     private final Plugin plugin;
     private final BorderMarkIndex borderMarks;
@@ -22,6 +28,7 @@ public final class BorderParticleService {
 
     private int viewRadius = DEFAULT_VIEW_RADIUS;
     private int maximumBlocksPerPlayer = DEFAULT_MAXIMUM_BLOCKS_PER_PLAYER;
+    private int maximumLinesPerPlayer = DEFAULT_MAXIMUM_LINES_PER_PLAYER;
     private long periodTicks = DEFAULT_PERIOD_TICKS;
     private BukkitTask activeTask;
 
@@ -39,6 +46,10 @@ public final class BorderParticleService {
 
     public void setMaximumBlocksPerPlayer(int maximumBlocksPerPlayer) {
         this.maximumBlocksPerPlayer = Math.max(1, maximumBlocksPerPlayer);
+    }
+
+    public void setMaximumLinesPerPlayer(int maximumLinesPerPlayer) {
+        this.maximumLinesPerPlayer = Math.max(0, maximumLinesPerPlayer);
     }
 
     public void setPeriodTicks(long periodTicks) {
@@ -84,8 +95,33 @@ public final class BorderParticleService {
         }
         long[] nearbyMarks = borderMarks.collectMarksNear(world.getName(), playerLocation.getBlockX(),
                 playerLocation.getBlockY(), playerLocation.getBlockZ(), viewRadius, maximumBlocksPerPlayer);
+        if (nearbyMarks.length == 0) {
+            return;
+        }
+        showBlocks(player, world, nearbyMarks);
+        showConnectionLines(player, world, nearbyMarks);
+    }
+
+    private void showBlocks(Player player, World world, long[] nearbyMarks) {
+        BlockedColumnLookup blockedColumns = borderMarks.lookupIn(world.getName());
         for (long encodedPosition : nearbyMarks) {
-            visualEffect.showAt(player, topFaceCenterOf(world, encodedPosition));
+            BorderConnectivity connectivity = BorderColumnConnectivity.of(blockedColumns,
+                    BlockPositionCodec.decodeX(encodedPosition), BlockPositionCodec.decodeZ(encodedPosition));
+            visualEffect.showAt(player, topFaceCenterOf(world, encodedPosition), connectivity);
+        }
+    }
+
+    private void showConnectionLines(Player player, World world, long[] nearbyMarks) {
+        if (maximumLinesPerPlayer == 0) {
+            return;
+        }
+        BorderColumnReader borderColumns = borderMarks.createColumnReader(world.getName());
+        for (BorderWallConnection connection
+                : BorderColumnConnections.fromShownBlocks(nearbyMarks, borderColumns, maximumLinesPerPlayer)) {
+            BorderLinePoints.walk(connection.firstPosition(), connection.secondPosition(),
+                    BorderLinePoints.BLOCK_TOP_FACE_OFFSET, CONNECTION_LINE_POINT_COUNT,
+                    (pointX, pointY, pointZ) -> visualEffect.showColumnConnection(player,
+                            new Location(world, pointX, pointY, pointZ)));
         }
     }
 

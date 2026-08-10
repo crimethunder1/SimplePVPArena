@@ -43,4 +43,5 @@ border:
   particle-period-ticks: 30
   particle-view-radius: 12
   particle-maximum-blocks-per-player: 24
+  particle-maximum-lines-per-player: 48
   wall-preview-seconds: 4

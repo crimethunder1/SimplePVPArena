@@ -50,10 +50,11 @@ public final class SimplePVPArenaPlugin extends JavaPlugin {
     private static final String SUDDEN_DEATH_DAMAGE_PER_SECOND_KEY = "match.sudden-death-damage-per-second";
     private static final String SUDDEN_DEATH_DAMAGE_INCREASE_KEY = "match.sudden-death-damage-increase-per-second";
     private static final String ARENA_BLOCKS_PER_TICK_KEY = "arena.clean-blocks-per-tick";
-    private static final String ARENA_MAXIMUM_CELLS_KEY = "arena.shape-maximum-cells";
+    private static final String ARENA_MAXIMUM_CELLS_KEY = ArenaShapeFloodFill.MAXIMUM_CELL_COUNT_CONFIGURATION_PATH;
     private static final String BORDER_PARTICLE_PERIOD_KEY = "border.particle-period-ticks";
     private static final String BORDER_PARTICLE_VIEW_RADIUS_KEY = "border.particle-view-radius";
     private static final String BORDER_PARTICLE_MAXIMUM_BLOCKS_KEY = "border.particle-maximum-blocks-per-player";
+    private static final String BORDER_PARTICLE_MAXIMUM_LINES_KEY = "border.particle-maximum-lines-per-player";
     private static final String BORDER_WALL_PREVIEW_SECONDS_KEY = "border.wall-preview-seconds";
     private static final String TEAMS_FILE_NAME = "teams.yml";
     private static final String BORDERS_FILE_NAME = "borders.yml";
@@ -125,6 +126,8 @@ public final class SimplePVPArenaPlugin extends JavaPlugin {
                 BorderParticleService.DEFAULT_VIEW_RADIUS));
         borderParticleService.setMaximumBlocksPerPlayer(getConfig().getInt(BORDER_PARTICLE_MAXIMUM_BLOCKS_KEY,
                 BorderParticleService.DEFAULT_MAXIMUM_BLOCKS_PER_PLAYER));
+        borderParticleService.setMaximumLinesPerPlayer(getConfig().getInt(BORDER_PARTICLE_MAXIMUM_LINES_KEY,
+                BorderParticleService.DEFAULT_MAXIMUM_LINES_PER_PLAYER));
         borderWallPreview = new BorderWallPreview(this, borderVisualEffect);
         borderWallPreview.setDurationTicks(TICKS_PER_SECOND * getConfig().getInt(BORDER_WALL_PREVIEW_SECONDS_KEY,
                 DEFAULT_BORDER_WALL_PREVIEW_SECONDS));
