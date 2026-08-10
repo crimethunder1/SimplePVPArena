@@ -3,6 +3,7 @@ package de.simplepvparena;
 import de.simplepvparena.arena.Arena;
 import de.simplepvparena.arena.ArenaCleaningService;
 import de.simplepvparena.arena.ArenaRegistry;
+import de.simplepvparena.arena.ArenaSetupService;
 import de.simplepvparena.arena.ArenaShapeFloodFill;
 import de.simplepvparena.arena.SpectatorItemFactory;
 import de.simplepvparena.arena.SpectatorService;
@@ -15,8 +16,10 @@ import de.simplepvparena.border.BorderWallPreview;
 import de.simplepvparena.border.OperatorBorderPassLog;
 import de.simplepvparena.border.SpectatorBorderService;
 import de.simplepvparena.command.TournamentCommand;
+import de.simplepvparena.gui.AdminMenuService;
 import de.simplepvparena.kit.KitConfigurationLoader;
 import de.simplepvparena.kit.KitService;
+import de.simplepvparena.listener.AdminMenuListener;
 import de.simplepvparena.listener.FriendlyFireListener;
 import de.simplepvparena.listener.GlobalPvpLockListener;
 import de.simplepvparena.listener.PlayerConnectionListener;
@@ -71,6 +74,8 @@ public final class SimplePVPArenaPlugin extends JavaPlugin {
     private BorderParticleService borderParticleService;
     private BorderWallPreview borderWallPreview;
     private ArenaCleaningService arenaCleaningService;
+    private ArenaSetupService arenaSetupService;
+    private AdminMenuService adminMenuService;
     private MatchService matchService;
     private TournamentManager tournamentManager;
 
@@ -123,6 +128,11 @@ public final class SimplePVPArenaPlugin extends JavaPlugin {
         borderWallPreview = new BorderWallPreview(this, borderVisualEffect);
         borderWallPreview.setDurationTicks(TICKS_PER_SECOND * getConfig().getInt(BORDER_WALL_PREVIEW_SECONDS_KEY,
                 DEFAULT_BORDER_WALL_PREVIEW_SECONDS));
+
+        arenaSetupService = new ArenaSetupService(arenaRegistry, matchService, spectatorBorderService,
+                borderWallPreview, arenaCleaningService, readMaximumArenaCellCount(), this::saveArenaConfiguration);
+        adminMenuService = new AdminMenuService(this, tournamentManager, teamRegistry, matchService,
+                arenaSetupService, this::saveTeamConfiguration);
 
         registerCommand();
         registerListeners();
@@ -240,8 +250,7 @@ public final class SimplePVPArenaPlugin extends JavaPlugin {
             return;
         }
         TournamentCommand tournamentCommand = new TournamentCommand(getServer(), tournamentManager, teamRegistry,
-                arenaRegistry, matchService, spectatorService, spectatorBorderService, borderWallPreview,
-                arenaCleaningService, readMaximumArenaCellCount(), this::saveArenaConfiguration,
+                matchService, spectatorService, spectatorBorderService, arenaSetupService, adminMenuService,
                 this::saveTeamConfiguration);
         pluginCommand.setExecutor(tournamentCommand);
         pluginCommand.setTabCompleter(tournamentCommand);
@@ -258,6 +267,7 @@ public final class SimplePVPArenaPlugin extends JavaPlugin {
         getServer().getPluginManager().registerEvents(
                 new SpectatorBorderListener(matchService, spectatorBorderService, operatorBorderPassLog), this);
         getServer().getPluginManager().registerEvents(new PlayerInteractListener(matchService, spectatorService), this);
+        getServer().getPluginManager().registerEvents(new AdminMenuListener(adminMenuService), this);
         getServer().getPluginManager().registerEvents(new GlobalPvpLockListener(matchService), this);
         getServer().getPluginManager().registerEvents(new FriendlyFireListener(matchService), this);
     }
