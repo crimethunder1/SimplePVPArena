@@ -95,6 +95,48 @@ public final class BorderMarkIndex {
         return borderHeights;
     }
 
+    public long[] collectMarksNear(String worldName, int centerX, int centerY, int centerZ,
+                                   int blockRadius, int maximumCount) {
+        if (blockRadius < 0) {
+            throw new IllegalArgumentException("blockRadius must not be negative");
+        }
+        Map<Long, long[]> columns = positionsByColumnByWorld.get(worldName);
+        if (columns == null) {
+            return MarkedBlockPositions.EMPTY_POSITIONS;
+        }
+        NearbyBorderBlocks nearbyBlocks = new NearbyBorderBlocks(maximumCount);
+        long squaredRadius = (long) blockRadius * blockRadius;
+        int squareSideLength = 2 * blockRadius + 1;
+        if ((long) columns.size() < (long) squareSideLength * squareSideLength) {
+            for (Map.Entry<Long, long[]> columnEntry : columns.entrySet()) {
+                offerColumn(nearbyBlocks, columnEntry.getValue(), centerX, centerY, centerZ, squaredRadius);
+            }
+            return nearbyBlocks.toArray();
+        }
+        for (int blockX = centerX - blockRadius; blockX <= centerX + blockRadius; blockX++) {
+            for (int blockZ = centerZ - blockRadius; blockZ <= centerZ + blockRadius; blockZ++) {
+                long[] positions = columns.get(HorizontalCellCodec.encode(blockX, blockZ));
+                if (positions != null) {
+                    offerColumn(nearbyBlocks, positions, centerX, centerY, centerZ, squaredRadius);
+                }
+            }
+        }
+        return nearbyBlocks.toArray();
+    }
+
+    private static void offerColumn(NearbyBorderBlocks nearbyBlocks, long[] positions,
+                                    int centerX, int centerY, int centerZ, long squaredRadius) {
+        for (long position : positions) {
+            long distanceX = BlockPositionCodec.decodeX(position) - (long) centerX;
+            long distanceY = BlockPositionCodec.decodeY(position) - (long) centerY;
+            long distanceZ = BlockPositionCodec.decodeZ(position) - (long) centerZ;
+            long squaredDistance = distanceX * distanceX + distanceY * distanceY + distanceZ * distanceZ;
+            if (squaredDistance <= squaredRadius) {
+                nearbyBlocks.offer(position, squaredDistance);
+            }
+        }
+    }
+
     public int removeInsideShape(ArenaShape shape) {
         Map<Long, long[]> columns = positionsByColumnByWorld.get(shape.getWorldName());
         if (columns == null) {

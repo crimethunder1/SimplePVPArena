@@ -6,10 +6,13 @@ import de.simplepvparena.arena.ArenaRegistry;
 import de.simplepvparena.arena.ArenaShape;
 import de.simplepvparena.arena.ArenaShapeCalculation;
 import de.simplepvparena.arena.ArenaShapeFloodFill;
+import de.simplepvparena.arena.BorderColumnReader;
 import de.simplepvparena.arena.PositionSnapshot;
 import de.simplepvparena.arena.SpectatorService;
 import de.simplepvparena.border.BorderItemRequest;
 import de.simplepvparena.border.BorderItemRequestResult;
+import de.simplepvparena.border.BorderWallOutline;
+import de.simplepvparena.border.BorderWallPreview;
 import de.simplepvparena.border.SpectatorBorderService;
 import de.simplepvparena.match.Match;
 import de.simplepvparena.match.MatchService;
@@ -61,6 +64,7 @@ public final class TournamentCommand implements TabExecutor {
     private final MatchService matchService;
     private final SpectatorService spectatorService;
     private final SpectatorBorderService spectatorBorderService;
+    private final BorderWallPreview borderWallPreview;
     private final ArenaCleaningService arenaCleaningService;
     private final int maximumArenaCellCount;
     private final Runnable arenaConfigurationSaver;
@@ -73,6 +77,7 @@ public final class TournamentCommand implements TabExecutor {
                              MatchService matchService,
                              SpectatorService spectatorService,
                              SpectatorBorderService spectatorBorderService,
+                             BorderWallPreview borderWallPreview,
                              ArenaCleaningService arenaCleaningService,
                              int maximumArenaCellCount,
                              Runnable arenaConfigurationSaver,
@@ -84,6 +89,7 @@ public final class TournamentCommand implements TabExecutor {
         this.matchService = matchService;
         this.spectatorService = spectatorService;
         this.spectatorBorderService = spectatorBorderService;
+        this.borderWallPreview = borderWallPreview;
         this.arenaCleaningService = arenaCleaningService;
         this.maximumArenaCellCount = maximumArenaCellCount;
         this.arenaConfigurationSaver = arenaConfigurationSaver;
@@ -209,9 +215,10 @@ public final class TournamentCommand implements TabExecutor {
         }
         Location seedLocation = player.get().getLocation();
         World world = seedLocation.getWorld();
+        BorderColumnReader borderColumns = spectatorBorderService.createColumnReader(world);
         ArenaShapeCalculation calculation = ArenaShapeFloodFill.calculate(world.getName(),
                 seedLocation.getBlockX(), seedLocation.getBlockY(), seedLocation.getBlockZ(),
-                maximumArenaCellCount, spectatorBorderService.createColumnReader(world));
+                maximumArenaCellCount, borderColumns);
         if (!calculation.isSuccessful()) {
             sender.sendMessage(calculation.getRejectionMessage().orElseThrow());
             return;
@@ -221,8 +228,18 @@ public final class TournamentCommand implements TabExecutor {
         arena.setShape(shape);
         arenaConfigurationSaver.run();
         sender.sendMessage("The fight area was calculated from the border blocks: " + shape.describe());
+        previewRecognizedWall(player.get(), world, shape, borderColumns);
         arena.findSpawnPlacementWarnings().forEach(sender::sendMessage);
         reportMissingConfiguration(sender, arena);
+    }
+
+    private void previewRecognizedWall(Player player, World world, ArenaShape shape,
+                                       BorderColumnReader borderColumns) {
+        BorderWallOutline outline = BorderWallOutline.around(shape, borderColumns);
+        if (!borderWallPreview.show(player, world, outline)) {
+            return;
+        }
+        player.sendMessage("The recognized wall is shown for a few seconds: " + outline.describe());
     }
 
     private void handleArenaSetSpawn(CommandSender sender, String[] arguments) {

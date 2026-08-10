@@ -38,3 +38,9 @@ arena:
   shape-maximum-cells: 50000
   shape: {}
   spawns: {}
+
+border:
+  particle-period-ticks: 30
+  particle-view-radius: 12
+  particle-maximum-blocks-per-player: 24
+  wall-preview-seconds: 4

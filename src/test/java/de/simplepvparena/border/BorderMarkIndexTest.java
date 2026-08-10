@@ -6,11 +6,13 @@ import de.simplepvparena.arena.HorizontalCellCodec;
 import org.junit.jupiter.api.Test;
 
 import java.util.Arrays;
+import java.util.List;
 import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class BorderMarkIndexTest {
@@ -167,6 +169,75 @@ class BorderMarkIndexTest {
         assertTrue(lookup.isBlockedColumn(10, 20));
         assertFalse(lookup.isBlockedColumn(11, 20));
         assertFalse(borderMarks.lookupIn(OTHER_WORLD).isBlockedColumn(10, 20));
+    }
+
+    @Test
+    void collectsTheBorderBlocksAroundAPosition() {
+        borderMarks.mark(WORLD, 10, 64, 20);
+        borderMarks.mark(WORLD, 12, 64, 20);
+        borderMarks.mark(WORLD, 11, 64, 20);
+        borderMarks.mark(WORLD, 40, 64, 20);
+        borderMarks.mark(OTHER_WORLD, 10, 64, 20);
+
+        long[] nearbyMarks = borderMarks.collectMarksNear(WORLD, 9, 64, 20, 4, 10);
+
+        assertArrayEquals(new long[] {
+                BlockPositionCodec.encode(10, 64, 20),
+                BlockPositionCodec.encode(11, 64, 20),
+                BlockPositionCodec.encode(12, 64, 20)}, nearbyMarks);
+        assertEquals(0, borderMarks.collectMarksNear("unknown", 9, 64, 20, 4, 10).length);
+    }
+
+    @Test
+    void leavesOutTheBorderBlocksOutsideOfTheRadius() {
+        borderMarks.mark(WORLD, 10, 64, 20);
+        borderMarks.mark(WORLD, 10, 70, 20);
+        borderMarks.mark(WORLD, 14, 64, 20);
+        borderMarks.mark(WORLD, 10, 64, 24);
+
+        long[] nearbyMarks = borderMarks.collectMarksNear(WORLD, 10, 64, 20, 3, 10);
+
+        assertArrayEquals(new long[] {BlockPositionCodec.encode(10, 64, 20)}, nearbyMarks);
+    }
+
+    @Test
+    void reportsAtMostTheRequestedNumberOfBorderBlocks() {
+        for (int blockY = 60; blockY <= 68; blockY++) {
+            borderMarks.mark(WORLD, 10, blockY, 20);
+        }
+
+        long[] nearbyMarks = borderMarks.collectMarksNear(WORLD, 10, 64, 20, 8, 3);
+
+        assertArrayEquals(new long[] {
+                BlockPositionCodec.encode(10, 64, 20),
+                BlockPositionCodec.encode(10, 63, 20),
+                BlockPositionCodec.encode(10, 65, 20)}, nearbyMarks);
+    }
+
+    @Test
+    void answersTheSameForASmallAndForALargeWall() {
+        BorderMarkIndex smallWall = new BorderMarkIndex();
+        BorderMarkIndex largeWall = new BorderMarkIndex();
+        for (BorderMarkIndex wall : List.of(smallWall, largeWall)) {
+            wall.mark(WORLD, 10, 64, 20);
+            wall.mark(WORLD, 11, 64, 21);
+        }
+        for (int blockX = 100; blockX < 140; blockX++) {
+            largeWall.mark(WORLD, blockX, 64, 200);
+        }
+
+        long[] expectedMarks = {BlockPositionCodec.encode(10, 64, 20), BlockPositionCodec.encode(11, 64, 21)};
+
+        assertArrayEquals(expectedMarks, smallWall.collectMarksNear(WORLD, 10, 64, 20, 2, 10));
+        assertArrayEquals(expectedMarks, largeWall.collectMarksNear(WORLD, 10, 64, 20, 2, 10));
+    }
+
+    @Test
+    void refusesANegativeRadius() {
+        borderMarks.mark(WORLD, 10, 64, 20);
+
+        assertThrows(IllegalArgumentException.class,
+                () -> borderMarks.collectMarksNear(WORLD, 10, 64, 20, -1, 10));
     }
 
     private static long[] sorted(long[] positions) {
