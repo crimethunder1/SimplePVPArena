@@ -34,7 +34,7 @@ class FinalMatchGateTest {
 
         assertEquals(FinalMatchStage.READY, gate.getStage());
         assertEquals(List.of("The final alpha against bravo is ready, "
-                + "an admin starts it with /tournament final start"), operatorNotifier.messages);
+                + "an admin starts it with \"Start the final\" in /tournament"), operatorNotifier.messages);
     }
 
     @Test

@@ -64,6 +64,7 @@ class AdminMenuHolderTest {
     @Test
     void returnsFromEveryConfirmationToTheMenuItWasAskedIn() {
         assertEquals(AdminMenuType.ARENA, ConfirmationRequest.CLEAN_ARENA.getReturnMenuType());
+        assertEquals(AdminMenuType.ARENA, ConfirmationRequest.RESET_ARENA.getReturnMenuType());
         assertEquals(AdminMenuType.TEAMS, ConfirmationRequest.REMOVE_TEAM.getReturnMenuType());
         assertEquals(AdminMenuType.MATCH, ConfirmationRequest.CANCEL_TOURNAMENT.getReturnMenuType());
     }

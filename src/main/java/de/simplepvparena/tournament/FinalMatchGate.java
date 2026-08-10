@@ -5,7 +5,7 @@ import java.util.Optional;
 
 public final class FinalMatchGate {
 
-    public static final String FINAL_START_COMMAND = "/tournament final start";
+    public static final String FINAL_START_ACTION = "\"Start the final\" in /tournament";
 
     private final OperatorNotifier operatorNotifier;
 
@@ -54,7 +54,7 @@ public final class FinalMatchGate {
     static String buildReadyMessage(BracketMatch finalMatch) {
         return "The final " + finalMatch.getFirstTeamName().orElseThrow() + " against "
                 + finalMatch.getSecondTeamName().orElseThrow()
-                + " is ready, an admin starts it with " + FINAL_START_COMMAND;
+                + " is ready, an admin starts it with " + FINAL_START_ACTION;
     }
 
     private FinalMatchStage determineStage(BracketMatch finalMatch) {

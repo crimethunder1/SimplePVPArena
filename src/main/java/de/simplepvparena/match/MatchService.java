@@ -218,7 +218,8 @@ public final class MatchService {
                 return;
             }
             announceToMatch(match, "Match " + match.getMatchId()
-                    + " is halted because no participant is online, use /tournament match forceresult to resolve it");
+                    + " is halted because no participant is online, use \"Force a result\" in the match menu "
+                    + "of /tournament to resolve it");
             return;
         }
         String winnerTeamName = outcome.winnerTeamName().orElseThrow();

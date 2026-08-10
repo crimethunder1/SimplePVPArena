@@ -1,10 +1,14 @@
 package de.simplepvparena.arena;
 
+import de.simplepvparena.input.ChatInputValues;
+
 import java.util.Optional;
 
 public final class ArenaDebugCellLimit {
 
     public static final int MINIMUM_CELL_COUNT = 1;
+    public static final int REQUIRED_VALUE_COUNT = 1;
+    public static final String USAGE = "<cells>";
 
     private final int cellCount;
     private final String rejectionMessage;
@@ -12,6 +16,15 @@ public final class ArenaDebugCellLimit {
     private ArenaDebugCellLimit(int cellCount, String rejectionMessage) {
         this.cellCount = cellCount;
         this.rejectionMessage = rejectionMessage;
+    }
+
+    public static ArenaDebugCellLimit parseLine(String line) {
+        ChatInputValues values = ChatInputValues.of(line);
+        Optional<String> countRejection = values.findCountRejection(REQUIRED_VALUE_COUNT, USAGE);
+        if (countRejection.isPresent()) {
+            return new ArenaDebugCellLimit(0, countRejection.get());
+        }
+        return parse(values.get(0));
     }
 
     public static ArenaDebugCellLimit parse(String cellCountArgument) {

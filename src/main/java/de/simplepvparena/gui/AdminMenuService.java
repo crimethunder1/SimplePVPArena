@@ -1,12 +1,20 @@
 package de.simplepvparena.gui;
 
+import de.simplepvparena.arena.ArenaDebugCellLimit;
 import de.simplepvparena.arena.ArenaSetupService;
+import de.simplepvparena.arena.ArenaShapeFloodFill;
 import de.simplepvparena.arena.ArenaSpawnType;
+import de.simplepvparena.border.BorderItemRequest;
+import de.simplepvparena.border.BorderItemRequestResult;
+import de.simplepvparena.border.SpectatorBorderService;
 import de.simplepvparena.command.TournamentCommand;
+import de.simplepvparena.input.ChatInputService;
 import de.simplepvparena.match.Match;
 import de.simplepvparena.match.MatchService;
 import de.simplepvparena.team.Team;
+import de.simplepvparena.team.TeamCreationRequest;
 import de.simplepvparena.team.TeamMember;
+import de.simplepvparena.team.TeamMemberLookup;
 import de.simplepvparena.team.TeamRegistry;
 import de.simplepvparena.tournament.TournamentManager;
 import de.simplepvparena.tournament.TournamentOperationResult;
@@ -19,6 +27,7 @@ import org.bukkit.plugin.Plugin;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.OptionalInt;
@@ -32,22 +41,27 @@ public final class AdminMenuService {
     private static final int INFO_SLOT = 4;
 
     private static final int MAIN_ARENA_SLOT = 10;
-    private static final int MAIN_TEAMS_SLOT = 12;
-    private static final int MAIN_MATCH_SLOT = 14;
-    private static final int MAIN_FINAL_SLOT = 16;
+    private static final int MAIN_TEAMS_SLOT = 11;
+    private static final int MAIN_MATCH_SLOT = 12;
+    private static final int MAIN_BORDER_SLOT = 13;
+    private static final int MAIN_FINAL_SLOT = 14;
+    private static final int MAIN_STATUS_SLOT = 15;
+    private static final int MAIN_BRACKET_SLOT = 16;
     private static final int MAIN_CLOSE_SLOT = 22;
 
     private static final int ARENA_CALCULATE_SLOT = 10;
-    private static final int ARENA_FIRST_TEAM_SPAWN_SLOT = 11;
-    private static final int ARENA_SECOND_TEAM_SPAWN_SLOT = 12;
-    private static final int ARENA_TRIBUNE_SPAWN_SLOT = 13;
+    private static final int ARENA_DIAGNOSE_SLOT = 11;
+    private static final int ARENA_FIRST_TEAM_SPAWN_SLOT = 12;
+    private static final int ARENA_SECOND_TEAM_SPAWN_SLOT = 13;
+    private static final int ARENA_TRIBUNE_SPAWN_SLOT = 14;
     private static final int ARENA_CLEAN_SLOT = 15;
     private static final int ARENA_RESET_SLOT = 16;
 
-    private static final int TEAMS_INFO_SLOT = 47;
     private static final int TEAMS_PREVIOUS_PAGE_SLOT = 45;
-    private static final int TEAMS_NEXT_PAGE_SLOT = 53;
+    private static final int TEAMS_INFO_SLOT = 47;
     private static final int TEAMS_BACK_SLOT = 49;
+    private static final int TEAMS_ADD_SLOT = 51;
+    private static final int TEAMS_NEXT_PAGE_SLOT = 53;
 
     private static final int TEAM_REMOVE_SLOT = 13;
 
@@ -69,21 +83,30 @@ public final class AdminMenuService {
     private final Plugin plugin;
     private final TournamentManager tournamentManager;
     private final TeamRegistry teamRegistry;
+    private final TeamMemberLookup teamMemberLookup;
     private final MatchService matchService;
     private final ArenaSetupService arenaSetupService;
+    private final SpectatorBorderService spectatorBorderService;
+    private final ChatInputService chatInputService;
     private final Runnable teamConfigurationSaver;
 
     public AdminMenuService(Plugin plugin,
                             TournamentManager tournamentManager,
                             TeamRegistry teamRegistry,
+                            TeamMemberLookup teamMemberLookup,
                             MatchService matchService,
                             ArenaSetupService arenaSetupService,
+                            SpectatorBorderService spectatorBorderService,
+                            ChatInputService chatInputService,
                             Runnable teamConfigurationSaver) {
         this.plugin = Objects.requireNonNull(plugin, "plugin");
         this.tournamentManager = Objects.requireNonNull(tournamentManager, "tournamentManager");
         this.teamRegistry = Objects.requireNonNull(teamRegistry, "teamRegistry");
+        this.teamMemberLookup = Objects.requireNonNull(teamMemberLookup, "teamMemberLookup");
         this.matchService = Objects.requireNonNull(matchService, "matchService");
         this.arenaSetupService = Objects.requireNonNull(arenaSetupService, "arenaSetupService");
+        this.spectatorBorderService = Objects.requireNonNull(spectatorBorderService, "spectatorBorderService");
+        this.chatInputService = Objects.requireNonNull(chatInputService, "chatInputService");
         this.teamConfigurationSaver = Objects.requireNonNull(teamConfigurationSaver, "teamConfigurationSaver");
     }
 
@@ -92,9 +115,8 @@ public final class AdminMenuService {
     }
 
     public void handleClick(Player player, AdminMenuHolder holder, int slot) {
-        if (!player.hasPermission(TournamentCommand.ADMIN_PERMISSION)) {
+        if (!isStillAdmin(player)) {
             closeMenu(player);
-            player.sendMessage("You are not allowed to use the tournament menu");
             return;
         }
         switch (holder.getMenuType()) {
@@ -113,24 +135,42 @@ public final class AdminMenuService {
             case MAIN_ARENA_SLOT -> openMenu(player, AdminMenuHolder.arena());
             case MAIN_TEAMS_SLOT -> openMenu(player, AdminMenuHolder.teams(0));
             case MAIN_MATCH_SLOT -> openMenu(player, AdminMenuHolder.match());
+            case MAIN_BORDER_SLOT -> askForBorderItemLine(player);
             case MAIN_FINAL_SLOT -> runOperation(player, tournamentManager::startFinalMatch);
+            case MAIN_STATUS_SLOT -> player.sendMessage(tournamentManager.describeStatus());
+            case MAIN_BRACKET_SLOT -> showBracket(player);
             case MAIN_CLOSE_SLOT -> closeMenu(player);
             default -> { }
         }
     }
 
+    private void showBracket(Player player) {
+        closeMenu(player);
+        tournamentManager.describeBracket().forEach(player::sendMessage);
+    }
+
     private void fillMainMenu(Inventory inventory) {
         inventory.setItem(INFO_SLOT, MenuItems.info("Tournament", buildMainInfoLore()));
         inventory.setItem(MAIN_ARENA_SLOT, MenuItems.create(Material.GRASS_BLOCK, "Arena",
-                "Fight area, spawns and cleaning",
+                "Fight area, spawns, cleaning and reset",
                 "Arena " + (arenaSetupService.isArenaReady() ? "ready" : "incomplete")));
         inventory.setItem(MAIN_TEAMS_SLOT, MenuItems.create(Material.PLAYER_HEAD, "Teams",
                 "Registered teams: " + teamRegistry.getTeamCount(),
-                "Shows every team and removes one of them"));
+                "Shows every team, adds one and removes one"));
         inventory.setItem(MAIN_MATCH_SLOT, MenuItems.create(Material.DIAMOND_SWORD, "Match and tournament",
                 "Start, pause, cancel and force a result",
                 "Running match: " + describeActiveMatch()));
+        inventory.setItem(MAIN_BORDER_SLOT, MenuItems.create(Material.GLASS, "Border blocks",
+                "Hands you the blocks the arena wall is built of",
+                "Every block placed with them stops everybody who is not fighting",
+                "Asks for " + BorderItemRequest.USAGE + " in the chat"));
         inventory.setItem(MAIN_FINAL_SLOT, buildFinalItem());
+        inventory.setItem(MAIN_STATUS_SLOT, MenuItems.create(Material.PAPER, "Tournament status",
+                "Writes the state, the rounds and the running match into the chat"));
+        inventory.setItem(MAIN_BRACKET_SLOT, MenuItems.create(Material.WRITTEN_BOOK, "Bracket",
+                "Writes every round and every match into the chat",
+                "A bracket is a tree, the chat shows it better than a grid",
+                "The menu closes so you can read it"));
         inventory.setItem(MAIN_CLOSE_SLOT, MenuItems.create(Material.BARRIER, "Close", "Closes the menu"));
     }
 
@@ -158,14 +198,13 @@ public final class AdminMenuService {
                 closeMenu(player);
                 arenaSetupService.calculateShape(player);
             }
+            case ARENA_DIAGNOSE_SLOT -> askForDebugCellLimitLine(player);
             case ARENA_FIRST_TEAM_SPAWN_SLOT -> setSpawn(player, holder, ArenaSpawnType.FIRST_TEAM);
             case ARENA_SECOND_TEAM_SPAWN_SLOT -> setSpawn(player, holder, ArenaSpawnType.SECOND_TEAM);
             case ARENA_TRIBUNE_SPAWN_SLOT -> setSpawn(player, holder, ArenaSpawnType.TRIBUNE);
             case ARENA_CLEAN_SLOT -> askForCleaningConfirmation(player);
-            case ARENA_RESET_SLOT -> {
-                arenaSetupService.clearConfiguration(player);
-                refresh(holder);
-            }
+            case ARENA_RESET_SLOT -> openMenu(player,
+                    AdminMenuHolder.confirmation(ConfirmationRequest.RESET_ARENA, null, 0));
             case BACK_SLOT -> openMenu(player, AdminMenuHolder.main());
             default -> { }
         }
@@ -191,6 +230,12 @@ public final class AdminMenuService {
                 "Runs the calculation for the position you stand on",
                 "Stand inside the closed border wall before you click",
                 "The menu closes so you can see the recognized wall"));
+        inventory.setItem(ARENA_DIAGNOSE_SLOT, MenuItems.create(Material.REDSTONE_TORCH,
+                "Diagnose with a higher cell limit",
+                "One calculation with a limit you type, up to "
+                        + ArenaShapeFloodFill.MAXIMUM_DEBUG_CELL_COUNT + " cells",
+                "Shows how far a fill through a gap really gets",
+                "config.yml stays untouched"));
         inventory.setItem(ARENA_FIRST_TEAM_SPAWN_SLOT, buildSpawnItem(Material.BLUE_BED, ArenaSpawnType.FIRST_TEAM));
         inventory.setItem(ARENA_SECOND_TEAM_SPAWN_SLOT, buildSpawnItem(Material.RED_BED, ArenaSpawnType.SECOND_TEAM));
         inventory.setItem(ARENA_TRIBUNE_SPAWN_SLOT, buildSpawnItem(Material.YELLOW_BED, ArenaSpawnType.TRIBUNE));
@@ -200,14 +245,14 @@ public final class AdminMenuService {
                 "Asks for a confirmation first"));
         inventory.setItem(ARENA_RESET_SLOT, MenuItems.create(MenuItems.DESTRUCTIVE_MATERIAL, "Reset the arena",
                 "Drops the fight area and all three spawns",
-                "The blocks and the border blocks stay untouched"));
+                "The blocks and the border blocks stay untouched",
+                "Asks for a confirmation first"));
         inventory.setItem(BACK_SLOT, MenuItems.back("the main menu"));
     }
 
     private ItemStack buildSpawnItem(Material material, ArenaSpawnType spawnType) {
         return MenuItems.create(material, "Set the " + spawnType.getDisplayName(),
-                "Sets it to the position you stand on",
-                "Same as /tournament arena setspawn " + spawnType.getArgumentName());
+                "Sets it to the position you stand on");
     }
 
     private void handleTeamsClick(Player player, AdminMenuHolder holder, int slot) {
@@ -224,6 +269,8 @@ public final class AdminMenuService {
                     openMenu(player, AdminMenuHolder.teams(pagination.getNextPageIndex()));
                 }
             }
+            case TEAMS_ADD_SLOT -> askForTeamLine(player, pagination.pageIndex());
+            case TEAMS_INFO_SLOT -> { }
             case TEAMS_BACK_SLOT -> openMenu(player, AdminMenuHolder.main());
             default -> openTeamActions(player, teams, pagination, slot);
         }
@@ -249,9 +296,11 @@ public final class AdminMenuService {
         inventory.setItem(TEAMS_INFO_SLOT, MenuItems.info("Teams", List.of(
                 "Registered teams: " + teams.size(),
                 "Page " + pagination.getPageNumber() + " of " + pagination.getPageCount(),
-                "A team is added in the chat:",
-                "/tournament team add <teamName> <firstPlayer> <secondPlayer>",
-                "Two player names cannot be typed into an inventory")));
+                "A click on a team opens its options")));
+        inventory.setItem(TEAMS_ADD_SLOT, MenuItems.create(MenuItems.CONFIRM_MATERIAL, "Add a team",
+                "Asks for " + TeamCreationRequest.USAGE + " in the chat",
+                "Two player names cannot be typed into an inventory",
+                "The menu closes so you can type"));
         if (pagination.hasPreviousPage()) {
             inventory.setItem(TEAMS_PREVIOUS_PAGE_SLOT, MenuItems.create(MenuItems.PAGE_MATERIAL, "Previous page",
                     "Page " + pagination.getPageNumber() + " of " + pagination.getPageCount()));
@@ -415,6 +464,7 @@ public final class AdminMenuService {
     private void carryOutConfirmedAction(Player player, AdminMenuHolder holder) {
         switch (holder.getConfirmationRequest().orElseThrow()) {
             case CLEAN_ARENA -> arenaSetupService.startCleaning(player);
+            case RESET_ARENA -> arenaSetupService.clearConfiguration(player);
             case REMOVE_TEAM -> removeTeam(player, holder.getSubject().orElseThrow());
             case CANCEL_TOURNAMENT -> player.sendMessage(tournamentManager.cancelTournament().message());
         }
@@ -453,6 +503,10 @@ public final class AdminMenuService {
                     arenaSetupService.countCleaningBlocks() + " blocks are affected",
                     "The change cannot be undone",
                     "The border wall around it stays untouched");
+            case RESET_ARENA -> List.of(
+                    "The fight area and all three spawns are dropped",
+                    "The blocks of the arena and the border blocks stay untouched",
+                    "No tournament can be started until it is calculated again");
             case REMOVE_TEAM -> List.of(
                     "Team " + holder.getSubject().orElseThrow() + " is removed from the registry",
                     "A running match of that team is not stopped by it");
@@ -460,6 +514,121 @@ public final class AdminMenuService {
                     "The running tournament is cancelled",
                     "The running match is stopped and its bracket is dropped");
         };
+    }
+
+    private void askForTeamLine(Player player, int pageIndex) {
+        closeMenu(player);
+        chatInputService.await(player, "the team to add", List.of(
+                        "Type: " + TeamCreationRequest.USAGE + " in chat",
+                        "Example: Alpha Steve Alex",
+                        "Both players have to be online or known to the server"),
+                line -> handleTeamLine(player, pageIndex, line));
+    }
+
+    private void handleTeamLine(Player player, int pageIndex, String line) {
+        if (!isStillAdmin(player)) {
+            return;
+        }
+        TeamCreationRequest request = TeamCreationRequest.parse(line);
+        if (!request.isAccepted()) {
+            player.sendMessage(request.getRejectionMessage().orElseThrow());
+            openMenu(player, AdminMenuHolder.teams(pageIndex));
+            return;
+        }
+        registerTeam(player, request);
+        openMenu(player, AdminMenuHolder.teams(pageIndex));
+    }
+
+    private void registerTeam(Player player, TeamCreationRequest request) {
+        Optional<TeamMember> firstMember = teamMemberLookup.find(request.getFirstPlayerName());
+        if (firstMember.isEmpty()) {
+            player.sendMessage(describeUnknownPlayer(request.getFirstPlayerName()));
+            return;
+        }
+        Optional<TeamMember> secondMember = teamMemberLookup.find(request.getSecondPlayerName());
+        if (secondMember.isEmpty()) {
+            player.sendMessage(describeUnknownPlayer(request.getSecondPlayerName()));
+            return;
+        }
+        try {
+            Team team = teamRegistry.registerTeam(request.getTeamName(), firstMember.get(), secondMember.get());
+            teamConfigurationSaver.run();
+            player.sendMessage("Team " + team.getTeamName() + " registered with " + team.getMemberNamesJoined());
+        } catch (IllegalArgumentException | IllegalStateException failure) {
+            player.sendMessage(failure.getMessage());
+        }
+    }
+
+    private static boolean isPlaceableBlock(Material material) {
+        return material.isBlock() && material.isItem() && !material.isAir();
+    }
+
+    private String describeUnknownPlayer(String playerName) {
+        return "Unknown player " + playerName + ", the player has to be online or known to the server";
+    }
+
+    private void askForBorderItemLine(Player player) {
+        closeMenu(player);
+        chatInputService.await(player, "the border blocks", List.of(
+                        "Type: " + BorderItemRequest.USAGE + " in chat",
+                        "Example: glass 16",
+                        "The amount has to be between " + BorderItemRequest.MINIMUM_AMOUNT
+                                + " and " + BorderItemRequest.MAXIMUM_AMOUNT),
+                line -> handleBorderItemLine(player, line));
+    }
+
+    private void handleBorderItemLine(Player player, String line) {
+        if (!isStillAdmin(player)) {
+            return;
+        }
+        BorderItemRequestResult requestResult = BorderItemRequest.parseLine(line,
+                AdminMenuService::isPlaceableBlock);
+        if (!requestResult.isAccepted()) {
+            player.sendMessage(requestResult.getRejectionMessage().orElseThrow());
+            openMainMenu(player);
+            return;
+        }
+        BorderItemRequest request = requestResult.getRequest().orElseThrow();
+        ItemStack borderItem = spectatorBorderService.createBorderItem(request);
+        Map<Integer, ItemStack> itemsThatDidNotFit = player.getInventory().addItem(borderItem);
+        if (!itemsThatDidNotFit.isEmpty()) {
+            player.sendMessage("Your inventory is full, not every border block could be handed out");
+        }
+        player.sendMessage("You received " + request.amount() + " " + request.material().name()
+                + " border blocks, every block you place with them stops everybody who is not fighting");
+        openMainMenu(player);
+    }
+
+    private void askForDebugCellLimitLine(Player player) {
+        closeMenu(player);
+        chatInputService.await(player, "the diagnosis cell limit", List.of(
+                        "Type: " + ArenaDebugCellLimit.USAGE + " in chat",
+                        "A number between " + ArenaDebugCellLimit.MINIMUM_CELL_COUNT + " and "
+                                + ArenaShapeFloodFill.MAXIMUM_DEBUG_CELL_COUNT,
+                        "Stand inside the border wall, the calculation runs from where you stand",
+                        "config.yml is not changed by it"),
+                line -> handleDebugCellLimitLine(player, line));
+    }
+
+    private void handleDebugCellLimitLine(Player player, String line) {
+        if (!isStillAdmin(player)) {
+            return;
+        }
+        ArenaDebugCellLimit debugCellLimit = ArenaDebugCellLimit.parseLine(line);
+        if (!debugCellLimit.isAccepted()) {
+            player.sendMessage(debugCellLimit.getRejectionMessage().orElseThrow());
+            openMenu(player, AdminMenuHolder.arena());
+            return;
+        }
+        arenaSetupService.calculateShape(player, debugCellLimit.getCellCount());
+    }
+
+    private boolean isStillAdmin(Player player) {
+        if (player.hasPermission(TournamentCommand.ADMIN_PERMISSION)) {
+            return true;
+        }
+        player.sendMessage("You are not allowed to use the tournament menu");
+        return false;
     }
 
     private void runOperation(Player player, Supplier<TournamentOperationResult> operation) {

@@ -3,6 +3,7 @@ package de.simplepvparena.gui;
 public enum ConfirmationRequest {
 
     CLEAN_ARENA("Clean the arena?", AdminMenuType.ARENA),
+    RESET_ARENA("Reset the arena?", AdminMenuType.ARENA),
     REMOVE_TEAM("Remove the team?", AdminMenuType.TEAMS),
     CANCEL_TOURNAMENT("Cancel the tournament?", AdminMenuType.MATCH);
 

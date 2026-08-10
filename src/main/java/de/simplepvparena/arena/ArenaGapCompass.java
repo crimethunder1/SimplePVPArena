@@ -31,7 +31,7 @@ public final class ArenaGapCompass {
                 lore("Points to a possible gap in your border wall"),
                 lore("Target " + target.describe()),
                 lore("The flood fill got that far before it was stopped"),
-                lore("Close the wall there and run " + Arena.CALCULATE_COMMAND + " again")));
+                lore("Close the wall there and calculate the fight area again")));
         compassMeta.setLodestone(new Location(world, target.blockX() + BLOCK_CENTER_OFFSET, target.blockY(),
                 target.blockZ() + BLOCK_CENTER_OFFSET));
         compassMeta.setLodestoneTracked(false);

@@ -50,4 +50,17 @@ class ArenaDebugCellLimitTest {
                 ArenaDebugCellLimit.parse(String.valueOf(ArenaShapeFloodFill.MAXIMUM_DEBUG_CELL_COUNT + 1))
                         .getRejectionMessage().orElseThrow());
     }
+
+    @Test
+    void readsATypedLineAsTheSingleCellCount() {
+        assertEquals(500, ArenaDebugCellLimit.parseLine("  500 ").getCellCount());
+    }
+
+    @Test
+    void rejectsALineThatHoldsMoreThanTheCellCount() {
+        assertEquals("Expected 1 values separated by spaces (<cells>), but got 2: 500 cells",
+                ArenaDebugCellLimit.parseLine("500 cells").getRejectionMessage().orElseThrow());
+        assertEquals("Nothing was typed, expected <cells>",
+                ArenaDebugCellLimit.parseLine("  ").getRejectionMessage().orElseThrow());
+    }
 }

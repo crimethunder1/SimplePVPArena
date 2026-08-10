@@ -63,4 +63,34 @@ class BorderItemRequestTest {
         assertEquals("The amount has to be between 1 and 64",
                 BorderItemRequest.parse("glass", "65", EVERY_MATERIAL_IS_PLACEABLE).getRejectionMessage().orElseThrow());
     }
+
+    @Test
+    void readsATypedLineAsTheMaterialAndTheAmount() {
+        BorderItemRequestResult result = BorderItemRequest.parseLine("  glass   16 ", EVERY_MATERIAL_IS_PLACEABLE);
+
+        assertTrue(result.isAccepted());
+        assertEquals(Material.GLASS, result.getRequest().orElseThrow().material());
+        assertEquals(16, result.getRequest().orElseThrow().amount());
+    }
+
+    @Test
+    void rejectsALineThatDoesNotHoldBothValues() {
+        assertEquals("Expected 2 values separated by spaces (<material> <amount>), but got 1: glass",
+                BorderItemRequest.parseLine("glass", EVERY_MATERIAL_IS_PLACEABLE)
+                        .getRejectionMessage().orElseThrow());
+        assertEquals("Expected 2 values separated by spaces (<material> <amount>), but got 3: glass 16 please",
+                BorderItemRequest.parseLine("glass 16 please", EVERY_MATERIAL_IS_PLACEABLE)
+                        .getRejectionMessage().orElseThrow());
+        assertEquals("Nothing was typed, expected <material> <amount>",
+                BorderItemRequest.parseLine("   ", EVERY_MATERIAL_IS_PLACEABLE)
+                        .getRejectionMessage().orElseThrow());
+    }
+
+    @Test
+    void rejectsAnUnknownMaterialOfATypedLine() {
+        assertEquals("Unknown material cheese",
+                BorderItemRequest.parseLine("cheese 16", EVERY_MATERIAL_IS_PLACEABLE)
+                        .getRejectionMessage().orElseThrow());
+    }
+
 }

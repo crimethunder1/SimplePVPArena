@@ -18,8 +18,8 @@ import java.util.Random;
 public final class TournamentManager implements MatchCompletionHandler {
 
     static final String ARENA_NOT_CONFIGURED_MESSAGE = "The arena is not fully configured, calculate its fight "
-            + "area with " + Arena.CALCULATE_COMMAND + " and set the tribune spawn with "
-            + Arena.TRIBUNE_SPAWN_COMMAND;
+            + "area with " + Arena.CALCULATE_ACTION + " and set the tribune spawn with "
+            + Arena.TRIBUNE_SPAWN_ACTION;
 
     private final Plugin plugin;
     private final TeamRegistry teamRegistry;
@@ -62,7 +62,8 @@ public final class TournamentManager implements MatchCompletionHandler {
             return TournamentOperationResult.failure("At least " + Bracket.MINIMUM_TEAM_COUNT + " teams are required");
         }
         if (!allowUnevenTeamCount && teamNames.size() % 2 != 0) {
-            return TournamentOperationResult.failure("The team count is uneven, use /tournament forcestart to start anyway");
+            return TournamentOperationResult.failure("The team count is uneven, use \"Force start\" in the "
+                    + "match menu of /tournament to start anyway");
         }
         if (!arenaRegistry.isArenaFullyConfigured()) {
             return TournamentOperationResult.failure(ARENA_NOT_CONFIGURED_MESSAGE);
@@ -150,7 +151,8 @@ public final class TournamentManager implements MatchCompletionHandler {
         }
         if (state == TournamentState.PAUSED) {
             return TournamentOperationResult.failure(
-                    "The tournament is paused, continue it with /tournament pause before starting the final");
+                    "The tournament is paused, continue it with \"Continue the tournament\" in the match menu "
+                            + "of /tournament before starting the final");
         }
         Optional<String> stageRejection = finalMatchGate.findStartRejection();
         if (stageRejection.isPresent()) {

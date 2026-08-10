@@ -113,7 +113,7 @@ public final class ArenaSetupService {
                 + ", and a trail of flame particles points the same way while you walk. That is the "
                 + "column the fill reached first of the ones it was stopped on, not a hole anybody "
                 + "found - start looking around there. The trail ends when you get there, and the next "
-                + Arena.CALCULATE_COMMAND + " replaces both with its own target");
+                + "calculation replaces both with its own target");
     }
 
     private void reportDiagnosisLimit(Player admin, ArenaShape shape, int cellLimit) {
@@ -122,8 +122,8 @@ public final class ArenaSetupService {
         }
         admin.sendMessage("The wall is closed, the area is only larger than "
                 + ArenaShapeFloodFill.MAXIMUM_CELL_COUNT_CONFIGURATION_PATH + ". Raise it to at least "
-                + shape.getCellCount() + " in config.yml, otherwise the next " + Arena.CALCULATE_COMMAND
-                + " without a limit is rejected again");
+                + shape.getCellCount() + " in config.yml, otherwise the next calculation without a limit "
+                + "is rejected again");
     }
 
     private void previewRecognizedWall(Player player, World world, ArenaShape shape,
@@ -144,7 +144,7 @@ public final class ArenaSetupService {
             case TRIBUNE -> arena.setTribuneSpawn(position);
         }
         arenaConfigurationSaver.run();
-        admin.sendMessage("Set spawn " + spawnType.getArgumentName() + " of the arena to " + position.describe());
+        admin.sendMessage("Set the " + spawnType.getDisplayName() + " of the arena to " + position.describe());
         arena.findSpawnPlacementWarnings().forEach(admin::sendMessage);
         reportMissingConfiguration(admin, arena);
     }
@@ -157,8 +157,8 @@ public final class ArenaSetupService {
 
     public Optional<String> findCleaningRejection() {
         if (arenaRegistry.getArena().getShape().isEmpty()) {
-            return Optional.of("The fight area is not calculated, there is nothing to clean. Run "
-                    + Arena.CALCULATE_COMMAND + " inside the border wall first");
+            return Optional.of("The fight area is not calculated, there is nothing to clean. Use "
+                    + Arena.CALCULATE_ACTION + " while standing inside the border wall first");
         }
         if (matchService.hasActiveMatch()) {
             return Optional.of("A match is running in the arena, the arena can only be cleaned between matches");

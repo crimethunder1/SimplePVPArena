@@ -19,7 +19,7 @@ class ArenaTest {
 
         arena.setShape(shape());
         assertFalse(arena.isFullyConfigured());
-        assertEquals(List.of("the tribune spawn (" + Arena.TRIBUNE_SPAWN_COMMAND + ")"),
+        assertEquals(List.of("the tribune spawn (" + Arena.TRIBUNE_SPAWN_ACTION + ")"),
                 arena.getMissingConfiguration());
 
         arena.setTribuneSpawn(position(50.0D, 50.0D));

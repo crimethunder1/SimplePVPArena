@@ -1,18 +1,31 @@
 package de.simplepvparena.border;
 
+import de.simplepvparena.input.ChatInputValues;
 import org.bukkit.Material;
 
 import java.util.Locale;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.function.Predicate;
 
 public record BorderItemRequest(Material material, int amount) {
 
     public static final int MINIMUM_AMOUNT = 1;
     public static final int MAXIMUM_AMOUNT = 64;
+    public static final int REQUIRED_VALUE_COUNT = 2;
+    public static final String USAGE = "<material> <amount>";
 
     public BorderItemRequest {
         Objects.requireNonNull(material, "material");
+    }
+
+    public static BorderItemRequestResult parseLine(String line, Predicate<Material> placeableBlockCheck) {
+        ChatInputValues values = ChatInputValues.of(line);
+        Optional<String> countRejection = values.findCountRejection(REQUIRED_VALUE_COUNT, USAGE);
+        if (countRejection.isPresent()) {
+            return BorderItemRequestResult.rejected(countRejection.get());
+        }
+        return parse(values.get(0), values.get(1), placeableBlockCheck);
     }
 
     public static BorderItemRequestResult parse(String materialArgument, String amountArgument,

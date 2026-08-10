@@ -49,9 +49,9 @@ public final class ArenaShapeCalculation {
                         + diagnostics.describeFront() + ". Walk along your wall" + searchDirection
                         + " and look for a missing green connection line between two border blocks, and if "
                         + "the wall is closed everywhere raise "
-                        + ArenaShapeFloodFill.MAXIMUM_CELL_COUNT_CONFIGURATION_PATH + " in config.yml and run "
-                        + Arena.CALCULATE_COMMAND + " again. " + Arena.CALCULATE_COMMAND
-                        + " <cells> runs a single calculation with a higher limit, up to "
+                        + ArenaShapeFloodFill.MAXIMUM_CELL_COUNT_CONFIGURATION_PATH + " in config.yml and use "
+                        + Arena.CALCULATE_ACTION + " again. " + Arena.DIAGNOSE_ACTION
+                        + " runs a single calculation with a higher limit, up to "
                         + ArenaShapeFloodFill.MAXIMUM_DEBUG_CELL_COUNT
                         + " cells, without changing config.yml, so you can see how far the fill really gets",
                 diagnostics);

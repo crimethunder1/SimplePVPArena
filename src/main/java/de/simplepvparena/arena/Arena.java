@@ -8,8 +8,10 @@ import java.util.Optional;
 
 public final class Arena {
 
-    public static final String CALCULATE_COMMAND = "/tournament arena calculate";
-    public static final String TRIBUNE_SPAWN_COMMAND = "/tournament arena setspawn tribune";
+    public static final String CALCULATE_ACTION = "\"Calculate the fight area\" in the arena menu of /tournament";
+    public static final String DIAGNOSE_ACTION = "\"Diagnose with a higher cell limit\" in the arena menu "
+            + "of /tournament";
+    public static final String TRIBUNE_SPAWN_ACTION = "\"Set the tribune spawn\" in the arena menu of /tournament";
 
     private ArenaShape shape;
     private PositionSnapshot firstTeamSpawn;
@@ -39,10 +41,10 @@ public final class Arena {
     public List<String> getMissingConfiguration() {
         List<String> missingParts = new ArrayList<>();
         if (shape == null) {
-            missingParts.add("the calculated fight area (" + CALCULATE_COMMAND + ")");
+            missingParts.add("the calculated fight area (" + CALCULATE_ACTION + ")");
         }
         if (tribuneSpawn == null) {
-            missingParts.add("the tribune spawn (" + TRIBUNE_SPAWN_COMMAND + ")");
+            missingParts.add("the tribune spawn (" + TRIBUNE_SPAWN_ACTION + ")");
         }
         return missingParts;
     }

@@ -18,9 +18,11 @@ import de.simplepvparena.border.BorderWallPreview;
 import de.simplepvparena.border.SpectatorBorderService;
 import de.simplepvparena.command.TournamentCommand;
 import de.simplepvparena.gui.AdminMenuService;
+import de.simplepvparena.input.ChatInputService;
 import de.simplepvparena.kit.KitConfigurationLoader;
 import de.simplepvparena.kit.KitService;
 import de.simplepvparena.listener.AdminMenuListener;
+import de.simplepvparena.listener.ChatInputListener;
 import de.simplepvparena.listener.FriendlyFireListener;
 import de.simplepvparena.listener.GlobalPvpLockListener;
 import de.simplepvparena.listener.PlayerConnectionListener;
@@ -31,6 +33,7 @@ import de.simplepvparena.listener.PlayerRespawnListener;
 import de.simplepvparena.listener.SpectatorBorderListener;
 import de.simplepvparena.match.MatchService;
 import de.simplepvparena.match.RoundTimeoutSettings;
+import de.simplepvparena.team.TeamMemberLookup;
 import de.simplepvparena.team.TeamRegistry;
 import de.simplepvparena.team.TeamStorage;
 import de.simplepvparena.tournament.OnlineOperatorNotifier;
@@ -76,6 +79,7 @@ public final class SimplePVPArenaPlugin extends JavaPlugin {
     private ArenaCleaningService arenaCleaningService;
     private ArenaGapGuide arenaGapGuide;
     private ArenaSetupService arenaSetupService;
+    private ChatInputService chatInputService;
     private AdminMenuService adminMenuService;
     private MatchService matchService;
     private TournamentManager tournamentManager;
@@ -136,16 +140,22 @@ public final class SimplePVPArenaPlugin extends JavaPlugin {
         arenaSetupService = new ArenaSetupService(arenaRegistry, matchService, spectatorBorderService,
                 borderWallPreview, arenaGapGuide, arenaCleaningService, arenaBorderConfirmation,
                 readMaximumArenaCellCount(), this::saveArenaConfiguration);
-        adminMenuService = new AdminMenuService(this, tournamentManager, teamRegistry, matchService,
-                arenaSetupService, this::saveTeamConfiguration);
+        chatInputService = new ChatInputService(this);
+        adminMenuService = new AdminMenuService(this, tournamentManager, teamRegistry,
+                new TeamMemberLookup(getServer()), matchService, arenaSetupService, spectatorBorderService,
+                chatInputService, this::saveTeamConfiguration);
 
         registerCommand();
         registerListeners();
         borderParticleService.start();
+        chatInputService.start();
     }
 
     @Override
     public void onDisable() {
+        if (chatInputService != null) {
+            chatInputService.stop();
+        }
         if (borderParticleService != null) {
             borderParticleService.stop();
         }
@@ -191,7 +201,7 @@ public final class SimplePVPArenaPlugin extends JavaPlugin {
         getLogger().warning("The configuration still holds the entries " + ArenaRegistry.LEGACY_ARENAS_SECTION
                 + " and " + ArenaRegistry.LEGACY_FINAL_ARENA_KEY + " of the former multi arena setup. They are "
                 + "ignored and dropped with the next arena change, configure the single arena in the section "
-                + ArenaRegistry.ARENA_SECTION + " again with " + Arena.CALCULATE_COMMAND);
+                + ArenaRegistry.ARENA_SECTION + " again with " + Arena.CALCULATE_ACTION);
     }
 
     private void warnAboutLegacyRegionConfiguration() {
@@ -201,7 +211,7 @@ public final class SimplePVPArenaPlugin extends JavaPlugin {
         getLogger().warning("The configuration still holds the rectangle regions of the former arena setup in "
                 + ArenaRegistry.ARENA_SECTION + "." + ArenaRegistry.LEGACY_REGIONS_SECTION + ". They are ignored "
                 + "and dropped with the next arena change, calculate the fight area again with "
-                + Arena.CALCULATE_COMMAND);
+                + Arena.CALCULATE_ACTION);
     }
 
     private void warnAboutUnreadableArenaShape() {
@@ -249,9 +259,8 @@ public final class SimplePVPArenaPlugin extends JavaPlugin {
             getLogger().severe("Command " + COMMAND_NAME + " is not declared in plugin.yml");
             return;
         }
-        TournamentCommand tournamentCommand = new TournamentCommand(getServer(), tournamentManager, teamRegistry,
-                matchService, spectatorService, spectatorBorderService, arenaSetupService, adminMenuService,
-                this::saveTeamConfiguration);
+        TournamentCommand tournamentCommand = new TournamentCommand(matchService, spectatorService,
+                adminMenuService);
         pluginCommand.setExecutor(tournamentCommand);
         pluginCommand.setTabCompleter(tournamentCommand);
     }
@@ -268,6 +277,7 @@ public final class SimplePVPArenaPlugin extends JavaPlugin {
                 new SpectatorBorderListener(matchService, spectatorBorderService), this);
         getServer().getPluginManager().registerEvents(new PlayerInteractListener(matchService, spectatorService), this);
         getServer().getPluginManager().registerEvents(new AdminMenuListener(adminMenuService), this);
+        getServer().getPluginManager().registerEvents(new ChatInputListener(chatInputService), this);
         getServer().getPluginManager().registerEvents(new GlobalPvpLockListener(matchService), this);
         getServer().getPluginManager().registerEvents(new FriendlyFireListener(matchService), this);
     }
