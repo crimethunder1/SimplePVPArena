@@ -1,8 +1,7 @@
 package de.simplepvparena.listener;
 
-import de.simplepvparena.arena.Arena;
+import de.simplepvparena.arena.ArenaRegionType;
 import de.simplepvparena.arena.ArenaRegistry;
-import de.simplepvparena.arena.SpectatorAssignment;
 import de.simplepvparena.arena.SpectatorMode;
 import de.simplepvparena.arena.SpectatorService;
 import de.simplepvparena.match.Match;
@@ -56,14 +55,13 @@ public final class PlayerMoveListener implements Listener {
         if (matchOfPlayer.isPresent() && matchService.isActiveFighter(player.getUniqueId())) {
             return matchOfPlayer.get().getArena().containsInFightRegion(destination);
         }
-        Optional<SpectatorAssignment> assignment = spectatorService.findAssignment(player.getUniqueId());
-        if (assignment.isPresent() && assignment.get().spectatorMode() == SpectatorMode.SPECTATOR_BOX) {
-            return spectatorService.findAssignedArena(player.getUniqueId())
-                    .map(arena -> arena.containsInSpectatorBox(destination))
+        Optional<SpectatorMode> spectatorMode = spectatorService.findSpectatorMode(player.getUniqueId());
+        if (spectatorMode.isPresent() && spectatorMode.get() == SpectatorMode.SPECTATOR_BOX) {
+            return arenaRegistry.getArena().getRegion(ArenaRegionType.SPECTATOR_BOX)
+                    .map(spectatorBox -> spectatorBox.contains(destination))
                     .orElse(true);
         }
-        Optional<Arena> arenaAtDestination = arenaRegistry.findArenaByFightRegion(destination);
-        return arenaAtDestination.isEmpty();
+        return !arenaRegistry.containsInFightRegion(destination);
     }
 
     private boolean hasChangedBlock(Location from, Location to) {

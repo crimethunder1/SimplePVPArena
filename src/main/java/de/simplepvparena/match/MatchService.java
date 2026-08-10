@@ -1,6 +1,5 @@
 package de.simplepvparena.match;
 
-import de.simplepvparena.arena.Arena;
 import de.simplepvparena.arena.PositionSnapshot;
 import de.simplepvparena.arena.SpectatorService;
 import de.simplepvparena.kit.KitService;
@@ -14,11 +13,8 @@ import org.bukkit.scheduler.BukkitTask;
 
 import java.time.Duration;
 import java.util.ArrayList;
-import java.util.Collection;
-import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Random;
@@ -36,12 +32,12 @@ public final class MatchService {
     private final Plugin plugin;
     private final KitService kitService;
     private final SpectatorService spectatorService;
-    private final Map<String, Match> activeMatchesById = new LinkedHashMap<>();
-    private final Map<String, ScheduledRoundTimer> roundTimersByMatchId = new LinkedHashMap<>();
-    private final Set<String> matchIdsInSuddenDeathTick = new LinkedHashSet<>();
     private final SuddenDeathTick suddenDeathTick = new SuddenDeathTick(new Random());
 
     private MatchCompletionHandler matchCompletionHandler = (match, winnerTeamName) -> { };
+    private Match activeMatch;
+    private ScheduledRoundTimer activeRoundTimer;
+    private boolean insideSuddenDeathTick;
     private long roundResetDelayTicks = DEFAULT_ROUND_RESET_DELAY_TICKS;
     private RoundTimeoutSettings roundTimeoutSettings = RoundTimeoutSettings.defaults();
     private boolean roundTimersPaused;
@@ -69,35 +65,29 @@ public final class MatchService {
     }
 
     public void startMatch(Match match) {
-        activeMatchesById.put(match.getMatchId(), match);
-        announceToMatch(match, "Match " + match.getMatchId() + " starts in arena " + match.getArena().getArenaName()
-                + ": " + match.getFirstTeam().getTeamName() + " against " + match.getSecondTeam().getTeamName());
+        if (activeMatch != null) {
+            throw new IllegalStateException("match " + activeMatch.getMatchId() + " is still running in the arena");
+        }
+        activeMatch = match;
+        announceToMatch(match, "Match " + match.getMatchId() + " starts: " + match.getFirstTeam().getTeamName()
+                + " against " + match.getSecondTeam().getTeamName());
         beginRound(match);
     }
 
-    public Collection<Match> getActiveMatches() {
-        return List.copyOf(activeMatchesById.values());
+    public boolean hasActiveMatch() {
+        return activeMatch != null;
+    }
+
+    public Optional<Match> getActiveMatch() {
+        return Optional.ofNullable(activeMatch);
     }
 
     public Optional<Match> findMatchById(String matchId) {
-        if (matchId == null) {
-            return Optional.empty();
-        }
-        return activeMatchesById.values().stream()
-                .filter(match -> match.getMatchId().equalsIgnoreCase(matchId))
-                .findFirst();
+        return getActiveMatch().filter(match -> match.getMatchId().equalsIgnoreCase(matchId));
     }
 
     public Optional<Match> findMatchOfPlayer(UUID playerUniqueId) {
-        return activeMatchesById.values().stream()
-                .filter(match -> match.containsPlayer(playerUniqueId))
-                .findFirst();
-    }
-
-    public Optional<Match> findMatchInArena(String arenaName) {
-        return activeMatchesById.values().stream()
-                .filter(match -> match.getArena().getArenaName().equalsIgnoreCase(arenaName))
-                .findFirst();
+        return getActiveMatch().filter(match -> match.containsPlayer(playerUniqueId));
     }
 
     public boolean isActiveFighter(UUID playerUniqueId) {
@@ -108,11 +98,23 @@ public final class MatchService {
     }
 
     public boolean isFriendlyFire(UUID attackerUniqueId, UUID victimUniqueId) {
-        return findMatchOfPlayer(victimUniqueId)
-                .filter(match -> match.getState() == MatchState.RUNNING)
-                .flatMap(Match::getRoundParticipants)
+        return findRunningRoundParticipants()
                 .map(participants -> participants.isSameActiveTeam(attackerUniqueId, victimUniqueId))
                 .orElse(false);
+    }
+
+    public boolean isPvpAllowed(UUID attackerUniqueId, UUID victimUniqueId) {
+        return isPvpAllowedInRound(findRunningRoundParticipants().orElse(null), attackerUniqueId, victimUniqueId);
+    }
+
+    static boolean isPvpAllowedInRound(RoundParticipants roundParticipants, UUID attackerUniqueId,
+                                       UUID victimUniqueId) {
+        if (attackerUniqueId.equals(victimUniqueId)) {
+            return true;
+        }
+        return roundParticipants != null
+                && roundParticipants.isActive(attackerUniqueId)
+                && roundParticipants.isActive(victimUniqueId);
     }
 
     public void handlePlayerEliminated(UUID playerUniqueId) {
@@ -128,7 +130,7 @@ public final class MatchService {
         if (roundParticipants.isEmpty() || !roundParticipants.get().eliminate(playerUniqueId)) {
             return;
         }
-        if (matchIdsInSuddenDeathTick.contains(match.getMatchId())) {
+        if (insideSuddenDeathTick) {
             return;
         }
         roundParticipants.get().determineOutcome().ifPresent(outcome -> concludeRound(match, outcome));
@@ -147,32 +149,43 @@ public final class MatchService {
         return true;
     }
 
-    public void cancelAllMatches() {
-        for (Match match : List.copyOf(activeMatchesById.values())) {
-            stopRoundTimer(match);
-            match.setState(MatchState.CANCELLED);
-            releaseParticipants(match);
-            match.getArena().release();
-            activeMatchesById.remove(match.getMatchId());
+    public void cancelActiveMatch() {
+        if (activeMatch == null) {
+            return;
+        }
+        Match cancelledMatch = activeMatch;
+        stopRoundTimer();
+        cancelledMatch.setState(MatchState.CANCELLED);
+        activeMatch = null;
+        releaseParticipants(cancelledMatch);
+    }
+
+    public void pauseRoundTimer() {
+        roundTimersPaused = true;
+        if (activeRoundTimer != null) {
+            activeRoundTimer.timer().pause();
         }
     }
 
-    public void pauseRoundTimers() {
-        roundTimersPaused = true;
-        roundTimersByMatchId.values().forEach(scheduledTimer -> scheduledTimer.timer().pause());
-    }
-
-    public void resumeRoundTimers() {
+    public void resumeRoundTimer() {
         roundTimersPaused = false;
-        roundTimersByMatchId.values().forEach(scheduledTimer -> scheduledTimer.timer().resume());
+        if (activeRoundTimer != null) {
+            activeRoundTimer.timer().resume();
+        }
     }
 
-    public boolean areRoundTimersPaused() {
+    public boolean isRoundTimerPaused() {
         return roundTimersPaused;
     }
 
-    public Optional<RoundTimer> findRoundTimer(String matchId) {
-        return Optional.ofNullable(roundTimersByMatchId.get(matchId)).map(ScheduledRoundTimer::timer);
+    public Optional<RoundTimer> findRoundTimer() {
+        return Optional.ofNullable(activeRoundTimer).map(ScheduledRoundTimer::timer);
+    }
+
+    private Optional<RoundParticipants> findRunningRoundParticipants() {
+        return getActiveMatch()
+                .filter(match -> match.getState() == MatchState.RUNNING)
+                .flatMap(Match::getRoundParticipants);
     }
 
     private void beginRound(Match match) {
@@ -180,8 +193,8 @@ public final class MatchService {
         Set<UUID> secondTeamPlayers = collectOnlineMembers(match.getSecondTeam());
         match.beginRound(firstTeamPlayers, secondTeamPlayers);
 
-        preparePlayers(match, match.getFirstTeam(), match.getArena().getFirstTeamSpawn());
-        preparePlayers(match, match.getSecondTeam(), match.getArena().getSecondTeamSpawn());
+        preparePlayers(match.getFirstTeam(), match.getArena().getFirstTeamSpawn());
+        preparePlayers(match.getSecondTeam(), match.getArena().getSecondTeamSpawn());
         startRoundTimer(match);
         announceToMatch(match, "Round " + match.getRoundNumber() + " of match " + match.getMatchId()
                 + " has started (" + match.getScore().describe() + "), time limit "
@@ -194,7 +207,7 @@ public final class MatchService {
     }
 
     private void concludeRound(Match match, RoundOutcome outcome) {
-        stopRoundTimer(match);
+        stopRoundTimer();
         if (outcome.isDraw()) {
             match.setState(MatchState.BETWEEN_ROUNDS);
             for (String drawMessage : buildDrawMessages(match.getRoundNumber(), match.getMatchId(), outcome)) {
@@ -239,43 +252,38 @@ public final class MatchService {
     }
 
     private void finishMatch(Match match, String winnerTeamName) {
-        stopRoundTimer(match);
+        stopRoundTimer();
         match.setState(MatchState.FINISHED);
-        activeMatchesById.remove(match.getMatchId());
+        activeMatch = null;
         announceToMatch(match, "Match " + match.getMatchId() + " is over, " + winnerTeamName + " wins ("
                 + match.getScore().describe() + ")");
         releaseParticipants(match);
-        match.getArena().release();
         matchCompletionHandler.onMatchCompleted(match, winnerTeamName);
     }
 
     private void startRoundTimer(Match match) {
-        stopRoundTimer(match);
+        stopRoundTimer();
         RoundTimer roundTimer = new RoundTimer(roundTimeoutSettings);
         if (roundTimersPaused) {
             roundTimer.pause();
         }
         BukkitTask timerTask = plugin.getServer().getScheduler().runTaskTimer(plugin,
                 () -> handleRoundTimerTick(match), ROUND_TIMER_PERIOD_TICKS, ROUND_TIMER_PERIOD_TICKS);
-        roundTimersByMatchId.put(match.getMatchId(), new ScheduledRoundTimer(roundTimer, timerTask));
+        activeRoundTimer = new ScheduledRoundTimer(roundTimer, timerTask);
     }
 
-    private void stopRoundTimer(Match match) {
-        ScheduledRoundTimer scheduledTimer = roundTimersByMatchId.remove(match.getMatchId());
-        if (scheduledTimer != null) {
-            scheduledTimer.task().cancel();
+    private void stopRoundTimer() {
+        if (activeRoundTimer != null) {
+            activeRoundTimer.task().cancel();
+            activeRoundTimer = null;
         }
     }
 
     private void handleRoundTimerTick(Match match) {
-        ScheduledRoundTimer scheduledTimer = roundTimersByMatchId.get(match.getMatchId());
-        if (scheduledTimer == null) {
+        if (activeRoundTimer == null || match.getState() != MatchState.RUNNING) {
             return;
         }
-        if (match.getState() != MatchState.RUNNING) {
-            return;
-        }
-        RoundTimer roundTimer = scheduledTimer.timer();
+        RoundTimer roundTimer = activeRoundTimer.timer();
         switch (roundTimer.tick()) {
             case WARNING -> announceActionBarToMatch(match,
                     "Sudden death in " + roundTimer.getRemainingSeconds() + " seconds");
@@ -297,12 +305,12 @@ public final class MatchService {
             return;
         }
         Optional<RoundOutcome> outcome;
-        matchIdsInSuddenDeathTick.add(match.getMatchId());
+        insideSuddenDeathTick = true;
         try {
             outcome = suddenDeathTick.apply(roundParticipants.get(), damageAmount,
                     activePlayerUniqueId -> damagePlayer(activePlayerUniqueId, damageAmount));
         } finally {
-            matchIdsInSuddenDeathTick.remove(match.getMatchId());
+            insideSuddenDeathTick = false;
         }
         if (match.getState() == MatchState.RUNNING) {
             outcome.ifPresent(roundOutcome -> concludeRound(match, roundOutcome));
@@ -316,7 +324,7 @@ public final class MatchService {
         }
     }
 
-    private void preparePlayers(Match match, Team team, Optional<PositionSnapshot> spawnPosition) {
+    private void preparePlayers(Team team, Optional<PositionSnapshot> spawnPosition) {
         Optional<Location> spawnLocation = spawnPosition.flatMap(PositionSnapshot::toLocation);
         for (Player player : collectOnlinePlayers(team)) {
             spectatorService.clearAssignment(player.getUniqueId());
@@ -324,17 +332,15 @@ public final class MatchService {
             kitService.applyKit(player);
         }
         if (spawnLocation.isEmpty()) {
-            plugin.getLogger().warning("Arena " + match.getArena().getArenaName()
-                    + " has no usable spawn position for team " + team.getTeamName());
+            plugin.getLogger().warning("The arena has no usable spawn position for team " + team.getTeamName());
         }
     }
 
     private void releaseParticipants(Match match) {
-        Arena arena = match.getArena();
         for (Team team : match.getTeams()) {
             for (Player player : collectOnlinePlayers(team)) {
                 kitService.clearKit(player);
-                spectatorService.sendToTribune(player, arena);
+                spectatorService.sendToTribune(player);
             }
         }
     }
@@ -383,7 +389,7 @@ public final class MatchService {
     private void forEachMatchAudience(Match match, Consumer<Player> action) {
         Set<UUID> receivers = new LinkedHashSet<>();
         match.getTeams().forEach(team -> receivers.addAll(team.getMemberUniqueIds()));
-        receivers.addAll(spectatorService.getSpectatorsOfArena(match.getArena().getArenaName()));
+        receivers.addAll(spectatorService.getSpectators());
         for (UUID receiverUniqueId : receivers) {
             Player player = plugin.getServer().getPlayer(receiverUniqueId);
             if (player != null && player.isOnline()) {

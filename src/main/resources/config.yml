@@ -8,27 +8,32 @@ match:
 kit:
   armor:
     head:
-      material: IRON_HELMET
+      material: DIAMOND_HELMET
       enchantments:
-        protection: 1
+        protection: 4
     chest:
-      material: IRON_CHESTPLATE
+      material: DIAMOND_CHESTPLATE
       enchantments:
-        protection: 1
+        protection: 4
     legs:
-      material: IRON_LEGGINGS
-    feet:
-      material: IRON_BOOTS
-  items:
-    - material: IRON_SWORD
+      material: DIAMOND_LEGGINGS
       enchantments:
-        sharpness: 1
+        protection: 4
+    feet:
+      material: DIAMOND_BOOTS
+      enchantments:
+        protection: 4
+  items:
+    - material: DIAMOND_SWORD
+      enchantments:
+        sharpness: 5
     - material: BOW
     - material: GOLDEN_APPLE
-      amount: 4
-    - material: COOKED_BEEF
-      amount: 16
+      amount: 6
     - material: ARROW
-      amount: 32
+      amount: 64
 
-arenas: {}
+arena:
+  clean-blocks-per-tick: 4096
+  regions: {}
+  spawns: {}

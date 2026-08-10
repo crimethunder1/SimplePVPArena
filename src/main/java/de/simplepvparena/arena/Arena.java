@@ -2,33 +2,26 @@ package de.simplepvparena.arena;
 
 import org.bukkit.Location;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Optional;
 
 public final class Arena {
 
-    private final String arenaName;
     private final Map<ArenaRegionType, EnumMap<RegionCorner, PositionSnapshot>> cornersByRegionType =
             new EnumMap<>(ArenaRegionType.class);
 
     private PositionSnapshot firstTeamSpawn;
     private PositionSnapshot secondTeamSpawn;
     private PositionSnapshot tribuneSpawn;
-    private String occupyingMatchId;
 
-    public Arena(String arenaName) {
-        this.arenaName = Objects.requireNonNull(arenaName, "arenaName");
+    public Arena() {
         for (ArenaRegionType regionType : ArenaRegionType.values()) {
             cornersByRegionType.put(regionType, new EnumMap<>(RegionCorner.class));
         }
-    }
-
-    public String getArenaName() {
-        return arenaName;
     }
 
     public void setCorner(ArenaRegionType regionType, RegionCorner corner, PositionSnapshot position) {
@@ -51,6 +44,14 @@ public final class Arena {
         return Optional.of(new RegionBoundary(firstCorner.worldName(),
                 (int) Math.floor(firstCorner.x()), (int) Math.floor(firstCorner.y()), (int) Math.floor(firstCorner.z()),
                 (int) Math.floor(secondCorner.x()), (int) Math.floor(secondCorner.y()), (int) Math.floor(secondCorner.z())));
+    }
+
+    public List<RegionBoundary> getConfiguredRegions() {
+        List<RegionBoundary> regions = new ArrayList<>();
+        for (ArenaRegionType regionType : ArenaRegionType.values()) {
+            getRegion(regionType).ifPresent(regions::add);
+        }
+        return regions;
     }
 
     public boolean isFullyConfigured() {
@@ -115,22 +116,10 @@ public final class Arena {
         return getRegion(ArenaRegionType.SPECTATOR_BOX).map(RegionBoundary::getCenterPosition);
     }
 
-    public boolean isOccupied() {
-        return occupyingMatchId != null;
-    }
-
-    public Optional<String> getOccupyingMatchId() {
-        return Optional.ofNullable(occupyingMatchId);
-    }
-
-    public void occupy(String matchId) {
-        if (occupyingMatchId != null) {
-            throw new IllegalStateException("arena " + arenaName + " is already occupied by match " + occupyingMatchId);
-        }
-        occupyingMatchId = Objects.requireNonNull(matchId, "matchId");
-    }
-
-    public void release() {
-        occupyingMatchId = null;
+    public void clearConfiguration() {
+        cornersByRegionType.values().forEach(EnumMap::clear);
+        firstTeamSpawn = null;
+        secondTeamSpawn = null;
+        tribuneSpawn = null;
     }
 }

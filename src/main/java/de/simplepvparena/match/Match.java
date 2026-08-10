@@ -109,6 +109,6 @@ public final class Match {
     }
 
     public String describe() {
-        return matchId + " in arena " + arena.getArenaName() + " (" + score.describe() + ")";
+        return matchId + " (" + score.describe() + ")";
     }
 }

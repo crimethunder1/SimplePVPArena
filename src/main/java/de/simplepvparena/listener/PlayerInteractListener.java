@@ -37,7 +37,7 @@ public final class PlayerInteractListener implements Listener {
             return;
         }
         if (!spectatorService.toggleSpectatorMode(player)) {
-            player.sendMessage("No arena is assigned to you, use /tournament spectate <arenaName>");
+            player.sendMessage("You are not watching the arena, use /tournament spectate");
         }
     }
 }

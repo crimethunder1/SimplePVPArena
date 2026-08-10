@@ -21,16 +21,19 @@ public final class TournamentManager implements MatchCompletionHandler {
     private final TeamRegistry teamRegistry;
     private final ArenaRegistry arenaRegistry;
     private final MatchService matchService;
+    private final FinalMatchGate finalMatchGate;
     private final Random seedingRandom = new Random();
 
     private TournamentState state = TournamentState.IDLE;
     private Bracket bracket;
 
-    public TournamentManager(Plugin plugin, TeamRegistry teamRegistry, ArenaRegistry arenaRegistry, MatchService matchService) {
+    public TournamentManager(Plugin plugin, TeamRegistry teamRegistry, ArenaRegistry arenaRegistry,
+                             MatchService matchService, OperatorNotifier operatorNotifier) {
         this.plugin = plugin;
         this.teamRegistry = teamRegistry;
         this.arenaRegistry = arenaRegistry;
         this.matchService = matchService;
+        this.finalMatchGate = new FinalMatchGate(operatorNotifier);
         this.matchService.setMatchCompletionHandler(this);
     }
 
@@ -40,6 +43,10 @@ public final class TournamentManager implements MatchCompletionHandler {
 
     public Optional<Bracket> getBracket() {
         return Optional.ofNullable(bracket);
+    }
+
+    public FinalMatchStage getFinalMatchStage() {
+        return finalMatchGate.getStage();
     }
 
     public TournamentOperationResult startTournament(boolean allowUnevenTeamCount) {
@@ -53,14 +60,16 @@ public final class TournamentManager implements MatchCompletionHandler {
         if (!allowUnevenTeamCount && teamNames.size() % 2 != 0) {
             return TournamentOperationResult.failure("The team count is uneven, use /tournament forcestart to start anyway");
         }
-        if (arenaRegistry.getArenas().stream().noneMatch(Arena::isFullyConfigured)) {
-            return TournamentOperationResult.failure("At least one fully configured arena is required");
+        if (!arenaRegistry.isArenaFullyConfigured()) {
+            return TournamentOperationResult.failure("The arena is not fully configured, "
+                    + "set its regions with /tournament arena setpos");
         }
 
         java.util.Collections.shuffle(teamNames, seedingRandom);
         bracket = Bracket.createSingleElimination(teamNames);
+        finalMatchGate.reset();
         state = TournamentState.RUNNING;
-        matchService.resumeRoundTimers();
+        matchService.resumeRoundTimer();
 
         broadcast("The tournament has started with " + teamNames.size() + " teams in "
                 + bracket.getRoundCount() + " rounds");
@@ -68,23 +77,24 @@ public final class TournamentManager implements MatchCompletionHandler {
             broadcast("Teams advancing without a first round opponent: "
                     + String.join(", ", bracket.getTeamNamesWithFirstRoundBye()));
         }
-        dispatchPendingMatches();
+        startNextMatch();
+        synchronizeFinalMatchStage();
         return TournamentOperationResult.success("Tournament started");
     }
 
     public TournamentOperationResult togglePause() {
         if (state == TournamentState.RUNNING) {
             state = TournamentState.PAUSED;
-            matchService.pauseRoundTimers();
-            broadcast("The tournament is paused, no further matches are started until it is resumed, "
-                    + "the round timers keep their remaining time");
+            matchService.pauseRoundTimer();
+            broadcast("The tournament is paused, no further match is started until it is resumed, "
+                    + "the round timer keeps its remaining time");
             return TournamentOperationResult.success("Tournament paused");
         }
         if (state == TournamentState.PAUSED) {
             state = TournamentState.RUNNING;
-            matchService.resumeRoundTimers();
+            matchService.resumeRoundTimer();
             broadcast("The tournament continues");
-            dispatchPendingMatches();
+            startNextMatch();
             return TournamentOperationResult.success("Tournament resumed");
         }
         return TournamentOperationResult.failure("No tournament is in progress");
@@ -94,9 +104,10 @@ public final class TournamentManager implements MatchCompletionHandler {
         if (state != TournamentState.RUNNING && state != TournamentState.PAUSED) {
             return TournamentOperationResult.failure("No tournament is in progress");
         }
-        matchService.cancelAllMatches();
-        matchService.resumeRoundTimers();
+        matchService.cancelActiveMatch();
+        matchService.resumeRoundTimer();
         bracket = null;
+        finalMatchGate.reset();
         state = TournamentState.CANCELLED;
         broadcast("The tournament has been cancelled");
         return TournamentOperationResult.success("Tournament cancelled");
@@ -130,9 +141,43 @@ public final class TournamentManager implements MatchCompletionHandler {
         return TournamentOperationResult.success("Match " + matchId + " was decided for " + resolvedTeamName.get());
     }
 
+    public TournamentOperationResult startFinalMatch() {
+        if (bracket == null || (state != TournamentState.RUNNING && state != TournamentState.PAUSED)) {
+            return TournamentOperationResult.failure("No tournament is in progress");
+        }
+        if (state == TournamentState.PAUSED) {
+            return TournamentOperationResult.failure(
+                    "The tournament is paused, continue it with /tournament pause before starting the final");
+        }
+        Optional<String> stageRejection = finalMatchGate.findStartRejection();
+        if (stageRejection.isPresent()) {
+            return TournamentOperationResult.failure(stageRejection.get());
+        }
+        Optional<String> arenaRejection = findArenaRejection(arenaRegistry.isArenaFullyConfigured(),
+                matchService.getActiveMatch().map(Match::getMatchId));
+        if (arenaRejection.isPresent()) {
+            return TournamentOperationResult.failure(arenaRejection.get());
+        }
+        BracketMatch finalMatch = bracket.getFinalMatch();
+        if (!resolveTeamsOrDeclareWalkover(finalMatch)) {
+            return TournamentOperationResult.failure("The final cannot be started, at least one finalist is "
+                    + "no longer registered");
+        }
+        finalMatchGate.markRunning();
+        startMatchInArena(finalMatch);
+        return TournamentOperationResult.success("The final has started");
+    }
+
     @Override
     public void onMatchCompleted(Match match, String winnerTeamName) {
         recordBracketWinner(match.getMatchId(), winnerTeamName);
+    }
+
+    static Optional<String> findArenaRejection(boolean arenaFullyConfigured, Optional<String> runningMatchId) {
+        if (!arenaFullyConfigured) {
+            return Optional.of("The arena is not fully configured, set its regions with /tournament arena setpos");
+        }
+        return runningMatchId.map(matchId -> "The arena is occupied by match " + matchId);
     }
 
     public String describeStatus() {
@@ -141,7 +186,9 @@ public final class TournamentManager implements MatchCompletionHandler {
             return statusText.toString();
         }
         statusText.append(" | rounds: ").append(bracket.getRoundCount());
-        statusText.append(" | running matches: ").append(matchService.getActiveMatches().size());
+        statusText.append(" | running match: ")
+                .append(matchService.getActiveMatch().map(Match::getMatchId).orElse("none"));
+        statusText.append(" | final: ").append(finalMatchGate.getStage());
         bracket.getChampionTeamName().ifPresent(champion -> statusText.append(" | champion: ").append(champion));
         return statusText.toString();
     }
@@ -169,30 +216,36 @@ public final class TournamentManager implements MatchCompletionHandler {
             return;
         }
         bracket.recordWinner(matchId, winnerTeamName);
+        synchronizeFinalMatchStage();
         if (bracket.isComplete()) {
             state = TournamentState.FINISHED;
             broadcast("The tournament is over, the winner is " + bracket.getChampionTeamName().orElse(winnerTeamName));
             return;
         }
-        dispatchPendingMatches();
+        startNextMatch();
     }
 
-    private void dispatchPendingMatches() {
-        if (state != TournamentState.RUNNING || bracket == null) {
+    private void synchronizeFinalMatchStage() {
+        if (bracket == null) {
             return;
         }
-        for (BracketMatch bracketMatch : bracket.getPlayableMatches()) {
-            if (bracketMatch.isDecided() || matchService.findMatchById(bracketMatch.getMatchId()).isPresent()) {
-                continue;
-            }
-            if (!resolveTeamsOrDeclareWalkover(bracketMatch)) {
-                continue;
-            }
-            Optional<Arena> freeArena = arenaRegistry.findFreeArena();
-            if (freeArena.isEmpty()) {
+        finalMatchGate.synchronizeWith(bracket.getFinalMatch());
+    }
+
+    private void startNextMatch() {
+        while (state == TournamentState.RUNNING && bracket != null && !matchService.hasActiveMatch()) {
+            Optional<BracketMatch> nextMatch = MatchSequence.findNextMatch(bracket);
+            if (nextMatch.isEmpty()) {
                 return;
             }
-            startMatchInArena(bracketMatch, freeArena.get());
+            if (!resolveTeamsOrDeclareWalkover(nextMatch.get())) {
+                if (!nextMatch.get().isDecided()) {
+                    return;
+                }
+                continue;
+            }
+            startMatchInArena(nextMatch.get());
+            return;
         }
     }
 
@@ -214,13 +267,13 @@ public final class TournamentManager implements MatchCompletionHandler {
         return false;
     }
 
-    private void startMatchInArena(BracketMatch bracketMatch, Arena arena) {
+    private void startMatchInArena(BracketMatch bracketMatch) {
         Team firstTeam = teamRegistry.findTeam(bracketMatch.getFirstTeamName().orElseThrow()).orElseThrow();
         Team secondTeam = teamRegistry.findTeam(bracketMatch.getSecondTeamName().orElseThrow()).orElseThrow();
+        Arena arena = arenaRegistry.getArena();
         Match match = new Match(bracketMatch.getMatchId(), firstTeam, secondTeam, arena);
-        arena.occupy(match.getMatchId());
         broadcast("Match " + match.getMatchId() + ": " + firstTeam.getTeamName() + " against "
-                + secondTeam.getTeamName() + " in arena " + arena.getArenaName());
+                + secondTeam.getTeamName());
         matchService.startMatch(match);
     }
 

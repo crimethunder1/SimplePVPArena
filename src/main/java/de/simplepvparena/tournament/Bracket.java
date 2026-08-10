@@ -124,6 +124,10 @@ public final class Bracket {
         return lastRound.get(0);
     }
 
+    public boolean isFinalMatch(BracketMatch match) {
+        return match != null && getFinalMatch().getMatchId().equals(match.getMatchId());
+    }
+
     private void resolveFirstRoundByes() {
         for (BracketMatch match : rounds.get(0)) {
             if (match.hasExactlyOneParticipant()) {

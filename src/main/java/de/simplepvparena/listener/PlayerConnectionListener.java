@@ -1,6 +1,5 @@
 package de.simplepvparena.listener;
 
-import de.simplepvparena.arena.Arena;
 import de.simplepvparena.arena.ArenaRegistry;
 import de.simplepvparena.arena.SpectatorService;
 import de.simplepvparena.match.Match;
@@ -30,15 +29,14 @@ public final class PlayerConnectionListener implements Listener {
         Player player = event.getPlayer();
         Optional<Match> matchOfPlayer = matchService.findMatchOfPlayer(player.getUniqueId());
         if (matchOfPlayer.isPresent()) {
-            spectatorService.sendToTribune(player, matchOfPlayer.get().getArena());
+            spectatorService.sendToTribune(player);
             player.sendMessage("You rejoined during match " + matchOfPlayer.get().getMatchId()
                     + " and take part again from the next round on");
             return;
         }
-        Optional<Arena> firstConfiguredArena = arenaRegistry.getArenas().stream()
-                .filter(Arena::isFullyConfigured)
-                .findFirst();
-        firstConfiguredArena.ifPresent(arena -> spectatorService.sendToTribune(player, arena));
+        if (arenaRegistry.isArenaFullyConfigured()) {
+            spectatorService.sendToTribune(player);
+        }
     }
 
     @EventHandler

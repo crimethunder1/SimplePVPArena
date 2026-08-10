@@ -77,6 +77,33 @@ class BracketTest {
     }
 
     @Test
+    void identifiesTheSingleMatchOfTheLastRoundAsTheFinal() {
+        Bracket bracket = Bracket.createSingleElimination(List.of("alpha", "bravo", "charlie", "delta"));
+
+        assertEquals("round2-match1", bracket.getFinalMatch().getMatchId());
+        assertTrue(bracket.isFinalMatch(bracket.findMatch("round2-match1").orElseThrow()));
+        assertFalse(bracket.isFinalMatch(bracket.findMatch("round1-match1").orElseThrow()));
+        assertFalse(bracket.isFinalMatch(bracket.findMatch("round1-match2").orElseThrow()));
+    }
+
+    @Test
+    void identifiesTheOnlyMatchOfATwoTeamBracketAsTheFinal() {
+        Bracket bracket = Bracket.createSingleElimination(List.of("alpha", "bravo"));
+
+        assertEquals(1, bracket.getRoundCount());
+        assertTrue(bracket.isFinalMatch(bracket.findMatch("round1-match1").orElseThrow()));
+    }
+
+    @Test
+    void identifiesTheFinalOfABracketWithByesByItsLastRound() {
+        Bracket bracket = Bracket.createSingleElimination(List.of("alpha", "bravo", "charlie", "delta", "echo"));
+
+        assertEquals(3, bracket.getRoundCount());
+        assertEquals("round3-match1", bracket.getFinalMatch().getMatchId());
+        assertFalse(bracket.isFinalMatch(bracket.findMatch("round2-match2").orElseThrow()));
+    }
+
+    @Test
     void rejectsWinnerThatDoesNotTakePartInTheMatch() {
         Bracket bracket = Bracket.createSingleElimination(List.of("alpha", "bravo", "charlie", "delta"));
 

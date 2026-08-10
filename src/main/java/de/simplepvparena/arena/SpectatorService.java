@@ -6,7 +6,6 @@ import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
 import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -18,56 +17,47 @@ public final class SpectatorService {
 
     private final ArenaRegistry arenaRegistry;
     private final SpectatorItemFactory spectatorItemFactory;
-    private final Map<UUID, SpectatorAssignment> assignmentsByPlayer = new LinkedHashMap<>();
+    private final Map<UUID, SpectatorMode> spectatorModesByPlayer = new LinkedHashMap<>();
 
     public SpectatorService(ArenaRegistry arenaRegistry, SpectatorItemFactory spectatorItemFactory) {
         this.arenaRegistry = arenaRegistry;
         this.spectatorItemFactory = spectatorItemFactory;
     }
 
-    public boolean sendToTribune(Player player, Arena arena) {
-        Optional<Location> tribuneLocation = arena.getTribuneSpawn().flatMap(PositionSnapshot::toLocation);
+    public boolean sendToTribune(Player player) {
+        Optional<Location> tribuneLocation = arenaRegistry.getArena().getTribuneSpawn()
+                .flatMap(PositionSnapshot::toLocation);
         if (tribuneLocation.isEmpty()) {
             return false;
         }
         player.teleport(tribuneLocation.get());
         player.setGameMode(GameMode.ADVENTURE);
-        assignmentsByPlayer.put(player.getUniqueId(), new SpectatorAssignment(arena.getArenaName(), SpectatorMode.TRIBUNE));
+        spectatorModesByPlayer.put(player.getUniqueId(), SpectatorMode.TRIBUNE);
         giveSpectatorToggleItem(player);
         return true;
     }
 
     public boolean enterSpectatorBox(Player player) {
-        Optional<Arena> arena = findAssignedArena(player.getUniqueId());
-        if (arena.isEmpty()) {
-            return false;
-        }
-        Optional<Location> spectatorBoxLocation = arena.get().getSpectatorBoxSpawn().flatMap(PositionSnapshot::toLocation);
+        Optional<Location> spectatorBoxLocation = arenaRegistry.getArena().getSpectatorBoxSpawn()
+                .flatMap(PositionSnapshot::toLocation);
         if (spectatorBoxLocation.isEmpty()) {
             return false;
         }
         player.teleport(spectatorBoxLocation.get());
         player.setGameMode(GameMode.SPECTATOR);
-        assignmentsByPlayer.put(player.getUniqueId(),
-                new SpectatorAssignment(arena.get().getArenaName(), SpectatorMode.SPECTATOR_BOX));
+        spectatorModesByPlayer.put(player.getUniqueId(), SpectatorMode.SPECTATOR_BOX);
         return true;
     }
 
-    public boolean returnToTribune(Player player) {
-        return findAssignedArena(player.getUniqueId())
-                .map(arena -> sendToTribune(player, arena))
-                .orElse(false);
-    }
-
     public boolean toggleSpectatorMode(Player player) {
-        Optional<SpectatorAssignment> assignment = findAssignment(player.getUniqueId());
-        if (assignment.isEmpty()) {
+        Optional<SpectatorMode> spectatorMode = findSpectatorMode(player.getUniqueId());
+        if (spectatorMode.isEmpty()) {
             return false;
         }
-        if (assignment.get().spectatorMode() == SpectatorMode.TRIBUNE) {
+        if (spectatorMode.get() == SpectatorMode.TRIBUNE) {
             return enterSpectatorBox(player);
         }
-        return returnToTribune(player);
+        return sendToTribune(player);
     }
 
     public void giveSpectatorToggleItem(Player player) {
@@ -79,29 +69,19 @@ public final class SpectatorService {
         return spectatorItemFactory.isSpectatorToggleItem(itemStack);
     }
 
-    public Optional<SpectatorAssignment> findAssignment(UUID playerUniqueId) {
-        return Optional.ofNullable(assignmentsByPlayer.get(playerUniqueId));
+    public Optional<SpectatorMode> findSpectatorMode(UUID playerUniqueId) {
+        return Optional.ofNullable(spectatorModesByPlayer.get(playerUniqueId));
     }
 
-    public Optional<Arena> findAssignedArena(UUID playerUniqueId) {
-        return findAssignment(playerUniqueId).flatMap(assignment -> arenaRegistry.findArena(assignment.arenaName()));
-    }
-
-    public Set<UUID> getSpectatorsOfArena(String arenaName) {
-        Set<UUID> spectators = new LinkedHashSet<>();
-        assignmentsByPlayer.forEach((playerUniqueId, assignment) -> {
-            if (assignment.arenaName().equalsIgnoreCase(arenaName)) {
-                spectators.add(playerUniqueId);
-            }
-        });
-        return spectators;
+    public Set<UUID> getSpectators() {
+        return Set.copyOf(spectatorModesByPlayer.keySet());
     }
 
     public void clearAssignment(UUID playerUniqueId) {
-        assignmentsByPlayer.remove(playerUniqueId);
+        spectatorModesByPlayer.remove(playerUniqueId);
     }
 
     public void clearAllAssignments() {
-        assignmentsByPlayer.clear();
+        spectatorModesByPlayer.clear();
     }
 }

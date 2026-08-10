@@ -1,30 +1,39 @@
 package de.simplepvparena.command;
 
 import de.simplepvparena.arena.Arena;
+import de.simplepvparena.arena.ArenaCleaningService;
 import de.simplepvparena.arena.ArenaRegionType;
 import de.simplepvparena.arena.ArenaRegistry;
 import de.simplepvparena.arena.PositionSnapshot;
+import de.simplepvparena.arena.RegionBoundary;
 import de.simplepvparena.arena.RegionCorner;
 import de.simplepvparena.arena.SpectatorService;
+import de.simplepvparena.border.BorderItemRequest;
+import de.simplepvparena.border.BorderItemRequestResult;
+import de.simplepvparena.border.SpectatorBorderService;
 import de.simplepvparena.match.Match;
 import de.simplepvparena.match.MatchService;
 import de.simplepvparena.team.Team;
 import de.simplepvparena.team.TeamMember;
 import de.simplepvparena.team.TeamRegistry;
+import de.simplepvparena.tournament.FinalMatchGate;
 import de.simplepvparena.tournament.TournamentManager;
 import de.simplepvparena.tournament.TournamentOperationResult;
+import org.bukkit.Material;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.Server;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.TabExecutor;
 import org.bukkit.entity.Player;
+import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Optional;
 
 public final class TournamentCommand implements TabExecutor {
@@ -32,11 +41,15 @@ public final class TournamentCommand implements TabExecutor {
     public static final String ADMIN_PERMISSION = "tournament.admin";
     public static final String SPECTATE_PERMISSION = "tournament.spectate";
 
+    private static final String CLEAN_CONFIRMATION_ARGUMENT = "confirm";
     private static final List<String> ROOT_SUBCOMMANDS = List.of(
-            "team", "arena", "match", "start", "forcestart", "pause", "cancel", "status", "bracket", "spectate", "help");
+            "team", "arena", "border", "match", "final", "start", "forcestart", "pause", "cancel", "status",
+            "bracket", "spectate", "help");
     private static final List<String> TEAM_SUBCOMMANDS = List.of("add", "remove", "list");
-    private static final List<String> ARENA_SUBCOMMANDS = List.of("setpos", "setspawn", "list", "info", "remove");
+    private static final List<String> ARENA_SUBCOMMANDS = List.of("setpos", "setspawn", "info", "clean", "remove");
+    private static final List<String> BORDER_SUBCOMMANDS = List.of("give");
     private static final List<String> MATCH_SUBCOMMANDS = List.of("forceresult", "list");
+    private static final List<String> FINAL_SUBCOMMANDS = List.of("start");
     private static final List<String> SPAWN_TYPES = List.of("team1", "team2", "tribune");
 
     private final Server server;
@@ -45,6 +58,8 @@ public final class TournamentCommand implements TabExecutor {
     private final ArenaRegistry arenaRegistry;
     private final MatchService matchService;
     private final SpectatorService spectatorService;
+    private final SpectatorBorderService spectatorBorderService;
+    private final ArenaCleaningService arenaCleaningService;
     private final Runnable arenaConfigurationSaver;
     private final Runnable teamConfigurationSaver;
 
@@ -54,6 +69,8 @@ public final class TournamentCommand implements TabExecutor {
                              ArenaRegistry arenaRegistry,
                              MatchService matchService,
                              SpectatorService spectatorService,
+                             SpectatorBorderService spectatorBorderService,
+                             ArenaCleaningService arenaCleaningService,
                              Runnable arenaConfigurationSaver,
                              Runnable teamConfigurationSaver) {
         this.server = server;
@@ -62,6 +79,8 @@ public final class TournamentCommand implements TabExecutor {
         this.arenaRegistry = arenaRegistry;
         this.matchService = matchService;
         this.spectatorService = spectatorService;
+        this.spectatorBorderService = spectatorBorderService;
+        this.arenaCleaningService = arenaCleaningService;
         this.arenaConfigurationSaver = arenaConfigurationSaver;
         this.teamConfigurationSaver = teamConfigurationSaver;
     }
@@ -78,14 +97,16 @@ public final class TournamentCommand implements TabExecutor {
         switch (subcommand) {
             case "team" -> handleTeamCommand(sender, remainingArguments);
             case "arena" -> handleArenaCommand(sender, remainingArguments);
+            case "border" -> handleBorderCommand(sender, remainingArguments);
             case "match" -> handleMatchCommand(sender, remainingArguments);
+            case "final" -> handleFinalCommand(sender, remainingArguments);
             case "start" -> handleStart(sender, false);
             case "forcestart" -> handleStart(sender, true);
             case "pause" -> handleAdminOperation(sender, tournamentManager::togglePause);
             case "cancel" -> handleAdminOperation(sender, tournamentManager::cancelTournament);
             case "status" -> sender.sendMessage(tournamentManager.describeStatus());
             case "bracket" -> tournamentManager.describeBracket().forEach(sender::sendMessage);
-            case "spectate" -> handleSpectate(sender, remainingArguments);
+            case "spectate" -> handleSpectate(sender);
             default -> sendHelp(sender);
         }
         return true;
@@ -159,16 +180,16 @@ public final class TournamentCommand implements TabExecutor {
 
     private void handleArenaCommand(CommandSender sender, String[] arguments) {
         if (arguments.length == 0) {
-            sender.sendMessage("Usage: /tournament arena <setpos|setspawn|list|info|remove>");
+            sender.sendMessage("Usage: /tournament arena <setpos|setspawn|info|clean|remove>");
             return;
         }
         switch (arguments[0].toLowerCase(Locale.ROOT)) {
             case "setpos" -> handleArenaSetPosition(sender, arguments);
             case "setspawn" -> handleArenaSetSpawn(sender, arguments);
-            case "list" -> handleArenaList(sender);
-            case "info" -> handleArenaInfo(sender, arguments);
-            case "remove" -> handleArenaRemove(sender, arguments);
-            default -> sender.sendMessage("Usage: /tournament arena <setpos|setspawn|list|info|remove>");
+            case "info" -> handleArenaInfo(sender);
+            case "clean" -> handleArenaClean(sender, arguments);
+            case "remove" -> handleArenaRemove(sender);
+            default -> sender.sendMessage("Usage: /tournament arena <setpos|setspawn|info|clean|remove>");
         }
     }
 
@@ -177,28 +198,28 @@ public final class TournamentCommand implements TabExecutor {
         if (player.isEmpty()) {
             return;
         }
-        if (arguments.length != 4) {
-            sender.sendMessage("Usage: /tournament arena setpos <arenaName> <fight|spectatorbox|tribune> <corner1|corner2>");
+        if (arguments.length != 3) {
+            sender.sendMessage("Usage: /tournament arena setpos <fight|spectatorbox|tribune> <corner1|corner2>");
             return;
         }
-        Optional<ArenaRegionType> regionType = ArenaRegionType.fromCommandArgument(arguments[2]);
+        Optional<ArenaRegionType> regionType = ArenaRegionType.fromCommandArgument(arguments[1]);
         if (regionType.isEmpty()) {
-            sender.sendMessage("Unknown region type " + arguments[2] + ", expected fight, spectatorbox or tribune");
+            sender.sendMessage("Unknown region type " + arguments[1] + ", expected fight, spectatorbox or tribune");
             return;
         }
-        Optional<RegionCorner> corner = RegionCorner.fromCommandArgument(arguments[3]);
+        Optional<RegionCorner> corner = RegionCorner.fromCommandArgument(arguments[2]);
         if (corner.isEmpty()) {
-            sender.sendMessage("Unknown corner " + arguments[3] + ", expected corner1 or corner2");
+            sender.sendMessage("Unknown corner " + arguments[2] + ", expected corner1 or corner2");
             return;
         }
-        Arena arena = arenaRegistry.getOrCreateArena(arguments[1]);
+        Arena arena = arenaRegistry.getArena();
         PositionSnapshot position = PositionSnapshot.fromLocation(player.get().getLocation());
         arena.setCorner(regionType.get(), corner.get(), position);
         arenaConfigurationSaver.run();
         sender.sendMessage("Set " + regionType.get().getCommandArgument() + " " + corner.get().getCommandArgument()
-                + " of arena " + arena.getArenaName() + " to " + position.describe());
+                + " of the arena to " + position.describe());
         if (!arena.isFullyConfigured()) {
-            sender.sendMessage("Arena " + arena.getArenaName() + " still misses: "
+            sender.sendMessage("The arena still misses: "
                     + arena.getMissingRegionTypes().stream().map(ArenaRegionType::getCommandArgument).toList());
         }
     }
@@ -208,73 +229,121 @@ public final class TournamentCommand implements TabExecutor {
         if (player.isEmpty()) {
             return;
         }
-        if (arguments.length != 3) {
-            sender.sendMessage("Usage: /tournament arena setspawn <arenaName> <team1|team2|tribune>");
+        if (arguments.length != 2) {
+            sender.sendMessage("Usage: /tournament arena setspawn <team1|team2|tribune>");
             return;
         }
-        Arena arena = arenaRegistry.getOrCreateArena(arguments[1]);
+        Arena arena = arenaRegistry.getArena();
         PositionSnapshot position = PositionSnapshot.fromLocation(player.get().getLocation());
-        switch (arguments[2].toLowerCase(Locale.ROOT)) {
+        switch (arguments[1].toLowerCase(Locale.ROOT)) {
             case "team1" -> arena.setFirstTeamSpawn(position);
             case "team2" -> arena.setSecondTeamSpawn(position);
             case "tribune" -> arena.setTribuneSpawn(position);
             default -> {
-                sender.sendMessage("Unknown spawn type " + arguments[2] + ", expected team1, team2 or tribune");
+                sender.sendMessage("Unknown spawn type " + arguments[1] + ", expected team1, team2 or tribune");
                 return;
             }
         }
         arenaConfigurationSaver.run();
-        sender.sendMessage("Set spawn " + arguments[2] + " of arena " + arena.getArenaName() + " to " + position.describe());
+        sender.sendMessage("Set spawn " + arguments[1] + " of the arena to " + position.describe());
     }
 
-    private void handleArenaList(CommandSender sender) {
-        if (arenaRegistry.getArenas().isEmpty()) {
-            sender.sendMessage("No arenas configured");
-            return;
-        }
-        sender.sendMessage("Configured arenas (" + arenaRegistry.getArenas().size() + "):");
-        arenaRegistry.getArenas().forEach(arena -> sender.sendMessage("  " + arena.getArenaName()
-                + (arena.isFullyConfigured() ? " ready" : " incomplete")
-                + (arena.isOccupied() ? " occupied by match " + arena.getOccupyingMatchId().orElse("") : " free")));
-    }
-
-    private void handleArenaInfo(CommandSender sender, String[] arguments) {
-        if (arguments.length != 2) {
-            sender.sendMessage("Usage: /tournament arena info <arenaName>");
-            return;
-        }
-        Optional<Arena> arena = arenaRegistry.findArena(arguments[1]);
-        if (arena.isEmpty()) {
-            sender.sendMessage("Unknown arena " + arguments[1]);
-            return;
-        }
-        sender.sendMessage("Arena " + arena.get().getArenaName());
+    private void handleArenaInfo(CommandSender sender) {
+        Arena arena = arenaRegistry.getArena();
+        sender.sendMessage("Arena " + (arena.isFullyConfigured() ? "ready" : "incomplete"));
         for (ArenaRegionType regionType : ArenaRegionType.values()) {
             sender.sendMessage("  " + regionType.getCommandArgument() + ": "
-                    + arena.get().getRegion(regionType).map(region -> region.describe()).orElse("not configured"));
+                    + arena.getRegion(regionType).map(RegionBoundary::describe).orElse("not configured"));
         }
         sender.sendMessage("  first team spawn: "
-                + arena.get().getFirstTeamSpawn().map(PositionSnapshot::describe).orElse("not configured"));
+                + arena.getFirstTeamSpawn().map(PositionSnapshot::describe).orElse("not configured"));
         sender.sendMessage("  second team spawn: "
-                + arena.get().getSecondTeamSpawn().map(PositionSnapshot::describe).orElse("not configured"));
+                + arena.getSecondTeamSpawn().map(PositionSnapshot::describe).orElse("not configured"));
         sender.sendMessage("  tribune spawn: "
-                + arena.get().getTribuneSpawn().map(PositionSnapshot::describe).orElse("not configured"));
+                + arena.getTribuneSpawn().map(PositionSnapshot::describe).orElse("not configured"));
+        sender.sendMessage("  running match: "
+                + matchService.getActiveMatch().map(Match::describe).orElse("none"));
     }
 
-    private void handleArenaRemove(CommandSender sender, String[] arguments) {
+    private void handleArenaClean(CommandSender sender, String[] arguments) {
         if (!requireAdminPermission(sender)) {
             return;
         }
-        if (arguments.length != 2) {
-            sender.sendMessage("Usage: /tournament arena remove <arenaName>");
+        List<RegionBoundary> regions = arenaRegistry.getArena().getConfiguredRegions();
+        if (regions.isEmpty()) {
+            sender.sendMessage("No arena region is configured, there is nothing to clean");
             return;
         }
-        if (arenaRegistry.removeArena(arguments[1])) {
-            arenaConfigurationSaver.run();
-            sender.sendMessage("Arena " + arguments[1] + " removed");
+        if (matchService.hasActiveMatch()) {
+            sender.sendMessage("A match is running in the arena, the arena can only be cleaned between matches");
             return;
         }
-        sender.sendMessage("Unknown arena " + arguments[1]);
+        if (arenaCleaningService.isCleaning()) {
+            sender.sendMessage("The arena is already being cleaned");
+            return;
+        }
+        long blockCount = ArenaCleaningService.countBlocks(regions);
+        if (arguments.length != 2 || !arguments[1].equalsIgnoreCase(CLEAN_CONFIRMATION_ARGUMENT)) {
+            sender.sendMessage("Cleaning sets every block of " + regions.size() + " regions to air, "
+                    + blockCount + " blocks are affected and the change cannot be undone");
+            regions.forEach(region -> sender.sendMessage("  " + region.describe()));
+            sender.sendMessage("Run /tournament arena clean " + CLEAN_CONFIRMATION_ARGUMENT + " to start it");
+            return;
+        }
+        boolean cleaningStarted = arenaCleaningService.startCleaning(regions,
+                report -> sender.sendMessage("The arena is clean, " + report.describe()));
+        if (!cleaningStarted) {
+            sender.sendMessage("The arena cleaning could not be started");
+            return;
+        }
+        sender.sendMessage("Cleaning the arena, " + blockCount + " blocks are processed in batches of "
+                + ArenaCleaningService.DEFAULT_BLOCKS_PER_TICK + " per tick");
+    }
+
+    private void handleArenaRemove(CommandSender sender) {
+        if (!requireAdminPermission(sender)) {
+            return;
+        }
+        arenaRegistry.clearArenaConfiguration();
+        arenaConfigurationSaver.run();
+        sender.sendMessage("The arena configuration was removed, its blocks stay untouched");
+    }
+
+    private void handleBorderCommand(CommandSender sender, String[] arguments) {
+        if (arguments.length == 0 || !arguments[0].equalsIgnoreCase("give")) {
+            sender.sendMessage("Usage: /tournament border give <material> <amount>");
+            return;
+        }
+        handleBorderGive(sender, arguments);
+    }
+
+    private void handleBorderGive(CommandSender sender, String[] arguments) {
+        Optional<Player> player = requireAdminPlayer(sender);
+        if (player.isEmpty()) {
+            return;
+        }
+        if (arguments.length != 3) {
+            sender.sendMessage("Usage: /tournament border give <material> <amount>");
+            return;
+        }
+        BorderItemRequestResult requestResult = BorderItemRequest.parse(arguments[1], arguments[2],
+                TournamentCommand::isPlaceableBlock);
+        if (!requestResult.isAccepted()) {
+            sender.sendMessage(requestResult.getRejectionMessage().orElseThrow());
+            return;
+        }
+        BorderItemRequest request = requestResult.getRequest().orElseThrow();
+        ItemStack borderItem = spectatorBorderService.createBorderItem(request);
+        Map<Integer, ItemStack> itemsThatDidNotFit = player.get().getInventory().addItem(borderItem);
+        if (!itemsThatDidNotFit.isEmpty()) {
+            sender.sendMessage("Your inventory is full, not every border block could be handed out");
+        }
+        sender.sendMessage("You received " + request.amount() + " " + request.material().name()
+                + " border blocks, every block you place with them stops everybody who is not fighting");
+    }
+
+    private static boolean isPlaceableBlock(Material material) {
+        return material.isBlock() && material.isItem() && !material.isAir();
     }
 
     private void handleMatchCommand(CommandSender sender, String[] arguments) {
@@ -302,13 +371,20 @@ public final class TournamentCommand implements TabExecutor {
     }
 
     private void handleMatchList(CommandSender sender) {
-        List<Match> activeMatches = List.copyOf(matchService.getActiveMatches());
-        if (activeMatches.isEmpty()) {
-            sender.sendMessage("No matches are running");
+        Optional<Match> activeMatch = matchService.getActiveMatch();
+        if (activeMatch.isEmpty()) {
+            sender.sendMessage("No match is running");
             return;
         }
-        sender.sendMessage("Running matches (" + activeMatches.size() + "):");
-        activeMatches.forEach(match -> sender.sendMessage("  " + match.describe()));
+        sender.sendMessage("Running match: " + activeMatch.get().describe());
+    }
+
+    private void handleFinalCommand(CommandSender sender, String[] arguments) {
+        if (arguments.length != 1 || !arguments[0].equalsIgnoreCase("start")) {
+            sender.sendMessage("Usage: " + FinalMatchGate.FINAL_START_COMMAND);
+            return;
+        }
+        handleAdminOperation(sender, tournamentManager::startFinalMatch);
     }
 
     private void handleStart(CommandSender sender, boolean allowUnevenTeamCount) {
@@ -322,7 +398,7 @@ public final class TournamentCommand implements TabExecutor {
         sender.sendMessage(operation.get().message());
     }
 
-    private void handleSpectate(CommandSender sender, String[] arguments) {
+    private void handleSpectate(CommandSender sender) {
         if (!(sender instanceof Player player)) {
             sender.sendMessage("Only players can use this command");
             return;
@@ -331,24 +407,15 @@ public final class TournamentCommand implements TabExecutor {
             player.sendMessage("You are not allowed to use this command");
             return;
         }
-        if (arguments.length != 1) {
-            player.sendMessage("Usage: /tournament spectate <arenaName>");
-            return;
-        }
         if (matchService.isActiveFighter(player.getUniqueId())) {
             player.sendMessage("You cannot leave the arena while you are fighting");
             return;
         }
-        Optional<Arena> arena = arenaRegistry.findArena(arguments[0]);
-        if (arena.isEmpty()) {
-            player.sendMessage("Unknown arena " + arguments[0]);
+        if (!spectatorService.sendToTribune(player)) {
+            player.sendMessage("The arena has no usable tribune position");
             return;
         }
-        if (!spectatorService.sendToTribune(player, arena.get())) {
-            player.sendMessage("Arena " + arena.get().getArenaName() + " has no usable tribune position");
-            return;
-        }
-        player.sendMessage("You are now watching arena " + arena.get().getArenaName());
+        player.sendMessage("You are now watching the arena");
     }
 
     private Optional<TeamMember> resolveTeamMember(String playerName) {
@@ -386,20 +453,22 @@ public final class TournamentCommand implements TabExecutor {
         sender.sendMessage("/tournament team add <teamName> <firstPlayer> <secondPlayer>");
         sender.sendMessage("/tournament team remove <teamName>");
         sender.sendMessage("/tournament team list");
-        sender.sendMessage("/tournament arena setpos <arenaName> <fight|spectatorbox|tribune> <corner1|corner2>");
-        sender.sendMessage("/tournament arena setspawn <arenaName> <team1|team2|tribune>");
-        sender.sendMessage("/tournament arena list");
-        sender.sendMessage("/tournament arena info <arenaName>");
-        sender.sendMessage("/tournament arena remove <arenaName>");
+        sender.sendMessage("/tournament arena setpos <fight|spectatorbox|tribune> <corner1|corner2>");
+        sender.sendMessage("/tournament arena setspawn <team1|team2|tribune>");
+        sender.sendMessage("/tournament arena info");
+        sender.sendMessage("/tournament arena clean [" + CLEAN_CONFIRMATION_ARGUMENT + "]");
+        sender.sendMessage("/tournament arena remove");
+        sender.sendMessage("/tournament border give <material> <amount>");
         sender.sendMessage("/tournament match forceresult <matchId> <teamName>");
         sender.sendMessage("/tournament match list");
+        sender.sendMessage(FinalMatchGate.FINAL_START_COMMAND);
         sender.sendMessage("/tournament start");
         sender.sendMessage("/tournament forcestart");
         sender.sendMessage("/tournament pause");
         sender.sendMessage("/tournament cancel");
         sender.sendMessage("/tournament status");
         sender.sendMessage("/tournament bracket");
-        sender.sendMessage("/tournament spectate <arenaName>");
+        sender.sendMessage("/tournament spectate");
     }
 
     @Override
@@ -413,8 +482,9 @@ public final class TournamentCommand implements TabExecutor {
             return switch (subcommand) {
                 case "team" -> filterByPrefix(TEAM_SUBCOMMANDS, arguments[1]);
                 case "arena" -> filterByPrefix(ARENA_SUBCOMMANDS, arguments[1]);
+                case "border" -> filterByPrefix(BORDER_SUBCOMMANDS, arguments[1]);
                 case "match" -> filterByPrefix(MATCH_SUBCOMMANDS, arguments[1]);
-                case "spectate" -> filterByPrefix(arenaRegistry.getArenaNames(), arguments[1]);
+                case "final" -> filterByPrefix(FINAL_SUBCOMMANDS, arguments[1]);
                 default -> List.of();
             };
         }
@@ -423,7 +493,8 @@ public final class TournamentCommand implements TabExecutor {
                 case "team" -> arguments[1].equalsIgnoreCase("remove")
                         ? filterByPrefix(teamRegistry.getTeamNames(), arguments[2])
                         : List.of();
-                case "arena" -> filterByPrefix(arenaRegistry.getArenaNames(), arguments[2]);
+                case "arena" -> filterByPrefix(collectArenaArguments(arguments[1]), arguments[2]);
+                case "border" -> filterByPrefix(collectPlaceableBlockNames(), arguments[2]);
                 case "match" -> filterByPrefix(collectActiveMatchIds(), arguments[2]);
                 default -> List.of();
             };
@@ -431,20 +502,33 @@ public final class TournamentCommand implements TabExecutor {
         if (arguments.length == 4) {
             return switch (subcommand) {
                 case "arena" -> arguments[1].equalsIgnoreCase("setpos")
-                        ? filterByPrefix(collectRegionTypeArguments(), arguments[3])
-                        : filterByPrefix(SPAWN_TYPES, arguments[3]);
+                        ? filterByPrefix(collectCornerArguments(), arguments[3])
+                        : List.of();
                 case "match" -> filterByPrefix(teamRegistry.getTeamNames(), arguments[3]);
                 default -> List.of();
             };
         }
-        if (arguments.length == 5 && subcommand.equals("arena") && arguments[1].equalsIgnoreCase("setpos")) {
-            return filterByPrefix(collectCornerArguments(), arguments[4]);
-        }
         return List.of();
     }
 
+    private List<String> collectArenaArguments(String arenaSubcommand) {
+        return switch (arenaSubcommand.toLowerCase(Locale.ROOT)) {
+            case "setpos" -> collectRegionTypeArguments();
+            case "setspawn" -> SPAWN_TYPES;
+            case "clean" -> List.of(CLEAN_CONFIRMATION_ARGUMENT);
+            default -> List.of();
+        };
+    }
+
+    private List<String> collectPlaceableBlockNames() {
+        return Arrays.stream(Material.values())
+                .filter(TournamentCommand::isPlaceableBlock)
+                .map(Material::name)
+                .toList();
+    }
+
     private List<String> collectActiveMatchIds() {
-        return matchService.getActiveMatches().stream().map(Match::getMatchId).toList();
+        return matchService.getActiveMatch().map(match -> List.of(match.getMatchId())).orElse(List.of());
     }
 
     private List<String> collectRegionTypeArguments() {

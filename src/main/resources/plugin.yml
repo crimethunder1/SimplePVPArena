@@ -10,14 +10,14 @@ softdepend:
   - ViaBackwards
 commands:
   tournament:
-    description: Manages teams, arenas, matches and the tournament bracket
+    description: Manages teams, the arena, matches and the tournament bracket
     usage: /tournament help
     aliases:
       - turnier
 permissions:
   tournament.admin:
-    description: Allows managing teams, arenas, matches and the tournament
+    description: Allows managing teams, the arena, border blocks, matches and the tournament
     default: op
   tournament.spectate:
-    description: Allows switching between the tribunes of the configured arenas
+    description: Allows returning to the tribune of the arena
     default: true
