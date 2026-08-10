@@ -1,0 +1,30 @@
+match:
+  round-reset-delay-ticks: 100
+
+kit:
+  armor:
+    head:
+      material: IRON_HELMET
+      enchantments:
+        protection: 1
+    chest:
+      material: IRON_CHESTPLATE
+      enchantments:
+        protection: 1
+    legs:
+      material: IRON_LEGGINGS
+    feet:
+      material: IRON_BOOTS
+  items:
+    - material: IRON_SWORD
+      enchantments:
+        sharpness: 1
+    - material: BOW
+    - material: GOLDEN_APPLE
+      amount: 4
+    - material: COOKED_BEEF
+      amount: 16
+    - material: ARROW
+      amount: 32
+
+arenas: {}

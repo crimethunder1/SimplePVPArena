@@ -1,0 +1,23 @@
+name: SimplePVPArena
+version: '${project.version}'
+main: de.simplepvparena.SimplePVPArenaPlugin
+api-version: '1.21'
+description: Tournament plugin running a two versus two single elimination bracket
+authors:
+  - crimethunder
+softdepend:
+  - ViaVersion
+  - ViaBackwards
+commands:
+  tournament:
+    description: Manages teams, arenas, matches and the tournament bracket
+    usage: /tournament help
+    aliases:
+      - turnier
+permissions:
+  tournament.admin:
+    description: Allows managing teams, arenas, matches and the tournament
+    default: op
+  tournament.spectate:
+    description: Allows switching between the tribunes of the configured arenas
+    default: true
