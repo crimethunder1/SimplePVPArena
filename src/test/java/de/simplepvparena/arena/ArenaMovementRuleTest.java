@@ -7,35 +7,69 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class ArenaMovementRuleTest {
 
+    private static final boolean BELONGS_INTO_ARENA = true;
+    private static final boolean BELONGS_OUTSIDE = false;
+    private static final boolean OPERATOR = true;
+    private static final boolean REGULAR_PLAYER = false;
+    private static final boolean INSIDE = true;
+    private static final boolean OUTSIDE = false;
+
     @Test
     void letsAFighterMoveFreelyInsideTheArena() {
-        assertTrue(ArenaMovementRule.isMovementAllowed(true, true, true));
+        assertTrue(isAllowed(BELONGS_INTO_ARENA, REGULAR_PLAYER, INSIDE, INSIDE));
     }
 
     @Test
     void stopsAFighterWhoWouldLeaveTheArena() {
-        assertFalse(ArenaMovementRule.isMovementAllowed(true, true, false));
+        assertFalse(isAllowed(BELONGS_INTO_ARENA, REGULAR_PLAYER, INSIDE, OUTSIDE));
     }
 
     @Test
     void letsAFighterWalkBackIntoTheArena() {
-        assertTrue(ArenaMovementRule.isMovementAllowed(true, false, true));
+        assertTrue(isAllowed(BELONGS_INTO_ARENA, REGULAR_PLAYER, OUTSIDE, INSIDE));
     }
 
     @Test
     void neverLocksAFighterWhoStandsOutsideTheArena() {
-        assertTrue(ArenaMovementRule.isMovementAllowed(true, false, false));
+        assertTrue(isAllowed(BELONGS_INTO_ARENA, REGULAR_PLAYER, OUTSIDE, OUTSIDE));
     }
 
     @Test
     void keepsSpectatorsOutOfTheArena() {
-        assertFalse(ArenaMovementRule.isMovementAllowed(false, false, true));
-        assertTrue(ArenaMovementRule.isMovementAllowed(false, false, false));
+        assertFalse(isAllowed(BELONGS_OUTSIDE, REGULAR_PLAYER, OUTSIDE, INSIDE));
+        assertTrue(isAllowed(BELONGS_OUTSIDE, REGULAR_PLAYER, OUTSIDE, OUTSIDE));
     }
 
     @Test
     void neverLocksASpectatorWhoStandsInsideTheArena() {
-        assertTrue(ArenaMovementRule.isMovementAllowed(false, true, true));
-        assertTrue(ArenaMovementRule.isMovementAllowed(false, true, false));
+        assertTrue(isAllowed(BELONGS_OUTSIDE, REGULAR_PLAYER, INSIDE, INSIDE));
+        assertTrue(isAllowed(BELONGS_OUTSIDE, REGULAR_PLAYER, INSIDE, OUTSIDE));
+    }
+
+    @Test
+    void letsAnOperatorCrossTheOutlineInBothDirections() {
+        assertTrue(isAllowed(BELONGS_OUTSIDE, OPERATOR, OUTSIDE, INSIDE), "walking into the arena");
+        assertTrue(isAllowed(BELONGS_OUTSIDE, OPERATOR, INSIDE, OUTSIDE), "and back out of it");
+    }
+
+    @Test
+    void letsAnOperatorPassNoMatterWhichSideHeBelongsTo() {
+        for (boolean belongsIntoArena : new boolean[] {BELONGS_INTO_ARENA, BELONGS_OUTSIDE}) {
+            assertTrue(isAllowed(belongsIntoArena, OPERATOR, INSIDE, OUTSIDE));
+            assertTrue(isAllowed(belongsIntoArena, OPERATOR, OUTSIDE, INSIDE));
+            assertTrue(isAllowed(belongsIntoArena, OPERATOR, INSIDE, INSIDE));
+            assertTrue(isAllowed(belongsIntoArena, OPERATOR, OUTSIDE, OUTSIDE));
+        }
+    }
+
+    @Test
+    void letsAFightingOperatorLeaveTheArena() {
+        assertFalse(isAllowed(BELONGS_INTO_ARENA, REGULAR_PLAYER, INSIDE, OUTSIDE));
+        assertTrue(isAllowed(BELONGS_INTO_ARENA, OPERATOR, INSIDE, OUTSIDE));
+    }
+
+    private static boolean isAllowed(boolean belongsIntoArena, boolean operator,
+                                     boolean originInside, boolean destinationInside) {
+        return ArenaMovementRule.isMovementAllowed(belongsIntoArena, operator, originInside, destinationInside);
     }
 }

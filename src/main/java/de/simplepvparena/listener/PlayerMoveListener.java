@@ -55,7 +55,7 @@ public final class PlayerMoveListener implements Listener {
         if (arenaShape.isEmpty()) {
             return true;
         }
-        return ArenaMovementRule.isMovementAllowed(belongsIntoArena(player),
+        return ArenaMovementRule.isMovementAllowed(belongsIntoArena(player), player.isOp(),
                 arenaShape.get().contains(origin), arenaShape.get().contains(destination));
     }
 

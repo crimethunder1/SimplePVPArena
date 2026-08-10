@@ -24,12 +24,12 @@ public final class SpectatorBorderService {
 
     private final NamespacedKey borderKey;
     private final BorderMarkIndex borderMarks;
-    private final Runnable borderMarkSaver;
+    private final Runnable borderMarkChangeListener;
 
-    public SpectatorBorderService(Plugin plugin, BorderMarkIndex borderMarks, Runnable borderMarkSaver) {
+    public SpectatorBorderService(Plugin plugin, BorderMarkIndex borderMarks, Runnable borderMarkChangeListener) {
         this.borderKey = new NamespacedKey(plugin, BORDER_KEY_NAME);
         this.borderMarks = Objects.requireNonNull(borderMarks, "borderMarks");
-        this.borderMarkSaver = Objects.requireNonNull(borderMarkSaver, "borderMarkSaver");
+        this.borderMarkChangeListener = Objects.requireNonNull(borderMarkChangeListener, "borderMarkChangeListener");
     }
 
     public NamespacedKey getBorderKey() {
@@ -57,13 +57,13 @@ public final class SpectatorBorderService {
 
     public void markBlock(Block block) {
         if (borderMarks.mark(block.getWorld().getName(), block.getX(), block.getY(), block.getZ())) {
-            borderMarkSaver.run();
+            borderMarkChangeListener.run();
         }
     }
 
     public void clearBlockMark(Block block) {
         if (borderMarks.clearMark(block.getWorld().getName(), block.getX(), block.getY(), block.getZ())) {
-            borderMarkSaver.run();
+            borderMarkChangeListener.run();
         }
     }
 
@@ -71,10 +71,10 @@ public final class SpectatorBorderService {
         return borderMarks.isMarkedBlock(block.getWorld().getName(), block.getX(), block.getY(), block.getZ());
     }
 
-    public BorderMovementDecision decideMovement(boolean activeFighter, boolean operator,
-                                                 Location origin, Location destination) {
+    public boolean isMovementAllowed(boolean activeFighter, boolean operator,
+                                     Location origin, Location destination) {
         if (destination == null || destination.getWorld() == null) {
-            return BorderMovementDecision.ALLOWED;
+            return true;
         }
         String worldName = destination.getWorld().getName();
         int originBlockX = destination.getBlockX();
@@ -83,8 +83,9 @@ public final class SpectatorBorderService {
             originBlockX = origin.getBlockX();
             originBlockZ = origin.getBlockZ();
         }
-        return SpectatorBorderMovementRule.decide(activeFighter, operator, borderMarks.lookupIn(worldName),
-                originBlockX, originBlockZ, destination.getBlockX(), destination.getBlockZ());
+        return SpectatorBorderMovementRule.isMovementAllowed(activeFighter, operator,
+                borderMarks.lookupIn(worldName), originBlockX, originBlockZ,
+                destination.getBlockX(), destination.getBlockZ());
     }
 
     public int clearMarksInShape(World world, ArenaShape shape) {
@@ -93,7 +94,7 @@ public final class SpectatorBorderService {
         }
         int clearedMarkCount = borderMarks.removeInsideShape(shape);
         if (clearedMarkCount > 0) {
-            borderMarkSaver.run();
+            borderMarkChangeListener.run();
         }
         return clearedMarkCount;
     }

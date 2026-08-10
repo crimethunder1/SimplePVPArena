@@ -2,8 +2,10 @@ package de.simplepvparena.command;
 
 import de.simplepvparena.arena.Arena;
 import de.simplepvparena.arena.ArenaCleaningService;
+import de.simplepvparena.arena.ArenaDebugCellLimit;
 import de.simplepvparena.arena.ArenaSetupService;
 import de.simplepvparena.arena.ArenaShape;
+import de.simplepvparena.arena.ArenaShapeFloodFill;
 import de.simplepvparena.arena.ArenaSpawnType;
 import de.simplepvparena.arena.SpectatorService;
 import de.simplepvparena.border.BorderItemRequest;
@@ -41,6 +43,7 @@ public final class TournamentCommand implements TabExecutor {
     public static final String SPECTATE_PERMISSION = "tournament.spectate";
 
     private static final String CLEAN_CONFIRMATION_ARGUMENT = "confirm";
+    private static final String DEBUG_CELL_LIMIT_ARGUMENT = "debugCellLimit";
     private static final List<String> ROOT_SUBCOMMANDS = List.of(
             "team", "arena", "border", "match", "final", "start", "forcestart", "pause", "cancel", "status",
             "bracket", "spectate", "gui", "menu", "help");
@@ -180,7 +183,7 @@ public final class TournamentCommand implements TabExecutor {
             return;
         }
         switch (arguments[0].toLowerCase(Locale.ROOT)) {
-            case "calculate" -> handleArenaCalculate(sender);
+            case "calculate" -> handleArenaCalculate(sender, arguments);
             case "setspawn" -> handleArenaSetSpawn(sender, arguments);
             case "info" -> handleArenaInfo(sender);
             case "clean" -> handleArenaClean(sender, arguments);
@@ -189,8 +192,25 @@ public final class TournamentCommand implements TabExecutor {
         }
     }
 
-    private void handleArenaCalculate(CommandSender sender) {
-        requireAdminPlayer(sender).ifPresent(arenaSetupService::calculateShape);
+    private void handleArenaCalculate(CommandSender sender, String[] arguments) {
+        Optional<Player> admin = requireAdminPlayer(sender);
+        if (admin.isEmpty()) {
+            return;
+        }
+        if (arguments.length == 1) {
+            arenaSetupService.calculateShape(admin.get());
+            return;
+        }
+        if (arguments.length != 2) {
+            sender.sendMessage("Usage: " + Arena.CALCULATE_COMMAND + " [" + DEBUG_CELL_LIMIT_ARGUMENT + "]");
+            return;
+        }
+        ArenaDebugCellLimit debugCellLimit = ArenaDebugCellLimit.parse(arguments[1]);
+        if (!debugCellLimit.isAccepted()) {
+            sender.sendMessage(debugCellLimit.getRejectionMessage().orElseThrow());
+            return;
+        }
+        arenaSetupService.calculateShape(admin.get(), debugCellLimit.getCellCount());
     }
 
     private void handleArenaSetSpawn(CommandSender sender, String[] arguments) {
@@ -391,6 +411,9 @@ public final class TournamentCommand implements TabExecutor {
         sender.sendMessage("/tournament team remove <teamName>");
         sender.sendMessage("/tournament team list");
         sender.sendMessage(Arena.CALCULATE_COMMAND + " (while standing inside the closed border wall)");
+        sender.sendMessage(Arena.CALCULATE_COMMAND + " <" + DEBUG_CELL_LIMIT_ARGUMENT
+                + "> (one calculation with a higher cell limit to find out where a fill escapes, "
+                + "config.yml stays untouched)");
         sender.sendMessage("/tournament arena setspawn <team1|team2|tribune>");
         sender.sendMessage("/tournament arena info");
         sender.sendMessage("/tournament arena clean [" + CLEAN_CONFIRMATION_ARGUMENT + "]");
@@ -451,6 +474,7 @@ public final class TournamentCommand implements TabExecutor {
         return switch (arenaSubcommand.toLowerCase(Locale.ROOT)) {
             case "setspawn" -> ArenaSpawnType.getArgumentNames();
             case "clean" -> List.of(CLEAN_CONFIRMATION_ARGUMENT);
+            case "calculate" -> List.of(String.valueOf(ArenaShapeFloodFill.MAXIMUM_DEBUG_CELL_COUNT));
             default -> List.of();
         };
     }

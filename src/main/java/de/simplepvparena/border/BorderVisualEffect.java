@@ -7,6 +7,8 @@ public interface BorderVisualEffect {
 
     void showAt(Player player, Location borderBlockCenter, BorderConnectivity connectivity);
 
+    void showConfirmedAt(Player player, Location borderBlockCenter);
+
     void showColumnConnection(Player player, Location pointBetweenBorderColumns);
 
     void showConnection(Player player, Location pointBetweenBorderBlocks);

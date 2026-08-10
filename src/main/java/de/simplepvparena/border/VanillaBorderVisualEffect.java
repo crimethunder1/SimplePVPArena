@@ -20,6 +20,10 @@ public final class VanillaBorderVisualEffect implements BorderVisualEffect {
     private static final int STREAM_PARTICLE_COUNT = 5;
     private static final double STREAM_STEP_HEIGHT = 0.5D;
     private static final double STREAM_RISE_SPEED = 0.02D;
+
+    private static final int CONFIRMED_STREAM_PARTICLE_COUNT = 3;
+    private static final double CONFIRMED_STREAM_STEP_HEIGHT = 0.25D;
+    private static final double CONFIRMED_STREAM_RISE_SPEED = 0.01D;
     private static final int DIRECTED_PARTICLE_COUNT = 0;
     private static final int SINGLE_PARTICLE_COUNT = 1;
     private static final double NO_OFFSET = 0.0D;
@@ -37,6 +41,16 @@ public final class VanillaBorderVisualEffect implements BorderVisualEffect {
                 player.spawnParticle(COLOURED_BORDER_BLOCK_PARTICLE, streamPoint, SINGLE_PARTICLE_COUNT,
                         NO_OFFSET, NO_OFFSET, NO_OFFSET, NO_SPEED, columnColour);
             }
+        }
+    }
+
+    @Override
+    public void showConfirmedAt(Player player, Location borderBlockCenter) {
+        for (int step = 0; step < CONFIRMED_STREAM_PARTICLE_COUNT; step++) {
+            Location streamPoint = borderBlockCenter.clone()
+                    .add(NO_OFFSET, step * CONFIRMED_STREAM_STEP_HEIGHT, NO_OFFSET);
+            player.spawnParticle(BORDER_BLOCK_PARTICLE, streamPoint, DIRECTED_PARTICLE_COUNT,
+                    NO_OFFSET, 1.0D, NO_OFFSET, CONFIRMED_STREAM_RISE_SPEED);
         }
     }
 

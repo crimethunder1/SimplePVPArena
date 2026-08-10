@@ -5,22 +5,15 @@ public final class SpectatorBorderMovementRule {
     private SpectatorBorderMovementRule() {
     }
 
-    public static BorderMovementDecision decide(boolean activeFighter, boolean operator,
-                                                BlockedColumnLookup blockedColumns,
-                                                int originBlockX, int originBlockZ,
-                                                int destinationBlockX, int destinationBlockZ) {
-        if (!isMovementBlocked(blockedColumns, originBlockX, originBlockZ, destinationBlockX, destinationBlockZ)) {
-            return BorderMovementDecision.ALLOWED;
+    public static boolean isMovementAllowed(boolean activeFighter, boolean operator,
+                                            BlockedColumnLookup blockedColumns,
+                                            int originBlockX, int originBlockZ,
+                                            int destinationBlockX, int destinationBlockZ) {
+        if (activeFighter || operator) {
+            return true;
         }
-        if (activeFighter) {
-            return BorderMovementDecision.ALLOWED;
-        }
-        if (!operator) {
-            return BorderMovementDecision.BLOCKED;
-        }
-        return blockedColumns.isBlockedColumn(originBlockX, originBlockZ)
-                ? BorderMovementDecision.ALLOWED
-                : BorderMovementDecision.OPERATOR_PASS;
+        return !isMovementBlocked(blockedColumns, originBlockX, originBlockZ,
+                destinationBlockX, destinationBlockZ);
     }
 
     public static boolean isMovementBlocked(BlockedColumnLookup blockedColumns,

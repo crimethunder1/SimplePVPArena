@@ -1,7 +1,5 @@
 package de.simplepvparena.listener;
 
-import de.simplepvparena.border.BorderMovementDecision;
-import de.simplepvparena.border.OperatorBorderPassLog;
 import de.simplepvparena.border.SpectatorBorderService;
 import de.simplepvparena.match.MatchService;
 import org.bukkit.Location;
@@ -17,13 +15,10 @@ public final class SpectatorBorderListener implements Listener {
 
     private final MatchService matchService;
     private final SpectatorBorderService spectatorBorderService;
-    private final OperatorBorderPassLog operatorBorderPassLog;
 
-    public SpectatorBorderListener(MatchService matchService, SpectatorBorderService spectatorBorderService,
-                                   OperatorBorderPassLog operatorBorderPassLog) {
+    public SpectatorBorderListener(MatchService matchService, SpectatorBorderService spectatorBorderService) {
         this.matchService = matchService;
         this.spectatorBorderService = spectatorBorderService;
-        this.operatorBorderPassLog = operatorBorderPassLog;
     }
 
     @EventHandler(ignoreCancelled = true)
@@ -52,12 +47,9 @@ public final class SpectatorBorderListener implements Listener {
             return;
         }
         Player player = event.getPlayer();
-        BorderMovementDecision decision = spectatorBorderService.decideMovement(
-                matchService.isActiveFighter(player.getUniqueId()), player.isOp(), origin, destination);
-        switch (decision) {
-            case BLOCKED -> event.setCancelled(true);
-            case OPERATOR_PASS -> operatorBorderPassLog.recordPass(player.getName(), System.currentTimeMillis());
-            case ALLOWED -> { }
+        if (!spectatorBorderService.isMovementAllowed(matchService.isActiveFighter(player.getUniqueId()),
+                player.isOp(), origin, destination)) {
+            event.setCancelled(true);
         }
     }
 

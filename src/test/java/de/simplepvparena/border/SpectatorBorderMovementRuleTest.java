@@ -6,7 +6,6 @@ import org.junit.jupiter.api.Test;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -31,8 +30,7 @@ class SpectatorBorderMovementRuleTest {
     void stopsTheMovementNoMatterHowDeepTheTunnelUnderTheWallIs() {
         BlockedColumnLookup wall = wall(10, 20);
 
-        assertEquals(BorderMovementDecision.BLOCKED,
-                SpectatorBorderMovementRule.decide(SPECTATOR, REGULAR_PLAYER, wall, 9, 20, 10, 20));
+        assertFalse(SpectatorBorderMovementRule.isMovementAllowed(SPECTATOR, REGULAR_PLAYER, wall, 9, 20, 10, 20));
     }
 
     @Test
@@ -94,31 +92,26 @@ class SpectatorBorderMovementRuleTest {
     void letsActiveFightersPass() {
         BlockedColumnLookup wall = wall(10, 20, 11, 21);
 
-        assertEquals(BorderMovementDecision.ALLOWED,
-                SpectatorBorderMovementRule.decide(FIGHTER, REGULAR_PLAYER, wall, 9, 20, 10, 20));
-        assertEquals(BorderMovementDecision.ALLOWED, SpectatorBorderMovementRule.decide(FIGHTER, REGULAR_PLAYER,
-                wall, 10, 21, 11, 20), "including the diagonal gap");
+        assertTrue(SpectatorBorderMovementRule.isMovementAllowed(FIGHTER, REGULAR_PLAYER, wall, 9, 20, 10, 20));
+        assertTrue(SpectatorBorderMovementRule.isMovementAllowed(FIGHTER, REGULAR_PLAYER, wall, 10, 21, 11, 20),
+                "including the diagonal gap");
     }
 
     @Test
-    void letsOperatorsPassAndReportsTheirPass() {
-        BlockedColumnLookup wall = wall(10, 20);
+    void letsOperatorsPassSilently() {
+        BlockedColumnLookup wall = wall(10, 20, 11, 21);
 
-        assertEquals(BorderMovementDecision.OPERATOR_PASS,
-                SpectatorBorderMovementRule.decide(SPECTATOR, OPERATOR, wall, 9, 20, 10, 20));
+        assertTrue(SpectatorBorderMovementRule.isMovementAllowed(SPECTATOR, OPERATOR, wall, 9, 20, 10, 20),
+                "the step into the wall");
+        assertTrue(SpectatorBorderMovementRule.isMovementAllowed(SPECTATOR, OPERATOR, wall, 10, 20, 10, 21),
+                "and the step along inside it");
+        assertTrue(SpectatorBorderMovementRule.isMovementAllowed(SPECTATOR, OPERATOR, wall, 10, 21, 11, 20),
+                "and the diagonal gap between two border blocks");
     }
 
     @Test
-    void reportsAnOperatorOnlyWhenHeEntersTheBorderFromOutsideOfIt() {
-        BlockedColumnLookup wall = wall(10, 20, 10, 21);
-
-        assertEquals(BorderMovementDecision.ALLOWED,
-                SpectatorBorderMovementRule.decide(SPECTATOR, OPERATOR, wall, 10, 20, 10, 21));
-    }
-
-    @Test
-    void reportsNoPassForAnOperatorThatNeverTouchesTheBorder() {
-        assertEquals(BorderMovementDecision.ALLOWED, SpectatorBorderMovementRule.decide(SPECTATOR, OPERATOR,
+    void letsAnOperatorMoveWhereNoBorderIsInTheWayAtAll() {
+        assertTrue(SpectatorBorderMovementRule.isMovementAllowed(SPECTATOR, OPERATOR,
                 wall(10, 20), 12, 20, 11, 20));
     }
 

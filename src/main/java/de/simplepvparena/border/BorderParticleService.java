@@ -1,5 +1,6 @@
 package de.simplepvparena.border;
 
+import de.simplepvparena.arena.ArenaBorderConfirmation;
 import de.simplepvparena.arena.BlockPositionCodec;
 import de.simplepvparena.arena.BorderColumnReader;
 import org.bukkit.Location;
@@ -25,6 +26,7 @@ public final class BorderParticleService {
     private final BorderMarkIndex borderMarks;
     private final BorderVisualEffect visualEffect;
     private final ActiveFighterLookup activeFighters;
+    private final ArenaBorderConfirmation borderConfirmation;
 
     private int viewRadius = DEFAULT_VIEW_RADIUS;
     private int maximumBlocksPerPlayer = DEFAULT_MAXIMUM_BLOCKS_PER_PLAYER;
@@ -33,11 +35,12 @@ public final class BorderParticleService {
     private BukkitTask activeTask;
 
     public BorderParticleService(Plugin plugin, BorderMarkIndex borderMarks, BorderVisualEffect visualEffect,
-                                 ActiveFighterLookup activeFighters) {
+                                 ActiveFighterLookup activeFighters, ArenaBorderConfirmation borderConfirmation) {
         this.plugin = Objects.requireNonNull(plugin, "plugin");
         this.borderMarks = Objects.requireNonNull(borderMarks, "borderMarks");
         this.visualEffect = Objects.requireNonNull(visualEffect, "visualEffect");
         this.activeFighters = Objects.requireNonNull(activeFighters, "activeFighters");
+        this.borderConfirmation = Objects.requireNonNull(borderConfirmation, "borderConfirmation");
     }
 
     public void setViewRadius(int viewRadius) {
@@ -98,8 +101,18 @@ public final class BorderParticleService {
         if (nearbyMarks.length == 0) {
             return;
         }
+        if (borderConfirmation.isConfirmed()) {
+            showConfirmedBlocks(player, world, nearbyMarks);
+            return;
+        }
         showBlocks(player, world, nearbyMarks);
         showConnectionLines(player, world, nearbyMarks);
+    }
+
+    private void showConfirmedBlocks(Player player, World world, long[] nearbyMarks) {
+        for (long encodedPosition : nearbyMarks) {
+            visualEffect.showConfirmedAt(player, topFaceCenterOf(world, encodedPosition));
+        }
     }
 
     private void showBlocks(Player player, World world, long[] nearbyMarks) {

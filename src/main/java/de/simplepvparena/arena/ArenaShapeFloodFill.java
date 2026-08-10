@@ -9,6 +9,8 @@ public final class ArenaShapeFloodFill {
 
     public static final int DEFAULT_MAXIMUM_CELL_COUNT = 50_000;
 
+    public static final int MAXIMUM_DEBUG_CELL_COUNT = 5_000_000;
+
     public static final String MAXIMUM_CELL_COUNT_CONFIGURATION_PATH = "arena.shape-maximum-cells";
 
     private static final int[] NEIGHBOUR_OFFSETS_X = {1, -1, 0, 0};
@@ -48,7 +50,8 @@ public final class ArenaShapeFloodFill {
                     continue;
                 }
                 if (filledCells.size() >= maximumCellCount) {
-                    return ArenaShapeCalculation.stoppedAtCellLimit(maximumCellCount);
+                    return ArenaShapeCalculation.stoppedAtCellLimit(maximumCellCount,
+                            ArenaFillDiagnostics.fromFillOrder(seedX, seedZ, filledCells));
                 }
                 filledCells.add(neighbourCell);
                 pendingCells.add(neighbourCell);

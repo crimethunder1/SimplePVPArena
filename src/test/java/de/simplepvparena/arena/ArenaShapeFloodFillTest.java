@@ -78,12 +78,83 @@ class ArenaShapeFloodFillTest {
         String gapRejection = calculate(wallWithAGap, 2, 2, 20).getRejectionMessage().orElseThrow();
         String limitRejection = calculate(closedWall, 5, 5, 20).getRejectionMessage().orElseThrow();
 
-        assertEquals(gapRejection, limitRejection, "the calculation cannot tell the two cases apart");
+        assertEquals(reasonOf(gapRejection), reasonOf(limitRejection),
+                "the calculation cannot tell the two cases apart");
         assertTrue(gapRejection.contains("gap"), "the wall may have a gap");
         assertTrue(gapRejection.contains("larger than that limit"), "or the area may just be too large");
         assertTrue(gapRejection.contains(ArenaShapeFloodFill.MAXIMUM_CELL_COUNT_CONFIGURATION_PATH),
                 "the setting to raise is named");
         assertTrue(gapRejection.contains("20 cells"), "the configured value that stopped the fill is named");
+    }
+
+    @Test
+    void reportsWhereTheFillEscapedTo() {
+        BorderWall wall = BorderWall.around(roomWithACorridorTowardsEast(), SEED_HEIGHT);
+
+        ArenaShapeCalculation calculation = calculate(wall, 2, 2, 100);
+
+        ArenaFillDiagnostics diagnostics = calculation.getDiagnostics().orElseThrow();
+        assertEquals(100, diagnostics.getCellCount());
+        assertEquals("east", diagnostics.getEscapeDirectionName());
+        assertEquals(0, diagnostics.getMinimumX());
+        assertEquals(79, diagnostics.getMaximumX(), "the fill ran 75 columns down the corridor");
+        assertEquals(0, diagnostics.getMinimumZ());
+        assertEquals(4, diagnostics.getMaximumZ());
+        String rejection = calculation.getRejectionMessage().orElseThrow();
+        assertTrue(rejection.contains("x 0..79, z 0..4"), "the box is named: " + rejection);
+        assertTrue(rejection.contains("Walk along your wall towards east"),
+                "the admin is sent in the direction the fill went: " + rejection);
+    }
+
+    @Test
+    void reportsTheLastColumnsTheFillReached() {
+        BorderWall wall = BorderWall.around(roomWithACorridorTowardsEast(), SEED_HEIGHT);
+
+        ArenaFillDiagnostics diagnostics = calculate(wall, 2, 2, 100).getDiagnostics().orElseThrow();
+
+        long[] frontCells = diagnostics.getFrontCells();
+        assertEquals(ArenaFillDiagnostics.FRONT_SAMPLE_SIZE, frontCells.length);
+        for (long frontCell : frontCells) {
+            assertEquals(2, HorizontalCellCodec.decodeZ(frontCell), "every front column lies in the corridor");
+        }
+        assertEquals(HorizontalCellCodec.encode(79, 2), frontCells[frontCells.length - 1]);
+    }
+
+    @Test
+    void reportsAFillThatWasStoppedBeforeItSpread() {
+        BorderWall wall = new BorderWall().addRectangleOutline(0, 0, 4, 4, SEED_HEIGHT).removeColumn(4, 2);
+
+        ArenaShapeCalculation calculation = calculate(wall, 2, 2, 1);
+
+        assertFalse(calculation.getDiagnostics().orElseThrow().hasSpread());
+        String rejection = calculation.getRejectionMessage().orElseThrow();
+        assertTrue(rejection.contains("never left the column you are standing in"), rejection);
+        assertTrue(rejection.contains("Walk along your wall and look"), rejection);
+    }
+
+    @Test
+    void reportsNoDiagnosticsForACalculationThatWasNotStoppedByTheLimit() {
+        BorderWall wall = new BorderWall().addRectangleOutline(0, 0, 4, 4, SEED_HEIGHT);
+
+        assertTrue(calculate(wall, 2, 2, 1000).getDiagnostics().isEmpty(), "a finished fill has its shape");
+        assertTrue(calculate(wall, 0, 0, 1000).getDiagnostics().isEmpty(), "a fill that never started has nothing");
+    }
+
+    private static Set<Long> roomWithACorridorTowardsEast() {
+        Set<Long> roomCells = new LinkedHashSet<>();
+        for (int cellX = 0; cellX <= 4; cellX++) {
+            for (int cellZ = 0; cellZ <= 4; cellZ++) {
+                roomCells.add(HorizontalCellCodec.encode(cellX, cellZ));
+            }
+        }
+        for (int cellX = 5; cellX <= 300; cellX++) {
+            roomCells.add(HorizontalCellCodec.encode(cellX, 2));
+        }
+        return roomCells;
+    }
+
+    private static String reasonOf(String rejectionMessage) {
+        return rejectionMessage.substring(0, rejectionMessage.indexOf("The fill spread furthest"));
     }
 
     @Test

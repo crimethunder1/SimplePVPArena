@@ -1,7 +1,9 @@
 package de.simplepvparena;
 
 import de.simplepvparena.arena.Arena;
+import de.simplepvparena.arena.ArenaBorderConfirmation;
 import de.simplepvparena.arena.ArenaCleaningService;
+import de.simplepvparena.arena.ArenaGapGuide;
 import de.simplepvparena.arena.ArenaRegistry;
 import de.simplepvparena.arena.ArenaSetupService;
 import de.simplepvparena.arena.ArenaShapeFloodFill;
@@ -13,7 +15,6 @@ import de.simplepvparena.border.BorderParticleService;
 import de.simplepvparena.border.BorderVisualEffect;
 import de.simplepvparena.border.BorderVisualEffects;
 import de.simplepvparena.border.BorderWallPreview;
-import de.simplepvparena.border.OperatorBorderPassLog;
 import de.simplepvparena.border.SpectatorBorderService;
 import de.simplepvparena.command.TournamentCommand;
 import de.simplepvparena.gui.AdminMenuService;
@@ -33,7 +34,6 @@ import de.simplepvparena.match.RoundTimeoutSettings;
 import de.simplepvparena.team.TeamRegistry;
 import de.simplepvparena.team.TeamStorage;
 import de.simplepvparena.tournament.OnlineOperatorNotifier;
-import de.simplepvparena.tournament.OperatorNotifier;
 import de.simplepvparena.tournament.TournamentManager;
 import org.bukkit.command.PluginCommand;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -59,7 +59,6 @@ public final class SimplePVPArenaPlugin extends JavaPlugin {
     private static final String TEAMS_FILE_NAME = "teams.yml";
     private static final String BORDERS_FILE_NAME = "borders.yml";
     private static final long DEFAULT_ROUND_RESET_DELAY_TICKS = 100L;
-    private static final long OPERATOR_BORDER_PASS_REPORT_PERIOD_TICKS = 20L * 120L;
     private static final long TICKS_PER_SECOND = 20L;
     private static final int DEFAULT_BORDER_WALL_PREVIEW_SECONDS = 4;
 
@@ -70,11 +69,12 @@ public final class SimplePVPArenaPlugin extends JavaPlugin {
     private SpectatorService spectatorService;
     private BorderMarkIndex borderMarkIndex;
     private BorderMarkStorage borderMarkStorage;
-    private OperatorBorderPassLog operatorBorderPassLog;
+    private ArenaBorderConfirmation arenaBorderConfirmation;
     private SpectatorBorderService spectatorBorderService;
     private BorderParticleService borderParticleService;
     private BorderWallPreview borderWallPreview;
     private ArenaCleaningService arenaCleaningService;
+    private ArenaGapGuide arenaGapGuide;
     private ArenaSetupService arenaSetupService;
     private AdminMenuService adminMenuService;
     private MatchService matchService;
@@ -103,8 +103,8 @@ public final class SimplePVPArenaPlugin extends JavaPlugin {
         borderMarkIndex = new BorderMarkIndex();
         borderMarkStorage = new BorderMarkStorage(new File(getDataFolder(), BORDERS_FILE_NAME), getLogger());
         borderMarkStorage.load(borderMarkIndex);
-        operatorBorderPassLog = new OperatorBorderPassLog();
-        spectatorBorderService = new SpectatorBorderService(this, borderMarkIndex, this::saveBorderMarks);
+        arenaBorderConfirmation = new ArenaBorderConfirmation(arenaRegistry.getArena()::hasShape);
+        spectatorBorderService = new SpectatorBorderService(this, borderMarkIndex, this::onBorderMarksChanged);
 
         arenaCleaningService = new ArenaCleaningService(this, spectatorBorderService::clearMarksInShape);
         arenaCleaningService.setBlocksPerTick(getConfig().getInt(ARENA_BLOCKS_PER_TICK_KEY,
@@ -119,7 +119,7 @@ public final class SimplePVPArenaPlugin extends JavaPlugin {
 
         BorderVisualEffect borderVisualEffect = BorderVisualEffects.create(getServer().getPluginManager(), getLogger());
         borderParticleService = new BorderParticleService(this, borderMarkIndex, borderVisualEffect,
-                matchService::isActiveFighter);
+                matchService::isActiveFighter, arenaBorderConfirmation);
         borderParticleService.setPeriodTicks(getConfig().getLong(BORDER_PARTICLE_PERIOD_KEY,
                 BorderParticleService.DEFAULT_PERIOD_TICKS));
         borderParticleService.setViewRadius(getConfig().getInt(BORDER_PARTICLE_VIEW_RADIUS_KEY,
@@ -131,15 +131,16 @@ public final class SimplePVPArenaPlugin extends JavaPlugin {
         borderWallPreview = new BorderWallPreview(this, borderVisualEffect);
         borderWallPreview.setDurationTicks(TICKS_PER_SECOND * getConfig().getInt(BORDER_WALL_PREVIEW_SECONDS_KEY,
                 DEFAULT_BORDER_WALL_PREVIEW_SECONDS));
+        arenaGapGuide = new ArenaGapGuide(this);
 
         arenaSetupService = new ArenaSetupService(arenaRegistry, matchService, spectatorBorderService,
-                borderWallPreview, arenaCleaningService, readMaximumArenaCellCount(), this::saveArenaConfiguration);
+                borderWallPreview, arenaGapGuide, arenaCleaningService, arenaBorderConfirmation,
+                readMaximumArenaCellCount(), this::saveArenaConfiguration);
         adminMenuService = new AdminMenuService(this, tournamentManager, teamRegistry, matchService,
                 arenaSetupService, this::saveTeamConfiguration);
 
         registerCommand();
         registerListeners();
-        startOperatorBorderPassReport();
         borderParticleService.start();
     }
 
@@ -150,6 +151,9 @@ public final class SimplePVPArenaPlugin extends JavaPlugin {
         }
         if (borderWallPreview != null) {
             borderWallPreview.stopAll();
+        }
+        if (arenaGapGuide != null) {
+            arenaGapGuide.stopAll();
         }
         if (arenaCleaningService != null) {
             arenaCleaningService.stopCleaning();
@@ -171,16 +175,9 @@ public final class SimplePVPArenaPlugin extends JavaPlugin {
         teamStorage.save(teamRegistry);
     }
 
-    public void saveBorderMarks() {
+    public void onBorderMarksChanged() {
         borderMarkStorage.save(borderMarkIndex);
-    }
-
-    private void startOperatorBorderPassReport() {
-        OperatorNotifier administratorNotifier = OnlineOperatorNotifier.administrators(getServer(),
-                TournamentCommand.ADMIN_PERMISSION);
-        getServer().getScheduler().runTaskTimer(this,
-                () -> operatorBorderPassLog.drainReport().ifPresent(administratorNotifier::notifyOperators),
-                OPERATOR_BORDER_PASS_REPORT_PERIOD_TICKS, OPERATOR_BORDER_PASS_REPORT_PERIOD_TICKS);
+        arenaBorderConfirmation.invalidate();
     }
 
     public TournamentManager getTournamentManager() {
@@ -268,7 +265,7 @@ public final class SimplePVPArenaPlugin extends JavaPlugin {
         getServer().getPluginManager().registerEvents(
                 new PlayerMoveListener(matchService, spectatorService, arenaRegistry), this);
         getServer().getPluginManager().registerEvents(
-                new SpectatorBorderListener(matchService, spectatorBorderService, operatorBorderPassLog), this);
+                new SpectatorBorderListener(matchService, spectatorBorderService), this);
         getServer().getPluginManager().registerEvents(new PlayerInteractListener(matchService, spectatorService), this);
         getServer().getPluginManager().registerEvents(new AdminMenuListener(adminMenuService), this);
         getServer().getPluginManager().registerEvents(new GlobalPvpLockListener(matchService), this);

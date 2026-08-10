@@ -19,7 +19,9 @@ public final class ArenaSetupService {
     private final MatchService matchService;
     private final SpectatorBorderService spectatorBorderService;
     private final BorderWallPreview borderWallPreview;
+    private final ArenaGapGuide arenaGapGuide;
     private final ArenaCleaningService arenaCleaningService;
+    private final ArenaBorderConfirmation borderConfirmation;
     private final int maximumArenaCellCount;
     private final Runnable arenaConfigurationSaver;
 
@@ -27,14 +29,18 @@ public final class ArenaSetupService {
                              MatchService matchService,
                              SpectatorBorderService spectatorBorderService,
                              BorderWallPreview borderWallPreview,
+                             ArenaGapGuide arenaGapGuide,
                              ArenaCleaningService arenaCleaningService,
+                             ArenaBorderConfirmation borderConfirmation,
                              int maximumArenaCellCount,
                              Runnable arenaConfigurationSaver) {
         this.arenaRegistry = arenaRegistry;
         this.matchService = matchService;
         this.spectatorBorderService = spectatorBorderService;
         this.borderWallPreview = borderWallPreview;
+        this.arenaGapGuide = arenaGapGuide;
         this.arenaCleaningService = arenaCleaningService;
+        this.borderConfirmation = borderConfirmation;
         this.maximumArenaCellCount = maximumArenaCellCount;
         this.arenaConfigurationSaver = arenaConfigurationSaver;
     }
@@ -48,28 +54,76 @@ public final class ArenaSetupService {
     }
 
     public void calculateShape(Player admin) {
+        calculateShape(admin, maximumArenaCellCount, false);
+    }
+
+    public void calculateShape(Player admin, int debugCellLimit) {
+        calculateShape(admin, debugCellLimit, true);
+    }
+
+    private void calculateShape(Player admin, int cellLimit, boolean isDiagnosisRun) {
         if (matchService.hasActiveMatch()) {
             admin.sendMessage("A match is running in the arena, it can only be calculated between matches");
             return;
+        }
+        if (isDiagnosisRun) {
+            admin.sendMessage("Calculating once with a limit of " + cellLimit + " cells instead of the "
+                    + maximumArenaCellCount + " of " + ArenaShapeFloodFill.MAXIMUM_CELL_COUNT_CONFIGURATION_PATH
+                    + ", config.yml is not changed by it");
         }
         Location seedLocation = admin.getLocation();
         World world = seedLocation.getWorld();
         BorderColumnReader borderColumns = spectatorBorderService.createColumnReader(world);
         ArenaShapeCalculation calculation = ArenaShapeFloodFill.calculate(world.getName(),
                 seedLocation.getBlockX(), seedLocation.getBlockY(), seedLocation.getBlockZ(),
-                maximumArenaCellCount, borderColumns);
+                cellLimit, borderColumns);
         if (!calculation.isSuccessful()) {
             admin.sendMessage(calculation.getRejectionMessage().orElseThrow());
+            guideToGap(admin, world, seedLocation.getBlockY(), calculation);
             return;
         }
+        arenaGapGuide.stopFor(admin);
         ArenaShape shape = calculation.getShape().orElseThrow();
         Arena arena = arenaRegistry.getArena();
         arena.setShape(shape);
+        borderConfirmation.confirmCalculation();
         arenaConfigurationSaver.run();
         admin.sendMessage("The fight area was calculated from the border blocks: " + shape.describe());
+        reportDiagnosisLimit(admin, shape, cellLimit);
         previewRecognizedWall(admin, world, shape, borderColumns);
         arena.findSpawnPlacementWarnings().forEach(admin::sendMessage);
         reportMissingConfiguration(admin, arena);
+    }
+
+    private void guideToGap(Player admin, World world, int seedY, ArenaShapeCalculation calculation) {
+        if (calculation.getStatus() != ArenaShapeCalculation.Status.CELL_LIMIT_REACHED) {
+            return;
+        }
+        Optional<ArenaFillDiagnostics> diagnostics = calculation.getDiagnostics()
+                .filter(ArenaFillDiagnostics::hasSpread);
+        if (diagnostics.isEmpty()) {
+            return;
+        }
+        ArenaGapTarget target = ArenaGapTarget.fromDiagnostics(world.getName(), seedY, diagnostics.get());
+        boolean compassHandedOut = arenaGapGuide.guideTo(admin, world, target);
+        admin.sendMessage((compassHandedOut
+                ? "You received a compass that points to " + target.describe()
+                : "Your inventory is full, the compass towards " + target.describe()
+                        + " could not be handed over")
+                + ", and a trail of flame particles points the same way while you walk. That is the "
+                + "column the fill reached first of the ones it was stopped on, not a hole anybody "
+                + "found - start looking around there. The trail ends when you get there, and the next "
+                + Arena.CALCULATE_COMMAND + " replaces both with its own target");
+    }
+
+    private void reportDiagnosisLimit(Player admin, ArenaShape shape, int cellLimit) {
+        if (cellLimit <= maximumArenaCellCount || shape.getCellCount() <= maximumArenaCellCount) {
+            return;
+        }
+        admin.sendMessage("The wall is closed, the area is only larger than "
+                + ArenaShapeFloodFill.MAXIMUM_CELL_COUNT_CONFIGURATION_PATH + ". Raise it to at least "
+                + shape.getCellCount() + " in config.yml, otherwise the next " + Arena.CALCULATE_COMMAND
+                + " without a limit is rejected again");
     }
 
     private void previewRecognizedWall(Player player, World world, ArenaShape shape,
