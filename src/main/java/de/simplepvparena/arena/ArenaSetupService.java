@@ -5,6 +5,7 @@ import de.simplepvparena.border.BorderWallPreview;
 import de.simplepvparena.border.SpectatorBorderService;
 import de.simplepvparena.match.Match;
 import de.simplepvparena.match.MatchService;
+import de.simplepvparena.message.TournamentMessages;
 import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.command.CommandSender;
@@ -74,13 +75,14 @@ public final class ArenaSetupService {
 
     private void calculateShape(Player admin, int cellLimit, boolean isDiagnosisRun) {
         if (matchService.hasActiveMatch()) {
-            admin.sendMessage("A match is running in the arena, it can only be calculated between matches");
+            TournamentMessages.sendError(admin,
+                    "A match is running, the fight area can only be calculated between matches");
             return;
         }
         if (isDiagnosisRun) {
-            admin.sendMessage("Calculating once with a limit of " + cellLimit + " cells instead of the "
-                    + maximumArenaCellCount + " of " + ArenaShapeFloodFill.MAXIMUM_CELL_COUNT_CONFIGURATION_PATH
-                    + ", config.yml is not changed by it");
+            TournamentMessages.sendInfo(admin, "Calculating once with a limit of " + cellLimit + " cells"
+                    + TournamentMessages.LINE_BREAK + "instead of the " + maximumArenaCellCount + " of "
+                    + ArenaShapeFloodFill.MAXIMUM_CELL_COUNT_CONFIGURATION_PATH + ", config.yml is not changed");
         }
         Location seedLocation = admin.getLocation();
         World world = seedLocation.getWorld();
@@ -89,7 +91,7 @@ public final class ArenaSetupService {
                 seedLocation.getBlockX(), seedLocation.getBlockY(), seedLocation.getBlockZ(),
                 cellLimit, borderColumns);
         if (!calculation.isSuccessful()) {
-            admin.sendMessage(calculation.getRejectionMessage().orElseThrow());
+            TournamentMessages.sendError(admin, calculation.getRejectionMessage().orElseThrow());
             guideToGap(admin, world, seedLocation.getBlockY(), calculation);
             return;
         }
@@ -99,25 +101,38 @@ public final class ArenaSetupService {
         arena.setShape(shape);
         borderConfirmation.confirmCalculation();
         arenaConfigurationSaver.run();
-        admin.sendMessage("The fight area was calculated from the border blocks: " + shape.describe());
+        TournamentMessages.sendSuccess(admin,
+                "The fight area was calculated from the border blocks"
+                        + TournamentMessages.LINE_BREAK + shape.describe());
         reportDiagnosisLimit(admin, shape, cellLimit);
         captureBaseline(admin, shape);
         previewRecognizedWall(admin, world, shape, borderColumns);
-        arena.findSpawnPlacementWarnings().forEach(admin::sendMessage);
+        reportSpawnPlacementWarnings(admin, arena);
         reportMissingConfiguration(admin, arena);
     }
 
     private void captureBaseline(Player admin, ArenaShape shape) {
-        if (!arenaBaselineService.startCapture(shape, report -> admin.sendMessage(report.describe()))) {
-            admin.sendMessage("The fight area holds " + shape.getBlockCount() + " blocks, more than the "
-                    + ArenaBaselineSnapshot.MAXIMUM_BLOCK_COUNT + " a baseline is taken of. "
-                    + Arena.CLEAN_ACTION + " sets every block of it to air, the way it always did");
+        if (!arenaBaselineService.startCapture(shape, report -> reportBaseline(admin, report))) {
+            TournamentMessages.sendWarning(admin, "No baseline is taken of the fight area"
+                    + TournamentMessages.LINE_BREAK + "It holds " + shape.getBlockCount()
+                    + " blocks, more than the " + ArenaBaselineSnapshot.MAXIMUM_BLOCK_COUNT + " a baseline covers."
+                    + TournamentMessages.LINE_BREAK + Arena.CLEAN_ACTION
+                    + " sets every block of it to air, the way it always did");
             return;
         }
-        admin.sendMessage("Reading the " + shape.getBlockCount() + " blocks of the fight area as the baseline "
-                + Arena.CLEAN_ACTION + " restores, in batches of " + arenaBaselineService.getBlocksPerTick()
-                + " per tick. The arena cannot be cleaned until that is done, and the baseline is gone "
-                + "when the server restarts");
+        TournamentMessages.sendInfo(admin, "Reading the " + shape.getBlockCount()
+                + " blocks of the fight area as the baseline " + Arena.CLEAN_ACTION + " restores"
+                + TournamentMessages.LINE_BREAK + "In batches of " + arenaBaselineService.getBlocksPerTick()
+                + " per tick, the arena cannot be cleaned until that is done."
+                + TournamentMessages.LINE_BREAK + "The baseline is gone when the server restarts");
+    }
+
+    private void reportBaseline(Player admin, ArenaBaselineReport report) {
+        if (report.isCaptured()) {
+            TournamentMessages.sendSuccess(admin, report.describe());
+            return;
+        }
+        TournamentMessages.sendWarning(admin, report.describe());
     }
 
     private void guideToGap(Player admin, World world, int seedY, ArenaShapeCalculation calculation) {
@@ -131,24 +146,29 @@ public final class ArenaSetupService {
         }
         ArenaGapTarget target = ArenaGapTarget.fromDiagnostics(world.getName(), seedY, diagnostics.get());
         boolean compassHandedOut = arenaGapGuide.guideTo(admin, world, target);
-        admin.sendMessage((compassHandedOut
-                ? "You received a compass that points to " + target.describe()
-                : "Your inventory is full, the compass towards " + target.describe()
-                        + " could not be handed over")
-                + ", and a trail of flame particles points the same way while you walk. "
-                + target.reason().getHandOutHint()
-                + ". The trail ends when you get there, and the next calculation replaces both with its "
-                + "own target");
+        String guidance = "A trail of flame particles points towards " + target.describe()
+                + " while you walk."
+                + TournamentMessages.LINE_BREAK + target.reason().getHandOutHint() + "."
+                + TournamentMessages.LINE_BREAK + "The trail ends when you get there, the next "
+                + "calculation replaces it with its own target";
+        if (compassHandedOut) {
+            TournamentMessages.sendInfo(admin, "You received a compass that points to " + target.describe()
+                    + TournamentMessages.LINE_BREAK + guidance);
+            return;
+        }
+        TournamentMessages.sendWarning(admin, "Your inventory is full, the compass towards "
+                + target.describe() + " could not be handed over"
+                + TournamentMessages.LINE_BREAK + guidance);
     }
 
     private void reportDiagnosisLimit(Player admin, ArenaShape shape, int cellLimit) {
         if (cellLimit <= maximumArenaCellCount || shape.getCellCount() <= maximumArenaCellCount) {
             return;
         }
-        admin.sendMessage("The wall is closed, the area is only larger than "
-                + ArenaShapeFloodFill.MAXIMUM_CELL_COUNT_CONFIGURATION_PATH + ". Raise it to at least "
-                + shape.getCellCount() + " in config.yml, otherwise the next calculation without a limit "
-                + "is rejected again");
+        TournamentMessages.sendWarning(admin, "The wall is closed, the area is only larger than "
+                + ArenaShapeFloodFill.MAXIMUM_CELL_COUNT_CONFIGURATION_PATH
+                + TournamentMessages.LINE_BREAK + "Raise it to at least " + shape.getCellCount()
+                + " in config.yml, otherwise the next calculation without a limit is rejected again");
     }
 
     private void previewRecognizedWall(Player player, World world, ArenaShape shape,
@@ -157,7 +177,8 @@ public final class ArenaSetupService {
         if (!borderWallPreview.show(player, world, outline)) {
             return;
         }
-        player.sendMessage("The recognized wall is shown for a few seconds: " + outline.describe());
+        TournamentMessages.sendInfo(player, "The recognized wall is shown for a few seconds"
+                + TournamentMessages.LINE_BREAK + outline.describe());
     }
 
     public void setSpawn(Player admin, ArenaSpawnType spawnType) {
@@ -165,12 +186,13 @@ public final class ArenaSetupService {
         PositionSnapshot position = PositionSnapshot.fromLocation(admin.getLocation());
         Optional<String> rejection = arena.setSpawn(spawnType, position);
         if (rejection.isPresent()) {
-            admin.sendMessage(rejection.get());
+            TournamentMessages.sendError(admin, rejection.get());
             return;
         }
         arenaConfigurationSaver.run();
-        admin.sendMessage("Set the " + spawnType.getDisplayName() + " of the arena to " + position.describe());
-        arena.findSpawnPlacementWarnings().forEach(admin::sendMessage);
+        TournamentMessages.sendSuccess(admin, "Set the " + spawnType.getDisplayName() + " to "
+                + position.describe());
+        reportSpawnPlacementWarnings(admin, arena);
         reportMissingConfiguration(admin, arena);
     }
 
@@ -178,23 +200,26 @@ public final class ArenaSetupService {
         arenaRegistry.clearArenaConfiguration();
         arenaBaselineService.discardSnapshot();
         arenaConfigurationSaver.run();
-        sender.sendMessage("The arena configuration was removed, its blocks and border blocks stay untouched");
+        TournamentMessages.sendSuccess(sender, "The arena configuration was removed"
+                + TournamentMessages.LINE_BREAK + "Its blocks and the border blocks stay untouched");
     }
 
     public Optional<String> findCleaningRejection() {
         if (arenaRegistry.getArena().getShape().isEmpty()) {
-            return Optional.of("The fight area is not calculated, there is nothing to clean. Use "
-                    + Arena.CALCULATE_ACTION + " while standing inside the border wall first");
+            return Optional.of("The fight area is not calculated, there is nothing to clean"
+                    + TournamentMessages.LINE_BREAK + "Use " + Arena.CALCULATE_ACTION
+                    + " while standing inside the border wall first");
         }
         if (matchService.hasActiveMatch()) {
-            return Optional.of("A match is running in the arena, the arena can only be cleaned between matches");
+            return Optional.of("A match is running, the arena can only be cleaned between matches");
         }
         if (arenaCleaningService.isCleaning()) {
             return Optional.of("The arena is already being cleaned");
         }
         if (arenaBaselineService.isCapturing()) {
-            return Optional.of("The baseline of the fight area is still being read, wait a moment. A cleaning "
-                    + "that started now would find no baseline and empty the arena instead of restoring it");
+            return Optional.of("The baseline of the fight area is still being read, wait a moment"
+                    + TournamentMessages.LINE_BREAK + "A cleaning that started now would find no "
+                    + "baseline and empty the arena instead of restoring it");
         }
         return Optional.empty();
     }
@@ -225,7 +250,7 @@ public final class ArenaSetupService {
     public boolean startCleaning(CommandSender sender) {
         Optional<String> rejection = findCleaningRejection();
         if (rejection.isPresent()) {
-            sender.sendMessage(rejection.get());
+            TournamentMessages.sendError(sender, rejection.get());
             return false;
         }
         ArenaShape shape = getShape().orElseThrow();
@@ -234,21 +259,33 @@ public final class ArenaSetupService {
         ArenaCleaningTarget cleaningTarget = baseline.map(ArenaCleaningTarget.class::cast)
                 .orElse(ArenaCleaningTarget.EMPTY_ARENA);
         boolean cleaningStarted = arenaCleaningService.startCleaning(shape, cleaningTarget,
-                report -> sender.sendMessage(report.describeOutcome()));
+                report -> reportCleaningOutcome(sender, report));
         if (!cleaningStarted) {
-            sender.sendMessage("The arena cleaning could not be started");
+            TournamentMessages.sendError(sender, "The arena cleaning could not be started");
             return false;
         }
-        sender.sendMessage(baseline
-                .map(snapshot -> "Restoring the arena to the baseline of the last calculation ("
-                        + snapshot.describe() + ")")
-                .orElse("No baseline of the fight area is stored, every block of it is set to air instead. "
-                        + "A baseline is taken by " + Arena.CALCULATE_ACTION + " and does not survive a server "
-                        + "restart"));
-        sender.sendMessage("Cleaning the arena, " + blockCount + " blocks between y " + shape.getFloorY()
-                + " and y " + shape.getWallTopY() + " are processed in batches of "
+        if (baseline.isPresent()) {
+            TournamentMessages.sendInfo(sender, "Restoring the arena to the baseline of the last calculation"
+                    + TournamentMessages.LINE_BREAK + baseline.get().describe());
+        } else {
+            TournamentMessages.sendWarning(sender, "No baseline of the fight area is stored, every block of "
+                    + "it is set to air instead"
+                    + TournamentMessages.LINE_BREAK + "A baseline is taken by " + Arena.CALCULATE_ACTION
+                    + " and does not survive a server restart");
+        }
+        TournamentMessages.sendInfo(sender, "Cleaning the arena, " + blockCount + " blocks between y "
+                + shape.getFloorY() + " and y " + shape.getWallTopY()
+                + TournamentMessages.LINE_BREAK + "Processed in batches of "
                 + arenaCleaningService.getBlocksPerTick() + " per tick");
         return true;
+    }
+
+    private static void reportCleaningOutcome(CommandSender sender, ArenaCleaningReport report) {
+        if (report.isSuccessful()) {
+            TournamentMessages.sendSuccess(sender, report.describeOutcome());
+            return;
+        }
+        TournamentMessages.sendError(sender, report.describeOutcome());
     }
 
     public List<String> describeArena() {
@@ -265,10 +302,18 @@ public final class ArenaSetupService {
                 "  running match: " + matchService.getActiveMatch().map(Match::describe).orElse("none"));
     }
 
-    private void reportMissingConfiguration(CommandSender sender, Arena arena) {
-        List<String> missingParts = arena.getMissingConfiguration();
-        if (!missingParts.isEmpty()) {
-            sender.sendMessage("The arena still misses: " + String.join(", ", missingParts));
+    private static void reportSpawnPlacementWarnings(CommandSender sender, Arena arena) {
+        for (String warning : arena.findSpawnPlacementWarnings()) {
+            TournamentMessages.sendWarning(sender, warning);
         }
+    }
+
+    private static void reportMissingConfiguration(CommandSender sender, Arena arena) {
+        List<String> missingParts = arena.getMissingConfiguration();
+        if (missingParts.isEmpty()) {
+            return;
+        }
+        TournamentMessages.sendBlock(sender, TournamentMessages.warning("The arena still misses:"),
+                missingParts);
     }
 }

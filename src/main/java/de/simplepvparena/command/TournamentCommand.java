@@ -3,6 +3,7 @@ package de.simplepvparena.command;
 import de.simplepvparena.arena.SpectatorService;
 import de.simplepvparena.gui.AdminMenuService;
 import de.simplepvparena.match.MatchService;
+import de.simplepvparena.message.TournamentMessages;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.TabExecutor;
@@ -46,12 +47,12 @@ public final class TournamentCommand implements TabExecutor {
 
     private void openAdminMenu(CommandSender sender) {
         if (!sender.hasPermission(ADMIN_PERMISSION)) {
-            sender.sendMessage("You are not allowed to use this command");
+            TournamentMessages.sendError(sender, "You are not allowed to use this command");
             return;
         }
         if (!(sender instanceof Player player)) {
-            sender.sendMessage("This command can only be used as a player, the tournament administration "
-                    + "is a menu that needs somebody to open it for");
+            TournamentMessages.sendError(sender, "The tournament administration is a menu"
+                    + TournamentMessages.LINE_BREAK + "It can only be opened by a player, not from the console");
             return;
         }
         adminMenuService.openMainMenu(player);
@@ -59,22 +60,22 @@ public final class TournamentCommand implements TabExecutor {
 
     private void handleSpectate(CommandSender sender) {
         if (!(sender instanceof Player player)) {
-            sender.sendMessage("This command can only be used as a player");
+            TournamentMessages.sendError(sender, "This command can only be used as a player");
             return;
         }
         if (!player.hasPermission(SPECTATE_PERMISSION)) {
-            player.sendMessage("You are not allowed to use this command");
+            TournamentMessages.sendError(player, "You are not allowed to use this command");
             return;
         }
         if (matchService.isActiveFighter(player.getUniqueId())) {
-            player.sendMessage("You cannot leave the arena while you are fighting");
+            TournamentMessages.sendError(player, "You cannot leave the arena while you are fighting");
             return;
         }
         if (!spectatorService.sendToTribune(player)) {
-            player.sendMessage("The arena has no usable tribune position");
+            TournamentMessages.sendError(player, "The arena has no usable tribune position");
             return;
         }
-        player.sendMessage("You are now watching the arena");
+        TournamentMessages.sendSuccess(player, "You are now watching the arena");
     }
 
     @Override

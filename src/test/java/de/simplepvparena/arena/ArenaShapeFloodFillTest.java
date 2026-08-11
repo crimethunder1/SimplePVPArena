@@ -2,6 +2,7 @@ package de.simplepvparena.arena;
 
 import de.simplepvparena.border.BlockedColumnLookup;
 import de.simplepvparena.border.SpectatorBorderMovementRule;
+import de.simplepvparena.message.TournamentMessages;
 import org.junit.jupiter.api.Test;
 
 import java.util.ArrayDeque;
@@ -278,7 +279,7 @@ class ArenaShapeFloodFillTest {
         assertFalse(rejection.contains("hold a border block"), "nothing is claimed about a wall: " + rejection);
         assertTrue(rejection.startsWith("The fight area could not be calculated, the flood fill was stopped at "
                 + "200 cells, the limit of " + ArenaShapeFloodFill.MAXIMUM_CELL_COUNT_CONFIGURATION_PATH
-                + ". Either your border wall has a gap"), rejection);
+                + TournamentMessages.LINE_BREAK + "Either your border wall has a gap"), rejection);
     }
 
     @Test

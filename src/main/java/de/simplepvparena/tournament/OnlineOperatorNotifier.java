@@ -1,5 +1,7 @@
 package de.simplepvparena.tournament;
 
+import de.simplepvparena.message.TournamentMessages;
+import net.kyori.adventure.text.Component;
 import org.bukkit.Server;
 import org.bukkit.entity.Player;
 
@@ -15,11 +17,12 @@ public final class OnlineOperatorNotifier implements OperatorNotifier {
 
     @Override
     public void notifyOperators(String message) {
+        Component notification = TournamentMessages.warning(message);
         for (Player player : server.getOnlinePlayers()) {
             if (player.isOp()) {
-                player.sendMessage(message);
+                player.sendMessage(notification);
             }
         }
-        server.getConsoleSender().sendMessage(message);
+        server.getConsoleSender().sendMessage(notification);
     }
 }

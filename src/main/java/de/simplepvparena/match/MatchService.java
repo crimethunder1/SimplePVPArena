@@ -3,6 +3,7 @@ package de.simplepvparena.match;
 import de.simplepvparena.arena.PositionSnapshot;
 import de.simplepvparena.arena.SpectatorService;
 import de.simplepvparena.kit.KitService;
+import de.simplepvparena.message.TournamentMessages;
 import de.simplepvparena.team.Team;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.title.Title;
@@ -217,14 +218,15 @@ public final class MatchService {
                 scheduleNextRound(match);
                 return;
             }
-            announceToMatch(match, "Match " + match.getMatchId()
-                    + " is halted because no participant is online, use \"Force a result\" in the match menu "
-                    + "of /tournament to resolve it");
+            announceWarningToMatch(match, "Match " + match.getMatchId()
+                    + " is halted, no participant is online"
+                    + TournamentMessages.LINE_BREAK
+                    + "Use \"Force a result\" in the match menu of /tournament to resolve it");
             return;
         }
         String winnerTeamName = outcome.winnerTeamName().orElseThrow();
         match.getScore().awardPoint(winnerTeamName);
-        announceToMatch(match, winnerTeamName + " scores a point (" + match.getScore().describe() + ")");
+        announceSuccessToMatch(match, winnerTeamName + " scores a point (" + match.getScore().describe() + ")");
         Optional<String> matchWinner = match.getScore().getWinnerTeamName();
         if (matchWinner.isPresent()) {
             finishMatch(match, matchWinner.get());
@@ -256,7 +258,7 @@ public final class MatchService {
         stopRoundTimer();
         match.setState(MatchState.FINISHED);
         activeMatch = null;
-        announceToMatch(match, "Match " + match.getMatchId() + " is over, " + winnerTeamName + " wins ("
+        announceSuccessToMatch(match, "Match " + match.getMatchId() + " is over, " + winnerTeamName + " wins ("
                 + match.getScore().describe() + ")");
         releaseParticipants(match);
         matchCompletionHandler.onMatchCompleted(match, winnerTeamName);
@@ -296,8 +298,8 @@ public final class MatchService {
 
     private void announceSuddenDeathStart(Match match) {
         announceTitleToMatch(match, "Sudden death", "Both teams take damage until one of them falls");
-        announceToMatch(match, "The time limit of round " + match.getRoundNumber() + " in match " + match.getMatchId()
-                + " is over, sudden death has started");
+        announceWarningToMatch(match, "The time limit of round " + match.getRoundNumber() + " in match "
+                + match.getMatchId() + " is over, sudden death has started");
     }
 
     private void applySuddenDeathDamage(Match match, double damageAmount) {
@@ -373,17 +375,30 @@ public final class MatchService {
     }
 
     private void announceToMatch(Match match, String message) {
+        announceToMatch(match, TournamentMessages.info(message), message);
+    }
+
+    private void announceSuccessToMatch(Match match, String message) {
+        announceToMatch(match, TournamentMessages.success(message), message);
+    }
+
+    private void announceWarningToMatch(Match match, String message) {
+        announceToMatch(match, TournamentMessages.warning(message), message);
+    }
+
+    private void announceToMatch(Match match, Component message, String logMessage) {
         forEachMatchAudience(match, player -> player.sendMessage(message));
-        plugin.getLogger().info(message);
+        plugin.getLogger().info(logMessage);
     }
 
     private void announceActionBarToMatch(Match match, String message) {
-        Component actionBarText = Component.text(message);
+        Component actionBarText = Component.text(message, TournamentMessages.WARNING_COLOUR);
         forEachMatchAudience(match, player -> player.sendActionBar(actionBarText));
     }
 
     private void announceTitleToMatch(Match match, String titleText, String subtitleText) {
-        Title title = Title.title(Component.text(titleText), Component.text(subtitleText), SUDDEN_DEATH_TITLE_TIMES);
+        Title title = Title.title(Component.text(titleText, TournamentMessages.ERROR_COLOUR),
+                Component.text(subtitleText, TournamentMessages.DETAIL_COLOUR), SUDDEN_DEATH_TITLE_TIMES);
         forEachMatchAudience(match, player -> player.showTitle(title));
     }
 

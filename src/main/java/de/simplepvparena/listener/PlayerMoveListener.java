@@ -6,6 +6,7 @@ import de.simplepvparena.arena.ArenaRegistry;
 import de.simplepvparena.arena.ArenaShape;
 import de.simplepvparena.arena.SpectatorService;
 import de.simplepvparena.match.MatchService;
+import de.simplepvparena.message.TournamentMessages;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -64,7 +65,8 @@ public final class PlayerMoveListener implements Listener {
 
     private void endArenaFlight(Player player) {
         if (!spectatorService.sendToTribune(player)) {
-            player.sendMessage("The tribune spawn of the arena is not set, use the spectator item to stop flying");
+            TournamentMessages.sendWarning(player,
+                    "The tribune spawn is not set, use the spectator item to stop flying");
             return;
         }
         player.setFallDistance(0.0F);

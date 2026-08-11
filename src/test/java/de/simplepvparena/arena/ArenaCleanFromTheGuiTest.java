@@ -7,6 +7,8 @@ import de.simplepvparena.border.BorderWallPreview;
 import de.simplepvparena.border.ConfirmedBorderParticleSettings;
 import de.simplepvparena.border.SpectatorBorderService;
 import de.simplepvparena.match.MatchService;
+import de.simplepvparena.message.TournamentMessages;
+import net.kyori.adventure.text.Component;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.World;
@@ -310,13 +312,20 @@ class ArenaCleanFromTheGuiTest {
         }
     }
 
+    private static String recordedText(Object message) {
+        if (message instanceof Component component) {
+            return TournamentMessages.toPlainBody(component);
+        }
+        return String.valueOf(message);
+    }
+
     private static Player fakePlayer(List<String> messages, World world, int blockY) {
         UUID playerId = UUID.randomUUID();
         return (Player) Proxy.newProxyInstance(Player.class.getClassLoader(), new Class<?>[] {Player.class},
                 (proxyInstance, method, arguments) -> switch (method.getName()) {
                     case "getLocation" -> new Location(world, 0.5D, blockY, 0.5D);
                     case "sendMessage" -> {
-                        messages.add(String.valueOf(arguments[0]));
+                        messages.add(recordedText(arguments[0]));
                         yield null;
                     }
                     case "getUniqueId" -> playerId;
@@ -336,7 +345,7 @@ class ArenaCleanFromTheGuiTest {
                 new Class<?>[] {CommandSender.class},
                 (proxyInstance, method, arguments) -> switch (method.getName()) {
                     case "sendMessage" -> {
-                        messages.add(String.valueOf(arguments[0]));
+                        messages.add(recordedText(arguments[0]));
                         yield null;
                     }
                     case "toString" -> "fake sender";

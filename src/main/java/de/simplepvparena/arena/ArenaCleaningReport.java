@@ -1,5 +1,7 @@
 package de.simplepvparena.arena;
 
+import de.simplepvparena.message.TournamentMessages;
+
 public record ArenaCleaningReport(long checkedBlockCount, long changedBlockCount, int clearedBorderMarkCount,
                                   String changeDescription, String failureReason) {
 
@@ -21,11 +23,12 @@ public record ArenaCleaningReport(long checkedBlockCount, long changedBlockCount
 
     public String describeOutcome() {
         if (isSuccessful()) {
-            return "The arena is clean, " + describe();
+            return "The arena is clean" + TournamentMessages.LINE_BREAK + describe();
         }
-        return "The arena cleaning was stopped: " + failureReason + ". " + describe()
-                + ". Run " + Arena.CLEAN_ACTION + " again once the reason is gone, the blocks that were "
-                + "already written stay as they are";
+        return "The arena cleaning was stopped: " + failureReason
+                + TournamentMessages.LINE_BREAK + describe()
+                + TournamentMessages.LINE_BREAK + "Run " + Arena.CLEAN_ACTION + " again once the reason is "
+                + "gone, the blocks that were already written stay as they are";
     }
 
     public String describe() {

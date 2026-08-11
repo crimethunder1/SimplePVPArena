@@ -13,6 +13,7 @@ import de.simplepvparena.input.ChatInputService;
 import de.simplepvparena.kit.KitSaveService;
 import de.simplepvparena.match.Match;
 import de.simplepvparena.match.MatchService;
+import de.simplepvparena.message.TournamentMessages;
 import de.simplepvparena.team.Team;
 import de.simplepvparena.team.TeamCreationRequest;
 import de.simplepvparena.team.TeamMember;
@@ -150,7 +151,7 @@ public final class AdminMenuService {
             case MAIN_MATCH_SLOT -> openMenu(player, AdminMenuHolder.match());
             case MAIN_BORDER_SLOT -> askForBorderItemLine(player);
             case MAIN_FINAL_SLOT -> runOperation(player, tournamentManager::startFinalMatch);
-            case MAIN_STATUS_SLOT -> player.sendMessage(tournamentManager.describeStatus());
+            case MAIN_STATUS_SLOT -> TournamentMessages.sendInfo(player, tournamentManager.describeStatus());
             case MAIN_BRACKET_SLOT -> showBracket(player);
             case MAIN_RELOAD_SLOT -> reloadConfiguration(player);
             case MAIN_KIT_SLOT -> openMenu(player, AdminMenuHolder.kit());
@@ -161,22 +162,24 @@ public final class AdminMenuService {
 
     private void showBracket(Player player) {
         closeMenu(player);
-        tournamentManager.describeBracket().forEach(player::sendMessage);
+        TournamentMessages.sendBlock(player, TournamentMessages.info("Bracket"),
+                tournamentManager.describeBracket());
     }
 
     private void reloadConfiguration(Player player) {
         closeMenu(player);
         boolean matchWasRunning = matchService.hasActiveMatch();
         ConfigurationReloadReport report = configurationReloader.get();
-        report.describe().forEach(player::sendMessage);
+        TournamentMessages.sendInfoReport(player, report.describe());
         if (matchWasRunning) {
-            player.sendMessage(describeRunningMatchDelay());
+            TournamentMessages.sendWarning(player, describeRunningMatchDelay());
         }
     }
 
     private static String describeRunningMatchDelay() {
-        return "A match is running: its round keeps the timer it started with and its fighters keep "
-                + "the kit they were given, both follow the new settings with the next round";
+        return "A match is running, the new settings arrive with the next round"
+                + TournamentMessages.LINE_BREAK
+                + "The running round keeps its timer and its fighters keep the kit they were given";
     }
 
     private void fillMainMenu(Inventory inventory) {
@@ -267,7 +270,7 @@ public final class AdminMenuService {
     private void askForCleaningConfirmation(Player player) {
         Optional<String> rejection = arenaSetupService.findCleaningRejection();
         if (rejection.isPresent()) {
-            player.sendMessage(rejection.get());
+            TournamentMessages.sendError(player, rejection.get());
             return;
         }
         openMenu(player, AdminMenuHolder.confirmation(ConfirmationRequest.CLEAN_ARENA, null, 0));
@@ -322,7 +325,7 @@ public final class AdminMenuService {
     }
 
     private void saveKit(Player player) {
-        kitSaveService.saveFromInventory(player).describe().forEach(player::sendMessage);
+        TournamentMessages.sendSuccessReport(player, kitSaveService.saveFromInventory(player).describe());
     }
 
     private void fillKitMenu(Inventory inventory) {
@@ -449,7 +452,7 @@ public final class AdminMenuService {
     private void openForceResultMenu(Player player) {
         Optional<Match> activeMatch = matchService.getActiveMatch();
         if (activeMatch.isEmpty()) {
-            player.sendMessage("No match is running");
+            TournamentMessages.sendError(player, "No match is running");
             return;
         }
         openMenu(player, AdminMenuHolder.forceResult(activeMatch.get().getMatchId()));
@@ -502,7 +505,8 @@ public final class AdminMenuService {
         }
         Optional<Match> activeMatch = findMatchOfMenu(holder);
         if (activeMatch.isEmpty()) {
-            player.sendMessage("Match " + holder.getSubject().orElseThrow() + " is not running any more");
+            TournamentMessages.sendWarning(player,
+                    "Match " + holder.getSubject().orElseThrow() + " is not running any more");
             openMenu(player, AdminMenuHolder.match());
             return;
         }
@@ -510,8 +514,8 @@ public final class AdminMenuService {
         if (winningTeam.isEmpty()) {
             return;
         }
-        player.sendMessage(tournamentManager.forceMatchResult(activeMatch.get().getMatchId(),
-                winningTeam.get().getTeamName()).message());
+        reportOperation(player, tournamentManager.forceMatchResult(activeMatch.get().getMatchId(),
+                winningTeam.get().getTeamName()));
         openMenu(player, AdminMenuHolder.match());
     }
 
@@ -566,17 +570,17 @@ public final class AdminMenuService {
             case RESET_ARENA -> arenaSetupService.clearConfiguration(player);
             case SAVE_KIT -> saveKit(player);
             case REMOVE_TEAM -> removeTeam(player, holder.getSubject().orElseThrow());
-            case CANCEL_TOURNAMENT -> player.sendMessage(tournamentManager.cancelTournament().message());
+            case CANCEL_TOURNAMENT -> reportOperation(player, tournamentManager.cancelTournament());
         }
     }
 
     private void removeTeam(Player player, String teamName) {
         if (!teamRegistry.removeTeam(teamName)) {
-            player.sendMessage("Unknown team " + teamName);
+            TournamentMessages.sendError(player, "Unknown team " + teamName);
             return;
         }
         teamConfigurationSaver.run();
-        player.sendMessage("Team " + teamName + " removed");
+        TournamentMessages.sendSuccess(player, "Team " + teamName + " removed");
     }
 
     private void openReturnMenu(Player player, AdminMenuHolder holder) {
@@ -630,7 +634,7 @@ public final class AdminMenuService {
         }
         TeamCreationRequest request = TeamCreationRequest.parse(line);
         if (!request.isAccepted()) {
-            player.sendMessage(request.getRejectionMessage().orElseThrow());
+            TournamentMessages.sendError(player, request.getRejectionMessage().orElseThrow());
             openMenu(player, AdminMenuHolder.teams(pageIndex));
             return;
         }
@@ -641,20 +645,21 @@ public final class AdminMenuService {
     private void registerTeam(Player player, TeamCreationRequest request) {
         Optional<TeamMember> firstMember = teamMemberLookup.find(request.getFirstPlayerName());
         if (firstMember.isEmpty()) {
-            player.sendMessage(describeUnknownPlayer(request.getFirstPlayerName()));
+            TournamentMessages.sendError(player, describeUnknownPlayer(request.getFirstPlayerName()));
             return;
         }
         Optional<TeamMember> secondMember = teamMemberLookup.find(request.getSecondPlayerName());
         if (secondMember.isEmpty()) {
-            player.sendMessage(describeUnknownPlayer(request.getSecondPlayerName()));
+            TournamentMessages.sendError(player, describeUnknownPlayer(request.getSecondPlayerName()));
             return;
         }
         try {
             Team team = teamRegistry.registerTeam(request.getTeamName(), firstMember.get(), secondMember.get());
             teamConfigurationSaver.run();
-            player.sendMessage("Team " + team.getTeamName() + " registered with " + team.getMemberNamesJoined());
+            TournamentMessages.sendSuccess(player, "Team " + team.getTeamName() + " registered with "
+                    + team.getMemberNamesJoined());
         } catch (IllegalArgumentException | IllegalStateException failure) {
-            player.sendMessage(failure.getMessage());
+            TournamentMessages.sendError(player, failure.getMessage());
         }
     }
 
@@ -663,7 +668,8 @@ public final class AdminMenuService {
     }
 
     private String describeUnknownPlayer(String playerName) {
-        return "Unknown player " + playerName + ", the player has to be online or known to the server";
+        return "Unknown player " + playerName
+                + TournamentMessages.LINE_BREAK + "The player has to be online or known to the server";
     }
 
     private void askForBorderItemLine(Player player) {
@@ -683,7 +689,7 @@ public final class AdminMenuService {
         BorderItemRequestResult requestResult = BorderItemRequest.parseLine(line,
                 AdminMenuService::isPlaceableBlock);
         if (!requestResult.isAccepted()) {
-            player.sendMessage(requestResult.getRejectionMessage().orElseThrow());
+            TournamentMessages.sendError(player, requestResult.getRejectionMessage().orElseThrow());
             openMainMenu(player);
             return;
         }
@@ -691,10 +697,13 @@ public final class AdminMenuService {
         ItemStack borderItem = spectatorBorderService.createBorderItem(request);
         Map<Integer, ItemStack> itemsThatDidNotFit = player.getInventory().addItem(borderItem);
         if (!itemsThatDidNotFit.isEmpty()) {
-            player.sendMessage("Your inventory is full, not every border block could be handed out");
+            TournamentMessages.sendWarning(player,
+                    "Your inventory is full, not every border block could be handed out");
         }
-        player.sendMessage("You received " + request.amount() + " " + request.material().name()
-                + " border blocks, every block you place with them stops everybody who is not fighting");
+        TournamentMessages.sendSuccess(player, "You received " + request.amount() + " "
+                + request.material().name() + " border blocks"
+                + TournamentMessages.LINE_BREAK
+                + "Every block you place with them stops everybody who is not fighting");
         openMainMenu(player);
     }
 
@@ -715,7 +724,7 @@ public final class AdminMenuService {
         }
         ArenaDebugCellLimit debugCellLimit = ArenaDebugCellLimit.parseLine(line);
         if (!debugCellLimit.isAccepted()) {
-            player.sendMessage(debugCellLimit.getRejectionMessage().orElseThrow());
+            TournamentMessages.sendError(player, debugCellLimit.getRejectionMessage().orElseThrow());
             openMenu(player, AdminMenuHolder.arena());
             return;
         }
@@ -726,12 +735,20 @@ public final class AdminMenuService {
         if (player.hasPermission(TournamentCommand.ADMIN_PERMISSION)) {
             return true;
         }
-        player.sendMessage("You are not allowed to use the tournament menu");
+        TournamentMessages.sendError(player, "You are not allowed to use the tournament menu");
         return false;
     }
 
     private void runOperation(Player player, Supplier<TournamentOperationResult> operation) {
-        player.sendMessage(operation.get().message());
+        reportOperation(player, operation.get());
+    }
+
+    private static void reportOperation(Player player, TournamentOperationResult result) {
+        if (result.successful()) {
+            TournamentMessages.sendSuccess(player, result.message());
+            return;
+        }
+        TournamentMessages.sendError(player, result.message());
     }
 
     private void runOperation(Player player, AdminMenuHolder holder,

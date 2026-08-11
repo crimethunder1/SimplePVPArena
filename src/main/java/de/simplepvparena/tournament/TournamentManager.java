@@ -5,6 +5,7 @@ import de.simplepvparena.arena.ArenaRegistry;
 import de.simplepvparena.match.Match;
 import de.simplepvparena.match.MatchCompletionHandler;
 import de.simplepvparena.match.MatchService;
+import de.simplepvparena.message.TournamentMessages;
 import de.simplepvparena.team.Team;
 import de.simplepvparena.team.TeamRegistry;
 import net.kyori.adventure.text.Component;
@@ -17,9 +18,9 @@ import java.util.Random;
 
 public final class TournamentManager implements MatchCompletionHandler {
 
-    static final String ARENA_NOT_CONFIGURED_MESSAGE = "The arena is not fully configured, calculate its fight "
-            + "area with " + Arena.CALCULATE_ACTION + " and set the tribune spawn with "
-            + Arena.TRIBUNE_SPAWN_ACTION;
+    static final String ARENA_NOT_CONFIGURED_MESSAGE = "The arena is not fully configured"
+            + TournamentMessages.LINE_BREAK + "Calculate its fight area with " + Arena.CALCULATE_ACTION
+            + " and set the tribune spawn with " + Arena.TRIBUNE_SPAWN_ACTION;
 
     private final Plugin plugin;
     private final TeamRegistry teamRegistry;
@@ -75,7 +76,7 @@ public final class TournamentManager implements MatchCompletionHandler {
         state = TournamentState.RUNNING;
         matchService.resumeRoundTimer();
 
-        broadcast("The tournament has started with " + teamNames.size() + " teams in "
+        broadcastSuccess("The tournament has started with " + teamNames.size() + " teams in "
                 + bracket.getRoundCount() + " rounds");
         if (!bracket.getTeamNamesWithFirstRoundBye().isEmpty()) {
             broadcast("Teams advancing without a first round opponent: "
@@ -90,8 +91,8 @@ public final class TournamentManager implements MatchCompletionHandler {
         if (state == TournamentState.RUNNING) {
             state = TournamentState.PAUSED;
             matchService.pauseRoundTimer();
-            broadcast("The tournament is paused, no further match is started until it is resumed, "
-                    + "the round timer keeps its remaining time");
+            broadcastWarning("The tournament is paused, no further match is started until it is resumed"
+                    + TournamentMessages.LINE_BREAK + "The round timer keeps its remaining time");
             return TournamentOperationResult.success("Tournament paused");
         }
         if (state == TournamentState.PAUSED) {
@@ -113,7 +114,7 @@ public final class TournamentManager implements MatchCompletionHandler {
         bracket = null;
         finalMatchGate.reset();
         state = TournamentState.CANCELLED;
-        broadcast("The tournament has been cancelled");
+        broadcastWarning("The tournament has been cancelled");
         return TournamentOperationResult.success("Tournament cancelled");
     }
 
@@ -150,9 +151,9 @@ public final class TournamentManager implements MatchCompletionHandler {
             return TournamentOperationResult.failure("No tournament is in progress");
         }
         if (state == TournamentState.PAUSED) {
-            return TournamentOperationResult.failure(
-                    "The tournament is paused, continue it with \"Continue the tournament\" in the match menu "
-                            + "of /tournament before starting the final");
+            return TournamentOperationResult.failure("The tournament is paused"
+                    + TournamentMessages.LINE_BREAK + "Continue it with \"Continue the tournament\" in the "
+                    + "match menu of /tournament before starting the final");
         }
         Optional<String> stageRejection = finalMatchGate.findStartRejection();
         if (stageRejection.isPresent()) {
@@ -224,7 +225,8 @@ public final class TournamentManager implements MatchCompletionHandler {
         synchronizeFinalMatchStage();
         if (bracket.isComplete()) {
             state = TournamentState.FINISHED;
-            broadcast("The tournament is over, the winner is " + bracket.getChampionTeamName().orElse(winnerTeamName));
+            broadcastSuccess("The tournament is over, the winner is "
+                    + bracket.getChampionTeamName().orElse(winnerTeamName));
             return;
         }
         startNextMatch();
@@ -288,6 +290,18 @@ public final class TournamentManager implements MatchCompletionHandler {
     }
 
     private void broadcast(String message) {
-        plugin.getServer().broadcast(Component.text(message));
+        broadcast(TournamentMessages.info(message));
+    }
+
+    private void broadcastSuccess(String message) {
+        broadcast(TournamentMessages.success(message));
+    }
+
+    private void broadcastWarning(String message) {
+        broadcast(TournamentMessages.warning(message));
+    }
+
+    private void broadcast(Component message) {
+        plugin.getServer().broadcast(message);
     }
 }

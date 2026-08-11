@@ -4,6 +4,7 @@ import de.simplepvparena.arena.ArenaRegistry;
 import de.simplepvparena.arena.SpectatorService;
 import de.simplepvparena.match.Match;
 import de.simplepvparena.match.MatchService;
+import de.simplepvparena.message.TournamentMessages;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -30,8 +31,8 @@ public final class PlayerConnectionListener implements Listener {
         Optional<Match> matchOfPlayer = matchService.findMatchOfPlayer(player.getUniqueId());
         if (matchOfPlayer.isPresent()) {
             spectatorService.sendToTribune(player);
-            player.sendMessage("You rejoined during match " + matchOfPlayer.get().getMatchId()
-                    + " and take part again from the next round on");
+            TournamentMessages.sendInfo(player, "You rejoined during match "
+                    + matchOfPlayer.get().getMatchId() + ", you take part again from the next round on");
             return;
         }
         if (arenaRegistry.isArenaFullyConfigured()) {

@@ -1,5 +1,6 @@
 package de.simplepvparena.arena;
 
+import de.simplepvparena.message.TournamentMessages;
 import org.bukkit.Location;
 import org.bukkit.Particle;
 import org.bukkit.World;
@@ -67,8 +68,10 @@ public final class ArenaGapGuide {
         if (ArenaGapTrailPoints.hasArrived(adminLocation.getX(), adminLocation.getZ(), target.blockX(),
                 target.blockZ())) {
             runningTrails.stop(adminUniqueId);
-            admin.sendMessage("You reached " + target.describe() + ", the trail ends here. "
-                    + target.reason().getArrivalHint() + ". Your compass keeps pointing at the same column");
+            TournamentMessages.sendSuccess(admin, "You reached " + target.describe()
+                    + ", the trail ends here"
+                    + TournamentMessages.LINE_BREAK + target.reason().getArrivalHint() + "."
+                    + TournamentMessages.LINE_BREAK + "Your compass keeps pointing at the same column");
             return;
         }
         ArenaGapTrailPoints.walkTowards(adminLocation.getX(), adminLocation.getY(), adminLocation.getZ(),

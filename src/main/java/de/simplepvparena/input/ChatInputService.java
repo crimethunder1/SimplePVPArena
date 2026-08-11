@@ -1,5 +1,6 @@
 package de.simplepvparena.input;
 
+import de.simplepvparena.message.TournamentMessages;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.scheduler.BukkitTask;
@@ -48,8 +49,8 @@ public final class ChatInputService {
 
     public void await(Player player, String description, List<String> promptLines, Consumer<String> lineHandler) {
         registry.await(player.getUniqueId(), description, lineHandler);
-        promptLines.forEach(player::sendMessage);
-        player.sendMessage("Type " + CANCEL_KEYWORD + " to abort, the request expires in "
+        TournamentMessages.sendInfoReport(player, promptLines);
+        TournamentMessages.sendDetail(player, "Type " + CANCEL_KEYWORD + " to abort, the request expires in "
                 + registry.getTimeoutMillis() / MILLIS_PER_SECOND + " seconds");
     }
 
@@ -60,7 +61,7 @@ public final class ChatInputService {
         }
         String description = request.get().description();
         if (line.trim().equalsIgnoreCase(CANCEL_KEYWORD)) {
-            runOnMainThread(() -> player.sendMessage("The input for " + description
+            runOnMainThread(() -> TournamentMessages.sendWarning(player, "The input for " + description
                     + " was cancelled, nothing was changed"));
             return true;
         }
@@ -81,8 +82,9 @@ public final class ChatInputService {
         for (ExpiredChatInput expiredRequest : registry.collectExpired()) {
             Player player = plugin.getServer().getPlayer(expiredRequest.playerUniqueId());
             if (player != null) {
-                player.sendMessage("The input for " + expiredRequest.description()
-                        + " expired, nothing was changed. Open /tournament again to start over");
+                TournamentMessages.sendWarning(player, "The input for " + expiredRequest.description()
+                        + " expired, nothing was changed"
+                        + TournamentMessages.LINE_BREAK + "Open /tournament again to start over");
             }
         }
     }

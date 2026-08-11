@@ -1,5 +1,6 @@
 package de.simplepvparena.arena;
 
+import de.simplepvparena.message.TournamentMessages;
 import org.bukkit.Location;
 
 import java.util.ArrayList;
@@ -68,7 +69,8 @@ public final class Arena {
             return Optional.empty();
         }
         return Optional.of(describeMisplacedSpawn(spawnType, position)
-                + ". Stand " + spawnType.getPlacementHint() + ", then set it again. Nothing was stored");
+                + TournamentMessages.LINE_BREAK + "Stand " + spawnType.getPlacementHint()
+                + ", then set it again. Nothing was stored");
     }
 
     public List<String> findSpawnPlacementWarnings() {
@@ -80,8 +82,8 @@ public final class Arena {
             getConfiguredSpawn(spawnType)
                     .filter(spawn -> !fitsShape(spawnType, spawn))
                     .ifPresent(spawn -> warnings.add(describeMisplacedSpawn(spawnType, spawn)
-                            + ". Set it again: stand " + spawnType.getPlacementHint()
-                            + ", then click its tile"));
+                            + TournamentMessages.LINE_BREAK + "Set it again: stand "
+                            + spawnType.getPlacementHint() + ", then click its tile"));
         }
         return warnings;
     }
