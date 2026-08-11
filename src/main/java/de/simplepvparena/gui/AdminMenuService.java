@@ -257,7 +257,10 @@ public final class AdminMenuService {
 
     private ItemStack buildSpawnItem(Material material, ArenaSpawnType spawnType) {
         return MenuItems.create(material, "Set the " + spawnType.getDisplayName(),
-                "Sets it to the position you stand on");
+                "Sets it to the position you stand on",
+                "Stand " + spawnType.getPlacementHint(),
+                "A position on the wrong side of the fight area",
+                "is refused once the area is calculated");
     }
 
     private void handleTeamsClick(Player player, AdminMenuHolder holder, int slot) {

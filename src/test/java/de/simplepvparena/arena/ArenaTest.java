@@ -42,20 +42,93 @@ class ArenaTest {
     }
 
     @Test
-    void warnsAboutSpawnsThatDoNotFitTheCalculatedFightArea() {
+    void refusesATeamSpawnOutsideOfTheCalculatedFightArea() {
         Arena arena = new Arena();
         arena.setShape(shape());
+
+        for (ArenaSpawnType spawnType : List.of(ArenaSpawnType.FIRST_TEAM, ArenaSpawnType.SECOND_TEAM)) {
+            String rejection = arena.setSpawn(spawnType, position(50.5D, 50.5D)).orElseThrow();
+
+            assertTrue(rejection.contains("The " + spawnType.getDisplayName() + " must lie inside"),
+                    rejection);
+            assertTrue(rejection.contains("lies outside of it"), rejection);
+            assertTrue(rejection.contains(spawnType.getPlacementHint()), rejection);
+            assertTrue(arena.getConfiguredSpawn(spawnType).isEmpty());
+        }
+    }
+
+    @Test
+    void acceptsATeamSpawnInsideOfTheCalculatedFightArea() {
+        Arena arena = new Arena();
+        arena.setShape(shape());
+
+        for (ArenaSpawnType spawnType : List.of(ArenaSpawnType.FIRST_TEAM, ArenaSpawnType.SECOND_TEAM)) {
+            PositionSnapshot spawn = position(1.5D, 1.5D);
+
+            assertTrue(arena.setSpawn(spawnType, spawn).isEmpty());
+            assertEquals(spawn, arena.getConfiguredSpawn(spawnType).orElseThrow());
+        }
+        assertTrue(arena.findSpawnPlacementWarnings().isEmpty());
+    }
+
+    @Test
+    void refusesTheTribuneSpawnInsideOfTheCalculatedFightArea() {
+        Arena arena = new Arena();
+        arena.setShape(shape());
+
+        String rejection = arena.setSpawn(ArenaSpawnType.TRIBUNE, position(2.5D, 2.5D)).orElseThrow();
+
+        assertTrue(rejection.contains("The tribune spawn must lie outside of"), rejection);
+        assertTrue(rejection.contains("lies inside it"), rejection);
+        assertTrue(rejection.contains(ArenaSpawnType.TRIBUNE.getPlacementHint()), rejection);
+        assertTrue(arena.getConfiguredTribuneSpawn().isEmpty());
+        assertFalse(arena.isFullyConfigured());
+    }
+
+    @Test
+    void acceptsTheTribuneSpawnOutsideOfTheCalculatedFightArea() {
+        Arena arena = new Arena();
+        arena.setShape(shape());
+        PositionSnapshot spawn = position(50.5D, 50.5D);
+
+        assertTrue(arena.setSpawn(ArenaSpawnType.TRIBUNE, spawn).isEmpty());
+
+        assertEquals(spawn, arena.getConfiguredTribuneSpawn().orElseThrow());
+        assertTrue(arena.isFullyConfigured());
+    }
+
+    @Test
+    void acceptsEverySpawnAsLongAsNoFightAreaIsCalculated() {
+        Arena arena = new Arena();
+        PositionSnapshot insidePosition = position(1.5D, 1.5D);
+        PositionSnapshot outsidePosition = position(50.5D, 50.5D);
+
+        for (ArenaSpawnType spawnType : ArenaSpawnType.values()) {
+            assertTrue(arena.setSpawn(spawnType, insidePosition).isEmpty());
+            assertEquals(insidePosition, arena.getConfiguredSpawn(spawnType).orElseThrow());
+            assertTrue(arena.setSpawn(spawnType, outsidePosition).isEmpty());
+            assertEquals(outsidePosition, arena.getConfiguredSpawn(spawnType).orElseThrow());
+        }
+        assertTrue(arena.findSpawnPlacementWarnings().isEmpty());
+    }
+
+    @Test
+    void warnsAboutStoredSpawnsThatDoNotFitTheCalculatedFightArea() {
+        Arena arena = new Arena();
         arena.setFirstTeamSpawn(position(1.5D, 1.5D));
         arena.setSecondTeamSpawn(position(50.5D, 50.5D));
         arena.setTribuneSpawn(position(2.5D, 2.5D));
 
+        arena.setShape(shape());
         List<String> warnings = arena.findSpawnPlacementWarnings();
 
         assertEquals(2, warnings.size());
         assertTrue(warnings.get(0).contains("The second team spawn"));
-        assertTrue(warnings.get(0).contains("outside"));
+        assertTrue(warnings.get(0).contains("lies outside of it"));
+        assertTrue(warnings.get(0).contains(ArenaSpawnType.SECOND_TEAM.getPlacementHint()));
         assertTrue(warnings.get(1).contains("The tribune spawn"));
-        assertTrue(warnings.get(1).contains("inside"));
+        assertTrue(warnings.get(1).contains("lies inside it"));
+        assertTrue(warnings.get(1).contains(ArenaSpawnType.TRIBUNE.getPlacementHint()));
     }
 
     @Test

@@ -155,10 +155,10 @@ public final class ArenaSetupService {
     public void setSpawn(Player admin, ArenaSpawnType spawnType) {
         Arena arena = arenaRegistry.getArena();
         PositionSnapshot position = PositionSnapshot.fromLocation(admin.getLocation());
-        switch (spawnType) {
-            case FIRST_TEAM -> arena.setFirstTeamSpawn(position);
-            case SECOND_TEAM -> arena.setSecondTeamSpawn(position);
-            case TRIBUNE -> arena.setTribuneSpawn(position);
+        Optional<String> rejection = arena.setSpawn(spawnType, position);
+        if (rejection.isPresent()) {
+            admin.sendMessage(rejection.get());
+            return;
         }
         arenaConfigurationSaver.run();
         admin.sendMessage("Set the " + spawnType.getDisplayName() + " of the arena to " + position.describe());

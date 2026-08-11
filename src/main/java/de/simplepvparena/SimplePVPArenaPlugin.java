@@ -7,6 +7,7 @@ import de.simplepvparena.arena.ArenaBorderConfirmation;
 import de.simplepvparena.arena.ArenaCleaningService;
 import de.simplepvparena.arena.ArenaGapGuide;
 import de.simplepvparena.arena.ArenaRegistry;
+import de.simplepvparena.arena.ArenaSafetyZone;
 import de.simplepvparena.arena.ArenaSetupService;
 import de.simplepvparena.arena.ArenaShapeFloodFill;
 import de.simplepvparena.arena.SpectatorItemFactory;
@@ -24,6 +25,7 @@ import de.simplepvparena.input.ChatInputService;
 import de.simplepvparena.kit.KitConfigurationLoader;
 import de.simplepvparena.kit.KitService;
 import de.simplepvparena.listener.AdminMenuListener;
+import de.simplepvparena.listener.ArenaSafetyZoneListener;
 import de.simplepvparena.listener.ChatInputListener;
 import de.simplepvparena.listener.FriendlyFireListener;
 import de.simplepvparena.listener.GlobalPvpLockListener;
@@ -57,6 +59,7 @@ public final class SimplePVPArenaPlugin extends JavaPlugin {
     private static final String ARENA_BLOCKS_PER_TICK_KEY = "arena.clean-blocks-per-tick";
     private static final String ARENA_BASELINE_BLOCKS_PER_TICK_KEY = "arena.baseline-blocks-per-tick";
     private static final String ARENA_MAXIMUM_CELLS_KEY = ArenaShapeFloodFill.MAXIMUM_CELL_COUNT_CONFIGURATION_PATH;
+    private static final String ARENA_SAFETY_ZONE_RADIUS_KEY = ArenaSafetyZone.RADIUS_CONFIGURATION_PATH;
     private static final String BORDER_PARTICLE_PERIOD_KEY = "border.particle-period-ticks";
     private static final String BORDER_PARTICLE_VIEW_RADIUS_KEY = "border.particle-view-radius";
     private static final String BORDER_PARTICLE_MAXIMUM_BLOCKS_KEY = "border.particle-maximum-blocks-per-player";
@@ -82,6 +85,7 @@ public final class SimplePVPArenaPlugin extends JavaPlugin {
     private ArenaCleaningService arenaCleaningService;
     private ArenaBaselineService arenaBaselineService;
     private ArenaGapGuide arenaGapGuide;
+    private ArenaSafetyZone arenaSafetyZone;
     private ArenaSetupService arenaSetupService;
     private ChatInputService chatInputService;
     private AdminMenuService adminMenuService;
@@ -144,6 +148,9 @@ public final class SimplePVPArenaPlugin extends JavaPlugin {
         borderWallPreview.setDurationTicks(TICKS_PER_SECOND * getConfig().getInt(BORDER_WALL_PREVIEW_SECONDS_KEY,
                 DEFAULT_BORDER_WALL_PREVIEW_SECONDS));
         arenaGapGuide = new ArenaGapGuide(this);
+
+        arenaSafetyZone = new ArenaSafetyZone(arenaRegistry.getArena()::getShape, matchService::isActiveFighter);
+        arenaSafetyZone.setRadius(readSafetyZoneRadius());
 
         arenaSetupService = new ArenaSetupService(arenaRegistry, matchService, spectatorBorderService,
                 borderWallPreview, arenaGapGuide, arenaCleaningService, arenaBaselineService,
@@ -249,6 +256,16 @@ public final class SimplePVPArenaPlugin extends JavaPlugin {
         return ArenaShapeFloodFill.DEFAULT_MAXIMUM_CELL_COUNT;
     }
 
+    private int readSafetyZoneRadius() {
+        int radius = getConfig().getInt(ARENA_SAFETY_ZONE_RADIUS_KEY, ArenaSafetyZone.DEFAULT_RADIUS);
+        if (radius >= 0) {
+            return radius;
+        }
+        getLogger().warning(ARENA_SAFETY_ZONE_RADIUS_KEY + " cannot be negative, falling back to "
+                + ArenaSafetyZone.DEFAULT_RADIUS + " blocks. Use zero to switch the safety zone off");
+        return ArenaSafetyZone.DEFAULT_RADIUS;
+    }
+
     private RoundTimeoutSettings readRoundTimeoutSettings() {
         RoundTimeoutSettings defaultSettings = RoundTimeoutSettings.defaults();
         int roundTimeoutSeconds = getConfig().getInt(ROUND_TIMEOUT_SECONDS_KEY, defaultSettings.roundTimeoutSeconds());
@@ -287,6 +304,7 @@ public final class SimplePVPArenaPlugin extends JavaPlugin {
         getServer().getPluginManager().registerEvents(
                 new SpectatorBorderListener(matchService, spectatorService, spectatorBorderService), this);
         getServer().getPluginManager().registerEvents(new PlayerInteractListener(matchService, spectatorService), this);
+        getServer().getPluginManager().registerEvents(new ArenaSafetyZoneListener(arenaSafetyZone), this);
         getServer().getPluginManager().registerEvents(new AdminMenuListener(adminMenuService), this);
         getServer().getPluginManager().registerEvents(new ChatInputListener(chatInputService), this);
         getServer().getPluginManager().registerEvents(new GlobalPvpLockListener(matchService), this);

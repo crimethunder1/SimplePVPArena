@@ -50,14 +50,39 @@ public final class Arena {
         return missingParts;
     }
 
+    public Optional<String> setSpawn(ArenaSpawnType spawnType, PositionSnapshot position) {
+        Optional<String> rejection = findSpawnPlacementRejection(spawnType, position);
+        if (rejection.isPresent()) {
+            return rejection;
+        }
+        switch (spawnType) {
+            case FIRST_TEAM -> setFirstTeamSpawn(position);
+            case SECOND_TEAM -> setSecondTeamSpawn(position);
+            case TRIBUNE -> setTribuneSpawn(position);
+        }
+        return Optional.empty();
+    }
+
+    public Optional<String> findSpawnPlacementRejection(ArenaSpawnType spawnType, PositionSnapshot position) {
+        if (fitsShape(spawnType, position)) {
+            return Optional.empty();
+        }
+        return Optional.of(describeMisplacedSpawn(spawnType, position)
+                + ". Stand " + spawnType.getPlacementHint() + ", then set it again. Nothing was stored");
+    }
+
     public List<String> findSpawnPlacementWarnings() {
         if (shape == null) {
             return List.of();
         }
         List<String> warnings = new ArrayList<>();
-        addSpawnWarning(warnings, firstTeamSpawn, true, "The first team spawn");
-        addSpawnWarning(warnings, secondTeamSpawn, true, "The second team spawn");
-        addSpawnWarning(warnings, tribuneSpawn, false, "The tribune spawn");
+        for (ArenaSpawnType spawnType : ArenaSpawnType.values()) {
+            getConfiguredSpawn(spawnType)
+                    .filter(spawn -> !fitsShape(spawnType, spawn))
+                    .ifPresent(spawn -> warnings.add(describeMisplacedSpawn(spawnType, spawn)
+                            + ". Set it again: stand " + spawnType.getPlacementHint()
+                            + ", then click its tile"));
+        }
         return warnings;
     }
 
@@ -83,6 +108,14 @@ public final class Arena {
 
     public Optional<PositionSnapshot> getConfiguredTribuneSpawn() {
         return Optional.ofNullable(tribuneSpawn);
+    }
+
+    public Optional<PositionSnapshot> getConfiguredSpawn(ArenaSpawnType spawnType) {
+        return switch (spawnType) {
+            case FIRST_TEAM -> getConfiguredFirstTeamSpawn();
+            case SECOND_TEAM -> getConfiguredSecondTeamSpawn();
+            case TRIBUNE -> getConfiguredTribuneSpawn();
+        };
     }
 
     public Optional<PositionSnapshot> getFirstTeamSpawn() {
@@ -112,16 +145,18 @@ public final class Arena {
         return getShape().map(arenaShape -> arenaShape.getCenterPosition());
     }
 
-    private void addSpawnWarning(List<String> warnings, PositionSnapshot spawn, boolean expectedInside,
-                                 String spawnName) {
-        if (spawn == null) {
-            return;
+    private boolean fitsShape(ArenaSpawnType spawnType, PositionSnapshot position) {
+        if (shape == null) {
+            return true;
         }
-        boolean insideArena = shape.contains(spawn.worldName(), spawn.x(), spawn.z());
-        if (insideArena == expectedInside) {
-            return;
-        }
-        warnings.add(spawnName + " lies " + (insideArena ? "inside" : "outside of")
-                + " the calculated fight area, it should lie " + (expectedInside ? "inside" : "outside of") + " it");
+        return shape.contains(position.worldName(), position.x(), position.z())
+                == spawnType.belongsIntoFightArea();
+    }
+
+    private String describeMisplacedSpawn(ArenaSpawnType spawnType, PositionSnapshot position) {
+        boolean belongsInside = spawnType.belongsIntoFightArea();
+        return "The " + spawnType.getDisplayName() + " must lie "
+                + (belongsInside ? "inside" : "outside of") + " the calculated fight area, "
+                + position.describe() + " lies " + (belongsInside ? "outside of" : "inside") + " it";
     }
 }
