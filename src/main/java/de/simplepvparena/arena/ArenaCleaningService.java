@@ -37,26 +37,27 @@ public final class ArenaCleaningService {
         return shape.getBlockCount();
     }
 
-    public boolean startCleaning(ArenaShape shape, Consumer<ArenaCleaningReport> completionHandler) {
+    public boolean startCleaning(ArenaShape shape, ArenaCleaningTarget cleaningTarget,
+                                 Consumer<ArenaCleaningReport> completionHandler) {
         if (isCleaning()) {
             return false;
         }
         ArenaShapeBlockCursor cursor = new ArenaShapeBlockCursor(shape);
         CleaningProgress progress = new CleaningProgress();
         activeTask = plugin.getServer().getScheduler().runTaskTimer(plugin,
-                () -> cleanNextBatch(cursor, progress, completionHandler),
+                () -> cleanNextBatch(cursor, cleaningTarget, progress, completionHandler),
                 BATCH_PERIOD_TICKS, BATCH_PERIOD_TICKS);
         return true;
     }
 
-    private void cleanNextBatch(ArenaShapeBlockCursor cursor, CleaningProgress progress,
-                                Consumer<ArenaCleaningReport> completionHandler) {
+    private void cleanNextBatch(ArenaShapeBlockCursor cursor, ArenaCleaningTarget cleaningTarget,
+                                CleaningProgress progress, Consumer<ArenaCleaningReport> completionHandler) {
         ArenaShape shape = cursor.getShape();
         World world = plugin.getServer().getWorld(shape.getWorldName());
         if (world == null) {
             plugin.getLogger().warning("The world " + shape.getWorldName()
                     + " is not loaded, the arena cleaning is stopped");
-            finish(progress, completionHandler);
+            finish(cleaningTarget, progress, completionHandler);
             return;
         }
         int remainingBlocksOfThisTick = blocksPerTick;
@@ -64,34 +65,37 @@ public final class ArenaCleaningService {
             long[] batch = cursor.nextBatch(remainingBlocksOfThisTick);
             remainingBlocksOfThisTick -= batch.length;
             progress.checkedBlockCount += batch.length;
-            progress.clearedBlockCount += clearBatch(world, batch);
+            progress.changedBlockCount += writeBatch(world, batch, cleaningTarget);
         }
         if (cursor.hasRemainingBlocks()) {
             return;
         }
         progress.clearedBorderMarkCount += cleanedArenaHandler.onArenaCleaned(world, shape);
-        finish(progress, completionHandler);
+        finish(cleaningTarget, progress, completionHandler);
     }
 
-    private void finish(CleaningProgress progress, Consumer<ArenaCleaningReport> completionHandler) {
+    private void finish(ArenaCleaningTarget cleaningTarget, CleaningProgress progress,
+                        Consumer<ArenaCleaningReport> completionHandler) {
         stopCleaning();
-        completionHandler.accept(new ArenaCleaningReport(progress.checkedBlockCount, progress.clearedBlockCount,
-                progress.clearedBorderMarkCount));
+        completionHandler.accept(new ArenaCleaningReport(progress.checkedBlockCount, progress.changedBlockCount,
+                progress.clearedBorderMarkCount, cleaningTarget.describeChange()));
     }
 
-    private long clearBatch(World world, long[] batch) {
-        long clearedBlockCount = 0L;
+    private long writeBatch(World world, long[] batch, ArenaCleaningTarget cleaningTarget) {
+        long changedBlockCount = 0L;
         for (long encodedPosition : batch) {
-            Block block = world.getBlockAt(BlockPositionCodec.decodeX(encodedPosition),
-                    BlockPositionCodec.decodeY(encodedPosition),
-                    BlockPositionCodec.decodeZ(encodedPosition));
-            if (block.getType() == Material.AIR) {
+            int blockX = BlockPositionCodec.decodeX(encodedPosition);
+            int blockY = BlockPositionCodec.decodeY(encodedPosition);
+            int blockZ = BlockPositionCodec.decodeZ(encodedPosition);
+            Material targetMaterial = cleaningTarget.findMaterial(blockX, blockY, blockZ);
+            Block block = world.getBlockAt(blockX, blockY, blockZ);
+            if (block.getType() == targetMaterial) {
                 continue;
             }
-            block.setType(Material.AIR, false);
-            clearedBlockCount++;
+            block.setType(targetMaterial, false);
+            changedBlockCount++;
         }
-        return clearedBlockCount;
+        return changedBlockCount;
     }
 
     public void stopCleaning() {
@@ -104,7 +108,7 @@ public final class ArenaCleaningService {
     private static final class CleaningProgress {
 
         private long checkedBlockCount;
-        private long clearedBlockCount;
+        private long changedBlockCount;
         private int clearedBorderMarkCount;
     }
 }

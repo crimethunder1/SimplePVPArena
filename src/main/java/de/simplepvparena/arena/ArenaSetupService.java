@@ -21,6 +21,7 @@ public final class ArenaSetupService {
     private final BorderWallPreview borderWallPreview;
     private final ArenaGapGuide arenaGapGuide;
     private final ArenaCleaningService arenaCleaningService;
+    private final ArenaBaselineService arenaBaselineService;
     private final ArenaBorderConfirmation borderConfirmation;
     private final int maximumArenaCellCount;
     private final Runnable arenaConfigurationSaver;
@@ -31,6 +32,7 @@ public final class ArenaSetupService {
                              BorderWallPreview borderWallPreview,
                              ArenaGapGuide arenaGapGuide,
                              ArenaCleaningService arenaCleaningService,
+                             ArenaBaselineService arenaBaselineService,
                              ArenaBorderConfirmation borderConfirmation,
                              int maximumArenaCellCount,
                              Runnable arenaConfigurationSaver) {
@@ -40,6 +42,7 @@ public final class ArenaSetupService {
         this.borderWallPreview = borderWallPreview;
         this.arenaGapGuide = arenaGapGuide;
         this.arenaCleaningService = arenaCleaningService;
+        this.arenaBaselineService = arenaBaselineService;
         this.borderConfirmation = borderConfirmation;
         this.maximumArenaCellCount = maximumArenaCellCount;
         this.arenaConfigurationSaver = arenaConfigurationSaver;
@@ -90,9 +93,23 @@ public final class ArenaSetupService {
         arenaConfigurationSaver.run();
         admin.sendMessage("The fight area was calculated from the border blocks: " + shape.describe());
         reportDiagnosisLimit(admin, shape, cellLimit);
+        captureBaseline(admin, shape);
         previewRecognizedWall(admin, world, shape, borderColumns);
         arena.findSpawnPlacementWarnings().forEach(admin::sendMessage);
         reportMissingConfiguration(admin, arena);
+    }
+
+    private void captureBaseline(Player admin, ArenaShape shape) {
+        if (!arenaBaselineService.startCapture(shape, report -> admin.sendMessage(report.describe()))) {
+            admin.sendMessage("The fight area holds " + shape.getBlockCount() + " blocks, more than the "
+                    + ArenaBaselineSnapshot.MAXIMUM_BLOCK_COUNT + " a baseline is taken of. "
+                    + Arena.CLEAN_ACTION + " sets every block of it to air, the way it always did");
+            return;
+        }
+        admin.sendMessage("Reading the " + shape.getBlockCount() + " blocks of the fight area as the baseline "
+                + Arena.CLEAN_ACTION + " restores, in batches of " + arenaBaselineService.getBlocksPerTick()
+                + " per tick. The arena cannot be cleaned until that is done, and the baseline is gone "
+                + "when the server restarts");
     }
 
     private void guideToGap(Player admin, World world, int seedY, ArenaShapeCalculation calculation) {
@@ -151,6 +168,7 @@ public final class ArenaSetupService {
 
     public void clearConfiguration(CommandSender sender) {
         arenaRegistry.clearArenaConfiguration();
+        arenaBaselineService.discardSnapshot();
         arenaConfigurationSaver.run();
         sender.sendMessage("The arena configuration was removed, its blocks and border blocks stay untouched");
     }
@@ -166,11 +184,32 @@ public final class ArenaSetupService {
         if (arenaCleaningService.isCleaning()) {
             return Optional.of("The arena is already being cleaned");
         }
+        if (arenaBaselineService.isCapturing()) {
+            return Optional.of("The baseline of the fight area is still being read, wait a moment. A cleaning "
+                    + "that started now would find no baseline and empty the arena instead of restoring it");
+        }
         return Optional.empty();
     }
 
     public long countCleaningBlocks() {
         return getShape().map(ArenaCleaningService::countBlocks).orElse(0L);
+    }
+
+    public boolean hasBaseline() {
+        return getShape().flatMap(arenaBaselineService::findSnapshot).isPresent();
+    }
+
+    public List<String> describeCleaningEffect() {
+        if (!hasBaseline()) {
+            return List.of("No baseline is stored, every block of the",
+                    "fight area is set to air",
+                    "A baseline is taken by the calculation and is",
+                    "gone after a server restart");
+        }
+        return List.of("Restores every block of the fight area to the",
+                "state the last calculation found",
+                "Blocks placed since then become air again,",
+                "broken ones come back");
     }
 
     public boolean startCleaning(CommandSender sender) {
@@ -181,12 +220,21 @@ public final class ArenaSetupService {
         }
         ArenaShape shape = getShape().orElseThrow();
         long blockCount = ArenaCleaningService.countBlocks(shape);
-        boolean cleaningStarted = arenaCleaningService.startCleaning(shape,
+        Optional<ArenaBaselineSnapshot> baseline = arenaBaselineService.findSnapshot(shape);
+        ArenaCleaningTarget cleaningTarget = baseline.map(ArenaCleaningTarget.class::cast)
+                .orElse(ArenaCleaningTarget.EMPTY_ARENA);
+        boolean cleaningStarted = arenaCleaningService.startCleaning(shape, cleaningTarget,
                 report -> sender.sendMessage("The arena is clean, " + report.describe()));
         if (!cleaningStarted) {
             sender.sendMessage("The arena cleaning could not be started");
             return false;
         }
+        sender.sendMessage(baseline
+                .map(snapshot -> "Restoring the arena to the baseline of the last calculation ("
+                        + snapshot.describe() + ")")
+                .orElse("No baseline of the fight area is stored, every block of it is set to air instead. "
+                        + "A baseline is taken by " + Arena.CALCULATE_ACTION + " and does not survive a server "
+                        + "restart"));
         sender.sendMessage("Cleaning the arena, " + blockCount + " blocks are processed in batches of "
                 + ArenaCleaningService.DEFAULT_BLOCKS_PER_TICK + " per tick");
         return true;

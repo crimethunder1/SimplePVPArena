@@ -240,14 +240,19 @@ public final class AdminMenuService {
         inventory.setItem(ARENA_SECOND_TEAM_SPAWN_SLOT, buildSpawnItem(Material.RED_BED, ArenaSpawnType.SECOND_TEAM));
         inventory.setItem(ARENA_TRIBUNE_SPAWN_SLOT, buildSpawnItem(Material.YELLOW_BED, ArenaSpawnType.TRIBUNE));
         inventory.setItem(ARENA_CLEAN_SLOT, MenuItems.create(Material.TNT, "Clean the arena",
-                "Sets every block of the fight area to air",
-                arenaSetupService.countCleaningBlocks() + " blocks are affected",
-                "Asks for a confirmation first"));
+                buildCleaningLore("Asks for a confirmation first")));
         inventory.setItem(ARENA_RESET_SLOT, MenuItems.create(MenuItems.DESTRUCTIVE_MATERIAL, "Reset the arena",
                 "Drops the fight area and all three spawns",
                 "The blocks and the border blocks stay untouched",
                 "Asks for a confirmation first"));
         inventory.setItem(BACK_SLOT, MenuItems.back("the main menu"));
+    }
+
+    private List<String> buildCleaningLore(String... closingLines) {
+        List<String> lore = new ArrayList<>(arenaSetupService.describeCleaningEffect());
+        lore.add(arenaSetupService.countCleaningBlocks() + " blocks are affected");
+        lore.addAll(List.of(closingLines));
+        return lore;
     }
 
     private ItemStack buildSpawnItem(Material material, ArenaSpawnType spawnType) {
@@ -498,10 +503,7 @@ public final class AdminMenuService {
 
     private List<String> buildConfirmationLore(ConfirmationRequest request, AdminMenuHolder holder) {
         return switch (request) {
-            case CLEAN_ARENA -> List.of(
-                    "Every block of the calculated fight area is set to air",
-                    arenaSetupService.countCleaningBlocks() + " blocks are affected",
-                    "The change cannot be undone",
+            case CLEAN_ARENA -> buildCleaningLore("The change cannot be undone",
                     "The border wall around it stays untouched");
             case RESET_ARENA -> List.of(
                     "The fight area and all three spawns are dropped",

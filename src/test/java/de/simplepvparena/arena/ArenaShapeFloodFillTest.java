@@ -1,19 +1,26 @@
 package de.simplepvparena.arena;
 
+import de.simplepvparena.border.BlockedColumnLookup;
+import de.simplepvparena.border.SpectatorBorderMovementRule;
 import org.junit.jupiter.api.Test;
 
+import java.util.ArrayDeque;
 import java.util.Arrays;
+import java.util.Deque;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 
 class ArenaShapeFloodFillTest {
 
     private static final String WORLD_NAME = "event";
     private static final int SEED_HEIGHT = 64;
+
+    private static final int SPECTATOR_WALK_LIMIT = 20_000;
 
     @Test
     void fillsASquareRoomUpToItsWall() {
@@ -46,6 +53,45 @@ class ArenaShapeFloodFillTest {
         assertEquals(roomCells, new LinkedHashSet<>(Arrays.stream(shape.getCells()).boxed().toList()));
         assertFalse(shape.containsCell(3, 0), "the notch of the shape stays outside");
         assertFalse(shape.containsCell(1, 1), "a cell walled off inside the shape stays outside");
+    }
+
+    @Test
+    void neverSpreadsThroughTheDiagonalGapAtACornerOfTheWall() {
+        BorderWall wall = new BorderWall().addRectangleOutline(0, 0, 4, 4, SEED_HEIGHT).removeColumn(4, 4);
+        BlockedColumnLookup blockedColumns = wall.asBlockedColumns();
+
+        ArenaShapeCalculation calculation = calculate(wall, 2, 2, 1000);
+
+        assertFalse(blockedColumns.isBlockedColumn(4, 4), "the corner column itself is free");
+        assertTrue(wall.hasTwoColumnsTouchingOnlyDiagonally(),
+                "the two columns beside the corner touch only diagonally");
+        assertTrue(SpectatorBorderMovementRule.isMovementBlocked(blockedColumns, 3, 3, 4, 4),
+                "a spectator cannot squeeze through that corner");
+        ArenaShape shape = calculation.getShape().orElseThrow();
+        assertEquals(9, shape.getCellCount(), "the fill stays in the room the wall encloses");
+        assertFalse(shape.containsCell(4, 4), "the free corner column is only reachable diagonally");
+        assertFalse(shape.containsCell(5, 5), "and the fill never squeezes past it into the open");
+    }
+
+    @Test
+    void fillsAnOvalRoomWhoseWallOnlyTouchesDiagonallyInPlaces() {
+        BorderWall wall = ovalWall(12, 7, SEED_HEIGHT);
+
+        ArenaShapeCalculation calculation = calculate(wall, 0, 0, 1000);
+
+        assertTrue(wall.hasTwoColumnsTouchingOnlyDiagonally(),
+                "the slanted parts of the oval are staircases of diagonally touching columns");
+        assertTrue(calculation.isSuccessful(),
+                "the oval is closed and is calculated instead of being reported as a leak: "
+                        + calculation.getRejectionMessage().orElse(""));
+        ArenaShape shape = calculation.getShape().orElseThrow();
+        assertEquals(columnsASpectatorCanReach(wall, 0, 0), cellsOf(shape),
+                "the fill covers exactly the columns a spectator can walk to");
+        assertTrue(shape.getCellCount() > 200, "a filled oval of 12 by 7 columns: " + shape.getCellCount());
+        assertTrue(shape.containsCell(0, 0));
+        assertTrue(shape.containsCell(10, 0), "up to the flat parts of the wall");
+        assertTrue(shape.containsCell(0, 5));
+        assertFalse(shape.containsCell(20, 20), "and never outside of it");
     }
 
     @Test
@@ -211,5 +257,55 @@ class ArenaShapeFloodFillTest {
 
     private ArenaShapeCalculation calculate(BorderWall wall, int seedX, int seedZ, int maximumCellCount) {
         return ArenaShapeFloodFill.calculate(WORLD_NAME, seedX, SEED_HEIGHT, seedZ, maximumCellCount, wall);
+    }
+
+    private static BorderWall ovalWall(int radiusX, int radiusZ, int borderHeight) {
+        BorderWall wall = new BorderWall();
+        for (int blockX = -radiusX; blockX <= radiusX; blockX++) {
+            int blockZ = (int) Math.round(radiusZ * Math.sqrt(1 - (double) (blockX * blockX) / (radiusX * radiusX)));
+            wall.add(blockX, blockZ, borderHeight);
+            wall.add(blockX, -blockZ, borderHeight);
+        }
+        for (int blockZ = -radiusZ; blockZ <= radiusZ; blockZ++) {
+            int blockX = (int) Math.round(radiusX * Math.sqrt(1 - (double) (blockZ * blockZ) / (radiusZ * radiusZ)));
+            wall.add(blockX, blockZ, borderHeight);
+            wall.add(-blockX, blockZ, borderHeight);
+        }
+        return wall;
+    }
+
+    private static Set<Long> columnsASpectatorCanReach(BorderWall wall, int seedX, int seedZ) {
+        BlockedColumnLookup blockedColumns = wall.asBlockedColumns();
+        int[] neighbourOffsetsX = {1, -1, 0, 0, 1, 1, -1, -1};
+        int[] neighbourOffsetsZ = {0, 0, 1, -1, 1, -1, 1, -1};
+        Set<Long> reachedColumns = new LinkedHashSet<>();
+        Deque<Long> pendingColumns = new ArrayDeque<>();
+        reachedColumns.add(HorizontalCellCodec.encode(seedX, seedZ));
+        pendingColumns.add(HorizontalCellCodec.encode(seedX, seedZ));
+        while (!pendingColumns.isEmpty()) {
+            long column = pendingColumns.poll();
+            int columnX = HorizontalCellCodec.decodeX(column);
+            int columnZ = HorizontalCellCodec.decodeZ(column);
+            for (int offsetIndex = 0; offsetIndex < neighbourOffsetsX.length; offsetIndex++) {
+                int neighbourX = columnX + neighbourOffsetsX[offsetIndex];
+                int neighbourZ = columnZ + neighbourOffsetsZ[offsetIndex];
+                long neighbour = HorizontalCellCodec.encode(neighbourX, neighbourZ);
+                if (reachedColumns.contains(neighbour)
+                        || SpectatorBorderMovementRule.isMovementBlocked(blockedColumns, columnX, columnZ,
+                        neighbourX, neighbourZ)) {
+                    continue;
+                }
+                if (reachedColumns.size() >= SPECTATOR_WALK_LIMIT) {
+                    fail("the spectator walked out of the wall, it is not closed for a player either");
+                }
+                reachedColumns.add(neighbour);
+                pendingColumns.add(neighbour);
+            }
+        }
+        return reachedColumns;
+    }
+
+    private static Set<Long> cellsOf(ArenaShape shape) {
+        return new LinkedHashSet<>(Arrays.stream(shape.getCells()).boxed().toList());
     }
 }

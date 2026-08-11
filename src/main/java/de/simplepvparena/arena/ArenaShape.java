@@ -55,6 +55,36 @@ public final class ArenaShape {
         return Arrays.binarySearch(cells, HorizontalCellCodec.encode(blockX, blockZ)) >= 0;
     }
 
+    public long encodeBlockAtIndex(long blockIndex) {
+        if (blockIndex < 0L || blockIndex >= getBlockCount()) {
+            throw new IndexOutOfBoundsException("the block index " + blockIndex + " is outside of the "
+                    + getBlockCount() + " blocks of the shape");
+        }
+        long cell = cells[(int) (blockIndex % cells.length)];
+        int blockY = referenceY + (int) (blockIndex / cells.length);
+        return BlockPositionCodec.encode(HorizontalCellCodec.decodeX(cell), blockY,
+                HorizontalCellCodec.decodeZ(cell));
+    }
+
+    public long findBlockIndex(int blockX, int blockY, int blockZ) {
+        if (blockY < referenceY || blockY > wallTopY) {
+            return -1L;
+        }
+        int cellIndex = Arrays.binarySearch(cells, HorizontalCellCodec.encode(blockX, blockZ));
+        if (cellIndex < 0) {
+            return -1L;
+        }
+        return (long) (blockY - referenceY) * cells.length + cellIndex;
+    }
+
+    public boolean hasSameVolume(ArenaShape otherShape) {
+        return otherShape != null
+                && worldName.equals(otherShape.worldName)
+                && referenceY == otherShape.referenceY
+                && wallTopY == otherShape.wallTopY
+                && Arrays.equals(cells, otherShape.cells);
+    }
+
     public boolean contains(String otherWorldName, double x, double z) {
         if (!worldName.equals(otherWorldName)) {
             return false;

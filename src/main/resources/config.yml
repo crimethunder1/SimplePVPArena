@@ -35,6 +35,7 @@ kit:
 
 arena:
   clean-blocks-per-tick: 4096
+  baseline-blocks-per-tick: 16384
   shape-maximum-cells: 50000
   shape: {}
   spawns: {}

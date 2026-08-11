@@ -1,6 +1,8 @@
 package de.simplepvparena;
 
 import de.simplepvparena.arena.Arena;
+import de.simplepvparena.arena.ArenaBaselineRegistry;
+import de.simplepvparena.arena.ArenaBaselineService;
 import de.simplepvparena.arena.ArenaBorderConfirmation;
 import de.simplepvparena.arena.ArenaCleaningService;
 import de.simplepvparena.arena.ArenaGapGuide;
@@ -53,6 +55,7 @@ public final class SimplePVPArenaPlugin extends JavaPlugin {
     private static final String SUDDEN_DEATH_DAMAGE_PER_SECOND_KEY = "match.sudden-death-damage-per-second";
     private static final String SUDDEN_DEATH_DAMAGE_INCREASE_KEY = "match.sudden-death-damage-increase-per-second";
     private static final String ARENA_BLOCKS_PER_TICK_KEY = "arena.clean-blocks-per-tick";
+    private static final String ARENA_BASELINE_BLOCKS_PER_TICK_KEY = "arena.baseline-blocks-per-tick";
     private static final String ARENA_MAXIMUM_CELLS_KEY = ArenaShapeFloodFill.MAXIMUM_CELL_COUNT_CONFIGURATION_PATH;
     private static final String BORDER_PARTICLE_PERIOD_KEY = "border.particle-period-ticks";
     private static final String BORDER_PARTICLE_VIEW_RADIUS_KEY = "border.particle-view-radius";
@@ -77,6 +80,7 @@ public final class SimplePVPArenaPlugin extends JavaPlugin {
     private BorderParticleService borderParticleService;
     private BorderWallPreview borderWallPreview;
     private ArenaCleaningService arenaCleaningService;
+    private ArenaBaselineService arenaBaselineService;
     private ArenaGapGuide arenaGapGuide;
     private ArenaSetupService arenaSetupService;
     private ChatInputService chatInputService;
@@ -114,6 +118,10 @@ public final class SimplePVPArenaPlugin extends JavaPlugin {
         arenaCleaningService.setBlocksPerTick(getConfig().getInt(ARENA_BLOCKS_PER_TICK_KEY,
                 ArenaCleaningService.DEFAULT_BLOCKS_PER_TICK));
 
+        arenaBaselineService = new ArenaBaselineService(this, new ArenaBaselineRegistry());
+        arenaBaselineService.setBlocksPerTick(getConfig().getInt(ARENA_BASELINE_BLOCKS_PER_TICK_KEY,
+                ArenaBaselineService.DEFAULT_BLOCKS_PER_TICK));
+
         matchService = new MatchService(this, kitService, spectatorService);
         matchService.setRoundResetDelayTicks(getConfig().getLong(ROUND_RESET_DELAY_KEY, DEFAULT_ROUND_RESET_DELAY_TICKS));
         matchService.setRoundTimeoutSettings(readRoundTimeoutSettings());
@@ -138,8 +146,8 @@ public final class SimplePVPArenaPlugin extends JavaPlugin {
         arenaGapGuide = new ArenaGapGuide(this);
 
         arenaSetupService = new ArenaSetupService(arenaRegistry, matchService, spectatorBorderService,
-                borderWallPreview, arenaGapGuide, arenaCleaningService, arenaBorderConfirmation,
-                readMaximumArenaCellCount(), this::saveArenaConfiguration);
+                borderWallPreview, arenaGapGuide, arenaCleaningService, arenaBaselineService,
+                arenaBorderConfirmation, readMaximumArenaCellCount(), this::saveArenaConfiguration);
         chatInputService = new ChatInputService(this);
         adminMenuService = new AdminMenuService(this, tournamentManager, teamRegistry,
                 new TeamMemberLookup(getServer()), matchService, arenaSetupService, spectatorBorderService,
@@ -167,6 +175,9 @@ public final class SimplePVPArenaPlugin extends JavaPlugin {
         }
         if (arenaCleaningService != null) {
             arenaCleaningService.stopCleaning();
+        }
+        if (arenaBaselineService != null) {
+            arenaBaselineService.stopCapture();
         }
         if (matchService != null) {
             matchService.cancelActiveMatch();

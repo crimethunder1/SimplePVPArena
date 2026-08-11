@@ -5,14 +5,12 @@ import java.util.Objects;
 public final class ArenaShapeBlockCursor {
 
     private final ArenaShape shape;
-    private final long[] cells;
     private final long totalBlockCount;
 
     private long visitedBlockCount;
 
     public ArenaShapeBlockCursor(ArenaShape shape) {
         this.shape = Objects.requireNonNull(shape, "shape");
-        this.cells = shape.getCells();
         this.totalBlockCount = shape.getBlockCount();
     }
 
@@ -43,16 +41,9 @@ public final class ArenaShapeBlockCursor {
         int batchLength = (int) Math.min(batchSize, getRemainingBlockCount());
         long[] batch = new long[batchLength];
         for (int batchIndex = 0; batchIndex < batchLength; batchIndex++) {
-            batch[batchIndex] = encodePosition(visitedBlockCount + batchIndex);
+            batch[batchIndex] = shape.encodeBlockAtIndex(visitedBlockCount + batchIndex);
         }
         visitedBlockCount += batchLength;
         return batch;
-    }
-
-    private long encodePosition(long blockIndex) {
-        int blockY = shape.getReferenceY() + (int) (blockIndex / cells.length);
-        long cell = cells[(int) (blockIndex % cells.length)];
-        return BlockPositionCodec.encode(HorizontalCellCodec.decodeX(cell), blockY,
-                HorizontalCellCodec.decodeZ(cell));
     }
 }

@@ -1,5 +1,7 @@
 package de.simplepvparena.arena;
 
+import de.simplepvparena.border.BlockedColumnLookup;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
@@ -53,6 +55,31 @@ final class BorderWall implements BorderColumnReader {
     BorderWall removeColumn(int blockX, int blockZ) {
         heightsByCell.remove(HorizontalCellCodec.encode(blockX, blockZ));
         return this;
+    }
+
+    BlockedColumnLookup asBlockedColumns() {
+        return (blockX, blockZ) -> !heightsByCell
+                .getOrDefault(HorizontalCellCodec.encode(blockX, blockZ), List.of()).isEmpty();
+    }
+
+    boolean hasTwoColumnsTouchingOnlyDiagonally() {
+        for (long cell : heightsByCell.keySet()) {
+            int cellX = HorizontalCellCodec.decodeX(cell);
+            int cellZ = HorizontalCellCodec.decodeZ(cell);
+            if (touchesOnlyDiagonally(cellX, cellZ, cellX + 1, cellZ + 1)
+                    || touchesOnlyDiagonally(cellX, cellZ, cellX + 1, cellZ - 1)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private boolean touchesOnlyDiagonally(int firstX, int firstZ, int secondX, int secondZ) {
+        BlockedColumnLookup blockedColumns = asBlockedColumns();
+        return blockedColumns.isBlockedColumn(firstX, firstZ)
+                && blockedColumns.isBlockedColumn(secondX, secondZ)
+                && !blockedColumns.isBlockedColumn(secondX, firstZ)
+                && !blockedColumns.isBlockedColumn(firstX, secondZ);
     }
 
     @Override

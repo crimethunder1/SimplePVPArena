@@ -4,6 +4,7 @@ import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class ArenaShapeTest {
@@ -62,6 +63,46 @@ class ArenaShapeTest {
         assertTrue(shape.contains(WORLD_NAME, center.x(), center.z()));
         assertEquals(64.0D, center.y());
         assertEquals(WORLD_NAME, center.worldName());
+    }
+
+    @Test
+    void numbersEveryBlockOfTheVolumeExactlyOnce() {
+        ArenaShape shape = shape(0, 0, 1, 0, 1, 1);
+
+        assertEquals(3L * 7L, shape.getBlockCount());
+        for (long blockIndex = 0; blockIndex < shape.getBlockCount(); blockIndex++) {
+            long encodedPosition = shape.encodeBlockAtIndex(blockIndex);
+            assertEquals(blockIndex, shape.findBlockIndex(BlockPositionCodec.decodeX(encodedPosition),
+                            BlockPositionCodec.decodeY(encodedPosition),
+                            BlockPositionCodec.decodeZ(encodedPosition)),
+                    "the index of " + BlockPositionCodec.describe(encodedPosition));
+        }
+        assertThrows(IndexOutOfBoundsException.class, () -> shape.encodeBlockAtIndex(3L * 7L));
+        assertThrows(IndexOutOfBoundsException.class, () -> shape.encodeBlockAtIndex(-1L));
+    }
+
+    @Test
+    void hasNoIndexForABlockOutsideOfTheVolume() {
+        ArenaShape shape = shape(0, 0, 1, 0);
+
+        assertEquals(-1L, shape.findBlockIndex(5, 64, 5), "a column that is not part of the shape");
+        assertEquals(-1L, shape.findBlockIndex(0, 63, 0), "below the floor of the arena");
+        assertEquals(-1L, shape.findBlockIndex(0, 71, 0), "above the top of the border wall");
+    }
+
+    @Test
+    void comparesTwoShapesByTheBlocksTheyCover() {
+        ArenaShape shape = shape(0, 0, 1, 0);
+
+        assertTrue(shape.hasSameVolume(shape(0, 0, 1, 0)));
+        assertTrue(shape.hasSameVolume(shape(1, 0, 0, 0)), "the order of the cells is not the area");
+        assertFalse(shape.hasSameVolume(shape(0, 0)));
+        assertFalse(shape.hasSameVolume(shape(0, 0, 1, 0, 2, 0)));
+        assertFalse(shape.hasSameVolume(new ArenaShape("lobby", 64, 70,
+                new long[] {HorizontalCellCodec.encode(0, 0), HorizontalCellCodec.encode(1, 0)})));
+        assertFalse(shape.hasSameVolume(new ArenaShape(WORLD_NAME, 64, 71,
+                new long[] {HorizontalCellCodec.encode(0, 0), HorizontalCellCodec.encode(1, 0)})));
+        assertFalse(shape.hasSameVolume(null));
     }
 
     private ArenaShape shape(int... coordinatePairs) {
