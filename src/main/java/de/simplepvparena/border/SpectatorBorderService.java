@@ -71,7 +71,7 @@ public final class SpectatorBorderService {
         return borderMarks.isMarkedBlock(block.getWorld().getName(), block.getX(), block.getY(), block.getZ());
     }
 
-    public boolean isMovementAllowed(boolean activeFighter, boolean operator,
+    public boolean isMovementAllowed(boolean activeFighter, boolean arenaFlightSpectator, boolean operator,
                                      Location origin, Location destination) {
         if (destination == null || destination.getWorld() == null) {
             return true;
@@ -83,7 +83,7 @@ public final class SpectatorBorderService {
             originBlockX = origin.getBlockX();
             originBlockZ = origin.getBlockZ();
         }
-        return SpectatorBorderMovementRule.isMovementAllowed(activeFighter, operator,
+        return SpectatorBorderMovementRule.isMovementAllowed(activeFighter, arenaFlightSpectator, operator,
                 borderMarks.lookupIn(worldName), originBlockX, originBlockZ,
                 destination.getBlockX(), destination.getBlockZ());
     }

@@ -1,10 +1,12 @@
 package de.simplepvparena.listener;
 
+import de.simplepvparena.arena.SpectatorService;
 import de.simplepvparena.border.SpectatorBorderService;
 import de.simplepvparena.match.MatchService;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
+import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
@@ -14,10 +16,13 @@ import org.bukkit.event.player.PlayerTeleportEvent;
 public final class SpectatorBorderListener implements Listener {
 
     private final MatchService matchService;
+    private final SpectatorService spectatorService;
     private final SpectatorBorderService spectatorBorderService;
 
-    public SpectatorBorderListener(MatchService matchService, SpectatorBorderService spectatorBorderService) {
+    public SpectatorBorderListener(MatchService matchService, SpectatorService spectatorService,
+                                   SpectatorBorderService spectatorBorderService) {
         this.matchService = matchService;
+        this.spectatorService = spectatorService;
         this.spectatorBorderService = spectatorBorderService;
     }
 
@@ -36,7 +41,7 @@ public final class SpectatorBorderListener implements Listener {
         }
     }
 
-    @EventHandler(ignoreCancelled = true)
+    @EventHandler(priority = EventPriority.LOW, ignoreCancelled = true)
     public void onPlayerMove(PlayerMoveEvent event) {
         if (event instanceof PlayerTeleportEvent) {
             return;
@@ -48,7 +53,7 @@ public final class SpectatorBorderListener implements Listener {
         }
         Player player = event.getPlayer();
         if (!spectatorBorderService.isMovementAllowed(matchService.isActiveFighter(player.getUniqueId()),
-                player.isOp(), origin, destination)) {
+                spectatorService.isFlyingSpectator(player.getUniqueId()), player.isOp(), origin, destination)) {
             event.setCancelled(true);
         }
     }

@@ -73,6 +73,12 @@ public final class SpectatorService {
         return Optional.ofNullable(spectatorModesByPlayer.get(playerUniqueId));
     }
 
+    public boolean isFlyingSpectator(UUID playerUniqueId) {
+        return findSpectatorMode(playerUniqueId)
+                .filter(spectatorMode -> spectatorMode == SpectatorMode.ARENA_FLIGHT)
+                .isPresent();
+    }
+
     public Set<UUID> getSpectators() {
         return Set.copyOf(spectatorModesByPlayer.keySet());
     }

@@ -1,8 +1,10 @@
 package de.simplepvparena.arena;
 
 import java.util.ArrayDeque;
+import java.util.ArrayList;
 import java.util.Deque;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Set;
 
 public final class ArenaShapeFloodFill {
@@ -33,6 +35,8 @@ public final class ArenaShapeFloodFill {
         filledCells.add(seedCell);
         pendingCells.add(seedCell);
         int wallTopY = seedY;
+        List<ArenaHeightMismatchColumn> heightMismatchSample = new ArrayList<>();
+        int heightMismatchColumnCount = 0;
         while (!pendingCells.isEmpty()) {
             long cell = pendingCells.poll();
             int cellX = HorizontalCellCodec.decodeX(cell);
@@ -49,9 +53,17 @@ public final class ArenaShapeFloodFill {
                     wallTopY = Math.max(wallTopY, highestHeight(borderHeights));
                     continue;
                 }
+                if (borderHeights.length > 0) {
+                    heightMismatchColumnCount++;
+                    if (heightMismatchSample.size() < ArenaFillDiagnostics.HEIGHT_MISMATCH_SAMPLE_SIZE) {
+                        heightMismatchSample.add(new ArenaHeightMismatchColumn(neighbourX, neighbourZ,
+                                lowestHeight(borderHeights), seedY));
+                    }
+                }
                 if (filledCells.size() >= maximumCellCount) {
                     return ArenaShapeCalculation.stoppedAtCellLimit(maximumCellCount,
-                            ArenaFillDiagnostics.fromFillOrder(seedX, seedZ, filledCells));
+                            ArenaFillDiagnostics.fromFillOrder(seedX, seedZ, filledCells, heightMismatchSample,
+                                    heightMismatchColumnCount));
                 }
                 filledCells.add(neighbourCell);
                 pendingCells.add(neighbourCell);
@@ -67,6 +79,14 @@ public final class ArenaShapeFloodFill {
             }
         }
         return false;
+    }
+
+    private static int lowestHeight(int[] borderHeights) {
+        int lowestHeight = Integer.MAX_VALUE;
+        for (int borderHeight : borderHeights) {
+            lowestHeight = Math.min(lowestHeight, borderHeight);
+        }
+        return lowestHeight;
     }
 
     private static int highestHeight(int[] borderHeights) {

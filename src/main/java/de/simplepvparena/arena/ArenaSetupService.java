@@ -127,10 +127,10 @@ public final class ArenaSetupService {
                 ? "You received a compass that points to " + target.describe()
                 : "Your inventory is full, the compass towards " + target.describe()
                         + " could not be handed over")
-                + ", and a trail of flame particles points the same way while you walk. That is the "
-                + "column the fill reached first of the ones it was stopped on, not a hole anybody "
-                + "found - start looking around there. The trail ends when you get there, and the next "
-                + "calculation replaces both with its own target");
+                + ", and a trail of flame particles points the same way while you walk. "
+                + target.reason().getHandOutHint()
+                + ". The trail ends when you get there, and the next calculation replaces both with its "
+                + "own target");
     }
 
     private void reportDiagnosisLimit(Player admin, ArenaShape shape, int cellLimit) {

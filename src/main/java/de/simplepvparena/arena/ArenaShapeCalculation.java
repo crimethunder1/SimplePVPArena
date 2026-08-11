@@ -41,7 +41,8 @@ public final class ArenaShapeCalculation {
         return new ArenaShapeCalculation(Status.CELL_LIMIT_REACHED, null,
                 "The fight area could not be calculated, the flood fill was stopped at " + maximumCellCount
                         + " cells, the limit of " + ArenaShapeFloodFill.MAXIMUM_CELL_COUNT_CONFIGURATION_PATH
-                        + ". Either your border wall has a gap the fill ran through, or the area you "
+                        + ". " + describeHeightMismatch(diagnostics)
+                        + "Either your border wall has a gap the fill ran through, or the area you "
                         + "enclosed is larger than that limit - the calculation cannot tell the two apart, "
                         + "it would have to keep filling to do so. The fill spread furthest "
                         + diagnostics.describeEscapeDirection() + ", it covers "
@@ -55,6 +56,28 @@ public final class ArenaShapeCalculation {
                         + ArenaShapeFloodFill.MAXIMUM_DEBUG_CELL_COUNT
                         + " cells, without changing config.yml, so you can see how far the fill really gets",
                 diagnostics);
+    }
+
+    private static String describeHeightMismatch(ArenaFillDiagnostics diagnostics) {
+        if (!diagnostics.hasHeightMismatch()) {
+            return "";
+        }
+        int mismatchCount = diagnostics.getHeightMismatchColumnCount();
+        int listedCount = Math.min(ArenaFillDiagnostics.REPORTED_HEIGHT_MISMATCH_COUNT, mismatchCount);
+        String finding = mismatchCount == 1
+                ? "One of the columns the fill walked through does hold a border block, and it sits above "
+                        + "the height you ran the calculation at, so it never barred its column. It is at "
+                : mismatchCount + " of the columns the fill walked through do hold a border block, and every "
+                        + "one of those blocks sits above the height you ran the calculation at, so none of "
+                        + "them barred its column. " + (listedCount == mismatchCount
+                                ? "They are at "
+                                : "The " + listedCount + " nearest of them are at ");
+        return finding + diagnostics.describeHeightMismatchColumns()
+                + ". A border block only bars its column from its own height upwards, so the wall is built "
+                + "there and the fill still walked underneath it - that is what it looks like when you run "
+                + "the calculation standing in a dip while that part of the wall stands on a rise. Build the "
+                + "wall down to your own height there, or use " + Arena.CALCULATE_ACTION + " again while "
+                + "standing at least as high as the wall does. ";
     }
 
     public Status getStatus() {

@@ -285,7 +285,7 @@ public final class SimplePVPArenaPlugin extends JavaPlugin {
         getServer().getPluginManager().registerEvents(
                 new PlayerMoveListener(matchService, spectatorService, arenaRegistry), this);
         getServer().getPluginManager().registerEvents(
-                new SpectatorBorderListener(matchService, spectatorBorderService), this);
+                new SpectatorBorderListener(matchService, spectatorService, spectatorBorderService), this);
         getServer().getPluginManager().registerEvents(new PlayerInteractListener(matchService, spectatorService), this);
         getServer().getPluginManager().registerEvents(new AdminMenuListener(adminMenuService), this);
         getServer().getPluginManager().registerEvents(new ChatInputListener(chatInputService), this);

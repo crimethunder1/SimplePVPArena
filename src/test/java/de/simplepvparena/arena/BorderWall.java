@@ -57,6 +57,10 @@ final class BorderWall implements BorderColumnReader {
         return this;
     }
 
+    BorderWall raiseColumn(int blockX, int blockZ, int borderHeight) {
+        return removeColumn(blockX, blockZ).add(blockX, blockZ, borderHeight);
+    }
+
     BlockedColumnLookup asBlockedColumns() {
         return (blockX, blockZ) -> !heightsByCell
                 .getOrDefault(HorizontalCellCodec.encode(blockX, blockZ), List.of()).isEmpty();

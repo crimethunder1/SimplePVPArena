@@ -67,9 +67,8 @@ public final class ArenaGapGuide {
         if (ArenaGapTrailPoints.hasArrived(adminLocation.getX(), adminLocation.getZ(), target.blockX(),
                 target.blockZ())) {
             runningTrails.stop(adminUniqueId);
-            admin.sendMessage("You reached " + target.describe() + ", the trail ends here. This is where the "
-                    + "flood fill was when it was stopped, look for a missing green connection line between two "
-                    + "border blocks around you. Your compass keeps pointing at the same column");
+            admin.sendMessage("You reached " + target.describe() + ", the trail ends here. "
+                    + target.reason().getArrivalHint() + ". Your compass keeps pointing at the same column");
             return;
         }
         ArenaGapTrailPoints.walkTowards(adminLocation.getX(), adminLocation.getY(), adminLocation.getZ(),

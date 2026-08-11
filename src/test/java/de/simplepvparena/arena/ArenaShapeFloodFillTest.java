@@ -179,6 +179,125 @@ class ArenaShapeFloodFillTest {
     }
 
     @Test
+    void reportsBorderBlocksThatSitTooHighToCloseTheWall() {
+        BorderWall wall = new BorderWall().addRectangleOutline(0, 0, 4, 4, SEED_HEIGHT)
+                .raiseColumn(4, 2, SEED_HEIGHT + 6);
+
+        ArenaShapeCalculation calculation = calculate(wall, 2, 2, 200);
+
+        ArenaFillDiagnostics diagnostics = calculation.getDiagnostics().orElseThrow();
+        assertTrue(diagnostics.hasHeightMismatch());
+        assertEquals(1, diagnostics.getHeightMismatchColumnCount());
+        ArenaHeightMismatchColumn column = diagnostics.getNearestHeightMismatchColumn().orElseThrow();
+        assertEquals(4, column.blockX());
+        assertEquals(2, column.blockZ());
+        assertEquals(SEED_HEIGHT + 6, column.lowestBorderY());
+        assertEquals(6, column.heightAboveSeed());
+    }
+
+    @Test
+    void tellsTheAdminWhichWallPartStandsTooHighAndHowToFixIt() {
+        BorderWall wall = new BorderWall().addRectangleOutline(0, 0, 4, 4, SEED_HEIGHT)
+                .raiseColumn(4, 2, SEED_HEIGHT + 6);
+
+        String rejection = calculate(wall, 2, 2, 200).getRejectionMessage().orElseThrow();
+
+        assertTrue(rejection.contains("One of the columns the fill walked through does hold a border block"),
+                rejection);
+        assertTrue(rejection.contains("x/z 4/2 (lowest border block at y " + (SEED_HEIGHT + 6) + ", 6 above you)"),
+                "the column and its height are named: " + rejection);
+        assertTrue(rejection.contains("Build the wall down to your own height there"), rejection);
+        assertTrue(rejection.contains("use " + Arena.CALCULATE_ACTION + " again"),
+                "the second way out is named: " + rejection);
+        assertTrue(rejection.indexOf("border block") < rejection.indexOf("The fill spread furthest"),
+                "the wall part comes before the box and the direction: " + rejection);
+        assertTrue(rejection.contains("larger than that limit"), "the two old reasons stay: " + rejection);
+    }
+
+    @Test
+    void countsEveryColumnThatStandsTooHighAndListsOnlyTheNearestOnes() {
+        BorderWall wall = new BorderWall().addRectangleOutline(0, 0, 30, 30, SEED_HEIGHT);
+        for (int blockZ = 0; blockZ <= 30; blockZ++) {
+            wall.raiseColumn(30, blockZ, SEED_HEIGHT + 3);
+        }
+
+        ArenaShapeCalculation calculation = calculate(wall, 15, 15, 5000);
+
+        ArenaFillDiagnostics diagnostics = calculation.getDiagnostics().orElseThrow();
+        assertEquals(31, diagnostics.getHeightMismatchColumnCount(), "the whole eastern side is too high");
+        assertEquals(ArenaFillDiagnostics.HEIGHT_MISMATCH_SAMPLE_SIZE, diagnostics.getHeightMismatchColumns().size(),
+                "and only a sample of them is kept while the fill runs");
+        ArenaHeightMismatchColumn nearestColumn = diagnostics.getNearestHeightMismatchColumn().orElseThrow();
+        assertEquals(30, nearestColumn.blockX());
+        assertEquals(15, nearestColumn.blockZ(), "the column straight east of the seed is the closest one");
+        String rejection = calculation.getRejectionMessage().orElseThrow();
+        assertTrue(rejection.contains("31 of the columns the fill walked through do hold a border block"),
+                rejection);
+        assertTrue(rejection.contains("The " + ArenaFillDiagnostics.REPORTED_HEIGHT_MISMATCH_COUNT
+                + " nearest of them are at x/z 30/15"), rejection);
+    }
+
+    @Test
+    void namesTheLowestBorderBlockOfAColumnThatHoldsSeveral() {
+        BorderWall wall = new BorderWall().addRectangleOutline(0, 0, 4, 4, SEED_HEIGHT)
+                .raiseColumn(4, 2, SEED_HEIGHT + 6)
+                .add(4, 2, SEED_HEIGHT + 2)
+                .add(4, 2, SEED_HEIGHT + 9);
+
+        ArenaFillDiagnostics diagnostics = calculate(wall, 2, 2, 200).getDiagnostics().orElseThrow();
+
+        ArenaHeightMismatchColumn column = diagnostics.getNearestHeightMismatchColumn().orElseThrow();
+        assertEquals(SEED_HEIGHT + 2, column.lowestBorderY());
+        assertEquals(2, column.heightAboveSeed());
+    }
+
+    @Test
+    void reportsNoMismatchForAColumnThatBarsTheFillAnyway() {
+        BorderWall wall = new BorderWall().addRectangleOutline(0, 0, 4, 4, SEED_HEIGHT)
+                .removeColumn(4, 2)
+                .add(4, 2, SEED_HEIGHT)
+                .add(4, 2, SEED_HEIGHT + 6);
+
+        ArenaShapeCalculation calculation = calculate(wall, 2, 2, 200);
+
+        assertTrue(calculation.isSuccessful(), "the wall is closed");
+        assertEquals(9, calculation.getShape().orElseThrow().getCellCount());
+    }
+
+    @Test
+    void reportsNoHeightMismatchForAWallWithARealGap() {
+        BorderWall wall = new BorderWall().addRectangleOutline(0, 0, 4, 4, SEED_HEIGHT).removeColumn(4, 2);
+
+        ArenaShapeCalculation calculation = calculate(wall, 2, 2, 200);
+
+        ArenaFillDiagnostics diagnostics = calculation.getDiagnostics().orElseThrow();
+        assertFalse(diagnostics.hasHeightMismatch());
+        assertEquals(0, diagnostics.getHeightMismatchColumnCount());
+        assertTrue(diagnostics.getNearestHeightMismatchColumn().isEmpty());
+        String rejection = calculation.getRejectionMessage().orElseThrow();
+        assertFalse(rejection.contains("hold a border block"), "nothing is claimed about a wall: " + rejection);
+        assertTrue(rejection.startsWith("The fight area could not be calculated, the flood fill was stopped at "
+                + "200 cells, the limit of " + ArenaShapeFloodFill.MAXIMUM_CELL_COUNT_CONFIGURATION_PATH
+                + ". Either your border wall has a gap"), rejection);
+    }
+
+    @Test
+    void walksThroughAColumnThatStandsTooHighExactlyAsItDidBefore() {
+        BorderWall wallBuiltAtTheSeedHeight = new BorderWall().addRectangleOutline(0, 0, 8, 8, SEED_HEIGHT);
+        BorderWall wallWithAnInnerRingAboveTheSeed = new BorderWall()
+                .addRectangleOutline(0, 0, 8, 8, SEED_HEIGHT)
+                .addRectangleOutline(2, 2, 6, 6, SEED_HEIGHT + 4);
+
+        ArenaShape plainShape = calculate(wallBuiltAtTheSeedHeight, 4, 4, 1000).getShape().orElseThrow();
+        ArenaShape shapeWithTheHighRing = calculate(wallWithAnInnerRingAboveTheSeed, 4, 4, 1000)
+                .getShape().orElseThrow();
+
+        assertEquals(49, plainShape.getCellCount());
+        assertEquals(cellsOf(plainShape), cellsOf(shapeWithTheHighRing),
+                "the ring above the seed changes nothing about which columns are the arena");
+    }
+
+    @Test
     void reportsNoDiagnosticsForACalculationThatWasNotStoppedByTheLimit() {
         BorderWall wall = new BorderWall().addRectangleOutline(0, 0, 4, 4, SEED_HEIGHT);
 

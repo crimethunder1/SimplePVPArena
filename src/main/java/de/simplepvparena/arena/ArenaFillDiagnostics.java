@@ -1,10 +1,18 @@
 package de.simplepvparena.arena;
 
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Optional;
 
 public final class ArenaFillDiagnostics {
 
     public static final int FRONT_SAMPLE_SIZE = 8;
+
+    public static final int HEIGHT_MISMATCH_SAMPLE_SIZE = 8;
+
+    public static final int REPORTED_HEIGHT_MISMATCH_COUNT = 3;
 
     private static final String NO_DIRECTION_NAME = "nowhere";
 
@@ -16,9 +24,13 @@ public final class ArenaFillDiagnostics {
     private final int maximumX;
     private final int maximumZ;
     private final long[] frontCells;
+    private final List<ArenaHeightMismatchColumn> heightMismatchColumns;
+    private final int heightMismatchColumnCount;
 
     private ArenaFillDiagnostics(int seedX, int seedZ, int cellCount, int minimumX, int minimumZ,
-                                 int maximumX, int maximumZ, long[] frontCells) {
+                                 int maximumX, int maximumZ, long[] frontCells,
+                                 List<ArenaHeightMismatchColumn> heightMismatchColumns,
+                                 int heightMismatchColumnCount) {
         this.seedX = seedX;
         this.seedZ = seedZ;
         this.cellCount = cellCount;
@@ -27,10 +39,19 @@ public final class ArenaFillDiagnostics {
         this.maximumX = maximumX;
         this.maximumZ = maximumZ;
         this.frontCells = frontCells;
+        this.heightMismatchColumns = heightMismatchColumns;
+        this.heightMismatchColumnCount = heightMismatchColumnCount;
     }
 
     public static ArenaFillDiagnostics fromFillOrder(int seedX, int seedZ,
                                                      Collection<Long> filledCellsInFillOrder) {
+        return fromFillOrder(seedX, seedZ, filledCellsInFillOrder, List.of(), 0);
+    }
+
+    public static ArenaFillDiagnostics fromFillOrder(int seedX, int seedZ,
+                                                     Collection<Long> filledCellsInFillOrder,
+                                                     List<ArenaHeightMismatchColumn> heightMismatchSample,
+                                                     int heightMismatchColumnCount) {
         if (filledCellsInFillOrder.isEmpty()) {
             throw new IllegalArgumentException("a fill always holds at least its seed cell");
         }
@@ -55,7 +76,8 @@ public final class ArenaFillDiagnostics {
             cellIndex++;
         }
         return new ArenaFillDiagnostics(seedX, seedZ, cellCount, minimumX, minimumZ, maximumX, maximumZ,
-                frontCells);
+                frontCells, List.copyOf(heightMismatchSample),
+                Math.max(heightMismatchColumnCount, heightMismatchSample.size()));
     }
 
     public int getCellCount() {
@@ -80,6 +102,40 @@ public final class ArenaFillDiagnostics {
 
     public long[] getFrontCells() {
         return frontCells.clone();
+    }
+
+    public List<ArenaHeightMismatchColumn> getHeightMismatchColumns() {
+        return heightMismatchColumns;
+    }
+
+    public int getHeightMismatchColumnCount() {
+        return heightMismatchColumnCount;
+    }
+
+    public boolean hasHeightMismatch() {
+        return !heightMismatchColumns.isEmpty();
+    }
+
+    public Optional<ArenaHeightMismatchColumn> getNearestHeightMismatchColumn() {
+        return findNearestHeightMismatchColumns(1).stream().findFirst();
+    }
+
+    public List<ArenaHeightMismatchColumn> findNearestHeightMismatchColumns(int wantedCount) {
+        List<ArenaHeightMismatchColumn> nearestColumns = new ArrayList<>(heightMismatchColumns);
+        nearestColumns.sort(Comparator.comparingLong(
+                column -> squaredSeedDistanceOf(column.blockX(), column.blockZ())));
+        return List.copyOf(nearestColumns.subList(0, Math.min(Math.max(wantedCount, 0), nearestColumns.size())));
+    }
+
+    public String describeHeightMismatchColumns() {
+        StringBuilder description = new StringBuilder();
+        for (ArenaHeightMismatchColumn column : findNearestHeightMismatchColumns(REPORTED_HEIGHT_MISMATCH_COUNT)) {
+            if (description.length() > 0) {
+                description.append(", ");
+            }
+            description.append(column.describe());
+        }
+        return description.toString();
     }
 
     public boolean hasSpread() {
@@ -155,8 +211,12 @@ public final class ArenaFillDiagnostics {
     }
 
     private long squaredSeedDistanceOf(long cell) {
-        long distanceX = HorizontalCellCodec.decodeX(cell) - (long) seedX;
-        long distanceZ = HorizontalCellCodec.decodeZ(cell) - (long) seedZ;
+        return squaredSeedDistanceOf(HorizontalCellCodec.decodeX(cell), HorizontalCellCodec.decodeZ(cell));
+    }
+
+    private long squaredSeedDistanceOf(int cellX, int cellZ) {
+        long distanceX = cellX - (long) seedX;
+        long distanceZ = cellZ - (long) seedZ;
         return distanceX * distanceX + distanceZ * distanceZ;
     }
 

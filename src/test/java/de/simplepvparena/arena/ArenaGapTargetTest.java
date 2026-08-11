@@ -3,9 +3,12 @@ package de.simplepvparena.arena;
 import org.junit.jupiter.api.Test;
 
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class ArenaGapTargetTest {
 
@@ -53,5 +56,51 @@ class ArenaGapTargetTest {
         ArenaGapTarget target = new ArenaGapTarget("arena_world", 12, 64, -30);
 
         assertEquals("x/y/z 12/64/-30 in arena_world", target.describe());
+    }
+
+    @Test
+    void targetPrefersTheNearestColumnWhoseWallStandsTooHigh() {
+        ArenaFillDiagnostics diagnostics = ArenaFillDiagnostics.fromFillOrder(0, 0,
+                BorderWall.cells(0, 0, 200, 0, 30, 40, 400, 400),
+                List.of(new ArenaHeightMismatchColumn(60, 60, 71, 64),
+                        new ArenaHeightMismatchColumn(9, 4, 70, 64)),
+                2);
+
+        ArenaGapTarget target = ArenaGapTarget.fromDiagnostics("arena_world", 64, diagnostics);
+
+        assertEquals(9, target.blockX());
+        assertEquals(4, target.blockZ());
+        assertEquals(64, target.blockY(), "still the height the calculation ran at");
+        assertEquals(ArenaGapTarget.Reason.BORDER_TOO_HIGH, target.reason());
+    }
+
+    @Test
+    void targetFallsBackToTheFrontWhenNoWallStandsTooHigh() {
+        ArenaFillDiagnostics diagnostics = ArenaFillDiagnostics.fromFillOrder(0, 0,
+                BorderWall.cells(0, 0, 200, 0, 30, 40, 400, 400));
+
+        ArenaGapTarget target = ArenaGapTarget.fromDiagnostics("arena_world", 64, diagnostics);
+
+        assertEquals(30, target.blockX());
+        assertEquals(40, target.blockZ());
+        assertEquals(ArenaGapTarget.Reason.FILL_FRONT, target.reason());
+    }
+
+    @Test
+    void everyReasonSaysWhatTheAdminIsLookingAt() {
+        assertTrue(ArenaGapTarget.Reason.FILL_FRONT.getArrivalHint().contains("where the flood fill was"));
+        assertTrue(ArenaGapTarget.Reason.FILL_FRONT.getHandOutHint().contains("not a hole anybody found"));
+        assertTrue(ArenaGapTarget.Reason.BORDER_TOO_HIGH.getArrivalHint()
+                .contains("Build it down to your own height here"));
+        assertTrue(ArenaGapTarget.Reason.BORDER_TOO_HIGH.getHandOutHint().contains("it is a piece of wall that "
+                + "does not close"));
+        for (ArenaGapTarget.Reason reason : ArenaGapTarget.Reason.values()) {
+            assertFalse(reason.getLoreLine().isBlank(), reason + " needs a line for the compass lore");
+        }
+    }
+
+    @Test
+    void targetWithoutAReasonIsTheFrontOfTheStoppedFill() {
+        assertEquals(ArenaGapTarget.Reason.FILL_FRONT, new ArenaGapTarget("world", 1, 2, 3).reason());
     }
 }

@@ -1,9 +1,9 @@
 package de.simplepvparena.listener;
 
+import de.simplepvparena.arena.ArenaFlightExitRule;
 import de.simplepvparena.arena.ArenaMovementRule;
 import de.simplepvparena.arena.ArenaRegistry;
 import de.simplepvparena.arena.ArenaShape;
-import de.simplepvparena.arena.SpectatorMode;
 import de.simplepvparena.arena.SpectatorService;
 import de.simplepvparena.match.MatchService;
 import org.bukkit.Location;
@@ -34,8 +34,20 @@ public final class PlayerMoveListener implements Listener {
         if (!hasChangedBlock(from, to)) {
             return;
         }
-        if (!isMovementAllowed(event.getPlayer(), from, to)) {
+        Optional<ArenaShape> arenaShape = arenaRegistry.getArena().getShape();
+        if (arenaShape.isEmpty()) {
+            return;
+        }
+        Player player = event.getPlayer();
+        boolean originInside = arenaShape.get().contains(from);
+        boolean destinationInside = arenaShape.get().contains(to);
+        boolean flyingSpectator = isFlyingSpectator(player);
+        if (!ArenaFlightExitRule.isMovementAllowed(belongsIntoArena(player), player.isOp(), flyingSpectator,
+                originInside, destinationInside)) {
             event.setCancelled(true);
+        }
+        if (ArenaFlightExitRule.leavesTheArena(flyingSpectator, originInside, destinationInside)) {
+            endArenaFlight(player);
         }
     }
 
@@ -48,6 +60,14 @@ public final class PlayerMoveListener implements Listener {
         if (!isMovementAllowed(event.getPlayer(), event.getFrom(), event.getTo())) {
             event.setCancelled(true);
         }
+    }
+
+    private void endArenaFlight(Player player) {
+        if (!spectatorService.sendToTribune(player)) {
+            player.sendMessage("The tribune spawn of the arena is not set, use the spectator item to stop flying");
+            return;
+        }
+        player.setFallDistance(0.0F);
     }
 
     private boolean isMovementAllowed(Player player, Location origin, Location destination) {
@@ -63,9 +83,11 @@ public final class PlayerMoveListener implements Listener {
         if (matchService.isActiveFighter(player.getUniqueId())) {
             return true;
         }
-        return spectatorService.findSpectatorMode(player.getUniqueId())
-                .filter(spectatorMode -> spectatorMode == SpectatorMode.ARENA_FLIGHT)
-                .isPresent();
+        return isFlyingSpectator(player);
+    }
+
+    private boolean isFlyingSpectator(Player player) {
+        return spectatorService.isFlyingSpectator(player.getUniqueId());
     }
 
     private boolean hasChangedBlock(Location from, Location to) {

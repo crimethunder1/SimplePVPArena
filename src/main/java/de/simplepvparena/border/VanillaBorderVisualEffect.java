@@ -12,14 +12,18 @@ public final class VanillaBorderVisualEffect implements BorderVisualEffect {
     public static final Particle CONNECTION_PARTICLE = Particle.ELECTRIC_SPARK;
 
     private static final float COLOURED_PARTICLE_SIZE = 1.0F;
+
     private static final Particle.DustOptions ISOLATED_COLUMN_DUST =
             new Particle.DustOptions(Color.fromRGB(255, 60, 60), COLOURED_PARTICLE_SIZE);
+
+    private static final Particle.DustOptions NORMAL_COLUMN_DUST =
+            new Particle.DustOptions(Color.fromRGB(255, 235, 40), COLOURED_PARTICLE_SIZE);
+
     private static final Particle.DustOptions CONNECTED_COLUMNS_DUST =
             new Particle.DustOptions(Color.fromRGB(60, 255, 90), COLOURED_PARTICLE_SIZE);
 
     private static final int STREAM_PARTICLE_COUNT = 5;
     private static final double STREAM_STEP_HEIGHT = 0.5D;
-    private static final double STREAM_RISE_SPEED = 0.02D;
 
     private static final int CONFIRMED_STREAM_PARTICLE_COUNT = 3;
     private static final double CONFIRMED_STREAM_STEP_HEIGHT = 0.25D;
@@ -34,13 +38,8 @@ public final class VanillaBorderVisualEffect implements BorderVisualEffect {
         Particle.DustOptions columnColour = colourOf(connectivity);
         for (int step = 0; step < STREAM_PARTICLE_COUNT; step++) {
             Location streamPoint = borderBlockCenter.clone().add(NO_OFFSET, step * STREAM_STEP_HEIGHT, NO_OFFSET);
-            if (columnColour == null) {
-                player.spawnParticle(BORDER_BLOCK_PARTICLE, streamPoint, DIRECTED_PARTICLE_COUNT,
-                        NO_OFFSET, 1.0D, NO_OFFSET, STREAM_RISE_SPEED);
-            } else {
-                player.spawnParticle(COLOURED_BORDER_BLOCK_PARTICLE, streamPoint, SINGLE_PARTICLE_COUNT,
-                        NO_OFFSET, NO_OFFSET, NO_OFFSET, NO_SPEED, columnColour);
-            }
+            player.spawnParticle(COLOURED_BORDER_BLOCK_PARTICLE, streamPoint, SINGLE_PARTICLE_COUNT,
+                    NO_OFFSET, NO_OFFSET, NO_OFFSET, NO_SPEED, columnColour);
         }
     }
 
@@ -69,7 +68,8 @@ public final class VanillaBorderVisualEffect implements BorderVisualEffect {
     static Particle.DustOptions colourOf(BorderConnectivity connectivity) {
         return switch (connectivity) {
             case ISOLATED -> ISOLATED_COLUMN_DUST;
-            case NORMAL, WELL_CONNECTED -> null;
+            case NORMAL -> NORMAL_COLUMN_DUST;
+            case WELL_CONNECTED -> CONNECTED_COLUMNS_DUST;
         };
     }
 }
