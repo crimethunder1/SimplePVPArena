@@ -47,3 +47,10 @@ border:
   particle-maximum-blocks-per-player: 24
   particle-maximum-lines-per-player: 48
   wall-preview-seconds: 4
+  confirmed-particle:
+    type: END_ROD
+    height: 0.25
+    colour:
+      red: 255
+      green: 255
+      blue: 255

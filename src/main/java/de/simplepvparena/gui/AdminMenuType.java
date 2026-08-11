@@ -4,6 +4,7 @@ public enum AdminMenuType {
 
     MAIN,
     ARENA,
+    KIT,
     TEAMS,
     TEAM_ACTIONS,
     MATCH,

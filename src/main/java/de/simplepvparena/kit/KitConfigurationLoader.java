@@ -5,14 +5,14 @@ import org.bukkit.NamespacedKey;
 import org.bukkit.Registry;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.enchantments.Enchantment;
-import org.bukkit.inventory.EquipmentSlot;
+import org.bukkit.inventory.ItemStack;
 
-import java.util.ArrayList;
 import java.util.EnumMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
+import java.util.TreeMap;
 import java.util.logging.Logger;
 
 public final class KitConfigurationLoader {
@@ -20,12 +20,6 @@ public final class KitConfigurationLoader {
     private static final String ARMOR_SECTION = "armor";
     private static final String ITEMS_SECTION = "items";
     private static final String ENCHANTMENTS_SECTION = "enchantments";
-
-    private static final Map<String, EquipmentSlot> ARMOR_SLOTS_BY_KEY = Map.of(
-            "head", EquipmentSlot.HEAD,
-            "chest", EquipmentSlot.CHEST,
-            "legs", EquipmentSlot.LEGS,
-            "feet", EquipmentSlot.FEET);
 
     private final Logger logger;
 
@@ -37,18 +31,25 @@ public final class KitConfigurationLoader {
         if (kitSection == null) {
             return KitDefinition.empty();
         }
+        if (SerializedKit.isWrittenIn(kitSection)) {
+            return KitSerialization.toDefinition(SerializedKit.read(kitSection, logger::warning), logger::warning);
+        }
+        return loadTypedKit(kitSection);
+    }
+
+    private KitDefinition loadTypedKit(ConfigurationSection kitSection) {
         return new KitDefinition(readArmorItems(kitSection.getConfigurationSection(ARMOR_SECTION)),
                 readInventoryItems(kitSection.getList(ITEMS_SECTION)));
     }
 
-    private Map<EquipmentSlot, KitItem> readArmorItems(ConfigurationSection armorSection) {
-        Map<EquipmentSlot, KitItem> armorItems = new EnumMap<>(EquipmentSlot.class);
+    private Map<KitEquipmentSlot, ItemStack> readArmorItems(ConfigurationSection armorSection) {
+        Map<KitEquipmentSlot, ItemStack> armorItems = new EnumMap<>(KitEquipmentSlot.class);
         if (armorSection == null) {
             return armorItems;
         }
         for (String slotKey : armorSection.getKeys(false)) {
-            EquipmentSlot equipmentSlot = ARMOR_SLOTS_BY_KEY.get(slotKey.toLowerCase(Locale.ROOT));
-            if (equipmentSlot == null) {
+            Optional<KitEquipmentSlot> equipmentSlot = KitEquipmentSlot.findByKey(slotKey);
+            if (equipmentSlot.isEmpty()) {
                 logger.warning("Unknown armor slot in kit configuration: " + slotKey);
                 continue;
             }
@@ -56,20 +57,28 @@ public final class KitConfigurationLoader {
             if (itemSection == null) {
                 continue;
             }
-            readKitItem(itemSection.getValues(false), itemSection).ifPresent(item -> armorItems.put(equipmentSlot, item));
+            readKitItem(itemSection.getValues(false), itemSection)
+                    .ifPresent(item -> armorItems.put(equipmentSlot.get(), item.toItemStack()));
         }
         return armorItems;
     }
 
-    private List<KitItem> readInventoryItems(List<?> rawItems) {
-        List<KitItem> inventoryItems = new ArrayList<>();
+    private Map<Integer, ItemStack> readInventoryItems(List<?> rawItems) {
+        Map<Integer, ItemStack> inventoryItems = new TreeMap<>();
         if (rawItems == null) {
             return inventoryItems;
         }
         for (Object rawItem : rawItems) {
-            if (rawItem instanceof Map<?, ?> itemValues) {
-                readKitItem(itemValues, null).ifPresent(inventoryItems::add);
+            if (!(rawItem instanceof Map<?, ?> itemValues)) {
+                continue;
             }
+            int slotIndex = inventoryItems.size();
+            if (slotIndex >= SerializedKit.INVENTORY_SLOT_COUNT) {
+                logger.warning("The kit configuration holds more than " + SerializedKit.INVENTORY_SLOT_COUNT
+                        + " items, the ones beyond that do not fit into an inventory and are skipped");
+                break;
+            }
+            readKitItem(itemValues, null).ifPresent(item -> inventoryItems.put(slotIndex, item.toItemStack()));
         }
         return inventoryItems;
     }

@@ -23,8 +23,9 @@ public final class ArenaSetupService {
     private final ArenaCleaningService arenaCleaningService;
     private final ArenaBaselineService arenaBaselineService;
     private final ArenaBorderConfirmation borderConfirmation;
-    private final int maximumArenaCellCount;
     private final Runnable arenaConfigurationSaver;
+
+    private int maximumArenaCellCount = ArenaShapeFloodFill.DEFAULT_MAXIMUM_CELL_COUNT;
 
     public ArenaSetupService(ArenaRegistry arenaRegistry,
                              MatchService matchService,
@@ -34,7 +35,6 @@ public final class ArenaSetupService {
                              ArenaCleaningService arenaCleaningService,
                              ArenaBaselineService arenaBaselineService,
                              ArenaBorderConfirmation borderConfirmation,
-                             int maximumArenaCellCount,
                              Runnable arenaConfigurationSaver) {
         this.arenaRegistry = arenaRegistry;
         this.matchService = matchService;
@@ -44,8 +44,15 @@ public final class ArenaSetupService {
         this.arenaCleaningService = arenaCleaningService;
         this.arenaBaselineService = arenaBaselineService;
         this.borderConfirmation = borderConfirmation;
-        this.maximumArenaCellCount = maximumArenaCellCount;
         this.arenaConfigurationSaver = arenaConfigurationSaver;
+    }
+
+    public void setMaximumArenaCellCount(int maximumArenaCellCount) {
+        this.maximumArenaCellCount = Math.max(1, maximumArenaCellCount);
+    }
+
+    public int getMaximumArenaCellCount() {
+        return maximumArenaCellCount;
     }
 
     public boolean isArenaReady() {
@@ -236,7 +243,7 @@ public final class ArenaSetupService {
                         + "A baseline is taken by " + Arena.CALCULATE_ACTION + " and does not survive a server "
                         + "restart"));
         sender.sendMessage("Cleaning the arena, " + blockCount + " blocks are processed in batches of "
-                + ArenaCleaningService.DEFAULT_BLOCKS_PER_TICK + " per tick");
+                + arenaCleaningService.getBlocksPerTick() + " per tick");
         return true;
     }
 

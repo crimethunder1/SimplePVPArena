@@ -12,6 +12,7 @@ class AdminMenuHolderTest {
     void namesTheMenuEveryHolderStandsFor() {
         assertEquals(AdminMenuType.MAIN, AdminMenuHolder.main().getMenuType());
         assertEquals(AdminMenuType.ARENA, AdminMenuHolder.arena().getMenuType());
+        assertEquals(AdminMenuType.KIT, AdminMenuHolder.kit().getMenuType());
         assertEquals(AdminMenuType.TEAMS, AdminMenuHolder.teams(0).getMenuType());
         assertEquals(AdminMenuType.TEAM_ACTIONS, AdminMenuHolder.teamActions("Alpha", 0).getMenuType());
         assertEquals(AdminMenuType.MATCH, AdminMenuHolder.match().getMenuType());
@@ -65,6 +66,7 @@ class AdminMenuHolderTest {
     void returnsFromEveryConfirmationToTheMenuItWasAskedIn() {
         assertEquals(AdminMenuType.ARENA, ConfirmationRequest.CLEAN_ARENA.getReturnMenuType());
         assertEquals(AdminMenuType.ARENA, ConfirmationRequest.RESET_ARENA.getReturnMenuType());
+        assertEquals(AdminMenuType.KIT, ConfirmationRequest.SAVE_KIT.getReturnMenuType());
         assertEquals(AdminMenuType.TEAMS, ConfirmationRequest.REMOVE_TEAM.getReturnMenuType());
         assertEquals(AdminMenuType.MATCH, ConfirmationRequest.CANCEL_TOURNAMENT.getReturnMenuType());
     }

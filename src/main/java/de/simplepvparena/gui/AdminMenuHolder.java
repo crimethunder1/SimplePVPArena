@@ -32,6 +32,10 @@ public final class AdminMenuHolder implements InventoryHolder {
         return new AdminMenuHolder(AdminMenuType.ARENA, null, null, 0);
     }
 
+    public static AdminMenuHolder kit() {
+        return new AdminMenuHolder(AdminMenuType.KIT, null, null, 0);
+    }
+
     public static AdminMenuHolder teams(int pageIndex) {
         return new AdminMenuHolder(AdminMenuType.TEAMS, null, null, pageIndex);
     }

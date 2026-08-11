@@ -9,7 +9,6 @@ import de.simplepvparena.arena.ArenaGapGuide;
 import de.simplepvparena.arena.ArenaRegistry;
 import de.simplepvparena.arena.ArenaSafetyZone;
 import de.simplepvparena.arena.ArenaSetupService;
-import de.simplepvparena.arena.ArenaShapeFloodFill;
 import de.simplepvparena.arena.SpectatorItemFactory;
 import de.simplepvparena.arena.SpectatorService;
 import de.simplepvparena.border.BorderMarkIndex;
@@ -20,10 +19,16 @@ import de.simplepvparena.border.BorderVisualEffects;
 import de.simplepvparena.border.BorderWallPreview;
 import de.simplepvparena.border.SpectatorBorderService;
 import de.simplepvparena.command.TournamentCommand;
+import de.simplepvparena.config.ConfigurationReloadReport;
+import de.simplepvparena.config.ConfigurationReloadService;
+import de.simplepvparena.config.PluginLiveConfiguration;
 import de.simplepvparena.gui.AdminMenuService;
 import de.simplepvparena.input.ChatInputService;
+import de.simplepvparena.config.PluginSettings;
 import de.simplepvparena.kit.KitConfigurationLoader;
+import de.simplepvparena.kit.KitSaveService;
 import de.simplepvparena.kit.KitService;
+import de.simplepvparena.kit.SerializedKit;
 import de.simplepvparena.listener.AdminMenuListener;
 import de.simplepvparena.listener.ArenaSafetyZoneListener;
 import de.simplepvparena.listener.ChatInputListener;
@@ -36,7 +41,6 @@ import de.simplepvparena.listener.PlayerMoveListener;
 import de.simplepvparena.listener.PlayerRespawnListener;
 import de.simplepvparena.listener.SpectatorBorderListener;
 import de.simplepvparena.match.MatchService;
-import de.simplepvparena.match.RoundTimeoutSettings;
 import de.simplepvparena.team.TeamMemberLookup;
 import de.simplepvparena.team.TeamRegistry;
 import de.simplepvparena.team.TeamStorage;
@@ -50,31 +54,14 @@ import java.io.File;
 public final class SimplePVPArenaPlugin extends JavaPlugin {
 
     private static final String COMMAND_NAME = "tournament";
-    private static final String KIT_SECTION = "kit";
-    private static final String ROUND_RESET_DELAY_KEY = "match.round-reset-delay-ticks";
-    private static final String ROUND_TIMEOUT_SECONDS_KEY = "match.round-timeout-seconds";
-    private static final String SUDDEN_DEATH_WARNING_SECONDS_KEY = "match.sudden-death-warning-seconds";
-    private static final String SUDDEN_DEATH_DAMAGE_PER_SECOND_KEY = "match.sudden-death-damage-per-second";
-    private static final String SUDDEN_DEATH_DAMAGE_INCREASE_KEY = "match.sudden-death-damage-increase-per-second";
-    private static final String ARENA_BLOCKS_PER_TICK_KEY = "arena.clean-blocks-per-tick";
-    private static final String ARENA_BASELINE_BLOCKS_PER_TICK_KEY = "arena.baseline-blocks-per-tick";
-    private static final String ARENA_MAXIMUM_CELLS_KEY = ArenaShapeFloodFill.MAXIMUM_CELL_COUNT_CONFIGURATION_PATH;
-    private static final String ARENA_SAFETY_ZONE_RADIUS_KEY = ArenaSafetyZone.RADIUS_CONFIGURATION_PATH;
-    private static final String BORDER_PARTICLE_PERIOD_KEY = "border.particle-period-ticks";
-    private static final String BORDER_PARTICLE_VIEW_RADIUS_KEY = "border.particle-view-radius";
-    private static final String BORDER_PARTICLE_MAXIMUM_BLOCKS_KEY = "border.particle-maximum-blocks-per-player";
-    private static final String BORDER_PARTICLE_MAXIMUM_LINES_KEY = "border.particle-maximum-lines-per-player";
-    private static final String BORDER_WALL_PREVIEW_SECONDS_KEY = "border.wall-preview-seconds";
     private static final String TEAMS_FILE_NAME = "teams.yml";
     private static final String BORDERS_FILE_NAME = "borders.yml";
-    private static final long DEFAULT_ROUND_RESET_DELAY_TICKS = 100L;
-    private static final long TICKS_PER_SECOND = 20L;
-    private static final int DEFAULT_BORDER_WALL_PREVIEW_SECONDS = 4;
 
     private ArenaRegistry arenaRegistry;
     private TeamRegistry teamRegistry;
     private TeamStorage teamStorage;
     private KitService kitService;
+    private KitSaveService kitSaveService;
     private SpectatorService spectatorService;
     private BorderMarkIndex borderMarkIndex;
     private BorderMarkStorage borderMarkStorage;
@@ -91,6 +78,7 @@ public final class SimplePVPArenaPlugin extends JavaPlugin {
     private AdminMenuService adminMenuService;
     private MatchService matchService;
     private TournamentManager tournamentManager;
+    private ConfigurationReloadService configurationReloadService;
 
     @Override
     public void onEnable() {
@@ -108,7 +96,7 @@ public final class SimplePVPArenaPlugin extends JavaPlugin {
         teamStorage.load(teamRegistry);
 
         kitService = new KitService();
-        kitService.setKitDefinition(new KitConfigurationLoader(getLogger()).load(getConfig().getConfigurationSection(KIT_SECTION)));
+        kitSaveService = new KitSaveService(kitService, this::saveKitConfiguration, getLogger()::warning);
 
         spectatorService = new SpectatorService(arenaRegistry, new SpectatorItemFactory(this));
 
@@ -119,46 +107,37 @@ public final class SimplePVPArenaPlugin extends JavaPlugin {
         spectatorBorderService = new SpectatorBorderService(this, borderMarkIndex, this::onBorderMarksChanged);
 
         arenaCleaningService = new ArenaCleaningService(this, spectatorBorderService::clearMarksInShape);
-        arenaCleaningService.setBlocksPerTick(getConfig().getInt(ARENA_BLOCKS_PER_TICK_KEY,
-                ArenaCleaningService.DEFAULT_BLOCKS_PER_TICK));
 
         arenaBaselineService = new ArenaBaselineService(this, new ArenaBaselineRegistry());
-        arenaBaselineService.setBlocksPerTick(getConfig().getInt(ARENA_BASELINE_BLOCKS_PER_TICK_KEY,
-                ArenaBaselineService.DEFAULT_BLOCKS_PER_TICK));
 
         matchService = new MatchService(this, kitService, spectatorService);
-        matchService.setRoundResetDelayTicks(getConfig().getLong(ROUND_RESET_DELAY_KEY, DEFAULT_ROUND_RESET_DELAY_TICKS));
-        matchService.setRoundTimeoutSettings(readRoundTimeoutSettings());
 
         tournamentManager = new TournamentManager(this, teamRegistry, arenaRegistry, matchService,
                 new OnlineOperatorNotifier(getServer()));
 
-        BorderVisualEffect borderVisualEffect = BorderVisualEffects.create(getServer().getPluginManager(), getLogger());
+        BorderVisualEffect borderVisualEffect = BorderVisualEffects.create(getServer().getPluginManager(),
+                getLogger());
         borderParticleService = new BorderParticleService(this, borderMarkIndex, borderVisualEffect,
                 matchService::isActiveFighter, arenaBorderConfirmation);
-        borderParticleService.setPeriodTicks(getConfig().getLong(BORDER_PARTICLE_PERIOD_KEY,
-                BorderParticleService.DEFAULT_PERIOD_TICKS));
-        borderParticleService.setViewRadius(getConfig().getInt(BORDER_PARTICLE_VIEW_RADIUS_KEY,
-                BorderParticleService.DEFAULT_VIEW_RADIUS));
-        borderParticleService.setMaximumBlocksPerPlayer(getConfig().getInt(BORDER_PARTICLE_MAXIMUM_BLOCKS_KEY,
-                BorderParticleService.DEFAULT_MAXIMUM_BLOCKS_PER_PLAYER));
-        borderParticleService.setMaximumLinesPerPlayer(getConfig().getInt(BORDER_PARTICLE_MAXIMUM_LINES_KEY,
-                BorderParticleService.DEFAULT_MAXIMUM_LINES_PER_PLAYER));
         borderWallPreview = new BorderWallPreview(this, borderVisualEffect);
-        borderWallPreview.setDurationTicks(TICKS_PER_SECOND * getConfig().getInt(BORDER_WALL_PREVIEW_SECONDS_KEY,
-                DEFAULT_BORDER_WALL_PREVIEW_SECONDS));
         arenaGapGuide = new ArenaGapGuide(this);
 
         arenaSafetyZone = new ArenaSafetyZone(arenaRegistry.getArena()::getShape, matchService::isActiveFighter);
-        arenaSafetyZone.setRadius(readSafetyZoneRadius());
 
         arenaSetupService = new ArenaSetupService(arenaRegistry, matchService, spectatorBorderService,
                 borderWallPreview, arenaGapGuide, arenaCleaningService, arenaBaselineService,
-                arenaBorderConfirmation, readMaximumArenaCellCount(), this::saveArenaConfiguration);
+                arenaBorderConfirmation, this::saveArenaConfiguration);
         chatInputService = new ChatInputService(this);
         adminMenuService = new AdminMenuService(this, tournamentManager, teamRegistry,
                 new TeamMemberLookup(getServer()), matchService, arenaSetupService, spectatorBorderService,
-                chatInputService, this::saveTeamConfiguration);
+                kitSaveService, chatInputService, this::saveTeamConfiguration, this::reloadConfiguration);
+
+        configurationReloadService = new ConfigurationReloadService(this::getConfig, this::reloadConfig,
+                new PluginLiveConfiguration(kitService, new KitConfigurationLoader(getLogger()), matchService,
+                        arenaCleaningService, arenaBaselineService, arenaSetupService, arenaSafetyZone,
+                        borderParticleService, borderWallPreview, borderVisualEffect, getLogger()::warning),
+                getLogger()::warning);
+        configurationReloadService.applyStoredConfiguration();
 
         registerCommand();
         registerListeners();
@@ -203,6 +182,15 @@ public final class SimplePVPArenaPlugin extends JavaPlugin {
         teamStorage.save(teamRegistry);
     }
 
+    public void saveKitConfiguration(SerializedKit serializedKit) {
+        serializedKit.writeInto(getConfig(), PluginSettings.KIT_SECTION_PATH);
+        saveConfig();
+    }
+
+    public ConfigurationReloadReport reloadConfiguration() {
+        return configurationReloadService.reloadFromFile();
+    }
+
     public void onBorderMarksChanged() {
         borderMarkStorage.save(borderMarkIndex);
         arenaBorderConfirmation.invalidate();
@@ -243,42 +231,6 @@ public final class SimplePVPArenaPlugin extends JavaPlugin {
         }
         getLogger().warning("The arena is not fully configured, it still misses: "
                 + String.join(", ", arenaRegistry.getArena().getMissingConfiguration()));
-    }
-
-    private int readMaximumArenaCellCount() {
-        int maximumCellCount = getConfig().getInt(ARENA_MAXIMUM_CELLS_KEY,
-                ArenaShapeFloodFill.DEFAULT_MAXIMUM_CELL_COUNT);
-        if (maximumCellCount >= 1) {
-            return maximumCellCount;
-        }
-        getLogger().warning(ARENA_MAXIMUM_CELLS_KEY + " must be at least one cell, falling back to "
-                + ArenaShapeFloodFill.DEFAULT_MAXIMUM_CELL_COUNT);
-        return ArenaShapeFloodFill.DEFAULT_MAXIMUM_CELL_COUNT;
-    }
-
-    private int readSafetyZoneRadius() {
-        int radius = getConfig().getInt(ARENA_SAFETY_ZONE_RADIUS_KEY, ArenaSafetyZone.DEFAULT_RADIUS);
-        if (radius >= 0) {
-            return radius;
-        }
-        getLogger().warning(ARENA_SAFETY_ZONE_RADIUS_KEY + " cannot be negative, falling back to "
-                + ArenaSafetyZone.DEFAULT_RADIUS + " blocks. Use zero to switch the safety zone off");
-        return ArenaSafetyZone.DEFAULT_RADIUS;
-    }
-
-    private RoundTimeoutSettings readRoundTimeoutSettings() {
-        RoundTimeoutSettings defaultSettings = RoundTimeoutSettings.defaults();
-        int roundTimeoutSeconds = getConfig().getInt(ROUND_TIMEOUT_SECONDS_KEY, defaultSettings.roundTimeoutSeconds());
-        if (roundTimeoutSeconds < 1) {
-            getLogger().warning(ROUND_TIMEOUT_SECONDS_KEY + " must be at least one second, falling back to "
-                    + defaultSettings.roundTimeoutSeconds() + " seconds");
-            roundTimeoutSeconds = defaultSettings.roundTimeoutSeconds();
-        }
-        return new RoundTimeoutSettings(roundTimeoutSeconds,
-                getConfig().getInt(SUDDEN_DEATH_WARNING_SECONDS_KEY, defaultSettings.suddenDeathWarningSeconds()),
-                getConfig().getDouble(SUDDEN_DEATH_DAMAGE_PER_SECOND_KEY, defaultSettings.suddenDeathBaseDamage()),
-                getConfig().getDouble(SUDDEN_DEATH_DAMAGE_INCREASE_KEY,
-                        defaultSettings.suddenDeathDamageIncreasePerSecond()));
     }
 
     private void registerCommand() {

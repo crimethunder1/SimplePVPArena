@@ -29,6 +29,10 @@ public final class ArenaCleaningService {
         this.blocksPerTick = Math.max(1, blocksPerTick);
     }
 
+    public int getBlocksPerTick() {
+        return blocksPerTick;
+    }
+
     public boolean isCleaning() {
         return activeTask != null;
     }

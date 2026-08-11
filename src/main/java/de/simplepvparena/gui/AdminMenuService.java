@@ -8,7 +8,9 @@ import de.simplepvparena.border.BorderItemRequest;
 import de.simplepvparena.border.BorderItemRequestResult;
 import de.simplepvparena.border.SpectatorBorderService;
 import de.simplepvparena.command.TournamentCommand;
+import de.simplepvparena.config.ConfigurationReloadReport;
 import de.simplepvparena.input.ChatInputService;
+import de.simplepvparena.kit.KitSaveService;
 import de.simplepvparena.match.Match;
 import de.simplepvparena.match.MatchService;
 import de.simplepvparena.team.Team;
@@ -47,7 +49,11 @@ public final class AdminMenuService {
     private static final int MAIN_FINAL_SLOT = 14;
     private static final int MAIN_STATUS_SLOT = 15;
     private static final int MAIN_BRACKET_SLOT = 16;
+    private static final int MAIN_RELOAD_SLOT = 20;
     private static final int MAIN_CLOSE_SLOT = 22;
+    private static final int MAIN_KIT_SLOT = 24;
+
+    private static final int KIT_SAVE_SLOT = 13;
 
     private static final int ARENA_CALCULATE_SLOT = 10;
     private static final int ARENA_DIAGNOSE_SLOT = 11;
@@ -87,8 +93,10 @@ public final class AdminMenuService {
     private final MatchService matchService;
     private final ArenaSetupService arenaSetupService;
     private final SpectatorBorderService spectatorBorderService;
+    private final KitSaveService kitSaveService;
     private final ChatInputService chatInputService;
     private final Runnable teamConfigurationSaver;
+    private final Supplier<ConfigurationReloadReport> configurationReloader;
 
     public AdminMenuService(Plugin plugin,
                             TournamentManager tournamentManager,
@@ -97,8 +105,10 @@ public final class AdminMenuService {
                             MatchService matchService,
                             ArenaSetupService arenaSetupService,
                             SpectatorBorderService spectatorBorderService,
+                            KitSaveService kitSaveService,
                             ChatInputService chatInputService,
-                            Runnable teamConfigurationSaver) {
+                            Runnable teamConfigurationSaver,
+                            Supplier<ConfigurationReloadReport> configurationReloader) {
         this.plugin = Objects.requireNonNull(plugin, "plugin");
         this.tournamentManager = Objects.requireNonNull(tournamentManager, "tournamentManager");
         this.teamRegistry = Objects.requireNonNull(teamRegistry, "teamRegistry");
@@ -106,8 +116,10 @@ public final class AdminMenuService {
         this.matchService = Objects.requireNonNull(matchService, "matchService");
         this.arenaSetupService = Objects.requireNonNull(arenaSetupService, "arenaSetupService");
         this.spectatorBorderService = Objects.requireNonNull(spectatorBorderService, "spectatorBorderService");
+        this.kitSaveService = Objects.requireNonNull(kitSaveService, "kitSaveService");
         this.chatInputService = Objects.requireNonNull(chatInputService, "chatInputService");
         this.teamConfigurationSaver = Objects.requireNonNull(teamConfigurationSaver, "teamConfigurationSaver");
+        this.configurationReloader = Objects.requireNonNull(configurationReloader, "configurationReloader");
     }
 
     public void openMainMenu(Player player) {
@@ -122,6 +134,7 @@ public final class AdminMenuService {
         switch (holder.getMenuType()) {
             case MAIN -> handleMainClick(player, slot);
             case ARENA -> handleArenaClick(player, holder, slot);
+            case KIT -> handleKitClick(player, slot);
             case TEAMS -> handleTeamsClick(player, holder, slot);
             case TEAM_ACTIONS -> handleTeamActionsClick(player, holder, slot);
             case MATCH -> handleMatchClick(player, holder, slot);
@@ -139,6 +152,8 @@ public final class AdminMenuService {
             case MAIN_FINAL_SLOT -> runOperation(player, tournamentManager::startFinalMatch);
             case MAIN_STATUS_SLOT -> player.sendMessage(tournamentManager.describeStatus());
             case MAIN_BRACKET_SLOT -> showBracket(player);
+            case MAIN_RELOAD_SLOT -> reloadConfiguration(player);
+            case MAIN_KIT_SLOT -> openMenu(player, AdminMenuHolder.kit());
             case MAIN_CLOSE_SLOT -> closeMenu(player);
             default -> { }
         }
@@ -147,6 +162,21 @@ public final class AdminMenuService {
     private void showBracket(Player player) {
         closeMenu(player);
         tournamentManager.describeBracket().forEach(player::sendMessage);
+    }
+
+    private void reloadConfiguration(Player player) {
+        closeMenu(player);
+        boolean matchWasRunning = matchService.hasActiveMatch();
+        ConfigurationReloadReport report = configurationReloader.get();
+        report.describe().forEach(player::sendMessage);
+        if (matchWasRunning) {
+            player.sendMessage(describeRunningMatchDelay());
+        }
+    }
+
+    private static String describeRunningMatchDelay() {
+        return "A match is running: its round keeps the timer it started with and its fighters keep "
+                + "the kit they were given, both follow the new settings with the next round";
     }
 
     private void fillMainMenu(Inventory inventory) {
@@ -171,7 +201,26 @@ public final class AdminMenuService {
                 "Writes every round and every match into the chat",
                 "A bracket is a tree, the chat shows it better than a grid",
                 "The menu closes so you can read it"));
+        inventory.setItem(MAIN_RELOAD_SLOT, MenuItems.create(Material.COMPARATOR, "Reload config.yml",
+                buildReloadLore()));
+        inventory.setItem(MAIN_KIT_SLOT, MenuItems.create(Material.DIAMOND_CHESTPLATE, "Kit",
+                "The items every fighter is given when a round starts",
+                "Saves your own inventory as that kit"));
         inventory.setItem(MAIN_CLOSE_SLOT, MenuItems.create(Material.BARRIER, "Close", "Closes the menu"));
+    }
+
+    private List<String> buildReloadLore() {
+        List<String> lore = new ArrayList<>();
+        lore.add("Reads config.yml again and applies it live");
+        lore.add("Kit, round timeout, cleaning batch sizes,");
+        lore.add("cell limit, safety zone and border particles");
+        lore.add("The arena, the teams and a running match stay untouched");
+        if (matchService.hasActiveMatch()) {
+            lore.add("A match is running: the new round timeout and");
+            lore.add("the new kit arrive with the next round");
+        }
+        lore.add("The menu closes so you can read the answer");
+        return lore;
     }
 
     private List<String> buildMainInfoLore() {
@@ -261,6 +310,48 @@ public final class AdminMenuService {
                 "Stand " + spawnType.getPlacementHint(),
                 "A position on the wrong side of the fight area",
                 "is refused once the area is calculated");
+    }
+
+    private void handleKitClick(Player player, int slot) {
+        switch (slot) {
+            case KIT_SAVE_SLOT -> openMenu(player,
+                    AdminMenuHolder.confirmation(ConfirmationRequest.SAVE_KIT, null, 0));
+            case BACK_SLOT -> openMenu(player, AdminMenuHolder.main());
+            default -> { }
+        }
+    }
+
+    private void saveKit(Player player) {
+        kitSaveService.saveFromInventory(player).describe().forEach(player::sendMessage);
+    }
+
+    private void fillKitMenu(Inventory inventory) {
+        inventory.setItem(INFO_SLOT, MenuItems.info("Kit", buildKitInfoLore()));
+        inventory.setItem(KIT_SAVE_SLOT, MenuItems.create(Material.CHEST, "Save your inventory as the kit",
+                buildKitSaveLore("Asks for a confirmation first")));
+        inventory.setItem(BACK_SLOT, MenuItems.back("the main menu"));
+    }
+
+    private List<String> buildKitInfoLore() {
+        List<String> lore = new ArrayList<>(kitSaveService.describeKit());
+        lore.add("Every fighter is given it when a round starts");
+        return lore;
+    }
+
+    private List<String> buildKitSaveLore(String... closingLines) {
+        List<String> lore = new ArrayList<>();
+        lore.add("Takes your helmet, chestplate, leggings, boots,");
+        lore.add("your offhand and the 36 slots of your inventory");
+        lore.add("Enchantments, names, lore and damage are kept exactly");
+        lore.add("An empty slot stays empty in the kit");
+        lore.add("The item on your cursor is not taken, it lies in no slot");
+        lore.add("It replaces the kit section of config.yml");
+        if (matchService.hasActiveMatch()) {
+            lore.add("A match is running: its fighters keep their items,");
+            lore.add("the new kit is handed out from the next round on");
+        }
+        lore.addAll(List.of(closingLines));
+        return lore;
     }
 
     private void handleTeamsClick(Player player, AdminMenuHolder holder, int slot) {
@@ -473,6 +564,7 @@ public final class AdminMenuService {
         switch (holder.getConfirmationRequest().orElseThrow()) {
             case CLEAN_ARENA -> arenaSetupService.startCleaning(player);
             case RESET_ARENA -> arenaSetupService.clearConfiguration(player);
+            case SAVE_KIT -> saveKit(player);
             case REMOVE_TEAM -> removeTeam(player, holder.getSubject().orElseThrow());
             case CANCEL_TOURNAMENT -> player.sendMessage(tournamentManager.cancelTournament().message());
         }
@@ -490,6 +582,7 @@ public final class AdminMenuService {
     private void openReturnMenu(Player player, AdminMenuHolder holder) {
         switch (holder.getConfirmationRequest().orElseThrow().getReturnMenuType()) {
             case ARENA -> openMenu(player, AdminMenuHolder.arena());
+            case KIT -> openMenu(player, AdminMenuHolder.kit());
             case TEAMS -> openMenu(player, AdminMenuHolder.teams(holder.getPageIndex()));
             default -> openMenu(player, AdminMenuHolder.match());
         }
@@ -508,6 +601,7 @@ public final class AdminMenuService {
         return switch (request) {
             case CLEAN_ARENA -> buildCleaningLore("The change cannot be undone",
                     "The border wall around it stays untouched");
+            case SAVE_KIT -> buildKitSaveLore("The kit that stands in config.yml now is gone afterwards");
             case RESET_ARENA -> List.of(
                     "The fight area and all three spawns are dropped",
                     "The blocks of the arena and the border blocks stay untouched",
@@ -685,6 +779,7 @@ public final class AdminMenuService {
         switch (holder.getMenuType()) {
             case MAIN -> fillMainMenu(inventory);
             case ARENA -> fillArenaMenu(inventory);
+            case KIT -> fillKitMenu(inventory);
             case TEAMS -> fillTeamsMenu(inventory, holder.getPageIndex());
             case TEAM_ACTIONS -> fillTeamActionsMenu(inventory, holder.getSubject().orElseThrow());
             case MATCH -> fillMatchMenu(inventory);
@@ -701,6 +796,7 @@ public final class AdminMenuService {
         return switch (holder.getMenuType()) {
             case MAIN -> "Tournament administration";
             case ARENA -> "Arena";
+            case KIT -> "Kit";
             case TEAMS -> "Teams (page "
                     + MenuPagination.of(teamRegistry.getTeamCount(), holder.getPageIndex()).getPageNumber() + ")";
             case TEAM_ACTIONS -> "Team " + holder.getSubject().orElseThrow();

@@ -4,6 +4,7 @@ public enum ConfirmationRequest {
 
     CLEAN_ARENA("Clean the arena?", AdminMenuType.ARENA),
     RESET_ARENA("Reset the arena?", AdminMenuType.ARENA),
+    SAVE_KIT("Save your inventory as the kit?", AdminMenuType.KIT),
     REMOVE_TEAM("Remove the team?", AdminMenuType.TEAMS),
     CANCEL_TOURNAMENT("Cancel the tournament?", AdminMenuType.MATCH);
 

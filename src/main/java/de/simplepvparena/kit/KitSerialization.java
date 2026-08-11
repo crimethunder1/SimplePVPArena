@@ -1,0 +1,63 @@
+package de.simplepvparena.kit;
+
+import org.bukkit.inventory.ItemStack;
+
+import java.util.EnumMap;
+import java.util.Map;
+import java.util.Optional;
+import java.util.TreeMap;
+import java.util.function.Consumer;
+
+public final class KitSerialization {
+
+    private KitSerialization() {
+    }
+
+    public static Optional<String> encode(ItemStack itemStack) {
+        if (itemStack == null || itemStack.isEmpty()) {
+            return Optional.empty();
+        }
+        try {
+            return Optional.of(KitItemCodec.encode(itemStack.serializeAsBytes()));
+        } catch (RuntimeException failure) {
+            return Optional.empty();
+        }
+    }
+
+    public static Optional<ItemStack> decode(String storedItem) {
+        return KitItemCodec.decode(storedItem).flatMap(KitSerialization::deserialize);
+    }
+
+    private static Optional<ItemStack> deserialize(byte[] itemBytes) {
+        try {
+            ItemStack itemStack = ItemStack.deserializeBytes(itemBytes);
+            return itemStack == null || itemStack.isEmpty() ? Optional.empty() : Optional.of(itemStack);
+        } catch (RuntimeException broken) {
+            return Optional.empty();
+        }
+    }
+
+    public static KitDefinition toDefinition(SerializedKit serializedKit, Consumer<String> problemReporter) {
+        Map<KitEquipmentSlot, ItemStack> equipmentItems = new EnumMap<>(KitEquipmentSlot.class);
+        serializedKit.equipmentItems().forEach((equipmentSlot, storedItem) -> {
+            Optional<ItemStack> itemStack = decode(storedItem);
+            if (itemStack.isEmpty()) {
+                problemReporter.accept("The stored kit item of the slot " + equipmentSlot.getConfigurationKey()
+                        + " could not be read and is left out of the kit");
+                return;
+            }
+            equipmentItems.put(equipmentSlot, itemStack.get());
+        });
+        Map<Integer, ItemStack> inventoryItems = new TreeMap<>();
+        serializedKit.inventoryItems().forEach((slotIndex, storedItem) -> {
+            Optional<ItemStack> itemStack = decode(storedItem);
+            if (itemStack.isEmpty()) {
+                problemReporter.accept("The stored kit item of the inventory slot " + slotIndex
+                        + " could not be read and is left out of the kit");
+                return;
+            }
+            inventoryItems.put(slotIndex, itemStack.get());
+        });
+        return new KitDefinition(equipmentItems, inventoryItems);
+    }
+}

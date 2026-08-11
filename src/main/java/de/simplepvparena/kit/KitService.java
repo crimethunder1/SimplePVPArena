@@ -33,11 +33,10 @@ public final class KitService {
     public void applyKit(Player player) {
         resetPlayerState(player);
         PlayerInventory inventory = player.getInventory();
-        kitDefinition.armorItems().forEach((equipmentSlot, kitItem) -> inventory.setItem(equipmentSlot, kitItem.toItemStack()));
-        List<KitItem> inventoryItems = kitDefinition.inventoryItems();
-        for (int slotIndex = 0; slotIndex < inventoryItems.size(); slotIndex++) {
-            inventory.setItem(slotIndex, inventoryItems.get(slotIndex).toItemStack());
-        }
+        kitDefinition.equipmentItems().forEach((equipmentSlot, itemStack) ->
+                inventory.setItem(equipmentSlot.getEquipmentSlot(), itemStack.clone()));
+        kitDefinition.inventoryItems().forEach((slotIndex, itemStack) ->
+                inventory.setItem(slotIndex, itemStack.clone()));
         playersWithAppliedKit.add(player.getUniqueId());
     }
 

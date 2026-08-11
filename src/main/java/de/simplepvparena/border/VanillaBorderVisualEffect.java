@@ -5,9 +5,11 @@ import org.bukkit.Location;
 import org.bukkit.Particle;
 import org.bukkit.entity.Player;
 
+import java.util.Objects;
+import java.util.function.Consumer;
+
 public final class VanillaBorderVisualEffect implements BorderVisualEffect {
 
-    public static final Particle BORDER_BLOCK_PARTICLE = Particle.END_ROD;
     public static final Particle COLOURED_BORDER_BLOCK_PARTICLE = Particle.DUST;
     public static final Particle CONNECTION_PARTICLE = Particle.ELECTRIC_SPARK;
 
@@ -25,13 +27,19 @@ public final class VanillaBorderVisualEffect implements BorderVisualEffect {
     private static final int STREAM_PARTICLE_COUNT = 5;
     private static final double STREAM_STEP_HEIGHT = 0.5D;
 
-    private static final int CONFIRMED_STREAM_PARTICLE_COUNT = 3;
-    private static final double CONFIRMED_STREAM_STEP_HEIGHT = 0.25D;
-    private static final double CONFIRMED_STREAM_RISE_SPEED = 0.01D;
-    private static final int DIRECTED_PARTICLE_COUNT = 0;
     private static final int SINGLE_PARTICLE_COUNT = 1;
     private static final double NO_OFFSET = 0.0D;
     private static final double NO_SPEED = 0.0D;
+
+    private ConfirmedBorderParticle confirmedParticle;
+
+    public VanillaBorderVisualEffect() {
+        this(ConfirmedBorderParticle.defaults());
+    }
+
+    public VanillaBorderVisualEffect(ConfirmedBorderParticle confirmedParticle) {
+        this.confirmedParticle = Objects.requireNonNull(confirmedParticle, "confirmedParticle");
+    }
 
     @Override
     public void showAt(Player player, Location borderBlockCenter, BorderConnectivity connectivity) {
@@ -45,12 +53,13 @@ public final class VanillaBorderVisualEffect implements BorderVisualEffect {
 
     @Override
     public void showConfirmedAt(Player player, Location borderBlockCenter) {
-        for (int step = 0; step < CONFIRMED_STREAM_PARTICLE_COUNT; step++) {
-            Location streamPoint = borderBlockCenter.clone()
-                    .add(NO_OFFSET, step * CONFIRMED_STREAM_STEP_HEIGHT, NO_OFFSET);
-            player.spawnParticle(BORDER_BLOCK_PARTICLE, streamPoint, DIRECTED_PARTICLE_COUNT,
-                    NO_OFFSET, 1.0D, NO_OFFSET, CONFIRMED_STREAM_RISE_SPEED);
-        }
+        confirmedParticle.spawnStreamAt(player, borderBlockCenter);
+    }
+
+    @Override
+    public void applyConfirmedParticleSettings(ConfirmedBorderParticleSettings settings,
+                                               Consumer<String> problemReporter) {
+        confirmedParticle = ConfirmedBorderParticle.from(settings, problemReporter);
     }
 
     @Override

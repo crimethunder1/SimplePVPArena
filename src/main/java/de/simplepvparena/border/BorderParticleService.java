@@ -56,7 +56,15 @@ public final class BorderParticleService {
     }
 
     public void setPeriodTicks(long periodTicks) {
-        this.periodTicks = Math.max(1L, periodTicks);
+        long newPeriodTicks = Math.max(1L, periodTicks);
+        if (newPeriodTicks == this.periodTicks) {
+            return;
+        }
+        this.periodTicks = newPeriodTicks;
+        if (isRunning()) {
+            stop();
+            start();
+        }
     }
 
     public boolean isRunning() {
