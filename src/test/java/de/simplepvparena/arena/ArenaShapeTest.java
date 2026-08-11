@@ -91,6 +91,51 @@ class ArenaShapeTest {
     }
 
     @Test
+    void keepsItsAreaWhenItsVerticalExtentIsReplaced() {
+        ArenaShape shape = shape(0, 0, 1, 0);
+
+        ArenaShape movedShape = shape.withVerticalExtent(20, 30);
+
+        assertEquals(20, movedShape.getFloorY());
+        assertEquals(30, movedShape.getWallTopY());
+        assertEquals(64, movedShape.getReferenceY(), "the height the calculation ran at is not moved");
+        assertEquals(WORLD_NAME, movedShape.getWorldName());
+        assertEquals(shape.getCellCount(), movedShape.getCellCount());
+        assertTrue(movedShape.containsCell(0, 0));
+        assertTrue(movedShape.containsCell(1, 0));
+        assertTrue(movedShape.containsBlock(0, 25, 0), "the new volume is what a cleaning writes");
+        assertFalse(movedShape.containsBlock(0, 64, 0), "and the old one is not");
+        assertEquals(64, shape.getFloorY(), "the shape it was made from is unchanged");
+        assertEquals(70, shape.getWallTopY());
+    }
+
+    @Test
+    void remembersThatItsVolumeWasMarkedAndNotReadOffTheWall() {
+        ArenaShape shape = shape(0, 0, 1, 0);
+
+        assertFalse(shape.hasMarkedHeights(), "a calculated shape follows its border wall");
+        assertTrue(shape.withVerticalExtent(20, 30).hasMarkedHeights(),
+                "and the one way to move that volume is an admin marking it");
+        assertTrue(new ArenaShape(WORLD_NAME, 64, 20, 30,
+                        new long[] {HorizontalCellCodec.encode(0, 0)}, true).hasMarkedHeights(),
+                "a shape read back from config.yml keeps what was written about it");
+    }
+
+    @Test
+    void comparesTheAreaWithoutTheVolumeItStandsUnder() {
+        ArenaShape shape = shape(0, 0, 1, 0);
+        ArenaShape movedShape = shape.withVerticalExtent(20, 30);
+
+        assertTrue(shape.coversTheSameArea(movedShape), "the cells did not move with the volume");
+        assertFalse(shape.hasSameVolume(movedShape), "the blocks it covers did");
+        assertTrue(shape.coversTheSameArea(shape(1, 0, 0, 0)), "the order of the cells is not the area");
+        assertFalse(shape.coversTheSameArea(shape(0, 0)));
+        assertFalse(shape.coversTheSameArea(new ArenaShape("lobby", 64, 70,
+                new long[] {HorizontalCellCodec.encode(0, 0), HorizontalCellCodec.encode(1, 0)})));
+        assertFalse(shape.coversTheSameArea(null));
+    }
+
+    @Test
     void comparesTwoShapesByTheBlocksTheyCover() {
         ArenaShape shape = shape(0, 0, 1, 0);
 
@@ -103,6 +148,8 @@ class ArenaShapeTest {
         assertFalse(shape.hasSameVolume(new ArenaShape(WORLD_NAME, 64, 71,
                 new long[] {HorizontalCellCodec.encode(0, 0), HorizontalCellCodec.encode(1, 0)})));
         assertFalse(shape.hasSameVolume(null));
+        assertTrue(shape.hasSameVolume(shape.withVerticalExtent(64, 70)),
+                "a baseline asks which blocks are covered, never who decided the two heights");
     }
 
     private ArenaShape shape(int... coordinatePairs) {

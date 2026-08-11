@@ -1,6 +1,7 @@
 package de.simplepvparena.gui;
 
 import de.simplepvparena.arena.ArenaDebugCellLimit;
+import de.simplepvparena.arena.ArenaHeightMarkerService;
 import de.simplepvparena.arena.ArenaSetupService;
 import de.simplepvparena.arena.ArenaShapeFloodFill;
 import de.simplepvparena.arena.ArenaSpawnType;
@@ -63,6 +64,7 @@ public final class AdminMenuService {
     private static final int ARENA_TRIBUNE_SPAWN_SLOT = 14;
     private static final int ARENA_CLEAN_SLOT = 15;
     private static final int ARENA_RESET_SLOT = 16;
+    private static final int ARENA_HEIGHT_MARKER_SLOT = 19;
 
     private static final int TEAMS_PREVIOUS_PAGE_SLOT = 45;
     private static final int TEAMS_INFO_SLOT = 47;
@@ -93,6 +95,7 @@ public final class AdminMenuService {
     private final TeamMemberLookup teamMemberLookup;
     private final MatchService matchService;
     private final ArenaSetupService arenaSetupService;
+    private final ArenaHeightMarkerService heightMarkerService;
     private final SpectatorBorderService spectatorBorderService;
     private final KitSaveService kitSaveService;
     private final ChatInputService chatInputService;
@@ -105,6 +108,7 @@ public final class AdminMenuService {
                             TeamMemberLookup teamMemberLookup,
                             MatchService matchService,
                             ArenaSetupService arenaSetupService,
+                            ArenaHeightMarkerService heightMarkerService,
                             SpectatorBorderService spectatorBorderService,
                             KitSaveService kitSaveService,
                             ChatInputService chatInputService,
@@ -116,6 +120,7 @@ public final class AdminMenuService {
         this.teamMemberLookup = Objects.requireNonNull(teamMemberLookup, "teamMemberLookup");
         this.matchService = Objects.requireNonNull(matchService, "matchService");
         this.arenaSetupService = Objects.requireNonNull(arenaSetupService, "arenaSetupService");
+        this.heightMarkerService = Objects.requireNonNull(heightMarkerService, "heightMarkerService");
         this.spectatorBorderService = Objects.requireNonNull(spectatorBorderService, "spectatorBorderService");
         this.kitSaveService = Objects.requireNonNull(kitSaveService, "kitSaveService");
         this.chatInputService = Objects.requireNonNull(chatInputService, "chatInputService");
@@ -251,6 +256,7 @@ public final class AdminMenuService {
                 arenaSetupService.calculateShape(player);
             }
             case ARENA_DIAGNOSE_SLOT -> askForDebugCellLimitLine(player);
+            case ARENA_HEIGHT_MARKER_SLOT -> handOutHeightMarker(player, holder);
             case ARENA_FIRST_TEAM_SPAWN_SLOT -> setSpawn(player, holder, ArenaSpawnType.FIRST_TEAM);
             case ARENA_SECOND_TEAM_SPAWN_SLOT -> setSpawn(player, holder, ArenaSpawnType.SECOND_TEAM);
             case ARENA_TRIBUNE_SPAWN_SLOT -> setSpawn(player, holder, ArenaSpawnType.TRIBUNE);
@@ -264,6 +270,21 @@ public final class AdminMenuService {
 
     private void setSpawn(Player player, AdminMenuHolder holder, ArenaSpawnType spawnType) {
         arenaSetupService.setSpawn(player, spawnType);
+        refresh(holder);
+    }
+
+    private void handOutHeightMarker(Player player, AdminMenuHolder holder) {
+        Map<Integer, ItemStack> itemsThatDidNotFit = player.getInventory()
+                .addItem(heightMarkerService.createMarkerItem());
+        if (!itemsThatDidNotFit.isEmpty()) {
+            TournamentMessages.sendWarning(player,
+                    "Your inventory is full, the height marker could not be handed out");
+            return;
+        }
+        TournamentMessages.sendSuccess(player, "You received the height marker of the fight area"
+                + TournamentMessages.LINE_BREAK + "Place a block with it at the lowest point of the area, "
+                + "the item switches to the highest one by itself"
+                + TournamentMessages.LINE_BREAK + "The placed block disappears again, only its height is kept");
         refresh(holder);
     }
 
@@ -288,6 +309,8 @@ public final class AdminMenuService {
                         + ArenaShapeFloodFill.MAXIMUM_DEBUG_CELL_COUNT + " cells",
                 "Shows how far a fill through a gap really gets",
                 "config.yml stays untouched"));
+        inventory.setItem(ARENA_HEIGHT_MARKER_SLOT, MenuItems.create(ArenaHeightMarkerService.MARKER_MATERIAL,
+                "Mark the height of the fight area", buildHeightMarkerLore()));
         inventory.setItem(ARENA_FIRST_TEAM_SPAWN_SLOT, buildSpawnItem(Material.BLUE_BED, ArenaSpawnType.FIRST_TEAM));
         inventory.setItem(ARENA_SECOND_TEAM_SPAWN_SLOT, buildSpawnItem(Material.RED_BED, ArenaSpawnType.SECOND_TEAM));
         inventory.setItem(ARENA_TRIBUNE_SPAWN_SLOT, buildSpawnItem(Material.YELLOW_BED, ArenaSpawnType.TRIBUNE));
@@ -298,6 +321,18 @@ public final class AdminMenuService {
                 "The blocks and the border blocks stay untouched",
                 "Asks for a confirmation first"));
         inventory.setItem(BACK_SLOT, MenuItems.back("the main menu"));
+    }
+
+    private List<String> buildHeightMarkerLore() {
+        List<String> lore = new ArrayList<>();
+        lore.add("Hands you the item that marks the lowest and the");
+        lore.add("highest point of the fight area");
+        lore.add("Place a block with it, only its height is kept");
+        lore.add("and the block disappears again");
+        lore.add("The next calculation cleans exactly between them,");
+        lore.add("also below the border wall, and uses both marks up");
+        lore.addAll(heightMarkerService.describeMarkers());
+        return lore;
     }
 
     private List<String> buildCleaningLore(String... closingLines) {

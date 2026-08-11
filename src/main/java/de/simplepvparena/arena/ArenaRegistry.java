@@ -18,6 +18,7 @@ public final class ArenaRegistry {
     private static final String SHAPE_REFERENCE_Y_KEY = "reference-y";
     private static final String SHAPE_FLOOR_Y_KEY = "floor-y";
     private static final String SHAPE_WALL_TOP_Y_KEY = "wall-top-y";
+    private static final String SHAPE_HEIGHTS_MARKED_KEY = "heights-marked";
     private static final String SHAPE_ROWS_KEY = "rows";
     private static final String SPAWNS_SECTION = "spawns";
     private static final String FIRST_TEAM_SPAWN_KEY = "first-team";
@@ -112,7 +113,8 @@ public final class ArenaRegistry {
             return Optional.of(new ArenaShape(worldName, referenceY,
                     shapeSection.getInt(SHAPE_FLOOR_Y_KEY, referenceY),
                     shapeSection.getInt(SHAPE_WALL_TOP_Y_KEY),
-                    ArenaShapeCodec.decodeRows(rows)));
+                    ArenaShapeCodec.decodeRows(rows),
+                    shapeSection.getBoolean(SHAPE_HEIGHTS_MARKED_KEY, false)));
         } catch (IllegalArgumentException failure) {
             shapeLoadFailure = failure.getMessage();
             return Optional.empty();
@@ -124,6 +126,7 @@ public final class ArenaRegistry {
         shapeSection.set(SHAPE_REFERENCE_Y_KEY, shape.getReferenceY());
         shapeSection.set(SHAPE_FLOOR_Y_KEY, shape.getFloorY());
         shapeSection.set(SHAPE_WALL_TOP_Y_KEY, shape.getWallTopY());
+        shapeSection.set(SHAPE_HEIGHTS_MARKED_KEY, shape.hasMarkedHeights());
         shapeSection.set(SHAPE_ROWS_KEY, ArenaShapeCodec.encodeRows(shape.getCells()));
     }
 

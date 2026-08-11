@@ -61,7 +61,7 @@ public record PluginSettings(long roundResetDelayTicks,
             ARENA_BASELINE_BLOCKS_PER_TICK_PATH,
             ArenaCleaningParticleSettings.ENABLED_CONFIGURATION_PATH,
             ArenaCleaningParticleSettings.TYPE_CONFIGURATION_PATH,
-            ArenaCleaningParticleSettings.HEIGHT_CONFIGURATION_PATH,
+            ArenaCleaningParticleSettings.TOTAL_DURATION_CONFIGURATION_PATH,
             ArenaCleaningParticleSettings.COLUMNS_PER_TICK_CONFIGURATION_PATH,
             ARENA_MAXIMUM_CELLS_PATH,
             ARENA_SAFETY_ZONE_RADIUS_PATH,
@@ -157,14 +157,14 @@ public record PluginSettings(long roundResetDelayTicks,
     private static ArenaCleaningParticleSettings readArenaCleaningParticleSettings(
             ConfigurationSection configuration, Consumer<String> problemReporter) {
         ArenaCleaningParticleSettings defaults = ArenaCleaningParticleSettings.defaults();
-        double height = configuration.getDouble(ArenaCleaningParticleSettings.HEIGHT_CONFIGURATION_PATH,
-                defaults.height());
-        if (height < 0.0D) {
-            problemReporter.accept(ArenaCleaningParticleSettings.HEIGHT_CONFIGURATION_PATH
-                    + " cannot be negative, falling back to " + defaults.height()
-                    + " blocks. Use " + ArenaCleaningParticleSettings.ENABLED_CONFIGURATION_PATH
-                    + " to switch the effect off");
-            height = defaults.height();
+        double totalDurationSeconds = configuration.getDouble(
+                ArenaCleaningParticleSettings.TOTAL_DURATION_CONFIGURATION_PATH,
+                defaults.totalDurationSeconds());
+        if (totalDurationSeconds < 0.0D) {
+            problemReporter.accept(ArenaCleaningParticleSettings.TOTAL_DURATION_CONFIGURATION_PATH
+                    + " cannot be negative, falling back to " + defaults.totalDurationSeconds()
+                    + " seconds. Use zero to clean without the two coloured phases");
+            totalDurationSeconds = defaults.totalDurationSeconds();
         }
         int columnsPerTick = configuration.getInt(
                 ArenaCleaningParticleSettings.COLUMNS_PER_TICK_CONFIGURATION_PATH, defaults.columnsPerTick());
@@ -179,7 +179,7 @@ public record PluginSettings(long roundResetDelayTicks,
                         defaults.enabled()),
                 configuration.getString(ArenaCleaningParticleSettings.TYPE_CONFIGURATION_PATH,
                         defaults.particleName()),
-                height, columnsPerTick);
+                totalDurationSeconds, columnsPerTick);
     }
 
     private static RoundTimeoutSettings readRoundTimeoutSettings(ConfigurationSection configuration,

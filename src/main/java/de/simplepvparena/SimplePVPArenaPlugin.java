@@ -7,6 +7,9 @@ import de.simplepvparena.arena.ArenaBorderConfirmation;
 import de.simplepvparena.arena.ArenaCleaningService;
 import de.simplepvparena.arena.ArenaCleaningVisualEffect;
 import de.simplepvparena.arena.ArenaGapGuide;
+import de.simplepvparena.arena.ActiveArenaState;
+import de.simplepvparena.arena.ArenaHeightMarkerService;
+import de.simplepvparena.arena.ArenaHeightMarkers;
 import de.simplepvparena.arena.ArenaRegistry;
 import de.simplepvparena.arena.ArenaSafetyZone;
 import de.simplepvparena.arena.ArenaSetupService;
@@ -32,6 +35,7 @@ import de.simplepvparena.kit.KitSaveService;
 import de.simplepvparena.kit.KitService;
 import de.simplepvparena.kit.SerializedKit;
 import de.simplepvparena.listener.AdminMenuListener;
+import de.simplepvparena.listener.ArenaHeightMarkerListener;
 import de.simplepvparena.listener.ArenaSafetyZoneListener;
 import de.simplepvparena.listener.ChatInputListener;
 import de.simplepvparena.listener.FriendlyFireListener;
@@ -76,6 +80,9 @@ public final class SimplePVPArenaPlugin extends JavaPlugin {
     private ArenaBaselineService arenaBaselineService;
     private ArenaGapGuide arenaGapGuide;
     private ArenaSafetyZone arenaSafetyZone;
+    private ArenaHeightMarkers arenaHeightMarkers;
+    private ArenaHeightMarkerService arenaHeightMarkerService;
+    private ActiveArenaState activeArenaState;
     private ArenaSetupService arenaSetupService;
     private ChatInputService chatInputService;
     private AdminMenuService adminMenuService;
@@ -127,15 +134,22 @@ public final class SimplePVPArenaPlugin extends JavaPlugin {
         borderWallPreview = new BorderWallPreview(this, borderVisualEffect);
         arenaGapGuide = new ArenaGapGuide(this);
 
-        arenaSafetyZone = new ArenaSafetyZone(arenaRegistry.getArena()::getShape, matchService::isActiveFighter);
+        arenaHeightMarkers = new ArenaHeightMarkers();
+        arenaHeightMarkerService = new ArenaHeightMarkerService(this, arenaHeightMarkers);
 
-        arenaSetupService = new ArenaSetupService(arenaRegistry, matchService, spectatorBorderService,
+        activeArenaState = new ActiveArenaState(arenaRegistry, arenaHeightMarkers);
+
+        arenaSafetyZone = new ArenaSafetyZone(activeArenaState::getCleanedVolume,
+                matchService::isActiveFighter);
+
+        arenaSetupService = new ArenaSetupService(activeArenaState, matchService, spectatorBorderService,
                 borderWallPreview, arenaGapGuide, arenaCleaningService, arenaBaselineService,
                 arenaBorderConfirmation, this::saveArenaConfiguration);
         chatInputService = new ChatInputService(this);
         adminMenuService = new AdminMenuService(this, tournamentManager, teamRegistry,
-                new TeamMemberLookup(getServer()), matchService, arenaSetupService, spectatorBorderService,
-                kitSaveService, chatInputService, this::saveTeamConfiguration, this::reloadConfiguration);
+                new TeamMemberLookup(getServer()), matchService, arenaSetupService, arenaHeightMarkerService,
+                spectatorBorderService, kitSaveService, chatInputService, this::saveTeamConfiguration,
+                this::reloadConfiguration);
 
         configurationReloadService = new ConfigurationReloadService(this::getConfig, this::reloadConfig,
                 new PluginLiveConfiguration(kitService, new KitConfigurationLoader(getLogger()), matchService,
@@ -262,6 +276,8 @@ public final class SimplePVPArenaPlugin extends JavaPlugin {
         getServer().getPluginManager().registerEvents(
                 new SpectatorBorderListener(matchService, spectatorService, spectatorBorderService), this);
         getServer().getPluginManager().registerEvents(new PlayerInteractListener(matchService, spectatorService), this);
+        getServer().getPluginManager().registerEvents(
+                new ArenaHeightMarkerListener(arenaHeightMarkerService), this);
         getServer().getPluginManager().registerEvents(new ArenaSafetyZoneListener(arenaSafetyZone), this);
         getServer().getPluginManager().registerEvents(new AdminMenuListener(adminMenuService), this);
         getServer().getPluginManager().registerEvents(new ChatInputListener(chatInputService), this);

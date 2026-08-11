@@ -20,14 +20,16 @@ class ArenaCleaningParticleSettingsTest {
     }
 
     @Test
-    void answersAHeightThatCannotBeOne() {
-        assertEquals(0.0D, settingsWithHeight(-4.0D).height());
-        assertEquals(ArenaCleaningParticleSettings.DEFAULT_HEIGHT, settingsWithHeight(Double.NaN).height());
-        assertEquals(ArenaCleaningParticleSettings.MAXIMUM_HEIGHT, settingsWithHeight(100000.0D).height(),
-                "a height typed with one zero too many is capped instead of costing packets by the thousand");
-        assertEquals(ArenaCleaningParticleSettings.DEFAULT_HEIGHT,
-                settingsWithHeight(Double.POSITIVE_INFINITY).height(),
-                "an entry that is no number at all is a broken one, not the tallest column there is");
+    void answersATimeThatCannotBeOne() {
+        assertEquals(0.0D, settingsWithDuration(-4.0D).totalDurationSeconds());
+        assertEquals(ArenaCleaningParticleSettings.DEFAULT_TOTAL_DURATION_SECONDS,
+                settingsWithDuration(Double.NaN).totalDurationSeconds());
+        assertEquals(ArenaCleaningParticleSettings.MAXIMUM_TOTAL_DURATION_SECONDS,
+                settingsWithDuration(100000.0D).totalDurationSeconds(),
+                "a time typed with one zero too many is capped instead of blocking the arena for an hour");
+        assertEquals(ArenaCleaningParticleSettings.DEFAULT_TOTAL_DURATION_SECONDS,
+                settingsWithDuration(Double.POSITIVE_INFINITY).totalDurationSeconds(),
+                "an entry that is no number at all is a broken one, not the longest animation there is");
     }
 
     @Test
@@ -42,15 +44,27 @@ class ArenaCleaningParticleSettingsTest {
     void isShownOnlyWhileThereIsSomethingToDraw() {
         assertTrue(ArenaCleaningParticleSettings.defaults().isShown());
         assertFalse(settingsWithColumnsPerTick(0).isShown());
-        assertFalse(new ArenaCleaningParticleSettings(false, "WITCH", 20.0D, 6).isShown());
+        assertFalse(new ArenaCleaningParticleSettings(false, "DUST", 6.0D, 24).isShown());
     }
 
     @Test
-    void spendsOneDotEveryFixedDistanceAndAlwaysAtLeastOne() {
-        assertEquals(9, settingsWithHeight(20.0D).dotCount());
-        assertEquals(1, settingsWithHeight(0.0D).dotCount(), "the shortest column is a single dot");
-        assertEquals(1, settingsWithHeight(-1.0D).dotCount());
-        assertEquals(3, settingsWithHeight(2 * ArenaCleaningParticleSettings.DOT_DISTANCE).dotCount());
+    void turnsTheConfiguredSecondsIntoTicks() {
+        assertEquals(120L, settingsWithDuration(6.0D).totalDurationTicks());
+        assertEquals(10L, settingsWithDuration(0.5D).totalDurationTicks());
+        assertEquals(1L, settingsWithDuration(0.04D).totalDurationTicks(),
+                "a time shorter than a tick is rounded to the shortest thing a server can show");
+        assertEquals(0L, settingsWithDuration(0.0D).totalDurationTicks());
+    }
+
+    @Test
+    void pacesTheCleaningOnlyWhileTheAnimationIsDrawn() {
+        assertEquals(120L, ArenaCleaningParticleSettings.defaults().animationDurationTicks());
+        assertEquals(0L, new ArenaCleaningParticleSettings(false, "DUST", 6.0D, 24).animationDurationTicks(),
+                "an effect that is switched off holds no layer back");
+        assertEquals(0L, settingsWithColumnsPerTick(0).animationDurationTicks(),
+                "and neither does one that draws no cell");
+        assertEquals(0L, settingsWithDuration(0.0D).animationDurationTicks(),
+                "a time of zero is the cleaning without the two phases");
     }
 
     @Test
@@ -60,23 +74,24 @@ class ArenaCleaningParticleSettingsTest {
         assertTrue(defaults.enabled());
         assertTrue(defaults.isShown());
         assertEquals(ArenaCleaningParticleSettings.DEFAULT_PARTICLE_NAME, defaults.particleName());
-        assertEquals(ArenaCleaningParticleSettings.DEFAULT_HEIGHT, defaults.height());
+        assertEquals(ArenaCleaningParticleSettings.DEFAULT_TOTAL_DURATION_SECONDS,
+                defaults.totalDurationSeconds());
         assertEquals(ArenaCleaningParticleSettings.DEFAULT_COLUMNS_PER_TICK, defaults.columnsPerTick());
     }
 
     private static ArenaCleaningParticleSettings settingsWithParticleName(String particleName) {
         return new ArenaCleaningParticleSettings(true, particleName,
-                ArenaCleaningParticleSettings.DEFAULT_HEIGHT,
+                ArenaCleaningParticleSettings.DEFAULT_TOTAL_DURATION_SECONDS,
                 ArenaCleaningParticleSettings.DEFAULT_COLUMNS_PER_TICK);
     }
 
-    private static ArenaCleaningParticleSettings settingsWithHeight(double height) {
+    private static ArenaCleaningParticleSettings settingsWithDuration(double totalDurationSeconds) {
         return new ArenaCleaningParticleSettings(true, ArenaCleaningParticleSettings.DEFAULT_PARTICLE_NAME,
-                height, ArenaCleaningParticleSettings.DEFAULT_COLUMNS_PER_TICK);
+                totalDurationSeconds, ArenaCleaningParticleSettings.DEFAULT_COLUMNS_PER_TICK);
     }
 
     private static ArenaCleaningParticleSettings settingsWithColumnsPerTick(int columnsPerTick) {
         return new ArenaCleaningParticleSettings(true, ArenaCleaningParticleSettings.DEFAULT_PARTICLE_NAME,
-                ArenaCleaningParticleSettings.DEFAULT_HEIGHT, columnsPerTick);
+                ArenaCleaningParticleSettings.DEFAULT_TOTAL_DURATION_SECONDS, columnsPerTick);
     }
 }

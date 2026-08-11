@@ -9,7 +9,7 @@ public interface ArenaCleaningVisualEffect {
     ArenaCleaningVisualEffect NONE = new ArenaCleaningVisualEffect() {
 
         @Override
-        public void showCleanedColumns(World world, ArenaShape shape, long[] cleanedBlockBatch) {
+        public void showFloodedLayer(World world, ArenaShape shape, ArenaCleaningPhase phase, int layerY) {
         }
 
         @Override
@@ -18,7 +18,7 @@ public interface ArenaCleaningVisualEffect {
         }
     };
 
-    void showCleanedColumns(World world, ArenaShape shape, long[] cleanedBlockBatch);
+    void showFloodedLayer(World world, ArenaShape shape, ArenaCleaningPhase phase, int layerY);
 
     void applyParticleSettings(ArenaCleaningParticleSettings settings, Consumer<String> problemReporter);
 }

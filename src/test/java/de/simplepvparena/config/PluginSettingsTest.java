@@ -161,19 +161,20 @@ class PluginSettingsTest {
     void aCleaningEffectTurnedDownToNothingIsAcceptedAndANegativeOneIsReported() {
         MemoryConfiguration switchedOff = new MemoryConfiguration();
         switchedOff.set(ArenaCleaningParticleSettings.COLUMNS_PER_TICK_CONFIGURATION_PATH, 0);
-        switchedOff.set(ArenaCleaningParticleSettings.HEIGHT_CONFIGURATION_PATH, 0.0D);
+        switchedOff.set(ArenaCleaningParticleSettings.TOTAL_DURATION_CONFIGURATION_PATH, 0.0D);
 
         ArenaCleaningParticleSettings settings =
                 PluginSettings.read(switchedOff, problems::add).arenaCleaningParticleSettings();
 
         assertEquals(List.of(), problems);
         assertEquals(0, settings.columnsPerTick());
-        assertEquals(0.0D, settings.height());
-        assertFalse(settings.isShown(), "no column per tick is a cleaning without an effect");
+        assertEquals(0.0D, settings.totalDurationSeconds());
+        assertFalse(settings.isShown(), "no cell per tick is a cleaning without an effect");
+        assertEquals(0L, settings.animationDurationTicks(), "and one that is held back by nothing");
 
         MemoryConfiguration negative = new MemoryConfiguration();
         negative.set(ArenaCleaningParticleSettings.COLUMNS_PER_TICK_CONFIGURATION_PATH, -3);
-        negative.set(ArenaCleaningParticleSettings.HEIGHT_CONFIGURATION_PATH, -1.0D);
+        negative.set(ArenaCleaningParticleSettings.TOTAL_DURATION_CONFIGURATION_PATH, -1.0D);
 
         ArenaCleaningParticleSettings answered =
                 PluginSettings.read(negative, problems::add).arenaCleaningParticleSettings();
@@ -181,7 +182,7 @@ class PluginSettingsTest {
         assertEquals(ArenaCleaningParticleSettings.defaults(), answered);
         assertEquals(2, problems.size(), "both broken entries are reported: " + problems);
         assertTrue(problems.stream().anyMatch(problem ->
-                        problem.startsWith(ArenaCleaningParticleSettings.HEIGHT_CONFIGURATION_PATH)),
+                        problem.startsWith(ArenaCleaningParticleSettings.TOTAL_DURATION_CONFIGURATION_PATH)),
                 "the problem has to name the entry an admin fixes: " + problems);
         assertTrue(problems.stream().anyMatch(problem ->
                         problem.startsWith(ArenaCleaningParticleSettings.COLUMNS_PER_TICK_CONFIGURATION_PATH)),
@@ -232,7 +233,7 @@ class PluginSettingsTest {
         configuration.set(PluginSettings.ARENA_BASELINE_BLOCKS_PER_TICK_PATH, 2048);
         configuration.set(ArenaCleaningParticleSettings.ENABLED_CONFIGURATION_PATH, false);
         configuration.set(ArenaCleaningParticleSettings.TYPE_CONFIGURATION_PATH, "minecraft:composter");
-        configuration.set(ArenaCleaningParticleSettings.HEIGHT_CONFIGURATION_PATH, 8.0D);
+        configuration.set(ArenaCleaningParticleSettings.TOTAL_DURATION_CONFIGURATION_PATH, 8.0D);
         configuration.set(ArenaCleaningParticleSettings.COLUMNS_PER_TICK_CONFIGURATION_PATH, 3);
         configuration.set(PluginSettings.ARENA_MAXIMUM_CELLS_PATH, 12345);
         configuration.set(PluginSettings.ARENA_SAFETY_ZONE_RADIUS_PATH, 17);

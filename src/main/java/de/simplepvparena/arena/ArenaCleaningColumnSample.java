@@ -10,16 +10,15 @@ public final class ArenaCleaningColumnSample {
     private ArenaCleaningColumnSample() {
     }
 
-    public static long[] pick(long[] blockBatch, int maximumColumnCount, IntUnaryOperator randomIndex) {
-        if (blockBatch == null || blockBatch.length == 0 || maximumColumnCount < 1) {
+    public static long[] pick(ArenaShape shape, int maximumColumnCount, IntUnaryOperator randomIndex) {
+        if (shape == null || maximumColumnCount < 1) {
             return NO_COLUMNS;
         }
-        long[] columns = new long[Math.min(maximumColumnCount, blockBatch.length)];
+        int cellCount = shape.getCellCount();
+        long[] columns = new long[Math.min(maximumColumnCount, cellCount)];
         int columnCount = 0;
         for (int draw = 0; draw < columns.length; draw++) {
-            long blockPosition = blockBatch[boundedIndex(randomIndex, blockBatch.length)];
-            long column = HorizontalCellCodec.encode(BlockPositionCodec.decodeX(blockPosition),
-                    BlockPositionCodec.decodeZ(blockPosition));
+            long column = shape.getCell(boundedIndex(randomIndex, cellCount));
             if (holds(columns, columnCount, column)) {
                 continue;
             }
@@ -28,8 +27,8 @@ public final class ArenaCleaningColumnSample {
         return columnCount == columns.length ? columns : Arrays.copyOf(columns, columnCount);
     }
 
-    private static int boundedIndex(IntUnaryOperator randomIndex, int batchLength) {
-        return Math.floorMod(randomIndex.applyAsInt(batchLength), batchLength);
+    private static int boundedIndex(IntUnaryOperator randomIndex, int cellCount) {
+        return Math.floorMod(randomIndex.applyAsInt(cellCount), cellCount);
     }
 
     private static boolean holds(long[] columns, int columnCount, long column) {

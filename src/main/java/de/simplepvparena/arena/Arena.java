@@ -13,6 +13,8 @@ public final class Arena {
     public static final String DIAGNOSE_ACTION = "\"Diagnose with a higher cell limit\" in the arena menu "
             + "of /tournament";
     public static final String TRIBUNE_SPAWN_ACTION = "\"Set the tribune spawn\" in the arena menu of /tournament";
+    public static final String MARK_HEIGHT_ACTION = "\"Mark the height of the fight area\" in the arena menu "
+            + "of /tournament";
     public static final String CLEAN_ACTION = "\"Clean the arena\" in the arena menu of /tournament";
 
     private ArenaShape shape;

@@ -145,6 +145,41 @@ class ArenaRegistryTest {
     }
 
     @Test
+    void writesAndReadsThatTheTwoHeightsWereMarked() {
+        ArenaRegistry registry = new ArenaRegistry();
+        registry.getArena().setShape(new ArenaShape("world", 64, 70,
+                new long[] {HorizontalCellCodec.encode(0, 0)}).withVerticalExtent(40, 50));
+
+        MemoryConfiguration configuration = new MemoryConfiguration();
+        registry.saveToConfiguration(configuration);
+
+        assertTrue(configuration.getBoolean("arena.shape.heights-marked"));
+
+        ArenaRegistry reloadedRegistry = new ArenaRegistry();
+        reloadedRegistry.loadFromConfiguration(configuration);
+        ArenaShape reloadedShape = reloadedRegistry.getArena().getShape().orElseThrow();
+
+        assertTrue(reloadedShape.hasMarkedHeights());
+        assertEquals(40, reloadedShape.getFloorY());
+        assertEquals(50, reloadedShape.getWallTopY());
+    }
+
+    @Test
+    void readsAShapeWithoutTheMarkedFlagAsOneThatFollowsItsWall() {
+        MemoryConfiguration configuration = new MemoryConfiguration();
+        configuration.set("arena.shape.world", "world");
+        configuration.set("arena.shape.reference-y", 64);
+        configuration.set("arena.shape.floor-y", 64);
+        configuration.set("arena.shape.wall-top-y", 70);
+        configuration.set("arena.shape.rows", List.of("0:0..1"));
+
+        ArenaRegistry registry = new ArenaRegistry();
+        registry.loadFromConfiguration(configuration);
+
+        assertFalse(registry.getArena().getShape().orElseThrow().hasMarkedHeights());
+    }
+
+    @Test
     void readsAShapeWithoutAStoredFloorWithTheReferenceHeightAsItsFloor() {
         MemoryConfiguration configuration = new MemoryConfiguration();
         configuration.set("arena.shape.world", "world");

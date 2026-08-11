@@ -33,6 +33,12 @@ class ArenaCleanFromTheGuiTest {
     private static final int WALL_BOTTOM_Y = 64;
     private static final int WALL_TOP_Y = 66;
 
+    private static final int MAXIMUM_CLEANING_TICKS = 600;
+
+    private static final int PROBE_X = 0;
+    private static final int PROBE_Y = WALL_BOTTOM_Y;
+    private static final int PROBE_Z = 0;
+
     @Test
     void cleansTheArenaAfterACalculationRunFromAboveTheWall() {
         Fixture fixture = new Fixture();
@@ -171,42 +177,127 @@ class ArenaCleanFromTheGuiTest {
     }
 
     @Test
-    void showsTheParticleColumnsOfTheBlocksItIsWriting() {
+    void climbsTheFightAreaInRedFirstAndClearsItInGreenAfterwards() {
         Fixture fixture = new Fixture();
         fixture.calculateFrom(WALL_BOTTOM_Y);
+        fixture.harness.setBlock(PROBE_X, PROBE_Y, PROBE_Z, Material.COBWEB);
 
         fixture.clean();
 
-        assertFalse(fixture.shownBatches.isEmpty(), "a running cleaning has to show its columns");
-        for (long[] batch : fixture.shownBatches) {
-            assertTrue(batch.length > 0, "an empty batch says nothing about where the cleaning is");
-            for (long blockPosition : batch) {
-                assertTrue(fixture.setupService.getShape().orElseThrow().containsBlock(
-                                BlockPositionCodec.decodeX(blockPosition),
-                                BlockPositionCodec.decodeY(blockPosition),
-                                BlockPositionCodec.decodeZ(blockPosition)),
-                        "the columns may only be drawn over blocks of the fight area");
-            }
-        }
+        assertEquals(List.of(WALL_BOTTOM_Y, WALL_BOTTOM_Y + 1, WALL_TOP_Y),
+                fixture.layersOf(ArenaCleaningPhase.FLOOD),
+                "the red flood climbs every layer of the volume, from the floor up");
+        assertEquals(List.of(WALL_BOTTOM_Y, WALL_BOTTOM_Y + 1, WALL_TOP_Y),
+                fixture.layersOf(ArenaCleaningPhase.CLEAR),
+                "and the green one walks the very same layers again");
+        assertEquals(List.of(ArenaCleaningPhase.FLOOD, ArenaCleaningPhase.CLEAR),
+                fixture.shownLayers.stream().map(ShownLayer::phase).distinct().toList(),
+                "never the other way round and never mixed: " + fixture.shownLayers);
+        assertTrue(fixture.shownLayers.stream()
+                        .filter(shownLayer -> shownLayer.phase() == ArenaCleaningPhase.FLOOD)
+                        .allMatch(shownLayer -> shownLayer.probedMaterial() == Material.COBWEB),
+                "the announcing phase may not have written a single block: " + fixture.shownLayers);
+        assertEquals(Material.AIR, fixture.harness.getBlock(PROBE_X, PROBE_Y, PROBE_Z),
+                "and the green phase behind it still cleans");
     }
 
     @Test
-    void cleansTheWholeArenaWhenTheParticleColumnsThrow() {
+    void takesTheConfiguredTimeForBothPhasesAndNoneWithoutThem() {
+        Fixture animated = new Fixture();
+        animated.calculateFrom(WALL_BOTTOM_Y);
+        animated.cleaningService.setAnimationDurationTicks(60L);
+        animated.harness.setBlock(PROBE_X, PROBE_Y, PROBE_Z, Material.COBWEB);
+
+        assertEquals(60, animated.clean(), "30 ticks of red and 30 of green over three layers");
+        assertEquals(Material.AIR, animated.harness.getBlock(PROBE_X, PROBE_Y, PROBE_Z));
+
+        Fixture switchedOff = new Fixture();
+        switchedOff.calculateFrom(WALL_BOTTOM_Y);
+        switchedOff.cleaningService.setAnimationDurationTicks(0L);
+        switchedOff.harness.setBlock(PROBE_X, PROBE_Y, PROBE_Z, Material.COBWEB);
+
+        assertEquals(3, switchedOff.clean(), "one tick per layer and no phase that is held back");
+        assertEquals(Material.AIR, switchedOff.harness.getBlock(PROBE_X, PROBE_Y, PROBE_Z));
+        assertTrue(switchedOff.layersOf(ArenaCleaningPhase.FLOOD).isEmpty(),
+                "there is nothing to announce when nothing is drawn: " + switchedOff.shownLayers);
+    }
+
+    @Test
+    void clearsWhatWasAddedSinceTheCalculationAndNothingElse() {
         Fixture fixture = new Fixture();
+        fixture.harness.setBlock(1, WALL_BOTTOM_Y, 1, Material.STONE);
+        fixture.harness.setBlock(-1, WALL_BOTTOM_Y, -1, Material.STONE);
         fixture.calculateFrom(WALL_BOTTOM_Y);
-        fixture.visualEffectFailure = new IllegalStateException("the particle could not be spawned");
-        fixture.harness.setBlock(0, WALL_BOTTOM_Y, 0, Material.COBWEB);
+
+        fixture.harness.setBlock(PROBE_X, PROBE_Y, PROBE_Z, Material.COBWEB);
+        fixture.harness.setBlock(0, WALL_TOP_Y, 1, Material.WATER);
+        fixture.harness.setBlock(1, WALL_BOTTOM_Y + 1, 0, Material.LAVA);
+        fixture.harness.setBlock(-1, WALL_BOTTOM_Y, -1, Material.AIR);
 
         fixture.clean();
 
-        assertEquals(Material.AIR, fixture.harness.getBlock(0, WALL_BOTTOM_Y, 0),
-                "the blocks are written although the effect failed");
+        assertEquals(Material.AIR, fixture.harness.getBlock(PROBE_X, PROBE_Y, PROBE_Z),
+                "a block placed after the calculation is gone");
+        assertEquals(Material.AIR, fixture.harness.getBlock(0, WALL_TOP_Y, 1),
+                "water that was poured into the arena is gone with it");
+        assertEquals(Material.AIR, fixture.harness.getBlock(1, WALL_BOTTOM_Y + 1, 0), "and so is lava");
+        assertEquals(Material.STONE, fixture.harness.getBlock(1, WALL_BOTTOM_Y, 1),
+                "a block the baseline holds is never touched");
+        assertEquals(Material.STONE, fixture.harness.getBlock(-1, WALL_BOTTOM_Y, -1),
+                "and one that was broken out of the arena comes back");
+        assertTrue(fixture.messages.stream().anyMatch(message -> message.contains("4 of 27 checked blocks")),
+                "every block of the volume is checked and only the four are written: " + fixture.messages);
+    }
+
+    @Test
+    void cleansTheWholeArenaWhenTheParticlesThrowInTheAnnouncingPhase() {
+        Fixture fixture = new Fixture();
+        fixture.calculateFrom(WALL_BOTTOM_Y);
+        fixture.visualEffectFailure = new IllegalStateException("the particle could not be spawned");
+        fixture.harness.setBlock(PROBE_X, PROBE_Y, PROBE_Z, Material.COBWEB);
+
+        fixture.clean();
+
+        assertEquals(Material.AIR, fixture.harness.getBlock(PROBE_X, PROBE_Y, PROBE_Z),
+                "the blocks are written although the effect failed in the phase before them");
         assertEquals(Material.STONE, fixture.harness.getBlock(0, FLOOR_Y, 0));
         assertFalse(fixture.cleaningService.isCleaning(), "the cleaning has to finish normally");
         assertTrue(fixture.messages.stream().anyMatch(message -> message.startsWith("The arena is clean")),
                 "a failed effect is nothing the admin is told about: " + fixture.messages);
         assertTrue(fixture.messages.stream().noneMatch(message -> message.contains("particle")),
                 "the failure belongs into the log, not into the chat: " + fixture.messages);
+    }
+
+    @Test
+    void stopsAndReportsWhenTheWorldBreaksInTheMiddleOfTheClearingPhase() {
+        Fixture fixture = new Fixture();
+        fixture.calculateFrom(WALL_BOTTOM_Y);
+        fixture.harness.setBlock(PROBE_X, PROBE_Y, PROBE_Z, Material.COBWEB);
+        fixture.onShownLayer = shownLayer -> {
+            if (shownLayer.phase() == ArenaCleaningPhase.CLEAR && shownLayer.layerY() > WALL_BOTTOM_Y) {
+                fixture.harness.failBlockAccessWith(new IllegalStateException("the chunk is no longer loaded"));
+            }
+        };
+
+        fixture.clean();
+        fixture.harness.stopFailingBlockAccess();
+
+        assertFalse(fixture.cleaningService.isCleaning(), "the broken world may not leave the run behind");
+        assertEquals(0, fixture.harness.getScheduledTaskCount(),
+                "the task may not keep throwing every tick");
+        assertEquals(Material.AIR, fixture.harness.getBlock(PROBE_X, PROBE_Y, PROBE_Z),
+                "the layers that were written before the failure stay written");
+        assertTrue(fixture.messages.stream().anyMatch(
+                        message -> message.startsWith("The arena cleaning was stopped")
+                                && message.contains("the chunk is no longer loaded")),
+                "the admin reads why the cleaning was stopped: " + fixture.messages);
+
+        fixture.messages.clear();
+        fixture.onShownLayer = shownLayer -> { };
+        fixture.clean();
+
+        assertTrue(fixture.messages.stream().anyMatch(message -> message.startsWith("The arena is clean")),
+                "the second cleaning has to finish normally: " + fixture.messages);
     }
 
     private static final class Fixture {
@@ -220,9 +311,11 @@ class ArenaCleanFromTheGuiTest {
 
         private CleanedArenaHandler cleanedArenaHandler = (world, shape) -> 0;
 
-        private final List<long[]> shownBatches = new ArrayList<>();
+        private final List<ShownLayer> shownLayers = new ArrayList<>();
 
         private RuntimeException visualEffectFailure;
+
+        private Consumer<ShownLayer> onShownLayer = shownLayer -> { };
 
         private final ArenaCleaningService cleaningService = new ArenaCleaningService(harness.getPlugin(),
                 (world, shape) -> cleanedArenaHandler.onArenaCleaned(world, shape),
@@ -241,12 +334,14 @@ class ArenaCleanFromTheGuiTest {
                     }
                 }
             }
-            setupService = new ArenaSetupService(arenaRegistry,
+            setupService = new ArenaSetupService(
+                    new ActiveArenaState(arenaRegistry, new ArenaHeightMarkers()),
                     new MatchService(harness.getPlugin(), null, null),
                     new SpectatorBorderService(harness.getPlugin(), borderMarks, () -> { }),
                     new BorderWallPreview(harness.getPlugin(), new SilentVisualEffect()),
                     new ArenaGapGuide(harness.getPlugin()), cleaningService, baselineService,
-                    new ArenaBorderConfirmation(arenaRegistry.getArena()::hasShape), () -> { });
+                    new ArenaBorderConfirmation(arenaRegistry.getArena()::hasShape),
+                    () -> { });
         }
 
         private List<String> calculateFrom(int blockY) {
@@ -266,11 +361,15 @@ class ArenaCleanFromTheGuiTest {
         private final class RecordingVisualEffect implements ArenaCleaningVisualEffect {
 
             @Override
-            public void showCleanedColumns(World world, ArenaShape shape, long[] cleanedBlockBatch) {
+            public void showFloodedLayer(World world, ArenaShape shape, ArenaCleaningPhase phase,
+                                         int layerY) {
                 if (visualEffectFailure != null) {
                     throw visualEffectFailure;
                 }
-                shownBatches.add(cleanedBlockBatch);
+                ShownLayer shownLayer = new ShownLayer(phase, layerY,
+                        harness.getBlock(PROBE_X, PROBE_Y, PROBE_Z));
+                shownLayers.add(shownLayer);
+                onShownLayer.accept(shownLayer);
             }
 
             @Override
@@ -279,13 +378,32 @@ class ArenaCleanFromTheGuiTest {
             }
         }
 
-        private void clean() {
+        private int clean() {
             assertTrue(setupService.findCleaningRejection().isEmpty(),
                     "nothing may stand in the way of the cleaning: " + setupService.findCleaningRejection());
             assertTrue(setupService.startCleaning(fakeSender(messages)));
-            harness.runTicks(20);
+            int tickCount = 0;
+            while (cleaningService.isCleaning() && tickCount < MAXIMUM_CLEANING_TICKS) {
+                harness.runTick();
+                tickCount++;
+            }
             assertFalse(cleaningService.isCleaning(), "the cleaning has to finish");
+            return tickCount;
         }
+
+        private List<Integer> layersOf(ArenaCleaningPhase phase) {
+            List<Integer> layers = new ArrayList<>();
+            for (ShownLayer shownLayer : shownLayers) {
+                if (shownLayer.phase() == phase && (layers.isEmpty()
+                        || layers.get(layers.size() - 1) != shownLayer.layerY())) {
+                    layers.add(shownLayer.layerY());
+                }
+            }
+            return layers;
+        }
+    }
+
+    private record ShownLayer(ArenaCleaningPhase phase, int layerY, Material probedMaterial) {
     }
 
     private static final class SilentVisualEffect implements BorderVisualEffect {

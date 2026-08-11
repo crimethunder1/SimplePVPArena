@@ -12,12 +12,19 @@ public final class ArenaShape {
     private final int floorY;
     private final int wallTopY;
     private final long[] cells;
+    private final boolean heightsMarked;
 
     public ArenaShape(String worldName, int referenceY, int wallTopY, long[] cells) {
         this(worldName, referenceY, referenceY, wallTopY, cells);
     }
 
     public ArenaShape(String worldName, int referenceY, int floorY, int wallTopY, long[] cells) {
+        this(worldName, referenceY, floorY, wallTopY, cells, false);
+    }
+
+    public ArenaShape(String worldName, int referenceY, int floorY, int wallTopY, long[] cells,
+                      boolean heightsMarked) {
+        this.heightsMarked = heightsMarked;
         this.worldName = Objects.requireNonNull(worldName, "worldName");
         Objects.requireNonNull(cells, "cells");
         if (cells.length == 0) {
@@ -45,6 +52,14 @@ public final class ArenaShape {
         return wallTopY;
     }
 
+    public boolean hasMarkedHeights() {
+        return heightsMarked;
+    }
+
+    public ArenaShape withVerticalExtent(int floorY, int wallTopY) {
+        return new ArenaShape(worldName, referenceY, floorY, wallTopY, cells, true);
+    }
+
     public int getHeight() {
         return wallTopY - floorY + 1;
     }
@@ -55,6 +70,10 @@ public final class ArenaShape {
 
     public long[] getCells() {
         return cells.clone();
+    }
+
+    public long getCell(int cellIndex) {
+        return cells[cellIndex];
     }
 
     public long getBlockCount() {
@@ -87,12 +106,16 @@ public final class ArenaShape {
         return (long) (blockY - floorY) * cells.length + cellIndex;
     }
 
-    public boolean hasSameVolume(ArenaShape otherShape) {
+    public boolean coversTheSameArea(ArenaShape otherShape) {
         return otherShape != null
                 && worldName.equals(otherShape.worldName)
-                && floorY == otherShape.floorY
-                && wallTopY == otherShape.wallTopY
                 && Arrays.equals(cells, otherShape.cells);
+    }
+
+    public boolean hasSameVolume(ArenaShape otherShape) {
+        return coversTheSameArea(otherShape)
+                && floorY == otherShape.floorY
+                && wallTopY == otherShape.wallTopY;
     }
 
     public boolean contains(String otherWorldName, double x, double z) {

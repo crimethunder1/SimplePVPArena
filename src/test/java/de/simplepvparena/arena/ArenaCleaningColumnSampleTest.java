@@ -11,91 +11,83 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class ArenaCleaningColumnSampleTest {
 
+    private static final String WORLD_NAME = "event";
     private static final int FLOOR_Y = 64;
 
     @Test
-    void neverDrawsMoreColumnsThanTheRateAllows() {
-        long[] batch = layerOfBlocks(4096);
+    void neverDrawsMoreCellsThanTheRateAllows() {
+        ArenaShape shape = shapeWithCells(4096);
 
-        long[] columns = ArenaCleaningColumnSample.pick(batch, 6, countingIndex());
+        long[] columns = ArenaCleaningColumnSample.pick(shape, 6, countingIndex());
 
         assertEquals(6, columns.length);
     }
 
     @Test
-    void picksTheColumnsOfTheBlocksTheRandomSourceNames() {
-        long[] batch = {
-                BlockPositionCodec.encode(10, FLOOR_Y, 20),
-                BlockPositionCodec.encode(11, FLOOR_Y, 21),
-                BlockPositionCodec.encode(12, FLOOR_Y, 22)};
+    void picksTheCellsTheRandomSourceNames() {
+        ArenaShape shape = shapeOf(cell(10, 20), cell(11, 21), cell(12, 22));
 
-        long[] columns = ArenaCleaningColumnSample.pick(batch, 2, indexesOf(2, 0));
+        long[] columns = ArenaCleaningColumnSample.pick(shape, 2, indexesOf(2, 0));
 
         assertEquals(List.of(HorizontalCellCodec.encode(12, 22), HorizontalCellCodec.encode(10, 20)),
-                asList(columns));
+                asList(columns), "the cells of a shape are sorted, the picks follow that order");
     }
 
     @Test
-    void dropsTheSecondPickOfTheSameColumn() {
-        long[] batch = {
-                BlockPositionCodec.encode(4, FLOOR_Y, 8),
-                BlockPositionCodec.encode(4, FLOOR_Y + 5, 8),
-                BlockPositionCodec.encode(9, FLOOR_Y, 3)};
+    void dropsTheSecondPickOfTheSameCell() {
+        ArenaShape shape = shapeOf(cell(4, 8), cell(9, 3));
 
-        long[] columns = ArenaCleaningColumnSample.pick(batch, 3, indexesOf(0, 1, 2));
+        long[] columns = ArenaCleaningColumnSample.pick(shape, 2, indexesOf(0, 0));
 
-        assertEquals(List.of(HorizontalCellCodec.encode(4, 8), HorizontalCellCodec.encode(9, 3)),
-                asList(columns), "the same cell at two heights is one column");
+        assertEquals(1, columns.length, "the same cell twice is one dot");
     }
 
     @Test
-    void aBatchSmallerThanTheRateIsNeverStretched() {
-        long[] batch = {BlockPositionCodec.encode(1, FLOOR_Y, 1), BlockPositionCodec.encode(2, FLOOR_Y, 2)};
+    void anAreaSmallerThanTheRateIsNeverStretched() {
+        ArenaShape shape = shapeOf(cell(1, 1), cell(2, 2));
 
-        long[] columns = ArenaCleaningColumnSample.pick(batch, 10, countingIndex());
+        long[] columns = ArenaCleaningColumnSample.pick(shape, 10, countingIndex());
 
         assertEquals(2, columns.length);
     }
 
     @Test
-    void drawsNothingForAnEmptyBatchOrARateOfZero() {
-        assertEquals(0, ArenaCleaningColumnSample.pick(new long[0], 6, countingIndex()).length);
+    void drawsNothingWithoutAShapeOrWithARateOfZero() {
         assertEquals(0, ArenaCleaningColumnSample.pick(null, 6, countingIndex()).length);
-        assertEquals(0, ArenaCleaningColumnSample.pick(layerOfBlocks(64), 0, countingIndex()).length);
-        assertEquals(0, ArenaCleaningColumnSample.pick(layerOfBlocks(64), -4, countingIndex()).length);
+        assertEquals(0, ArenaCleaningColumnSample.pick(shapeWithCells(64), 0, countingIndex()).length);
+        assertEquals(0, ArenaCleaningColumnSample.pick(shapeWithCells(64), -4, countingIndex()).length);
     }
 
     @Test
     void keepsTheCellsOfANegativeCorner() {
-        long[] batch = {BlockPositionCodec.encode(-30, FLOOR_Y, -7)};
+        ArenaShape shape = shapeOf(cell(-30, -7));
 
-        long[] columns = ArenaCleaningColumnSample.pick(batch, 1, indexesOf(0));
+        long[] columns = ArenaCleaningColumnSample.pick(shape, 1, indexesOf(0));
 
         assertEquals(-30, HorizontalCellCodec.decodeX(columns[0]));
         assertEquals(-7, HorizontalCellCodec.decodeZ(columns[0]));
     }
 
     @Test
-    void survivesARandomSourceThatAnswersOutsideOfTheBatch() {
-        long[] batch = layerOfBlocks(8);
+    void survivesARandomSourceThatAnswersOutsideOfTheArea() {
+        ArenaShape shape = shapeWithCells(8);
 
-        long[] columns = ArenaCleaningColumnSample.pick(batch, 3, indexesOf(99, -1, Integer.MIN_VALUE));
+        long[] columns = ArenaCleaningColumnSample.pick(shape, 3, indexesOf(99, -1, Integer.MIN_VALUE));
 
         assertEquals(3, columns.length);
         for (long column : columns) {
-            assertTrue(asList(batch).stream().anyMatch(blockPosition ->
-                            HorizontalCellCodec.encode(BlockPositionCodec.decodeX(blockPosition),
-                                    BlockPositionCodec.decodeZ(blockPosition)) == column),
-                    "every drawn column has to belong to a block of the batch");
+            assertTrue(shape.containsCell(HorizontalCellCodec.decodeX(column),
+                            HorizontalCellCodec.decodeZ(column)),
+                    "every drawn dot has to stand in a cell of the fight area");
         }
     }
 
     @Test
-    void asksTheRandomSourceWithTheLengthOfTheBatch() {
+    void asksTheRandomSourceWithTheNumberOfCells() {
         List<Integer> bounds = new ArrayList<>();
-        long[] batch = layerOfBlocks(37);
+        ArenaShape shape = shapeWithCells(37);
 
-        ArenaCleaningColumnSample.pick(batch, 4, bound -> {
+        ArenaCleaningColumnSample.pick(shape, 4, bound -> {
             bounds.add(bound);
             return 0;
         });
@@ -103,12 +95,30 @@ class ArenaCleaningColumnSampleTest {
         assertEquals(List.of(37, 37, 37, 37), bounds);
     }
 
-    private static long[] layerOfBlocks(int blockCount) {
-        long[] batch = new long[blockCount];
-        for (int blockIndex = 0; blockIndex < blockCount; blockIndex++) {
-            batch[blockIndex] = BlockPositionCodec.encode(blockIndex, FLOOR_Y, blockIndex * 2);
+    @Test
+    void picksTheSameCellsNoMatterHowTallTheFightAreaIs() {
+        ArenaShape flat = new ArenaShape(WORLD_NAME, FLOOR_Y, FLOOR_Y, FLOOR_Y,
+                new long[] {cell(0, 0), cell(1, 0)});
+        ArenaShape tall = flat.withVerticalExtent(FLOOR_Y, FLOOR_Y + 50);
+
+        assertEquals(asList(ArenaCleaningColumnSample.pick(flat, 2, indexesOf(0, 1))),
+                asList(ArenaCleaningColumnSample.pick(tall, 2, indexesOf(0, 1))));
+    }
+
+    private static ArenaShape shapeWithCells(int cellCount) {
+        long[] cells = new long[cellCount];
+        for (int cellIndex = 0; cellIndex < cellCount; cellIndex++) {
+            cells[cellIndex] = cell(cellIndex, cellIndex * 2);
         }
-        return batch;
+        return shapeOf(cells);
+    }
+
+    private static ArenaShape shapeOf(long... cells) {
+        return new ArenaShape(WORLD_NAME, FLOOR_Y, FLOOR_Y, FLOOR_Y + 2, cells);
+    }
+
+    private static long cell(int blockX, int blockZ) {
+        return HorizontalCellCodec.encode(blockX, blockZ);
     }
 
     private static IntUnaryOperator indexesOf(int... indexes) {

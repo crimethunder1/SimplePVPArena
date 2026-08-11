@@ -45,6 +45,10 @@ public final class ArenaBaselineService {
         return baselineRegistry.find(shape);
     }
 
+    public Optional<ArenaBaselineSnapshot> findStoredSnapshot() {
+        return baselineRegistry.findStored();
+    }
+
     public void discardSnapshot() {
         stopCapture();
         baselineRegistry.discard();

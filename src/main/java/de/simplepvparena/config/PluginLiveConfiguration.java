@@ -84,6 +84,7 @@ public final class PluginLiveConfiguration implements LiveConfiguration {
     @Override
     public void setArenaCleaningParticleSettings(ArenaCleaningParticleSettings settings) {
         arenaCleaningVisualEffect.applyParticleSettings(settings, problemReporter);
+        arenaCleaningService.setAnimationDurationTicks(settings.animationDurationTicks());
     }
 
     @Override

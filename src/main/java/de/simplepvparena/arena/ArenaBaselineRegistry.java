@@ -19,6 +19,10 @@ public final class ArenaBaselineRegistry {
     }
 
     public Optional<ArenaBaselineSnapshot> find(ArenaShape shape) {
-        return Optional.ofNullable(snapshot).filter(storedSnapshot -> storedSnapshot.covers(shape));
+        return findStored().filter(storedSnapshot -> storedSnapshot.covers(shape));
+    }
+
+    public Optional<ArenaBaselineSnapshot> findStored() {
+        return Optional.ofNullable(snapshot);
     }
 }

@@ -17,7 +17,7 @@ import java.util.Optional;
 
 public final class ArenaSetupService {
 
-    private final ArenaRegistry arenaRegistry;
+    private final ActiveArenaState activeArena;
     private final MatchService matchService;
     private final SpectatorBorderService spectatorBorderService;
     private final BorderWallPreview borderWallPreview;
@@ -29,7 +29,7 @@ public final class ArenaSetupService {
 
     private int maximumArenaCellCount = ArenaShapeFloodFill.DEFAULT_MAXIMUM_CELL_COUNT;
 
-    public ArenaSetupService(ArenaRegistry arenaRegistry,
+    public ArenaSetupService(ActiveArenaState activeArena,
                              MatchService matchService,
                              SpectatorBorderService spectatorBorderService,
                              BorderWallPreview borderWallPreview,
@@ -38,7 +38,7 @@ public final class ArenaSetupService {
                              ArenaBaselineService arenaBaselineService,
                              ArenaBorderConfirmation borderConfirmation,
                              Runnable arenaConfigurationSaver) {
-        this.arenaRegistry = arenaRegistry;
+        this.activeArena = activeArena;
         this.matchService = matchService;
         this.spectatorBorderService = spectatorBorderService;
         this.borderWallPreview = borderWallPreview;
@@ -58,11 +58,11 @@ public final class ArenaSetupService {
     }
 
     public boolean isArenaReady() {
-        return arenaRegistry.isArenaFullyConfigured();
+        return activeArena.isArenaFullyConfigured();
     }
 
     public Optional<ArenaShape> getShape() {
-        return arenaRegistry.getArena().getShape();
+        return activeArena.getCleanedVolume();
     }
 
     public void calculateShape(Player admin) {
@@ -96,22 +96,58 @@ public final class ArenaSetupService {
             return;
         }
         arenaGapGuide.stopFor(admin);
-        ArenaShape shape = calculation.getShape().orElseThrow();
-        Arena arena = arenaRegistry.getArena();
-        arena.setShape(shape);
+        ArenaShape calculatedShape = calculation.getShape().orElseThrow();
+        ArenaVolumeUpdate update = activeArena.adoptCalculation(calculatedShape);
+        ArenaShape shape = update.volume();
+        Arena arena = activeArena.getArena();
         borderConfirmation.confirmCalculation();
         arenaConfigurationSaver.run();
         TournamentMessages.sendSuccess(admin,
                 "The fight area was calculated from the border blocks"
                         + TournamentMessages.LINE_BREAK + shape.describe());
+        reportVolume(admin, update);
         reportDiagnosisLimit(admin, shape, cellLimit);
-        captureBaseline(admin, shape);
+        captureBaseline(admin);
         previewRecognizedWall(admin, world, shape, borderColumns);
         reportSpawnPlacementWarnings(admin, arena);
         reportMissingConfiguration(admin, arena);
     }
 
-    private void captureBaseline(Player admin, ArenaShape shape) {
+    private void reportVolume(Player admin, ArenaVolumeUpdate update) {
+        ArenaShape shape = update.volume();
+        switch (update.origin()) {
+            case MARKS_TAKEN_OVER -> TournamentMessages.sendInfo(admin,
+                    "The marked heights were taken over: the area is cleaned from y "
+                            + shape.getFloorY() + " to y " + shape.getWallTopY()
+                            + " instead of the height of the border wall"
+                            + TournamentMessages.LINE_BREAK + "Both marks are used up. The area keeps these two "
+                            + "heights as long as it is calculated again as the same area, mark them again with "
+                            + Arena.MARK_HEIGHT_ACTION + " to change them");
+            case MARKS_KEPT -> TournamentMessages.sendInfo(admin,
+                    "The same fight area was calculated again, so it keeps the "
+                            + "heights that were marked for it: it is cleaned from y " + shape.getFloorY()
+                            + " to y " + shape.getWallTopY() + " instead of the height of the border wall"
+                            + TournamentMessages.LINE_BREAK + "Mark two heights with " + Arena.MARK_HEIGHT_ACTION
+                            + " and calculate again to replace them");
+            case BORDER_WALL -> reportVolumeReadOffTheWall(admin, update);
+        }
+    }
+
+    private void reportVolumeReadOffTheWall(Player admin, ArenaVolumeUpdate update) {
+        ArenaShape shape = update.volume();
+        activeArena.getHeightMarkers().findIncompleteHint()
+                .ifPresent(hint -> TournamentMessages.sendWarning(admin, hint));
+        update.findDroppedMarkedVolume().ifPresent(marked ->
+                TournamentMessages.sendWarning(admin, "This is not the fight area the heights y "
+                        + marked.getFloorY() + " to y " + marked.getWallTopY()
+                        + " were marked for any more, so they are gone"
+                        + TournamentMessages.LINE_BREAK + "It is cleaned from y " + shape.getFloorY()
+                        + " to y " + shape.getWallTopY() + ", the height of its own border wall. Mark two "
+                        + "heights with " + Arena.MARK_HEIGHT_ACTION + " and calculate again if it needs them"));
+    }
+
+    private void captureBaseline(Player admin) {
+        ArenaShape shape = getShape().orElseThrow();
         if (!arenaBaselineService.startCapture(shape, report -> reportBaseline(admin, report))) {
             TournamentMessages.sendWarning(admin, "No baseline is taken of the fight area"
                     + TournamentMessages.LINE_BREAK + "It holds " + shape.getBlockCount()
@@ -182,7 +218,7 @@ public final class ArenaSetupService {
     }
 
     public void setSpawn(Player admin, ArenaSpawnType spawnType) {
-        Arena arena = arenaRegistry.getArena();
+        Arena arena = activeArena.getArena();
         PositionSnapshot position = PositionSnapshot.fromLocation(admin.getLocation());
         Optional<String> rejection = arena.setSpawn(spawnType, position);
         if (rejection.isPresent()) {
@@ -197,7 +233,7 @@ public final class ArenaSetupService {
     }
 
     public void clearConfiguration(CommandSender sender) {
-        arenaRegistry.clearArenaConfiguration();
+        activeArena.clear();
         arenaBaselineService.discardSnapshot();
         arenaConfigurationSaver.run();
         TournamentMessages.sendSuccess(sender, "The arena configuration was removed"
@@ -205,7 +241,8 @@ public final class ArenaSetupService {
     }
 
     public Optional<String> findCleaningRejection() {
-        if (arenaRegistry.getArena().getShape().isEmpty()) {
+        Optional<ArenaShape> volume = getShape();
+        if (volume.isEmpty()) {
             return Optional.of("The fight area is not calculated, there is nothing to clean"
                     + TournamentMessages.LINE_BREAK + "Use " + Arena.CALCULATE_ACTION
                     + " while standing inside the border wall first");
@@ -221,7 +258,7 @@ public final class ArenaSetupService {
                     + TournamentMessages.LINE_BREAK + "A cleaning that started now would find no "
                     + "baseline and empty the arena instead of restoring it");
         }
-        return Optional.empty();
+        return ArenaCleaningPlan.findBaselineMismatch(volume.get(), arenaBaselineService.findStoredSnapshot());
     }
 
     public long countCleaningBlocks() {
@@ -243,7 +280,7 @@ public final class ArenaSetupService {
                         "A baseline is taken by the calculation and is",
                         "gone after a server restart"));
         getShape().ifPresent(shape -> effect.add("Covers y " + shape.getFloorY() + " to y "
-                + shape.getWallTopY() + ", the height of the border wall"));
+                + shape.getWallTopY() + ", the height of the fight area"));
         return effect;
     }
 
@@ -253,20 +290,19 @@ public final class ArenaSetupService {
             TournamentMessages.sendError(sender, rejection.get());
             return false;
         }
-        ArenaShape shape = getShape().orElseThrow();
-        long blockCount = ArenaCleaningService.countBlocks(shape);
-        Optional<ArenaBaselineSnapshot> baseline = arenaBaselineService.findSnapshot(shape);
-        ArenaCleaningTarget cleaningTarget = baseline.map(ArenaCleaningTarget.class::cast)
-                .orElse(ArenaCleaningTarget.EMPTY_ARENA);
-        boolean cleaningStarted = arenaCleaningService.startCleaning(shape, cleaningTarget,
+        ArenaCleaningPlan plan = ArenaCleaningPlan.of(getShape().orElseThrow(),
+                arenaBaselineService.findStoredSnapshot());
+        ArenaShape shape = plan.getVolume();
+        long blockCount = plan.getBlockCount();
+        boolean cleaningStarted = arenaCleaningService.startCleaning(plan,
                 report -> reportCleaningOutcome(sender, report));
         if (!cleaningStarted) {
             TournamentMessages.sendError(sender, "The arena cleaning could not be started");
             return false;
         }
-        if (baseline.isPresent()) {
+        if (plan.restoresABaseline()) {
             TournamentMessages.sendInfo(sender, "Restoring the arena to the baseline of the last calculation"
-                    + TournamentMessages.LINE_BREAK + baseline.get().describe());
+                    + TournamentMessages.LINE_BREAK + plan.findBaseline().orElseThrow().describe());
         } else {
             TournamentMessages.sendWarning(sender, "No baseline of the fight area is stored, every block of "
                     + "it is set to air instead"
@@ -276,7 +312,8 @@ public final class ArenaSetupService {
         TournamentMessages.sendInfo(sender, "Cleaning the arena, " + blockCount + " blocks between y "
                 + shape.getFloorY() + " and y " + shape.getWallTopY()
                 + TournamentMessages.LINE_BREAK + "Processed in batches of "
-                + arenaCleaningService.getBlocksPerTick() + " per tick");
+                + arenaCleaningService.getBlocksPerTick() + " per tick"
+                + TournamentMessages.LINE_BREAK + arenaCleaningService.describeAnimation());
         return true;
     }
 
@@ -289,7 +326,7 @@ public final class ArenaSetupService {
     }
 
     public List<String> describeArena() {
-        Arena arena = arenaRegistry.getArena();
+        Arena arena = activeArena.getArena();
         return List.of(
                 "Arena " + (arena.isFullyConfigured() ? "ready" : "incomplete"),
                 "  fight area: " + arena.getShape().map(ArenaShape::describe).orElse("not calculated"),

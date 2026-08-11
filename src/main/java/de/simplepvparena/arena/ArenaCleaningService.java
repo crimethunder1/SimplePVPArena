@@ -16,11 +16,14 @@ public final class ArenaCleaningService {
 
     private static final long BATCH_PERIOD_TICKS = 1L;
 
+    private static final long TICKS_PER_SECOND = 20L;
+
     private final Plugin plugin;
     private final CleanedArenaHandler cleanedArenaHandler;
     private final ArenaCleaningVisualEffect visualEffect;
 
     private int blocksPerTick = DEFAULT_BLOCKS_PER_TICK;
+    private long animationDurationTicks = ArenaCleaningParticleSettings.defaults().animationDurationTicks();
     private BukkitTask activeTask;
 
     public ArenaCleaningService(Plugin plugin, CleanedArenaHandler cleanedArenaHandler) {
@@ -42,6 +45,14 @@ public final class ArenaCleaningService {
         return blocksPerTick;
     }
 
+    public void setAnimationDurationTicks(long animationDurationTicks) {
+        this.animationDurationTicks = Math.max(0L, animationDurationTicks);
+    }
+
+    public long getAnimationDurationTicks() {
+        return animationDurationTicks;
+    }
+
     public boolean isCleaning() {
         return activeTask != null;
     }
@@ -50,61 +61,76 @@ public final class ArenaCleaningService {
         return shape.getBlockCount();
     }
 
-    public boolean startCleaning(ArenaShape shape, ArenaCleaningTarget cleaningTarget,
+    public String describeAnimation() {
+        if (animationDurationTicks <= 0L) {
+            return "The two coloured phases are switched off, the layers are cleared as fast as the "
+                    + "batches allow";
+        }
+        return "Layer by layer from the floor up: " + ArenaCleaningPhase.FLOOD.describe()
+                + " announces the volume, " + ArenaCleaningPhase.CLEAR.describe() + " writes it, "
+                + (animationDurationTicks / (double) TICKS_PER_SECOND) + " seconds for both together";
+    }
+
+    public boolean startCleaning(ArenaCleaningPlan plan,
                                  Consumer<ArenaCleaningReport> completionHandler) {
         if (isCleaning()) {
             return false;
         }
-        ArenaShapeBlockCursor cursor = new ArenaShapeBlockCursor(shape);
-        CleaningProgress progress = new CleaningProgress();
+        ArenaShape shape = plan.getVolume();
+        ArenaCleaningTarget cleaningTarget = plan.getTarget();
+        CleaningRun run = new CleaningRun(shape,
+                ArenaCleaningLayerSchedule.of(shape.getHeight(), animationDurationTicks));
         activeTask = plugin.getServer().getScheduler().runTaskTimer(plugin,
-                () -> cleanNextBatch(cursor, cleaningTarget, progress, completionHandler),
+                () -> runNextTick(run, cleaningTarget, completionHandler),
                 BATCH_PERIOD_TICKS, BATCH_PERIOD_TICKS);
         return true;
     }
 
-    private void cleanNextBatch(ArenaShapeBlockCursor cursor, ArenaCleaningTarget cleaningTarget,
-                                CleaningProgress progress, Consumer<ArenaCleaningReport> completionHandler) {
-        ArenaShape shape = cursor.getShape();
+    private void runNextTick(CleaningRun run, ArenaCleaningTarget cleaningTarget,
+                             Consumer<ArenaCleaningReport> completionHandler) {
+        ArenaShape shape = run.shape;
         World world = plugin.getServer().getWorld(shape.getWorldName());
         if (world == null) {
             plugin.getLogger().warning("The world " + shape.getWorldName()
                     + " is not loaded, the arena cleaning is stopped");
-            finish(cleaningTarget, progress, "the world " + shape.getWorldName() + " is not loaded",
+            finish(cleaningTarget, run, "the world " + shape.getWorldName() + " is not loaded",
                     completionHandler);
             return;
         }
         try {
-            int remainingBlocksOfThisTick = blocksPerTick;
-            boolean columnsShown = false;
-            while (remainingBlocksOfThisTick > 0 && cursor.hasRemainingBlocks()) {
-                long[] batch = cursor.nextBatch(remainingBlocksOfThisTick);
-                remainingBlocksOfThisTick -= batch.length;
-                progress.checkedBlockCount += batch.length;
-                progress.changedBlockCount += writeBatch(world, batch, cleaningTarget);
-                if (!columnsShown) {
-                    columnsShown = true;
-                    showCleanedColumns(world, shape, batch, progress);
-                }
+            showFloodedLayer(world, run);
+            if (run.phase.writesBlocks()) {
+                clearCurrentLayer(world, run, cleaningTarget);
             }
-            if (cursor.hasRemainingBlocks()) {
+            run.endTickOfLayer();
+            if (!run.finished) {
                 return;
             }
-            progress.clearedBorderMarkCount += cleanedArenaHandler.onArenaCleaned(world, shape);
+            run.clearedBorderMarkCount += cleanedArenaHandler.onArenaCleaned(world, shape);
         } catch (RuntimeException failure) {
             plugin.getLogger().log(Level.SEVERE, "The arena cleaning in " + shape.getWorldName()
                     + " ran into a failure and is stopped", failure);
-            finish(cleaningTarget, progress, describeFailure(failure), completionHandler);
+            finish(cleaningTarget, run, describeFailure(failure), completionHandler);
             return;
         }
-        finish(cleaningTarget, progress, null, completionHandler);
+        finish(cleaningTarget, run, null, completionHandler);
     }
 
-    private void finish(ArenaCleaningTarget cleaningTarget, CleaningProgress progress, String failureReason,
+    private void clearCurrentLayer(World world, CleaningRun run, ArenaCleaningTarget cleaningTarget) {
+        int remainingBlocksOfThisTick = blocksPerTick;
+        while (remainingBlocksOfThisTick > 0 && run.hasUnwrittenBlocksInLayer()) {
+            long[] batch = run.nextBatchOfLayer(remainingBlocksOfThisTick);
+            remainingBlocksOfThisTick -= batch.length;
+            run.checkedBlockCount += batch.length;
+            run.changedBlockCount += writeBatch(world, batch, cleaningTarget);
+        }
+    }
+
+    private void finish(ArenaCleaningTarget cleaningTarget, CleaningRun run, String failureReason,
                         Consumer<ArenaCleaningReport> completionHandler) {
         stopCleaning();
-        completionHandler.accept(new ArenaCleaningReport(progress.checkedBlockCount, progress.changedBlockCount,
-                progress.clearedBorderMarkCount, cleaningTarget.describeChange(), failureReason));
+        completionHandler.accept(new ArenaCleaningReport(run.checkedBlockCount, run.changedBlockCount,
+                run.clearedBorderMarkCount, cleaningTarget.describeChange(), failureReason));
     }
 
     private static String describeFailure(RuntimeException failure) {
@@ -112,17 +138,17 @@ public final class ArenaCleaningService {
         return message == null || message.isBlank() ? failure.getClass().getSimpleName() : message;
     }
 
-    private void showCleanedColumns(World world, ArenaShape shape, long[] batch, CleaningProgress progress) {
-        if (progress.visualEffectStopped) {
+    private void showFloodedLayer(World world, CleaningRun run) {
+        if (run.visualEffectStopped) {
             return;
         }
         try {
-            visualEffect.showCleanedColumns(world, shape, batch);
+            visualEffect.showFloodedLayer(world, run.shape, run.phase, run.layerY());
         } catch (RuntimeException failure) {
-            progress.visualEffectStopped = true;
+            run.visualEffectStopped = true;
             plugin.getLogger().log(Level.WARNING, "The particles of the arena cleaning in "
-                    + shape.getWorldName() + " could not be drawn, the cleaning itself carries on without "
-                    + "them", failure);
+                    + run.shape.getWorldName() + " could not be drawn, the cleaning itself carries on "
+                    + "without them", failure);
         }
     }
 
@@ -150,12 +176,72 @@ public final class ArenaCleaningService {
         }
     }
 
-    private static final class CleaningProgress {
+    private static final class CleaningRun {
+
+        private final ArenaShape shape;
+        private final ArenaCleaningLayerSchedule schedule;
+        private final ArenaShapeBlockCursor cursor;
+        private final int layerBlockCount;
+
+        private ArenaCleaningPhase phase;
+        private int layerIndex;
+        private long ticksSpentInLayer;
+        private long remainingBlocksOfLayer;
+        private boolean finished;
 
         private long checkedBlockCount;
         private long changedBlockCount;
         private int clearedBorderMarkCount;
 
         private boolean visualEffectStopped;
+
+        private CleaningRun(ArenaShape shape, ArenaCleaningLayerSchedule schedule) {
+            this.shape = shape;
+            this.schedule = schedule;
+            this.cursor = new ArenaShapeBlockCursor(shape);
+            this.layerBlockCount = shape.getCellCount();
+            this.phase = schedule.isAnimated() ? ArenaCleaningPhase.FLOOD : ArenaCleaningPhase.CLEAR;
+            this.remainingBlocksOfLayer = layerBlockCount;
+        }
+
+        private int layerY() {
+            return shape.getFloorY() + layerIndex;
+        }
+
+        private boolean hasUnwrittenBlocksInLayer() {
+            return remainingBlocksOfLayer > 0L;
+        }
+
+        private long[] nextBatchOfLayer(int maximumBlockCount) {
+            long[] batch = cursor.nextBatch((int) Math.min(maximumBlockCount, remainingBlocksOfLayer));
+            remainingBlocksOfLayer -= batch.length;
+            return batch;
+        }
+
+        private void endTickOfLayer() {
+            ticksSpentInLayer++;
+            if (phase.writesBlocks() && hasUnwrittenBlocksInLayer()) {
+                return;
+            }
+            if (ticksSpentInLayer < schedule.ticksForLayer(layerIndex)) {
+                return;
+            }
+            startNextLayer();
+        }
+
+        private void startNextLayer() {
+            layerIndex++;
+            ticksSpentInLayer = 0L;
+            remainingBlocksOfLayer = layerBlockCount;
+            if (layerIndex < schedule.getLayerCount()) {
+                return;
+            }
+            layerIndex = 0;
+            if (phase.writesBlocks()) {
+                finished = true;
+                return;
+            }
+            phase = ArenaCleaningPhase.CLEAR;
+        }
     }
 }
