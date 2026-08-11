@@ -1,7 +1,9 @@
 package de.simplepvparena.config;
 
 import de.simplepvparena.arena.ArenaBaselineService;
+import de.simplepvparena.arena.ArenaCleaningParticleSettings;
 import de.simplepvparena.arena.ArenaCleaningService;
+import de.simplepvparena.arena.ArenaCleaningVisualEffect;
 import de.simplepvparena.arena.ArenaSafetyZone;
 import de.simplepvparena.arena.ArenaSetupService;
 import de.simplepvparena.border.BorderParticleService;
@@ -23,6 +25,7 @@ public final class PluginLiveConfiguration implements LiveConfiguration {
     private final KitConfigurationLoader kitConfigurationLoader;
     private final MatchService matchService;
     private final ArenaCleaningService arenaCleaningService;
+    private final ArenaCleaningVisualEffect arenaCleaningVisualEffect;
     private final ArenaBaselineService arenaBaselineService;
     private final ArenaSetupService arenaSetupService;
     private final ArenaSafetyZone arenaSafetyZone;
@@ -35,6 +38,7 @@ public final class PluginLiveConfiguration implements LiveConfiguration {
                                    KitConfigurationLoader kitConfigurationLoader,
                                    MatchService matchService,
                                    ArenaCleaningService arenaCleaningService,
+                                   ArenaCleaningVisualEffect arenaCleaningVisualEffect,
                                    ArenaBaselineService arenaBaselineService,
                                    ArenaSetupService arenaSetupService,
                                    ArenaSafetyZone arenaSafetyZone,
@@ -46,6 +50,8 @@ public final class PluginLiveConfiguration implements LiveConfiguration {
         this.kitConfigurationLoader = Objects.requireNonNull(kitConfigurationLoader, "kitConfigurationLoader");
         this.matchService = Objects.requireNonNull(matchService, "matchService");
         this.arenaCleaningService = Objects.requireNonNull(arenaCleaningService, "arenaCleaningService");
+        this.arenaCleaningVisualEffect = Objects.requireNonNull(arenaCleaningVisualEffect,
+                "arenaCleaningVisualEffect");
         this.arenaBaselineService = Objects.requireNonNull(arenaBaselineService, "arenaBaselineService");
         this.arenaSetupService = Objects.requireNonNull(arenaSetupService, "arenaSetupService");
         this.arenaSafetyZone = Objects.requireNonNull(arenaSafetyZone, "arenaSafetyZone");
@@ -73,6 +79,11 @@ public final class PluginLiveConfiguration implements LiveConfiguration {
     @Override
     public void setArenaBaselineBlocksPerTick(int blocksPerTick) {
         arenaBaselineService.setBlocksPerTick(blocksPerTick);
+    }
+
+    @Override
+    public void setArenaCleaningParticleSettings(ArenaCleaningParticleSettings settings) {
+        arenaCleaningVisualEffect.applyParticleSettings(settings, problemReporter);
     }
 
     @Override

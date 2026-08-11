@@ -366,12 +366,59 @@ class ArenaShapeFloodFillTest {
     }
 
     @Test
+    void anchorsTheCleanedVolumeAtTheWallNoMatterWhichHeightTheFillRanAt() {
+        BorderWall wall = new BorderWall()
+                .addRectangleOutline(0, 0, 4, 4, SEED_HEIGHT)
+                .addRectangleOutline(0, 0, 4, 4, SEED_HEIGHT + 1)
+                .addRectangleOutline(0, 0, 4, 4, SEED_HEIGHT + 2);
+
+        ArenaShape fromTheFloor = calculateFrom(wall, 2, SEED_HEIGHT, 2).getShape().orElseThrow();
+        ArenaShape fromAboveTheWall = calculateFrom(wall, 2, SEED_HEIGHT + 20, 2).getShape().orElseThrow();
+
+        assertEquals(SEED_HEIGHT, fromAboveTheWall.getFloorY(), "the bottom of the wall is the floor");
+        assertEquals(SEED_HEIGHT + 2, fromAboveTheWall.getWallTopY(), "the top of the wall is the top");
+        assertEquals(fromTheFloor.getFloorY(), fromAboveTheWall.getFloorY());
+        assertEquals(fromTheFloor.getWallTopY(), fromAboveTheWall.getWallTopY());
+        assertEquals(9L * 3, fromAboveTheWall.getBlockCount());
+        assertEquals(SEED_HEIGHT + 20, fromAboveTheWall.getReferenceY(),
+                "the height the fill ran at is kept, the wall recognition still runs on it");
+    }
+
+    @Test
+    void takesTheVolumeOfAWallThatStandsBelowTheHeightOfTheFill() {
+        BorderWall wall = new BorderWall().addRectangleOutline(0, 0, 4, 4, SEED_HEIGHT - 2);
+
+        ArenaShape shape = calculateFrom(wall, 2, SEED_HEIGHT, 2).getShape().orElseThrow();
+
+        assertEquals(SEED_HEIGHT - 2, shape.getFloorY());
+        assertEquals(SEED_HEIGHT - 2, shape.getWallTopY());
+        assertEquals(9L, shape.getBlockCount());
+        assertTrue(shape.getFloorY() <= shape.getReferenceY(),
+                "the floor never lies above the height the calculation ran at");
+    }
+
+    @Test
+    void takesTheLowestBlockOfTheWholeWallAsTheFloor() {
+        BorderWall wall = new BorderWall().addRectangleOutline(0, 0, 4, 4, SEED_HEIGHT);
+        wall.add(2, 0, SEED_HEIGHT - 4);
+
+        ArenaShape shape = calculateFrom(wall, 2, SEED_HEIGHT + 9, 2).getShape().orElseThrow();
+
+        assertEquals(SEED_HEIGHT - 4, shape.getFloorY());
+        assertEquals(SEED_HEIGHT, shape.getWallTopY());
+    }
+
+    @Test
     void fillsASingleCellRoom() {
         ArenaShape shape = calculate(BorderWall.around(BorderWall.cells(7, -3), SEED_HEIGHT), 7, -3, 1000)
                 .getShape().orElseThrow();
 
         assertEquals(1, shape.getCellCount());
         assertTrue(shape.containsCell(7, -3));
+    }
+
+    private ArenaShapeCalculation calculateFrom(BorderWall wall, int seedX, int seedY, int seedZ) {
+        return ArenaShapeFloodFill.calculate(WORLD_NAME, seedX, seedY, seedZ, 1000, wall);
     }
 
     private ArenaShapeCalculation calculate(BorderWall wall, int seedX, int seedZ, int maximumCellCount) {

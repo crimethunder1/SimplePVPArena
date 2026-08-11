@@ -6,6 +6,7 @@ import org.bukkit.scheduler.BukkitTask;
 
 import java.util.Optional;
 import java.util.function.Consumer;
+import java.util.logging.Level;
 
 public final class ArenaBaselineService {
 
@@ -74,19 +75,34 @@ public final class ArenaBaselineService {
                     + " is not loaded"));
             return;
         }
-        int remainingBlocksOfThisTick = blocksPerTick;
-        while (remainingBlocksOfThisTick > 0 && cursor.hasRemainingBlocks()) {
-            long[] batch = cursor.nextBatch(remainingBlocksOfThisTick);
-            remainingBlocksOfThisTick -= batch.length;
-            readBatch(world, batch, builder);
-        }
-        if (cursor.hasRemainingBlocks()) {
+        ArenaBaselineSnapshot snapshot;
+        try {
+            int remainingBlocksOfThisTick = blocksPerTick;
+            while (remainingBlocksOfThisTick > 0 && cursor.hasRemainingBlocks()) {
+                long[] batch = cursor.nextBatch(remainingBlocksOfThisTick);
+                remainingBlocksOfThisTick -= batch.length;
+                readBatch(world, batch, builder);
+            }
+            if (cursor.hasRemainingBlocks()) {
+                return;
+            }
+            snapshot = builder.build();
+        } catch (RuntimeException failure) {
+            plugin.getLogger().log(Level.SEVERE, "The baseline of the fight area in " + shape.getWorldName()
+                    + " could not be taken", failure);
+            stopCapture();
+            completionHandler.accept(ArenaBaselineReport.failed(describeFailure(failure)));
             return;
         }
         stopCapture();
-        ArenaBaselineSnapshot snapshot = builder.build();
         baselineRegistry.store(snapshot);
         completionHandler.accept(ArenaBaselineReport.captured(snapshot));
+    }
+
+    private static String describeFailure(RuntimeException failure) {
+        String message = failure.getMessage();
+        return "its blocks could not be read ("
+                + (message == null || message.isBlank() ? failure.getClass().getSimpleName() : message) + ")";
     }
 
     private void readBatch(World world, long[] batch, ArenaBaselineSnapshotBuilder builder) {

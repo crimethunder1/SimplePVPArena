@@ -1,6 +1,7 @@
 package de.simplepvparena.config;
 
 import de.simplepvparena.arena.ArenaBaselineService;
+import de.simplepvparena.arena.ArenaCleaningParticleSettings;
 import de.simplepvparena.arena.ArenaCleaningService;
 import de.simplepvparena.arena.ArenaSafetyZone;
 import de.simplepvparena.arena.ArenaShapeFloodFill;
@@ -17,6 +18,7 @@ public record PluginSettings(long roundResetDelayTicks,
                              RoundTimeoutSettings roundTimeoutSettings,
                              int arenaCleaningBlocksPerTick,
                              int arenaBaselineBlocksPerTick,
+                             ArenaCleaningParticleSettings arenaCleaningParticleSettings,
                              int maximumArenaCellCount,
                              int safetyZoneRadius,
                              long borderParticlePeriodTicks,
@@ -57,6 +59,10 @@ public record PluginSettings(long roundResetDelayTicks,
             SUDDEN_DEATH_DAMAGE_INCREASE_PATH,
             ARENA_CLEAN_BLOCKS_PER_TICK_PATH,
             ARENA_BASELINE_BLOCKS_PER_TICK_PATH,
+            ArenaCleaningParticleSettings.ENABLED_CONFIGURATION_PATH,
+            ArenaCleaningParticleSettings.TYPE_CONFIGURATION_PATH,
+            ArenaCleaningParticleSettings.HEIGHT_CONFIGURATION_PATH,
+            ArenaCleaningParticleSettings.COLUMNS_PER_TICK_CONFIGURATION_PATH,
             ARENA_MAXIMUM_CELLS_PATH,
             ARENA_SAFETY_ZONE_RADIUS_PATH,
             BORDER_PARTICLE_PERIOD_PATH,
@@ -75,6 +81,7 @@ public record PluginSettings(long roundResetDelayTicks,
                 RoundTimeoutSettings.defaults(),
                 ArenaCleaningService.DEFAULT_BLOCKS_PER_TICK,
                 ArenaBaselineService.DEFAULT_BLOCKS_PER_TICK,
+                ArenaCleaningParticleSettings.defaults(),
                 ArenaShapeFloodFill.DEFAULT_MAXIMUM_CELL_COUNT,
                 ArenaSafetyZone.DEFAULT_RADIUS,
                 BorderParticleService.DEFAULT_PERIOD_TICKS,
@@ -95,6 +102,7 @@ public record PluginSettings(long roundResetDelayTicks,
                 readRoundTimeoutSettings(configuration, problemReporter),
                 configuration.getInt(ARENA_CLEAN_BLOCKS_PER_TICK_PATH, shipped.arenaCleaningBlocksPerTick()),
                 configuration.getInt(ARENA_BASELINE_BLOCKS_PER_TICK_PATH, shipped.arenaBaselineBlocksPerTick()),
+                readArenaCleaningParticleSettings(configuration, problemReporter),
                 readMaximumArenaCellCount(configuration, problemReporter),
                 readSafetyZoneRadius(configuration, problemReporter),
                 configuration.getLong(BORDER_PARTICLE_PERIOD_PATH, shipped.borderParticlePeriodTicks()),
@@ -113,6 +121,7 @@ public record PluginSettings(long roundResetDelayTicks,
         liveConfiguration.setRoundTimeoutSettings(roundTimeoutSettings);
         liveConfiguration.setArenaCleaningBlocksPerTick(arenaCleaningBlocksPerTick);
         liveConfiguration.setArenaBaselineBlocksPerTick(arenaBaselineBlocksPerTick);
+        liveConfiguration.setArenaCleaningParticleSettings(arenaCleaningParticleSettings);
         liveConfiguration.setMaximumArenaCellCount(maximumArenaCellCount);
         liveConfiguration.setSafetyZoneRadius(safetyZoneRadius);
         liveConfiguration.setBorderParticlePeriodTicks(borderParticlePeriodTicks);
@@ -143,6 +152,34 @@ public record PluginSettings(long roundResetDelayTicks,
         problemReporter.accept(ARENA_SAFETY_ZONE_RADIUS_PATH + " cannot be negative, falling back to "
                 + ArenaSafetyZone.DEFAULT_RADIUS + " blocks. Use zero to switch the safety zone off");
         return ArenaSafetyZone.DEFAULT_RADIUS;
+    }
+
+    private static ArenaCleaningParticleSettings readArenaCleaningParticleSettings(
+            ConfigurationSection configuration, Consumer<String> problemReporter) {
+        ArenaCleaningParticleSettings defaults = ArenaCleaningParticleSettings.defaults();
+        double height = configuration.getDouble(ArenaCleaningParticleSettings.HEIGHT_CONFIGURATION_PATH,
+                defaults.height());
+        if (height < 0.0D) {
+            problemReporter.accept(ArenaCleaningParticleSettings.HEIGHT_CONFIGURATION_PATH
+                    + " cannot be negative, falling back to " + defaults.height()
+                    + " blocks. Use " + ArenaCleaningParticleSettings.ENABLED_CONFIGURATION_PATH
+                    + " to switch the effect off");
+            height = defaults.height();
+        }
+        int columnsPerTick = configuration.getInt(
+                ArenaCleaningParticleSettings.COLUMNS_PER_TICK_CONFIGURATION_PATH, defaults.columnsPerTick());
+        if (columnsPerTick < 0) {
+            problemReporter.accept(ArenaCleaningParticleSettings.COLUMNS_PER_TICK_CONFIGURATION_PATH
+                    + " cannot be negative, falling back to " + defaults.columnsPerTick()
+                    + " columns per tick. Use zero to draw none");
+            columnsPerTick = defaults.columnsPerTick();
+        }
+        return new ArenaCleaningParticleSettings(
+                configuration.getBoolean(ArenaCleaningParticleSettings.ENABLED_CONFIGURATION_PATH,
+                        defaults.enabled()),
+                configuration.getString(ArenaCleaningParticleSettings.TYPE_CONFIGURATION_PATH,
+                        defaults.particleName()),
+                height, columnsPerTick);
     }
 
     private static RoundTimeoutSettings readRoundTimeoutSettings(ConfigurationSection configuration,

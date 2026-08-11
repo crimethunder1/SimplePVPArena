@@ -1,5 +1,6 @@
 package de.simplepvparena.border;
 
+import de.simplepvparena.particle.ParticleTypes;
 import org.bukkit.Color;
 import org.bukkit.Particle;
 import org.junit.jupiter.api.Test;
@@ -73,7 +74,7 @@ class ConfirmedBorderParticleTest {
     @Test
     void supportsEveryParticleTheConfigurationOffers() {
         for (String particleName : List.of("END_ROD", "FLAME", "ELECTRIC_SPARK", "SOUL_FIRE_FLAME", "CRIT", "DUST")) {
-            Optional<Particle> particle = ConfirmedBorderParticle.byName(particleName);
+            Optional<Particle> particle = ParticleTypes.byName(particleName);
             assertTrue(particle.isPresent(), particleName + " is no particle of this server version");
             assertTrue(ConfirmedBorderParticle.isSupported(particle.orElseThrow()),
                     particleName + " is offered by config.yml but cannot be drawn");
@@ -82,10 +83,10 @@ class ConfirmedBorderParticleTest {
 
     @Test
     void tellsTheColourlessParticlesFromTheColouredOne() {
-        assertTrue(ConfirmedBorderParticle.carriesNoData(ConfirmedBorderParticle.DEFAULT_PARTICLE));
+        assertTrue(ParticleTypes.carriesNoData(ConfirmedBorderParticle.DEFAULT_PARTICLE));
         assertFalse(ConfirmedBorderParticle.carriesColour(ConfirmedBorderParticle.DEFAULT_PARTICLE));
         assertTrue(ConfirmedBorderParticle.carriesColour(Particle.DUST));
-        assertFalse(ConfirmedBorderParticle.carriesNoData(Particle.DUST));
+        assertFalse(ParticleTypes.carriesNoData(Particle.DUST));
     }
 
     @Test

@@ -1,5 +1,6 @@
 package de.simplepvparena.config;
 
+import de.simplepvparena.arena.ArenaCleaningParticleSettings;
 import de.simplepvparena.border.ConfirmedBorderParticleSettings;
 import de.simplepvparena.match.RoundTimeoutSettings;
 import org.bukkit.configuration.ConfigurationSection;
@@ -32,6 +33,8 @@ class ConfigurationReloadServiceTest {
         assertEquals(new RoundTimeoutSettings(120, 30, 3.5D, 0.5D), liveConfiguration.roundTimeoutSettings());
         assertEquals(1024, liveConfiguration.intValueOf(RecordingLiveConfiguration.CLEANING_BLOCKS_PER_TICK));
         assertEquals(2048, liveConfiguration.intValueOf(RecordingLiveConfiguration.BASELINE_BLOCKS_PER_TICK));
+        assertEquals(new ArenaCleaningParticleSettings(false, "COMPOSTER", 8.0D, 3),
+                liveConfiguration.arenaCleaningParticleSettings());
         assertEquals(12345, liveConfiguration.intValueOf(RecordingLiveConfiguration.MAXIMUM_CELL_COUNT));
         assertEquals(17, liveConfiguration.intValueOf(RecordingLiveConfiguration.SAFETY_ZONE_RADIUS));
         assertEquals(11L, liveConfiguration.longValueOf(RecordingLiveConfiguration.PARTICLE_PERIOD));

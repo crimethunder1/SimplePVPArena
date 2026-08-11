@@ -10,6 +10,7 @@ import org.bukkit.World;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -207,16 +208,18 @@ public final class ArenaSetupService {
     }
 
     public List<String> describeCleaningEffect() {
-        if (!hasBaseline()) {
-            return List.of("No baseline is stored, every block of the",
-                    "fight area is set to air",
-                    "A baseline is taken by the calculation and is",
-                    "gone after a server restart");
-        }
-        return List.of("Restores every block of the fight area to the",
-                "state the last calculation found",
-                "Blocks placed since then become air again,",
-                "broken ones come back");
+        List<String> effect = new ArrayList<>(hasBaseline()
+                ? List.of("Restores every block of the fight area to the",
+                        "state the last calculation found",
+                        "Blocks placed since then become air again,",
+                        "broken ones come back")
+                : List.of("No baseline is stored, every block of the",
+                        "fight area is set to air",
+                        "A baseline is taken by the calculation and is",
+                        "gone after a server restart"));
+        getShape().ifPresent(shape -> effect.add("Covers y " + shape.getFloorY() + " to y "
+                + shape.getWallTopY() + ", the height of the border wall"));
+        return effect;
     }
 
     public boolean startCleaning(CommandSender sender) {
@@ -231,7 +234,7 @@ public final class ArenaSetupService {
         ArenaCleaningTarget cleaningTarget = baseline.map(ArenaCleaningTarget.class::cast)
                 .orElse(ArenaCleaningTarget.EMPTY_ARENA);
         boolean cleaningStarted = arenaCleaningService.startCleaning(shape, cleaningTarget,
-                report -> sender.sendMessage("The arena is clean, " + report.describe()));
+                report -> sender.sendMessage(report.describeOutcome()));
         if (!cleaningStarted) {
             sender.sendMessage("The arena cleaning could not be started");
             return false;
@@ -242,7 +245,8 @@ public final class ArenaSetupService {
                 .orElse("No baseline of the fight area is stored, every block of it is set to air instead. "
                         + "A baseline is taken by " + Arena.CALCULATE_ACTION + " and does not survive a server "
                         + "restart"));
-        sender.sendMessage("Cleaning the arena, " + blockCount + " blocks are processed in batches of "
+        sender.sendMessage("Cleaning the arena, " + blockCount + " blocks between y " + shape.getFloorY()
+                + " and y " + shape.getWallTopY() + " are processed in batches of "
                 + arenaCleaningService.getBlocksPerTick() + " per tick");
         return true;
     }

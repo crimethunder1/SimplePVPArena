@@ -1,6 +1,6 @@
 package de.simplepvparena.border;
 
-import java.util.Locale;
+import de.simplepvparena.particle.ParticleNames;
 
 public record ConfirmedBorderParticleSettings(String particleName, double height, int red, int green, int blue) {
 
@@ -24,12 +24,8 @@ public record ConfirmedBorderParticleSettings(String particleName, double height
 
     public static final int PARTICLE_COUNT = 3;
 
-    private static final char NAME_SEPARATOR = '_';
-
-    private static final char NAMESPACE_SEPARATOR = ':';
-
     public ConfirmedBorderParticleSettings {
-        particleName = normalizeParticleName(particleName);
+        particleName = ParticleNames.normalize(particleName, DEFAULT_PARTICLE_NAME);
         height = normalizeHeight(height);
         red = clampColourChannel(red);
         green = clampColourChannel(green);
@@ -47,18 +43,6 @@ public record ConfirmedBorderParticleSettings(String particleName, double height
 
     public int drawnParticleCount() {
         return height > 0.0D ? PARTICLE_COUNT : 1;
-    }
-
-    private static String normalizeParticleName(String particleName) {
-        if (particleName == null) {
-            return DEFAULT_PARTICLE_NAME;
-        }
-        String withoutNamespace = particleName.substring(particleName.lastIndexOf(NAMESPACE_SEPARATOR) + 1);
-        String normalized = withoutNamespace.trim()
-                .toUpperCase(Locale.ROOT)
-                .replace('-', NAME_SEPARATOR)
-                .replace(' ', NAME_SEPARATOR);
-        return normalized.isEmpty() ? DEFAULT_PARTICLE_NAME : normalized;
     }
 
     private static double normalizeHeight(double height) {

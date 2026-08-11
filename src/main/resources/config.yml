@@ -36,6 +36,11 @@ kit:
 arena:
   clean-blocks-per-tick: 4096
   baseline-blocks-per-tick: 16384
+  clean-particle:
+    enabled: true
+    type: WITCH
+    height: 20.0
+    columns-per-tick: 6
   shape-maximum-cells: 50000
   safety-zone-radius: 64
   shape: {}

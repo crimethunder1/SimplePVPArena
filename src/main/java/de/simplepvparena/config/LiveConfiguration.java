@@ -1,5 +1,6 @@
 package de.simplepvparena.config;
 
+import de.simplepvparena.arena.ArenaCleaningParticleSettings;
 import de.simplepvparena.border.ConfirmedBorderParticleSettings;
 import de.simplepvparena.match.RoundTimeoutSettings;
 import org.bukkit.configuration.ConfigurationSection;
@@ -13,6 +14,8 @@ public interface LiveConfiguration {
     void setArenaCleaningBlocksPerTick(int blocksPerTick);
 
     void setArenaBaselineBlocksPerTick(int blocksPerTick);
+
+    void setArenaCleaningParticleSettings(ArenaCleaningParticleSettings settings);
 
     void setMaximumArenaCellCount(int maximumArenaCellCount);
 

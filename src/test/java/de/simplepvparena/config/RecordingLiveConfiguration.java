@@ -1,5 +1,6 @@
 package de.simplepvparena.config;
 
+import de.simplepvparena.arena.ArenaCleaningParticleSettings;
 import de.simplepvparena.border.ConfirmedBorderParticleSettings;
 import de.simplepvparena.match.RoundTimeoutSettings;
 import org.bukkit.configuration.ConfigurationSection;
@@ -15,6 +16,7 @@ final class RecordingLiveConfiguration implements LiveConfiguration {
     static final String ROUND_TIMEOUT = "roundTimeoutSettings";
     static final String CLEANING_BLOCKS_PER_TICK = "arenaCleaningBlocksPerTick";
     static final String BASELINE_BLOCKS_PER_TICK = "arenaBaselineBlocksPerTick";
+    static final String CLEANING_PARTICLE = "arenaCleaningParticleSettings";
     static final String MAXIMUM_CELL_COUNT = "maximumArenaCellCount";
     static final String SAFETY_ZONE_RADIUS = "safetyZoneRadius";
     static final String PARTICLE_PERIOD = "borderParticlePeriodTicks";
@@ -27,7 +29,7 @@ final class RecordingLiveConfiguration implements LiveConfiguration {
 
     static final List<String> EVERY_APPLIED_VALUE = List.of(
             ROUND_RESET_DELAY, ROUND_TIMEOUT, CLEANING_BLOCKS_PER_TICK, BASELINE_BLOCKS_PER_TICK,
-            MAXIMUM_CELL_COUNT, SAFETY_ZONE_RADIUS, PARTICLE_PERIOD, PARTICLE_VIEW_RADIUS,
+            CLEANING_PARTICLE, MAXIMUM_CELL_COUNT, SAFETY_ZONE_RADIUS, PARTICLE_PERIOD, PARTICLE_VIEW_RADIUS,
             PARTICLE_MAXIMUM_BLOCKS, PARTICLE_MAXIMUM_LINES, WALL_PREVIEW_DURATION, CONFIRMED_PARTICLE, KIT);
 
     private final Map<String, Object> appliedValues = new LinkedHashMap<>();
@@ -51,6 +53,11 @@ final class RecordingLiveConfiguration implements LiveConfiguration {
     @Override
     public void setArenaBaselineBlocksPerTick(int blocksPerTick) {
         appliedValues.put(BASELINE_BLOCKS_PER_TICK, blocksPerTick);
+    }
+
+    @Override
+    public void setArenaCleaningParticleSettings(ArenaCleaningParticleSettings settings) {
+        appliedValues.put(CLEANING_PARTICLE, settings);
     }
 
     @Override
@@ -116,6 +123,10 @@ final class RecordingLiveConfiguration implements LiveConfiguration {
 
     RoundTimeoutSettings roundTimeoutSettings() {
         return (RoundTimeoutSettings) appliedValues.get(ROUND_TIMEOUT);
+    }
+
+    ArenaCleaningParticleSettings arenaCleaningParticleSettings() {
+        return (ArenaCleaningParticleSettings) appliedValues.get(CLEANING_PARTICLE);
     }
 
     ConfirmedBorderParticleSettings confirmedBorderParticleSettings() {

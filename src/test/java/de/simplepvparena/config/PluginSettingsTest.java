@@ -1,6 +1,7 @@
 package de.simplepvparena.config;
 
 import de.simplepvparena.arena.ArenaBaselineService;
+import de.simplepvparena.arena.ArenaCleaningParticleSettings;
 import de.simplepvparena.arena.ArenaCleaningService;
 import de.simplepvparena.arena.ArenaSafetyZone;
 import de.simplepvparena.arena.ArenaShapeFloodFill;
@@ -14,6 +15,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class PluginSettingsTest {
@@ -31,6 +33,8 @@ class PluginSettingsTest {
         assertEquals(new RoundTimeoutSettings(120, 30, 3.5D, 0.5D), settings.roundTimeoutSettings());
         assertEquals(1024, settings.arenaCleaningBlocksPerTick());
         assertEquals(2048, settings.arenaBaselineBlocksPerTick());
+        assertEquals(new ArenaCleaningParticleSettings(false, "COMPOSTER", 8.0D, 3),
+                settings.arenaCleaningParticleSettings());
         assertEquals(12345, settings.maximumArenaCellCount());
         assertEquals(17, settings.safetyZoneRadius());
         assertEquals(11L, settings.borderParticlePeriodTicks());
@@ -52,6 +56,7 @@ class PluginSettingsTest {
         assertTrue(!shipped.roundTimeoutSettings().equals(settings.roundTimeoutSettings()));
         assertTrue(shipped.arenaCleaningBlocksPerTick() != settings.arenaCleaningBlocksPerTick());
         assertTrue(shipped.arenaBaselineBlocksPerTick() != settings.arenaBaselineBlocksPerTick());
+        assertTrue(!shipped.arenaCleaningParticleSettings().equals(settings.arenaCleaningParticleSettings()));
         assertTrue(shipped.maximumArenaCellCount() != settings.maximumArenaCellCount());
         assertTrue(shipped.safetyZoneRadius() != settings.safetyZoneRadius());
         assertTrue(shipped.borderParticlePeriodTicks() != settings.borderParticlePeriodTicks());
@@ -153,6 +158,37 @@ class PluginSettingsTest {
     }
 
     @Test
+    void aCleaningEffectTurnedDownToNothingIsAcceptedAndANegativeOneIsReported() {
+        MemoryConfiguration switchedOff = new MemoryConfiguration();
+        switchedOff.set(ArenaCleaningParticleSettings.COLUMNS_PER_TICK_CONFIGURATION_PATH, 0);
+        switchedOff.set(ArenaCleaningParticleSettings.HEIGHT_CONFIGURATION_PATH, 0.0D);
+
+        ArenaCleaningParticleSettings settings =
+                PluginSettings.read(switchedOff, problems::add).arenaCleaningParticleSettings();
+
+        assertEquals(List.of(), problems);
+        assertEquals(0, settings.columnsPerTick());
+        assertEquals(0.0D, settings.height());
+        assertFalse(settings.isShown(), "no column per tick is a cleaning without an effect");
+
+        MemoryConfiguration negative = new MemoryConfiguration();
+        negative.set(ArenaCleaningParticleSettings.COLUMNS_PER_TICK_CONFIGURATION_PATH, -3);
+        negative.set(ArenaCleaningParticleSettings.HEIGHT_CONFIGURATION_PATH, -1.0D);
+
+        ArenaCleaningParticleSettings answered =
+                PluginSettings.read(negative, problems::add).arenaCleaningParticleSettings();
+
+        assertEquals(ArenaCleaningParticleSettings.defaults(), answered);
+        assertEquals(2, problems.size(), "both broken entries are reported: " + problems);
+        assertTrue(problems.stream().anyMatch(problem ->
+                        problem.startsWith(ArenaCleaningParticleSettings.HEIGHT_CONFIGURATION_PATH)),
+                "the problem has to name the entry an admin fixes: " + problems);
+        assertTrue(problems.stream().anyMatch(problem ->
+                        problem.startsWith(ArenaCleaningParticleSettings.COLUMNS_PER_TICK_CONFIGURATION_PATH)),
+                problems.toString());
+    }
+
+    @Test
     void everyBrokenEntryOfOneFileIsReportedAndAnswered() {
         MemoryConfiguration configuration = new MemoryConfiguration();
         configuration.set(PluginSettings.ARENA_MAXIMUM_CELLS_PATH, -5);
@@ -194,6 +230,10 @@ class PluginSettingsTest {
         configuration.set(PluginSettings.SUDDEN_DEATH_DAMAGE_INCREASE_PATH, 0.5D);
         configuration.set(PluginSettings.ARENA_CLEAN_BLOCKS_PER_TICK_PATH, 1024);
         configuration.set(PluginSettings.ARENA_BASELINE_BLOCKS_PER_TICK_PATH, 2048);
+        configuration.set(ArenaCleaningParticleSettings.ENABLED_CONFIGURATION_PATH, false);
+        configuration.set(ArenaCleaningParticleSettings.TYPE_CONFIGURATION_PATH, "minecraft:composter");
+        configuration.set(ArenaCleaningParticleSettings.HEIGHT_CONFIGURATION_PATH, 8.0D);
+        configuration.set(ArenaCleaningParticleSettings.COLUMNS_PER_TICK_CONFIGURATION_PATH, 3);
         configuration.set(PluginSettings.ARENA_MAXIMUM_CELLS_PATH, 12345);
         configuration.set(PluginSettings.ARENA_SAFETY_ZONE_RADIUS_PATH, 17);
         configuration.set(PluginSettings.BORDER_PARTICLE_PERIOD_PATH, 11);

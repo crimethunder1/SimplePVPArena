@@ -123,6 +123,45 @@ class ArenaRegistryTest {
     }
 
     @Test
+    void writesAndReadsTheFloorOfTheCleanedVolume() {
+        ArenaRegistry registry = new ArenaRegistry();
+        registry.getArena().setShape(new ArenaShape("world", 90, 64, 70,
+                new long[] {HorizontalCellCodec.encode(0, 0), HorizontalCellCodec.encode(1, 0)}));
+
+        MemoryConfiguration configuration = new MemoryConfiguration();
+        registry.saveToConfiguration(configuration);
+
+        assertEquals(90, configuration.getInt("arena.shape.reference-y"));
+        assertEquals(64, configuration.getInt("arena.shape.floor-y"));
+
+        ArenaRegistry reloadedRegistry = new ArenaRegistry();
+        reloadedRegistry.loadFromConfiguration(configuration);
+        ArenaShape reloadedShape = reloadedRegistry.getArena().getShape().orElseThrow();
+
+        assertEquals(90, reloadedShape.getReferenceY());
+        assertEquals(64, reloadedShape.getFloorY());
+        assertEquals(70, reloadedShape.getWallTopY());
+        assertEquals(2L * 7, reloadedShape.getBlockCount());
+    }
+
+    @Test
+    void readsAShapeWithoutAStoredFloorWithTheReferenceHeightAsItsFloor() {
+        MemoryConfiguration configuration = new MemoryConfiguration();
+        configuration.set("arena.shape.world", "world");
+        configuration.set("arena.shape.reference-y", 64);
+        configuration.set("arena.shape.wall-top-y", 70);
+        configuration.set("arena.shape.rows", List.of("0:0..1"));
+
+        ArenaRegistry registry = new ArenaRegistry();
+        registry.loadFromConfiguration(configuration);
+        ArenaShape shape = registry.getArena().getShape().orElseThrow();
+
+        assertEquals(64, shape.getFloorY());
+        assertEquals(70, shape.getWallTopY());
+        assertTrue(registry.getShapeLoadFailure().isEmpty());
+    }
+
+    @Test
     void startsWithAnUnconfiguredArenaWhenTheSectionIsMissing() {
         ArenaRegistry registry = new ArenaRegistry();
         registry.loadFromConfiguration(new MemoryConfiguration());

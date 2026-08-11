@@ -16,6 +16,7 @@ public final class ArenaRegistry {
     private static final String SHAPE_SECTION = "shape";
     private static final String SHAPE_WORLD_KEY = "world";
     private static final String SHAPE_REFERENCE_Y_KEY = "reference-y";
+    private static final String SHAPE_FLOOR_Y_KEY = "floor-y";
     private static final String SHAPE_WALL_TOP_Y_KEY = "wall-top-y";
     private static final String SHAPE_ROWS_KEY = "rows";
     private static final String SPAWNS_SECTION = "spawns";
@@ -106,9 +107,10 @@ public final class ArenaRegistry {
         if (worldName == null || rows.isEmpty()) {
             return Optional.empty();
         }
+        int referenceY = shapeSection.getInt(SHAPE_REFERENCE_Y_KEY);
         try {
-            return Optional.of(new ArenaShape(worldName,
-                    shapeSection.getInt(SHAPE_REFERENCE_Y_KEY),
+            return Optional.of(new ArenaShape(worldName, referenceY,
+                    shapeSection.getInt(SHAPE_FLOOR_Y_KEY, referenceY),
                     shapeSection.getInt(SHAPE_WALL_TOP_Y_KEY),
                     ArenaShapeCodec.decodeRows(rows)));
         } catch (IllegalArgumentException failure) {
@@ -120,6 +122,7 @@ public final class ArenaRegistry {
     private void writeShape(ConfigurationSection shapeSection, ArenaShape shape) {
         shapeSection.set(SHAPE_WORLD_KEY, shape.getWorldName());
         shapeSection.set(SHAPE_REFERENCE_Y_KEY, shape.getReferenceY());
+        shapeSection.set(SHAPE_FLOOR_Y_KEY, shape.getFloorY());
         shapeSection.set(SHAPE_WALL_TOP_Y_KEY, shape.getWallTopY());
         shapeSection.set(SHAPE_ROWS_KEY, ArenaShapeCodec.encodeRows(shape.getCells()));
     }

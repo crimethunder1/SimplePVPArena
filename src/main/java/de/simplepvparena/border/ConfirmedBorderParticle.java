@@ -1,5 +1,6 @@
 package de.simplepvparena.border;
 
+import de.simplepvparena.particle.ParticleTypes;
 import org.bukkit.Color;
 import org.bukkit.Location;
 import org.bukkit.Particle;
@@ -78,7 +79,7 @@ public final class ConfirmedBorderParticle {
     }
 
     private static Particle resolveParticle(String particleName, Consumer<String> problemReporter) {
-        Optional<Particle> namedParticle = byName(particleName);
+        Optional<Particle> namedParticle = ParticleTypes.byName(particleName);
         if (namedParticle.isEmpty()) {
             problemReporter.accept(ConfirmedBorderParticleSettings.TYPE_CONFIGURATION_PATH + " is set to "
                     + particleName + ", which is no particle of this server version. Falling back to "
@@ -96,27 +97,12 @@ public final class ConfirmedBorderParticle {
         return particle;
     }
 
-    static Optional<Particle> byName(String particleName) {
-        if (particleName == null) {
-            return Optional.empty();
-        }
-        try {
-            return Optional.of(Particle.valueOf(particleName));
-        } catch (IllegalArgumentException unknownParticle) {
-            return Optional.empty();
-        }
-    }
-
     static boolean isSupported(Particle particle) {
-        return carriesNoData(particle) || carriesColour(particle);
+        return ParticleTypes.carriesNoData(particle) || carriesColour(particle);
     }
 
     static boolean carriesColour(Particle particle) {
-        return particle.getDataType() == Particle.DustOptions.class;
-    }
-
-    static boolean carriesNoData(Particle particle) {
-        return particle.getDataType() == Void.class;
+        return ParticleTypes.carriesColour(particle);
     }
 
     private void spawnDotAt(Player player, Location streamPoint) {

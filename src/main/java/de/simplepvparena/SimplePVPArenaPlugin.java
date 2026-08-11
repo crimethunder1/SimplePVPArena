@@ -5,12 +5,14 @@ import de.simplepvparena.arena.ArenaBaselineRegistry;
 import de.simplepvparena.arena.ArenaBaselineService;
 import de.simplepvparena.arena.ArenaBorderConfirmation;
 import de.simplepvparena.arena.ArenaCleaningService;
+import de.simplepvparena.arena.ArenaCleaningVisualEffect;
 import de.simplepvparena.arena.ArenaGapGuide;
 import de.simplepvparena.arena.ArenaRegistry;
 import de.simplepvparena.arena.ArenaSafetyZone;
 import de.simplepvparena.arena.ArenaSetupService;
 import de.simplepvparena.arena.SpectatorItemFactory;
 import de.simplepvparena.arena.SpectatorService;
+import de.simplepvparena.arena.VanillaArenaCleaningVisualEffect;
 import de.simplepvparena.border.BorderMarkIndex;
 import de.simplepvparena.border.BorderMarkStorage;
 import de.simplepvparena.border.BorderParticleService;
@@ -70,6 +72,7 @@ public final class SimplePVPArenaPlugin extends JavaPlugin {
     private BorderParticleService borderParticleService;
     private BorderWallPreview borderWallPreview;
     private ArenaCleaningService arenaCleaningService;
+    private ArenaCleaningVisualEffect arenaCleaningVisualEffect;
     private ArenaBaselineService arenaBaselineService;
     private ArenaGapGuide arenaGapGuide;
     private ArenaSafetyZone arenaSafetyZone;
@@ -106,7 +109,9 @@ public final class SimplePVPArenaPlugin extends JavaPlugin {
         arenaBorderConfirmation = new ArenaBorderConfirmation(arenaRegistry.getArena()::hasShape);
         spectatorBorderService = new SpectatorBorderService(this, borderMarkIndex, this::onBorderMarksChanged);
 
-        arenaCleaningService = new ArenaCleaningService(this, spectatorBorderService::clearMarksInShape);
+        arenaCleaningVisualEffect = new VanillaArenaCleaningVisualEffect();
+        arenaCleaningService = new ArenaCleaningService(this, spectatorBorderService::clearMarksInShape,
+                arenaCleaningVisualEffect);
 
         arenaBaselineService = new ArenaBaselineService(this, new ArenaBaselineRegistry());
 
@@ -134,8 +139,9 @@ public final class SimplePVPArenaPlugin extends JavaPlugin {
 
         configurationReloadService = new ConfigurationReloadService(this::getConfig, this::reloadConfig,
                 new PluginLiveConfiguration(kitService, new KitConfigurationLoader(getLogger()), matchService,
-                        arenaCleaningService, arenaBaselineService, arenaSetupService, arenaSafetyZone,
-                        borderParticleService, borderWallPreview, borderVisualEffect, getLogger()::warning),
+                        arenaCleaningService, arenaCleaningVisualEffect, arenaBaselineService, arenaSetupService,
+                        arenaSafetyZone, borderParticleService, borderWallPreview, borderVisualEffect,
+                        getLogger()::warning),
                 getLogger()::warning);
         configurationReloadService.applyStoredConfiguration();
 

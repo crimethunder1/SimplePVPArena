@@ -9,17 +9,23 @@ public final class ArenaShape {
 
     private final String worldName;
     private final int referenceY;
+    private final int floorY;
     private final int wallTopY;
     private final long[] cells;
 
     public ArenaShape(String worldName, int referenceY, int wallTopY, long[] cells) {
+        this(worldName, referenceY, referenceY, wallTopY, cells);
+    }
+
+    public ArenaShape(String worldName, int referenceY, int floorY, int wallTopY, long[] cells) {
         this.worldName = Objects.requireNonNull(worldName, "worldName");
         Objects.requireNonNull(cells, "cells");
         if (cells.length == 0) {
             throw new IllegalArgumentException("an arena shape needs at least one cell");
         }
         this.referenceY = referenceY;
-        this.wallTopY = Math.max(referenceY, wallTopY);
+        this.floorY = floorY;
+        this.wallTopY = Math.max(floorY, wallTopY);
         this.cells = sortedDistinct(cells);
     }
 
@@ -31,12 +37,16 @@ public final class ArenaShape {
         return referenceY;
     }
 
+    public int getFloorY() {
+        return floorY;
+    }
+
     public int getWallTopY() {
         return wallTopY;
     }
 
     public int getHeight() {
-        return wallTopY - referenceY + 1;
+        return wallTopY - floorY + 1;
     }
 
     public int getCellCount() {
@@ -61,26 +71,26 @@ public final class ArenaShape {
                     + getBlockCount() + " blocks of the shape");
         }
         long cell = cells[(int) (blockIndex % cells.length)];
-        int blockY = referenceY + (int) (blockIndex / cells.length);
+        int blockY = floorY + (int) (blockIndex / cells.length);
         return BlockPositionCodec.encode(HorizontalCellCodec.decodeX(cell), blockY,
                 HorizontalCellCodec.decodeZ(cell));
     }
 
     public long findBlockIndex(int blockX, int blockY, int blockZ) {
-        if (blockY < referenceY || blockY > wallTopY) {
+        if (blockY < floorY || blockY > wallTopY) {
             return -1L;
         }
         int cellIndex = Arrays.binarySearch(cells, HorizontalCellCodec.encode(blockX, blockZ));
         if (cellIndex < 0) {
             return -1L;
         }
-        return (long) (blockY - referenceY) * cells.length + cellIndex;
+        return (long) (blockY - floorY) * cells.length + cellIndex;
     }
 
     public boolean hasSameVolume(ArenaShape otherShape) {
         return otherShape != null
                 && worldName.equals(otherShape.worldName)
-                && referenceY == otherShape.referenceY
+                && floorY == otherShape.floorY
                 && wallTopY == otherShape.wallTopY
                 && Arrays.equals(cells, otherShape.cells);
     }
@@ -100,7 +110,7 @@ public final class ArenaShape {
     }
 
     public boolean containsBlock(int blockX, int blockY, int blockZ) {
-        return blockY >= referenceY && blockY <= wallTopY && containsCell(blockX, blockZ);
+        return blockY >= floorY && blockY <= wallTopY && containsCell(blockX, blockZ);
     }
 
     public RegionBoundary getBoundingBox() {
@@ -116,7 +126,7 @@ public final class ArenaShape {
             maximumX = Math.max(maximumX, cellX);
             maximumZ = Math.max(maximumZ, cellZ);
         }
-        return new RegionBoundary(worldName, minimumX, referenceY, minimumZ, maximumX, wallTopY, maximumZ);
+        return new RegionBoundary(worldName, minimumX, floorY, minimumZ, maximumX, wallTopY, maximumZ);
     }
 
     public PositionSnapshot getCenterPosition() {
@@ -149,7 +159,8 @@ public final class ArenaShape {
         return worldName + " with " + cells.length + " cells between "
                 + boundingBox.getMinimumX() + "/" + boundingBox.getMinimumZ() + " and "
                 + boundingBox.getMaximumX() + "/" + boundingBox.getMaximumZ()
-                + ", floor y " + referenceY + ", wall top y " + wallTopY;
+                + ", cleaned from y " + floorY + " to y " + wallTopY
+                + ", calculated at y " + referenceY;
     }
 
     private static long[] sortedDistinct(long[] cells) {

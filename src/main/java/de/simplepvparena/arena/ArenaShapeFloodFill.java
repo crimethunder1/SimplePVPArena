@@ -34,7 +34,8 @@ public final class ArenaShapeFloodFill {
         long seedCell = HorizontalCellCodec.encode(seedX, seedZ);
         filledCells.add(seedCell);
         pendingCells.add(seedCell);
-        int wallTopY = seedY;
+        Integer wallTopY = null;
+        Integer wallBottomY = null;
         List<ArenaHeightMismatchColumn> heightMismatchSample = new ArrayList<>();
         int heightMismatchColumnCount = 0;
         while (!pendingCells.isEmpty()) {
@@ -50,7 +51,10 @@ public final class ArenaShapeFloodFill {
                 }
                 int[] borderHeights = borderColumns.readBorderHeights(neighbourX, neighbourZ);
                 if (barsColumn(borderHeights, seedY)) {
-                    wallTopY = Math.max(wallTopY, highestHeight(borderHeights));
+                    int columnTopY = highestHeight(borderHeights);
+                    int columnBottomY = lowestHeight(borderHeights);
+                    wallTopY = wallTopY == null ? columnTopY : Math.max(wallTopY, columnTopY);
+                    wallBottomY = wallBottomY == null ? columnBottomY : Math.min(wallBottomY, columnBottomY);
                     continue;
                 }
                 if (borderHeights.length > 0) {
@@ -69,7 +73,10 @@ public final class ArenaShapeFloodFill {
                 pendingCells.add(neighbourCell);
             }
         }
-        return ArenaShapeCalculation.filled(new ArenaShape(worldName, seedY, wallTopY, toArray(filledCells)));
+        return ArenaShapeCalculation.filled(new ArenaShape(worldName, seedY,
+                wallBottomY == null ? seedY : Math.min(seedY, wallBottomY),
+                wallTopY == null ? seedY : wallTopY,
+                toArray(filledCells)));
     }
 
     private static boolean barsColumn(int[] borderHeights, int fillHeight) {
