@@ -2,6 +2,7 @@ package de.simplepvparena.listener;
 
 import de.simplepvparena.arena.ArenaRegistry;
 import de.simplepvparena.arena.SpectatorService;
+import de.simplepvparena.border.BorderSelectorModeRegistry;
 import de.simplepvparena.match.Match;
 import de.simplepvparena.match.MatchService;
 import de.simplepvparena.message.TournamentMessages;
@@ -18,11 +19,14 @@ public final class PlayerConnectionListener implements Listener {
     private final MatchService matchService;
     private final SpectatorService spectatorService;
     private final ArenaRegistry arenaRegistry;
+    private final BorderSelectorModeRegistry selectorModes;
 
-    public PlayerConnectionListener(MatchService matchService, SpectatorService spectatorService, ArenaRegistry arenaRegistry) {
+    public PlayerConnectionListener(MatchService matchService, SpectatorService spectatorService,
+                                    ArenaRegistry arenaRegistry, BorderSelectorModeRegistry selectorModes) {
         this.matchService = matchService;
         this.spectatorService = spectatorService;
         this.arenaRegistry = arenaRegistry;
+        this.selectorModes = selectorModes;
     }
 
     @EventHandler
@@ -44,5 +48,6 @@ public final class PlayerConnectionListener implements Listener {
     public void onPlayerQuit(PlayerQuitEvent event) {
         matchService.handlePlayerEliminated(event.getPlayer().getUniqueId());
         spectatorService.clearAssignment(event.getPlayer().getUniqueId());
+        selectorModes.deactivate(event.getPlayer().getUniqueId());
     }
 }

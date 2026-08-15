@@ -7,6 +7,7 @@ import de.simplepvparena.arena.ArenaShapeFloodFill;
 import de.simplepvparena.arena.ArenaSpawnType;
 import de.simplepvparena.border.BorderItemRequest;
 import de.simplepvparena.border.BorderItemRequestResult;
+import de.simplepvparena.border.BorderSelectorModeRegistry;
 import de.simplepvparena.border.SpectatorBorderService;
 import de.simplepvparena.command.TournamentCommand;
 import de.simplepvparena.config.ConfigurationReloadReport;
@@ -47,7 +48,7 @@ public final class AdminMenuService {
     private static final int MAIN_ARENA_SLOT = 10;
     private static final int MAIN_TEAMS_SLOT = 11;
     private static final int MAIN_MATCH_SLOT = 12;
-    private static final int MAIN_BORDER_SLOT = 13;
+    private static final int MAIN_BORDER_SELECTOR_SLOT = 13;
     private static final int MAIN_FINAL_SLOT = 14;
     private static final int MAIN_STATUS_SLOT = 15;
     private static final int MAIN_BRACKET_SLOT = 16;
@@ -97,6 +98,7 @@ public final class AdminMenuService {
     private final ArenaSetupService arenaSetupService;
     private final ArenaHeightMarkerService heightMarkerService;
     private final SpectatorBorderService spectatorBorderService;
+    private final BorderSelectorModeRegistry borderSelectorModes;
     private final KitSaveService kitSaveService;
     private final ChatInputService chatInputService;
     private final Runnable teamConfigurationSaver;
@@ -110,6 +112,7 @@ public final class AdminMenuService {
                             ArenaSetupService arenaSetupService,
                             ArenaHeightMarkerService heightMarkerService,
                             SpectatorBorderService spectatorBorderService,
+                            BorderSelectorModeRegistry borderSelectorModes,
                             KitSaveService kitSaveService,
                             ChatInputService chatInputService,
                             Runnable teamConfigurationSaver,
@@ -122,6 +125,7 @@ public final class AdminMenuService {
         this.arenaSetupService = Objects.requireNonNull(arenaSetupService, "arenaSetupService");
         this.heightMarkerService = Objects.requireNonNull(heightMarkerService, "heightMarkerService");
         this.spectatorBorderService = Objects.requireNonNull(spectatorBorderService, "spectatorBorderService");
+        this.borderSelectorModes = Objects.requireNonNull(borderSelectorModes, "borderSelectorModes");
         this.kitSaveService = Objects.requireNonNull(kitSaveService, "kitSaveService");
         this.chatInputService = Objects.requireNonNull(chatInputService, "chatInputService");
         this.teamConfigurationSaver = Objects.requireNonNull(teamConfigurationSaver, "teamConfigurationSaver");
@@ -154,7 +158,7 @@ public final class AdminMenuService {
             case MAIN_ARENA_SLOT -> openMenu(player, AdminMenuHolder.arena());
             case MAIN_TEAMS_SLOT -> openMenu(player, AdminMenuHolder.teams(0));
             case MAIN_MATCH_SLOT -> openMenu(player, AdminMenuHolder.match());
-            case MAIN_BORDER_SLOT -> askForBorderItemLine(player);
+            case MAIN_BORDER_SELECTOR_SLOT -> toggleBorderSelectorMode(player);
             case MAIN_FINAL_SLOT -> runOperation(player, tournamentManager::startFinalMatch);
             case MAIN_STATUS_SLOT -> TournamentMessages.sendInfo(player, tournamentManager.describeStatus());
             case MAIN_BRACKET_SLOT -> showBracket(player);
@@ -187,7 +191,7 @@ public final class AdminMenuService {
                 + "The running round keeps its timer and its fighters keep the kit they were given";
     }
 
-    private void fillMainMenu(Inventory inventory) {
+    private void fillMainMenu(Player player, Inventory inventory) {
         inventory.setItem(INFO_SLOT, MenuItems.info("Tournament", buildMainInfoLore()));
         inventory.setItem(MAIN_ARENA_SLOT, MenuItems.create(Material.GRASS_BLOCK, "Arena",
                 "Fight area, spawns, cleaning and reset",
@@ -198,10 +202,8 @@ public final class AdminMenuService {
         inventory.setItem(MAIN_MATCH_SLOT, MenuItems.create(Material.DIAMOND_SWORD, "Match and tournament",
                 "Start, pause, cancel and force a result",
                 "Running match: " + describeActiveMatch()));
-        inventory.setItem(MAIN_BORDER_SLOT, MenuItems.create(Material.GLASS, "Border blocks",
-                "Hands you the blocks the arena wall is built of",
-                "Every block placed with them stops everybody who is not fighting",
-                "Asks for " + BorderItemRequest.USAGE + " in the chat"));
+        inventory.setItem(MAIN_BORDER_SELECTOR_SLOT, MenuItems.create(Material.BRUSH,
+                "Mark border blocks by clicking them", buildBorderSelectorLore(player)));
         inventory.setItem(MAIN_FINAL_SLOT, buildFinalItem());
         inventory.setItem(MAIN_STATUS_SLOT, MenuItems.create(Material.PAPER, "Tournament status",
                 "Writes the state, the rounds and the running match into the chat"));
@@ -249,6 +251,42 @@ public final class AdminMenuService {
                 "Both finalists are known", "Starts the final on the arena");
     }
 
+    private void toggleBorderSelectorMode(Player player) {
+        closeMenu(player);
+        if (borderSelectorModes.toggle(player.getUniqueId())) {
+            TournamentMessages.sendSuccess(player, "Border selector mode is on"
+                    + TournamentMessages.LINE_BREAK
+                    + "Right click any block in the world to mark it as a border block, "
+                    + "right click a marked one to take its mark away again"
+                    + TournamentMessages.LINE_BREAK
+                    + "No border item is needed: stairs, fences and everything else that already "
+                    + "stands there can become part of the wall"
+                    + TournamentMessages.LINE_BREAK
+                    + "Every other right click is blocked while the mode is on, chests and doors included"
+                    + TournamentMessages.LINE_BREAK
+                    + "Open the tournament menu and click the tile again to switch it off");
+            return;
+        }
+        TournamentMessages.sendSuccess(player, "Border selector mode is off"
+                + TournamentMessages.LINE_BREAK
+                + "Right clicking works the way it always did again, every mark you set stays");
+    }
+
+    private List<String> buildBorderSelectorLore(Player player) {
+        List<String> lore = new ArrayList<>();
+        lore.add("Turns every right click of yours into a border mark");
+        lore.add("A click marks a block, a click on a marked block");
+        lore.add("takes the mark away again");
+        lore.add("No border item is needed: stairs, fences and every");
+        lore.add("other block that already stands there can be marked");
+        lore.add("Chests, doors and everything else stay shut while it is on");
+        lore.add("The menu closes so you can click the blocks");
+        lore.add(borderSelectorModes.isActive(player.getUniqueId())
+                ? "The mode is on, this tile switches it off"
+                : "The mode is off, this tile switches it on");
+        return lore;
+    }
+
     private void handleArenaClick(Player player, AdminMenuHolder holder, int slot) {
         switch (slot) {
             case ARENA_CALCULATE_SLOT -> {
@@ -270,7 +308,7 @@ public final class AdminMenuService {
 
     private void setSpawn(Player player, AdminMenuHolder holder, ArenaSpawnType spawnType) {
         arenaSetupService.setSpawn(player, spawnType);
-        refresh(holder);
+        refresh(player, holder);
     }
 
     private void handOutHeightMarker(Player player, AdminMenuHolder holder) {
@@ -285,7 +323,7 @@ public final class AdminMenuService {
                 + TournamentMessages.LINE_BREAK + "Place a block with it at the lowest point of the area, "
                 + "the item switches to the highest one by itself"
                 + TournamentMessages.LINE_BREAK + "The placed block disappears again, only its height is kept");
-        refresh(holder);
+        refresh(player, holder);
     }
 
     private void askForCleaningConfirmation(Player player) {
@@ -707,6 +745,7 @@ public final class AdminMenuService {
                 + TournamentMessages.LINE_BREAK + "The player has to be online or known to the server";
     }
 
+    @SuppressWarnings("unused")
     private void askForBorderItemLine(Player player) {
         closeMenu(player);
         chatInputService.await(player, "the border blocks", List.of(
@@ -789,7 +828,7 @@ public final class AdminMenuService {
     private void runOperation(Player player, AdminMenuHolder holder,
                               Supplier<TournamentOperationResult> operation) {
         runOperation(player, operation);
-        refresh(holder);
+        refresh(player, holder);
     }
 
     private TournamentMenuOptions currentOptions() {
@@ -813,7 +852,7 @@ public final class AdminMenuService {
         Inventory inventory = plugin.getServer().createInventory(holder, sizeOf(holder.getMenuType()),
                 Component.text(titleOf(holder)));
         holder.setInventory(inventory);
-        fill(holder);
+        fill(player, holder);
         plugin.getServer().getScheduler().runTask(plugin, () -> player.openInventory(inventory));
     }
 
@@ -821,15 +860,15 @@ public final class AdminMenuService {
         plugin.getServer().getScheduler().runTask(plugin, () -> player.closeInventory());
     }
 
-    private void refresh(AdminMenuHolder holder) {
-        fill(holder);
+    private void refresh(Player player, AdminMenuHolder holder) {
+        fill(player, holder);
     }
 
-    private void fill(AdminMenuHolder holder) {
+    private void fill(Player player, AdminMenuHolder holder) {
         Inventory inventory = holder.getInventory();
         inventory.clear();
         switch (holder.getMenuType()) {
-            case MAIN -> fillMainMenu(inventory);
+            case MAIN -> fillMainMenu(player, inventory);
             case ARENA -> fillArenaMenu(inventory);
             case KIT -> fillKitMenu(inventory);
             case TEAMS -> fillTeamsMenu(inventory, holder.getPageIndex());

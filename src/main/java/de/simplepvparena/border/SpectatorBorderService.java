@@ -71,6 +71,16 @@ public final class SpectatorBorderService {
         return borderMarks.isMarkedBlock(block.getWorld().getName(), block.getX(), block.getY(), block.getZ());
     }
 
+    public BorderMarkToggle toggleBlockMark(Block block) {
+        BorderMarkToggle toggle = BorderMarkToggle.decide(isBorderBlock(block));
+        if (toggle.marks()) {
+            markBlock(block);
+        } else {
+            clearBlockMark(block);
+        }
+        return toggle;
+    }
+
     public boolean isMovementAllowed(boolean activeFighter, boolean arenaFlightSpectator, boolean operator,
                                      Location origin, Location destination) {
         if (destination == null || destination.getWorld() == null) {

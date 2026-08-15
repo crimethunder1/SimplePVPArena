@@ -1,6 +1,7 @@
 package de.simplepvparena.listener;
 
 import de.simplepvparena.arena.SpectatorService;
+import de.simplepvparena.border.BorderSelectorModeRegistry;
 import de.simplepvparena.match.MatchService;
 import de.simplepvparena.message.TournamentMessages;
 import org.bukkit.entity.Player;
@@ -14,10 +15,13 @@ public final class PlayerInteractListener implements Listener {
 
     private final MatchService matchService;
     private final SpectatorService spectatorService;
+    private final BorderSelectorModeRegistry selectorModes;
 
-    public PlayerInteractListener(MatchService matchService, SpectatorService spectatorService) {
+    public PlayerInteractListener(MatchService matchService, SpectatorService spectatorService,
+                                  BorderSelectorModeRegistry selectorModes) {
         this.matchService = matchService;
         this.spectatorService = spectatorService;
+        this.selectorModes = selectorModes;
     }
 
     @EventHandler
@@ -29,6 +33,10 @@ public final class PlayerInteractListener implements Listener {
             return;
         }
         if (!spectatorService.isSpectatorToggleItem(event.getItem())) {
+            return;
+        }
+        if (event.getAction() == Action.RIGHT_CLICK_BLOCK
+                && selectorModes.isActive(event.getPlayer().getUniqueId())) {
             return;
         }
         event.setCancelled(true);

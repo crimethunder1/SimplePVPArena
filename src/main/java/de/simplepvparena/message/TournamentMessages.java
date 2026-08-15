@@ -79,6 +79,14 @@ public final class TournamentMessages {
         receiver.sendMessage(detail(text));
     }
 
+    public static void sendActionBarSuccess(CommandSender receiver, String text) {
+        receiver.sendActionBar(line(SUCCESS_COLOUR, text));
+    }
+
+    public static void sendActionBarWarning(CommandSender receiver, String text) {
+        receiver.sendActionBar(line(WARNING_COLOUR, text));
+    }
+
     public static void sendBlock(CommandSender receiver, Component head, List<String> detailLines) {
         receiver.sendMessage(head);
         for (String detailLine : detailLines) {

@@ -19,6 +19,7 @@ import de.simplepvparena.arena.VanillaArenaCleaningVisualEffect;
 import de.simplepvparena.border.BorderMarkIndex;
 import de.simplepvparena.border.BorderMarkStorage;
 import de.simplepvparena.border.BorderParticleService;
+import de.simplepvparena.border.BorderSelectorModeRegistry;
 import de.simplepvparena.border.BorderVisualEffect;
 import de.simplepvparena.border.BorderVisualEffects;
 import de.simplepvparena.border.BorderWallPreview;
@@ -37,6 +38,7 @@ import de.simplepvparena.kit.SerializedKit;
 import de.simplepvparena.listener.AdminMenuListener;
 import de.simplepvparena.listener.ArenaHeightMarkerListener;
 import de.simplepvparena.listener.ArenaSafetyZoneListener;
+import de.simplepvparena.listener.BorderSelectorListener;
 import de.simplepvparena.listener.ChatInputListener;
 import de.simplepvparena.listener.FriendlyFireListener;
 import de.simplepvparena.listener.GlobalPvpLockListener;
@@ -73,6 +75,7 @@ public final class SimplePVPArenaPlugin extends JavaPlugin {
     private BorderMarkStorage borderMarkStorage;
     private ArenaBorderConfirmation arenaBorderConfirmation;
     private SpectatorBorderService spectatorBorderService;
+    private BorderSelectorModeRegistry borderSelectorModes;
     private BorderParticleService borderParticleService;
     private BorderWallPreview borderWallPreview;
     private ArenaCleaningService arenaCleaningService;
@@ -115,6 +118,7 @@ public final class SimplePVPArenaPlugin extends JavaPlugin {
         borderMarkStorage.load(borderMarkIndex);
         arenaBorderConfirmation = new ArenaBorderConfirmation(arenaRegistry.getArena()::hasShape);
         spectatorBorderService = new SpectatorBorderService(this, borderMarkIndex, this::onBorderMarksChanged);
+        borderSelectorModes = new BorderSelectorModeRegistry();
 
         arenaCleaningVisualEffect = new VanillaArenaCleaningVisualEffect();
         arenaCleaningService = new ArenaCleaningService(this, spectatorBorderService::clearMarksInShape,
@@ -148,8 +152,8 @@ public final class SimplePVPArenaPlugin extends JavaPlugin {
         chatInputService = new ChatInputService(this);
         adminMenuService = new AdminMenuService(this, tournamentManager, teamRegistry,
                 new TeamMemberLookup(getServer()), matchService, arenaSetupService, arenaHeightMarkerService,
-                spectatorBorderService, kitSaveService, chatInputService, this::saveTeamConfiguration,
-                this::reloadConfiguration);
+                spectatorBorderService, borderSelectorModes, kitSaveService, chatInputService,
+                this::saveTeamConfiguration, this::reloadConfiguration);
 
         configurationReloadService = new ConfigurationReloadService(this::getConfig, this::reloadConfig,
                 new PluginLiveConfiguration(kitService, new KitConfigurationLoader(getLogger()), matchService,
@@ -267,7 +271,7 @@ public final class SimplePVPArenaPlugin extends JavaPlugin {
 
     private void registerListeners() {
         getServer().getPluginManager().registerEvents(
-                new PlayerConnectionListener(matchService, spectatorService, arenaRegistry), this);
+                new PlayerConnectionListener(matchService, spectatorService, arenaRegistry, borderSelectorModes), this);
         getServer().getPluginManager().registerEvents(new PlayerDeathListener(matchService), this);
         getServer().getPluginManager().registerEvents(
                 new PlayerRespawnListener(this, matchService, spectatorService, arenaRegistry), this);
@@ -275,7 +279,10 @@ public final class SimplePVPArenaPlugin extends JavaPlugin {
                 new PlayerMoveListener(matchService, spectatorService, arenaRegistry), this);
         getServer().getPluginManager().registerEvents(
                 new SpectatorBorderListener(matchService, spectatorService, spectatorBorderService), this);
-        getServer().getPluginManager().registerEvents(new PlayerInteractListener(matchService, spectatorService), this);
+        getServer().getPluginManager().registerEvents(
+                new PlayerInteractListener(matchService, spectatorService, borderSelectorModes), this);
+        getServer().getPluginManager().registerEvents(
+                new BorderSelectorListener(borderSelectorModes, spectatorBorderService), this);
         getServer().getPluginManager().registerEvents(
                 new ArenaHeightMarkerListener(arenaHeightMarkerService), this);
         getServer().getPluginManager().registerEvents(new ArenaSafetyZoneListener(arenaSafetyZone), this);
