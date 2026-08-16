@@ -3,6 +3,8 @@ package de.simplepvparena.config;
 import de.simplepvparena.arena.ArenaCleaningParticleSettings;
 import de.simplepvparena.border.ConfirmedBorderParticleSettings;
 import de.simplepvparena.match.RoundTimeoutSettings;
+import de.simplepvparena.match.TeamColourSettings;
+import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.MemoryConfiguration;
 import org.junit.jupiter.api.Test;
@@ -31,6 +33,8 @@ class ConfigurationReloadServiceTest {
         assertTrue(report.isClean(), "a valid file reports no problem: " + report.problems());
         assertEquals(60L, liveConfiguration.longValueOf(RecordingLiveConfiguration.ROUND_RESET_DELAY));
         assertEquals(new RoundTimeoutSettings(120, 30, 3.5D, 0.5D), liveConfiguration.roundTimeoutSettings());
+        assertEquals(new TeamColourSettings(NamedTextColor.GOLD, NamedTextColor.DARK_PURPLE),
+                liveConfiguration.teamColourSettings());
         assertEquals(1024, liveConfiguration.intValueOf(RecordingLiveConfiguration.CLEANING_BLOCKS_PER_TICK));
         assertEquals(2048, liveConfiguration.intValueOf(RecordingLiveConfiguration.BASELINE_BLOCKS_PER_TICK));
         assertEquals(new ArenaCleaningParticleSettings(false, "COMPOSTER", 8.0D, 3),

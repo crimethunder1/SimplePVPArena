@@ -87,6 +87,10 @@ public final class TournamentMessages {
         receiver.sendActionBar(line(WARNING_COLOUR, text));
     }
 
+    public static void sendActionBarError(CommandSender receiver, String text) {
+        receiver.sendActionBar(line(ERROR_COLOUR, text));
+    }
+
     public static void sendBlock(CommandSender receiver, Component head, List<String> detailLines) {
         receiver.sendMessage(head);
         for (String detailLine : detailLines) {

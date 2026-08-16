@@ -43,8 +43,9 @@ public final class PlayerMoveListener implements Listener {
         boolean originInside = arenaShape.get().contains(from);
         boolean destinationInside = arenaShape.get().contains(to);
         boolean flyingSpectator = isFlyingSpectator(player);
-        if (!ArenaFlightExitRule.isMovementAllowed(belongsIntoArena(player), player.isOp(), flyingSpectator,
-                originInside, destinationInside)) {
+        boolean activeFighter = isActiveFighter(player);
+        if (!ArenaFlightExitRule.isMovementAllowed(activeFighter, belongsIntoArena(player), player.isOp(),
+                flyingSpectator, originInside, destinationInside)) {
             event.setCancelled(true);
         }
         if (ArenaFlightExitRule.leavesTheArena(flyingSpectator, originInside, destinationInside)) {
@@ -77,15 +78,19 @@ public final class PlayerMoveListener implements Listener {
         if (arenaShape.isEmpty()) {
             return true;
         }
-        return ArenaMovementRule.isMovementAllowed(belongsIntoArena(player), player.isOp(),
+        return ArenaMovementRule.isMovementAllowed(isActiveFighter(player), belongsIntoArena(player), player.isOp(),
                 arenaShape.get().contains(origin), arenaShape.get().contains(destination));
     }
 
     private boolean belongsIntoArena(Player player) {
-        if (matchService.isActiveFighter(player.getUniqueId())) {
+        if (isActiveFighter(player)) {
             return true;
         }
         return isFlyingSpectator(player);
+    }
+
+    private boolean isActiveFighter(Player player) {
+        return matchService.isActiveFighter(player.getUniqueId());
     }
 
     private boolean isFlyingSpectator(Player player) {

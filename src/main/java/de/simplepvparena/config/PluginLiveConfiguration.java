@@ -12,8 +12,10 @@ import de.simplepvparena.border.BorderWallPreview;
 import de.simplepvparena.border.ConfirmedBorderParticleSettings;
 import de.simplepvparena.kit.KitConfigurationLoader;
 import de.simplepvparena.kit.KitService;
+import de.simplepvparena.match.FighterColours;
 import de.simplepvparena.match.MatchService;
 import de.simplepvparena.match.RoundTimeoutSettings;
+import de.simplepvparena.match.TeamColourSettings;
 import org.bukkit.configuration.ConfigurationSection;
 
 import java.util.Objects;
@@ -24,6 +26,7 @@ public final class PluginLiveConfiguration implements LiveConfiguration {
     private final KitService kitService;
     private final KitConfigurationLoader kitConfigurationLoader;
     private final MatchService matchService;
+    private final FighterColours fighterColours;
     private final ArenaCleaningService arenaCleaningService;
     private final ArenaCleaningVisualEffect arenaCleaningVisualEffect;
     private final ArenaBaselineService arenaBaselineService;
@@ -37,6 +40,7 @@ public final class PluginLiveConfiguration implements LiveConfiguration {
     public PluginLiveConfiguration(KitService kitService,
                                    KitConfigurationLoader kitConfigurationLoader,
                                    MatchService matchService,
+                                   FighterColours fighterColours,
                                    ArenaCleaningService arenaCleaningService,
                                    ArenaCleaningVisualEffect arenaCleaningVisualEffect,
                                    ArenaBaselineService arenaBaselineService,
@@ -49,6 +53,7 @@ public final class PluginLiveConfiguration implements LiveConfiguration {
         this.kitService = Objects.requireNonNull(kitService, "kitService");
         this.kitConfigurationLoader = Objects.requireNonNull(kitConfigurationLoader, "kitConfigurationLoader");
         this.matchService = Objects.requireNonNull(matchService, "matchService");
+        this.fighterColours = Objects.requireNonNull(fighterColours, "fighterColours");
         this.arenaCleaningService = Objects.requireNonNull(arenaCleaningService, "arenaCleaningService");
         this.arenaCleaningVisualEffect = Objects.requireNonNull(arenaCleaningVisualEffect,
                 "arenaCleaningVisualEffect");
@@ -69,6 +74,11 @@ public final class PluginLiveConfiguration implements LiveConfiguration {
     @Override
     public void setRoundTimeoutSettings(RoundTimeoutSettings roundTimeoutSettings) {
         matchService.setRoundTimeoutSettings(roundTimeoutSettings);
+    }
+
+    @Override
+    public void setTeamColourSettings(TeamColourSettings teamColourSettings) {
+        fighterColours.applySettings(teamColourSettings);
     }
 
     @Override

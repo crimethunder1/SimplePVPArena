@@ -9,13 +9,17 @@ import de.simplepvparena.border.BorderParticleService;
 import de.simplepvparena.border.BorderWallPreview;
 import de.simplepvparena.border.ConfirmedBorderParticleSettings;
 import de.simplepvparena.match.RoundTimeoutSettings;
+import de.simplepvparena.match.TeamColourSettings;
+import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.configuration.ConfigurationSection;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.function.Consumer;
 
 public record PluginSettings(long roundResetDelayTicks,
                              RoundTimeoutSettings roundTimeoutSettings,
+                             TeamColourSettings teamColourSettings,
                              int arenaCleaningBlocksPerTick,
                              int arenaBaselineBlocksPerTick,
                              ArenaCleaningParticleSettings arenaCleaningParticleSettings,
@@ -35,6 +39,8 @@ public record PluginSettings(long roundResetDelayTicks,
     public static final String SUDDEN_DEATH_WARNING_SECONDS_PATH = "match.sudden-death-warning-seconds";
     public static final String SUDDEN_DEATH_DAMAGE_PER_SECOND_PATH = "match.sudden-death-damage-per-second";
     public static final String SUDDEN_DEATH_DAMAGE_INCREASE_PATH = "match.sudden-death-damage-increase-per-second";
+    public static final String FIRST_TEAM_COLOUR_PATH = TeamColourSettings.FIRST_TEAM_CONFIGURATION_PATH;
+    public static final String SECOND_TEAM_COLOUR_PATH = TeamColourSettings.SECOND_TEAM_CONFIGURATION_PATH;
     public static final String ARENA_CLEAN_BLOCKS_PER_TICK_PATH = "arena.clean-blocks-per-tick";
     public static final String ARENA_BASELINE_BLOCKS_PER_TICK_PATH = "arena.baseline-blocks-per-tick";
     public static final String ARENA_MAXIMUM_CELLS_PATH = ArenaShapeFloodFill.MAXIMUM_CELL_COUNT_CONFIGURATION_PATH;
@@ -57,6 +63,8 @@ public record PluginSettings(long roundResetDelayTicks,
             SUDDEN_DEATH_WARNING_SECONDS_PATH,
             SUDDEN_DEATH_DAMAGE_PER_SECOND_PATH,
             SUDDEN_DEATH_DAMAGE_INCREASE_PATH,
+            FIRST_TEAM_COLOUR_PATH,
+            SECOND_TEAM_COLOUR_PATH,
             ARENA_CLEAN_BLOCKS_PER_TICK_PATH,
             ARENA_BASELINE_BLOCKS_PER_TICK_PATH,
             ArenaCleaningParticleSettings.ENABLED_CONFIGURATION_PATH,
@@ -79,6 +87,7 @@ public record PluginSettings(long roundResetDelayTicks,
     public static PluginSettings defaults() {
         return new PluginSettings(DEFAULT_ROUND_RESET_DELAY_TICKS,
                 RoundTimeoutSettings.defaults(),
+                TeamColourSettings.defaults(),
                 ArenaCleaningService.DEFAULT_BLOCKS_PER_TICK,
                 ArenaBaselineService.DEFAULT_BLOCKS_PER_TICK,
                 ArenaCleaningParticleSettings.defaults(),
@@ -100,6 +109,7 @@ public record PluginSettings(long roundResetDelayTicks,
         return new PluginSettings(
                 configuration.getLong(ROUND_RESET_DELAY_PATH, shipped.roundResetDelayTicks()),
                 readRoundTimeoutSettings(configuration, problemReporter),
+                readTeamColourSettings(configuration, problemReporter),
                 configuration.getInt(ARENA_CLEAN_BLOCKS_PER_TICK_PATH, shipped.arenaCleaningBlocksPerTick()),
                 configuration.getInt(ARENA_BASELINE_BLOCKS_PER_TICK_PATH, shipped.arenaBaselineBlocksPerTick()),
                 readArenaCleaningParticleSettings(configuration, problemReporter),
@@ -119,6 +129,7 @@ public record PluginSettings(long roundResetDelayTicks,
     public void applyTo(LiveConfiguration liveConfiguration) {
         liveConfiguration.setRoundResetDelayTicks(roundResetDelayTicks);
         liveConfiguration.setRoundTimeoutSettings(roundTimeoutSettings);
+        liveConfiguration.setTeamColourSettings(teamColourSettings);
         liveConfiguration.setArenaCleaningBlocksPerTick(arenaCleaningBlocksPerTick);
         liveConfiguration.setArenaBaselineBlocksPerTick(arenaBaselineBlocksPerTick);
         liveConfiguration.setArenaCleaningParticleSettings(arenaCleaningParticleSettings);
@@ -197,6 +208,39 @@ public record PluginSettings(long roundResetDelayTicks,
                 configuration.getDouble(SUDDEN_DEATH_DAMAGE_PER_SECOND_PATH, defaultSettings.suddenDeathBaseDamage()),
                 configuration.getDouble(SUDDEN_DEATH_DAMAGE_INCREASE_PATH,
                         defaultSettings.suddenDeathDamageIncreasePerSecond()));
+    }
+
+    private static TeamColourSettings readTeamColourSettings(ConfigurationSection configuration,
+                                                             Consumer<String> problemReporter) {
+        TeamColourSettings defaults = TeamColourSettings.defaults();
+        NamedTextColor firstTeamColour = readTeamColour(configuration, FIRST_TEAM_COLOUR_PATH,
+                defaults.firstTeamColour(), problemReporter);
+        NamedTextColor secondTeamColour = readTeamColour(configuration, SECOND_TEAM_COLOUR_PATH,
+                defaults.secondTeamColour(), problemReporter);
+        if (firstTeamColour.equals(secondTeamColour)) {
+            problemReporter.accept(TeamColourSettings.SECTION_CONFIGURATION_PATH + " gives both teams the colour "
+                    + TeamColourSettings.nameOf(firstTeamColour) + ", which would be no colouring at all, falling "
+                    + "back to " + TeamColourSettings.nameOf(defaults.firstTeamColour()) + " and "
+                    + TeamColourSettings.nameOf(defaults.secondTeamColour()));
+            return defaults;
+        }
+        return new TeamColourSettings(firstTeamColour, secondTeamColour);
+    }
+
+    private static NamedTextColor readTeamColour(ConfigurationSection configuration, String path,
+                                                 NamedTextColor fallbackColour, Consumer<String> problemReporter) {
+        String writtenName = configuration.getString(path);
+        if (writtenName == null || writtenName.isBlank()) {
+            return fallbackColour;
+        }
+        Optional<NamedTextColor> colour = TeamColourSettings.colourOfName(writtenName);
+        if (colour.isPresent()) {
+            return colour.get();
+        }
+        problemReporter.accept(path + " is no colour a name can be shown in, falling back to "
+                + TeamColourSettings.nameOf(fallbackColour) + ". Usable colours: "
+                + String.join(", ", TeamColourSettings.knownColourNames()));
+        return fallbackColour;
     }
 
     private static ConfirmedBorderParticleSettings readConfirmedBorderParticleSettings(

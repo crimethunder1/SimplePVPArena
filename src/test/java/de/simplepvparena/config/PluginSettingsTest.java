@@ -8,6 +8,8 @@ import de.simplepvparena.arena.ArenaShapeFloodFill;
 import de.simplepvparena.border.BorderParticleService;
 import de.simplepvparena.border.ConfirmedBorderParticleSettings;
 import de.simplepvparena.match.RoundTimeoutSettings;
+import de.simplepvparena.match.TeamColourSettings;
+import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.configuration.MemoryConfiguration;
 import org.junit.jupiter.api.Test;
 
@@ -31,6 +33,8 @@ class PluginSettingsTest {
         assertEquals(List.of(), problems, "a fully valid file must not report a single problem");
         assertEquals(60L, settings.roundResetDelayTicks());
         assertEquals(new RoundTimeoutSettings(120, 30, 3.5D, 0.5D), settings.roundTimeoutSettings());
+        assertEquals(new TeamColourSettings(NamedTextColor.GOLD, NamedTextColor.DARK_PURPLE),
+                settings.teamColourSettings());
         assertEquals(1024, settings.arenaCleaningBlocksPerTick());
         assertEquals(2048, settings.arenaBaselineBlocksPerTick());
         assertEquals(new ArenaCleaningParticleSettings(false, "COMPOSTER", 8.0D, 3),
@@ -54,6 +58,7 @@ class PluginSettingsTest {
 
         assertTrue(shipped.roundResetDelayTicks() != settings.roundResetDelayTicks());
         assertTrue(!shipped.roundTimeoutSettings().equals(settings.roundTimeoutSettings()));
+        assertTrue(!shipped.teamColourSettings().equals(settings.teamColourSettings()));
         assertTrue(shipped.arenaCleaningBlocksPerTick() != settings.arenaCleaningBlocksPerTick());
         assertTrue(shipped.arenaBaselineBlocksPerTick() != settings.arenaBaselineBlocksPerTick());
         assertTrue(!shipped.arenaCleaningParticleSettings().equals(settings.arenaCleaningParticleSettings()));
@@ -158,6 +163,46 @@ class PluginSettingsTest {
     }
 
     @Test
+    void aTeamColourThatIsNoColourFallsBackAndIsReported() {
+        MemoryConfiguration configuration = new MemoryConfiguration();
+        configuration.set(PluginSettings.FIRST_TEAM_COLOUR_PATH, "hellrot");
+        configuration.set(PluginSettings.SECOND_TEAM_COLOUR_PATH, "blue");
+
+        TeamColourSettings settings = PluginSettings.read(configuration, problems::add).teamColourSettings();
+
+        assertEquals(TeamColourSettings.defaults().firstTeamColour(), settings.firstTeamColour());
+        assertEquals(NamedTextColor.BLUE, settings.secondTeamColour(), "the entry that is usable still arrives");
+        assertEquals(1, problems.size());
+        assertTrue(problems.get(0).startsWith(PluginSettings.FIRST_TEAM_COLOUR_PATH),
+                "the problem has to name the entry an admin fixes: " + problems.get(0));
+        assertTrue(problems.get(0).contains("light_purple"),
+                "and the colours he can write instead: " + problems.get(0));
+    }
+
+    @Test
+    void twoTeamsInTheSameColourFallBackToTheShippedPairAndAreReported() {
+        MemoryConfiguration configuration = new MemoryConfiguration();
+        configuration.set(PluginSettings.FIRST_TEAM_COLOUR_PATH, "gold");
+        configuration.set(PluginSettings.SECOND_TEAM_COLOUR_PATH, "minecraft:GOLD");
+
+        TeamColourSettings settings = PluginSettings.read(configuration, problems::add).teamColourSettings();
+
+        assertEquals(TeamColourSettings.defaults(), settings);
+        assertEquals(1, problems.size());
+        assertTrue(problems.get(0).startsWith(TeamColourSettings.SECTION_CONFIGURATION_PATH), problems.get(0));
+    }
+
+    @Test
+    void aFileWithoutTeamColoursKeepsTheShippedPair() {
+        PluginSettings settings = PluginSettings.read(new MemoryConfiguration(), problems::add);
+
+        assertEquals(TeamColourSettings.defaults(), settings.teamColourSettings());
+        assertEquals(NamedTextColor.RED, settings.teamColourSettings().firstTeamColour());
+        assertEquals(NamedTextColor.AQUA, settings.teamColourSettings().secondTeamColour());
+        assertEquals(List.of(), problems);
+    }
+
+    @Test
     void aCleaningEffectTurnedDownToNothingIsAcceptedAndANegativeOneIsReported() {
         MemoryConfiguration switchedOff = new MemoryConfiguration();
         switchedOff.set(ArenaCleaningParticleSettings.COLUMNS_PER_TICK_CONFIGURATION_PATH, 0);
@@ -229,6 +274,8 @@ class PluginSettingsTest {
         configuration.set(PluginSettings.SUDDEN_DEATH_WARNING_SECONDS_PATH, 30);
         configuration.set(PluginSettings.SUDDEN_DEATH_DAMAGE_PER_SECOND_PATH, 3.5D);
         configuration.set(PluginSettings.SUDDEN_DEATH_DAMAGE_INCREASE_PATH, 0.5D);
+        configuration.set(PluginSettings.FIRST_TEAM_COLOUR_PATH, "GOLD");
+        configuration.set(PluginSettings.SECOND_TEAM_COLOUR_PATH, "dark purple");
         configuration.set(PluginSettings.ARENA_CLEAN_BLOCKS_PER_TICK_PATH, 1024);
         configuration.set(PluginSettings.ARENA_BASELINE_BLOCKS_PER_TICK_PATH, 2048);
         configuration.set(ArenaCleaningParticleSettings.ENABLED_CONFIGURATION_PATH, false);

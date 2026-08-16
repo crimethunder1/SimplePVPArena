@@ -36,6 +36,8 @@ import de.simplepvparena.kit.KitSaveService;
 import de.simplepvparena.kit.KitService;
 import de.simplepvparena.kit.SerializedKit;
 import de.simplepvparena.listener.AdminMenuListener;
+import de.simplepvparena.listener.ArenaBreakListener;
+import de.simplepvparena.listener.ArenaBuildListener;
 import de.simplepvparena.listener.ArenaHeightMarkerListener;
 import de.simplepvparena.listener.ArenaSafetyZoneListener;
 import de.simplepvparena.listener.BorderSelectorListener;
@@ -48,7 +50,9 @@ import de.simplepvparena.listener.PlayerInteractListener;
 import de.simplepvparena.listener.PlayerMoveListener;
 import de.simplepvparena.listener.PlayerRespawnListener;
 import de.simplepvparena.listener.SpectatorBorderListener;
+import de.simplepvparena.match.FighterColours;
 import de.simplepvparena.match.MatchService;
+import de.simplepvparena.match.ScoreboardFighterColours;
 import de.simplepvparena.team.EventTeamImportFile;
 import de.simplepvparena.team.EventTeamImportService;
 import de.simplepvparena.team.TeamMemberLookup;
@@ -92,6 +96,7 @@ public final class SimplePVPArenaPlugin extends JavaPlugin {
     private ArenaSetupService arenaSetupService;
     private ChatInputService chatInputService;
     private AdminMenuService adminMenuService;
+    private FighterColours fighterColours;
     private MatchService matchService;
     private TournamentManager tournamentManager;
     private ConfigurationReloadService configurationReloadService;
@@ -129,7 +134,10 @@ public final class SimplePVPArenaPlugin extends JavaPlugin {
 
         arenaBaselineService = new ArenaBaselineService(this, new ArenaBaselineRegistry());
 
-        matchService = new MatchService(this, kitService, spectatorService);
+        fighterColours = new ScoreboardFighterColours(getServer(), getLogger()::warning);
+        fighterColours.clearColours();
+
+        matchService = new MatchService(this, kitService, spectatorService, fighterColours);
 
         tournamentManager = new TournamentManager(this, teamRegistry, arenaRegistry, matchService,
                 new OnlineOperatorNotifier(getServer()));
@@ -164,9 +172,9 @@ public final class SimplePVPArenaPlugin extends JavaPlugin {
 
         configurationReloadService = new ConfigurationReloadService(this::getConfig, this::reloadConfig,
                 new PluginLiveConfiguration(kitService, new KitConfigurationLoader(getLogger()), matchService,
-                        arenaCleaningService, arenaCleaningVisualEffect, arenaBaselineService, arenaSetupService,
-                        arenaSafetyZone, borderParticleService, borderWallPreview, borderVisualEffect,
-                        getLogger()::warning),
+                        fighterColours, arenaCleaningService, arenaCleaningVisualEffect, arenaBaselineService,
+                        arenaSetupService, arenaSafetyZone, borderParticleService, borderWallPreview,
+                        borderVisualEffect, getLogger()::warning),
                 getLogger()::warning);
         configurationReloadService.applyStoredConfiguration();
 
@@ -198,6 +206,9 @@ public final class SimplePVPArenaPlugin extends JavaPlugin {
         }
         if (matchService != null) {
             matchService.cancelActiveMatch();
+        }
+        if (fighterColours != null) {
+            fighterColours.clearColours();
         }
         if (spectatorService != null) {
             spectatorService.clearAllAssignments();
@@ -292,6 +303,10 @@ public final class SimplePVPArenaPlugin extends JavaPlugin {
                 new BorderSelectorListener(borderSelectorModes, spectatorBorderService), this);
         getServer().getPluginManager().registerEvents(
                 new ArenaHeightMarkerListener(arenaHeightMarkerService), this);
+        getServer().getPluginManager().registerEvents(
+                new ArenaBuildListener(matchService, arenaRegistry), this);
+        getServer().getPluginManager().registerEvents(
+                new ArenaBreakListener(matchService, arenaRegistry, arenaBaselineService), this);
         getServer().getPluginManager().registerEvents(new ArenaSafetyZoneListener(arenaSafetyZone), this);
         getServer().getPluginManager().registerEvents(new AdminMenuListener(adminMenuService), this);
         getServer().getPluginManager().registerEvents(new ChatInputListener(chatInputService), this);

@@ -3,6 +3,7 @@ package de.simplepvparena.config;
 import de.simplepvparena.arena.ArenaCleaningParticleSettings;
 import de.simplepvparena.border.ConfirmedBorderParticleSettings;
 import de.simplepvparena.match.RoundTimeoutSettings;
+import de.simplepvparena.match.TeamColourSettings;
 import org.bukkit.configuration.ConfigurationSection;
 
 public interface LiveConfiguration {
@@ -10,6 +11,8 @@ public interface LiveConfiguration {
     void setRoundResetDelayTicks(long roundResetDelayTicks);
 
     void setRoundTimeoutSettings(RoundTimeoutSettings roundTimeoutSettings);
+
+    void setTeamColourSettings(TeamColourSettings teamColourSettings);
 
     void setArenaCleaningBlocksPerTick(int blocksPerTick);
 

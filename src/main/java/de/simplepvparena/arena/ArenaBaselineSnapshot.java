@@ -74,6 +74,12 @@ public final class ArenaBaselineSnapshot implements ArenaCleaningTarget {
         return Optional.of(MATERIALS_BY_ORDINAL[materialOrdinals[(int) blockIndex]]);
     }
 
+    public boolean holdsCapturedMaterial(int blockX, int blockY, int blockZ, Material currentMaterial) {
+        return findMaterialAt(blockX, blockY, blockZ)
+                .filter(capturedMaterial -> capturedMaterial == currentMaterial)
+                .isPresent();
+    }
+
     @Override
     public Material findMaterial(int blockX, int blockY, int blockZ) {
         return findMaterialAt(blockX, blockY, blockZ).orElse(Material.AIR);

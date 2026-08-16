@@ -33,6 +33,7 @@ public final class MatchService {
     private final Plugin plugin;
     private final KitService kitService;
     private final SpectatorService spectatorService;
+    private final FighterColours fighterColours;
     private final SuddenDeathTick suddenDeathTick = new SuddenDeathTick(new Random());
 
     private MatchCompletionHandler matchCompletionHandler = (match, winnerTeamName) -> { };
@@ -43,10 +44,12 @@ public final class MatchService {
     private RoundTimeoutSettings roundTimeoutSettings = RoundTimeoutSettings.defaults();
     private boolean roundTimersPaused;
 
-    public MatchService(Plugin plugin, KitService kitService, SpectatorService spectatorService) {
+    public MatchService(Plugin plugin, KitService kitService, SpectatorService spectatorService,
+                        FighterColours fighterColours) {
         this.plugin = plugin;
         this.kitService = kitService;
         this.spectatorService = spectatorService;
+        this.fighterColours = fighterColours;
     }
 
     public void setMatchCompletionHandler(MatchCompletionHandler matchCompletionHandler) {
@@ -96,6 +99,28 @@ public final class MatchService {
                 .flatMap(Match::getRoundParticipants)
                 .map(participants -> participants.isActive(playerUniqueId))
                 .orElse(false);
+    }
+
+    public Optional<Location> findActiveFighterSpawn(UUID playerUniqueId) {
+        if (!isActiveFighter(playerUniqueId)) {
+            return Optional.empty();
+        }
+        return findMatchOfPlayer(playerUniqueId)
+                .flatMap(match -> findTeamSpawn(match, playerUniqueId))
+                .flatMap(PositionSnapshot::toLocation);
+    }
+
+    public void equipActiveFighter(Player player) {
+        if (isActiveFighter(player.getUniqueId())) {
+            kitService.applyKit(player);
+        }
+    }
+
+    private static Optional<PositionSnapshot> findTeamSpawn(Match match, UUID playerUniqueId) {
+        if (match.getFirstTeam().containsPlayer(playerUniqueId)) {
+            return match.getArena().getFirstTeamSpawn();
+        }
+        return match.getArena().getSecondTeamSpawn();
     }
 
     public boolean isFriendlyFire(UUID attackerUniqueId, UUID victimUniqueId) {
@@ -196,6 +221,7 @@ public final class MatchService {
 
         preparePlayers(match.getFirstTeam(), match.getArena().getFirstTeamSpawn());
         preparePlayers(match.getSecondTeam(), match.getArena().getSecondTeamSpawn());
+        fighterColours.colourFighters(match);
         startRoundTimer(match);
         announceToMatch(match, "Round " + match.getRoundNumber() + " of match " + match.getMatchId()
                 + " has started (" + match.getScore().describe() + "), time limit "
@@ -346,6 +372,7 @@ public final class MatchService {
                 spectatorService.sendToTribune(player);
             }
         }
+        fighterColours.clearColours();
     }
 
     private boolean hasAnyOnlineParticipant(Match match) {

@@ -336,7 +336,7 @@ class ArenaCleanFromTheGuiTest {
             }
             setupService = new ArenaSetupService(
                     new ActiveArenaState(arenaRegistry, new ArenaHeightMarkers()),
-                    new MatchService(harness.getPlugin(), null, null),
+                    new MatchService(harness.getPlugin(), null, null, null),
                     new SpectatorBorderService(harness.getPlugin(), borderMarks, () -> { }),
                     new BorderWallPreview(harness.getPlugin(), new SilentVisualEffect()),
                     new ArenaGapGuide(harness.getPlugin()), cleaningService, baselineService,

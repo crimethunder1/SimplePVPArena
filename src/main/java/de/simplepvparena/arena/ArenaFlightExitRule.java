@@ -12,11 +12,12 @@ public final class ArenaFlightExitRule {
         return originInside && !destinationInside;
     }
 
-    public static boolean isMovementAllowed(boolean belongsIntoArena, boolean operator, boolean arenaFlight,
-                                            boolean originInside, boolean destinationInside) {
+    public static boolean isMovementAllowed(boolean activeFighter, boolean belongsIntoArena, boolean operator,
+                                            boolean arenaFlight, boolean originInside, boolean destinationInside) {
         if (leavesTheArena(arenaFlight, originInside, destinationInside)) {
             return true;
         }
-        return ArenaMovementRule.isMovementAllowed(belongsIntoArena, operator, originInside, destinationInside);
+        return ArenaMovementRule.isMovementAllowed(activeFighter, belongsIntoArena, operator,
+                originInside, destinationInside);
     }
 }

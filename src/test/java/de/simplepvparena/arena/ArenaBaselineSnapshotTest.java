@@ -91,6 +91,19 @@ class ArenaBaselineSnapshotTest {
     }
 
     @Test
+    void tellsABlockOfTheCapturedArenaFromOneThatWasPutThereAfterwards() {
+        ArenaBaselineSnapshot snapshot = capture(shape(64, 65, 0, 0, 1, 0),
+                Map.of(position(0, 64, 0), Material.STONE), 4);
+
+        assertTrue(snapshot.holdsCapturedMaterial(0, 64, 0, Material.STONE));
+        assertFalse(snapshot.holdsCapturedMaterial(0, 64, 0, Material.SAND), "the stone was replaced");
+        assertTrue(snapshot.holdsCapturedMaterial(1, 64, 0, Material.AIR), "the baseline holds air here");
+        assertFalse(snapshot.holdsCapturedMaterial(1, 64, 0, Material.OAK_PLANKS), "and this was built into it");
+        assertFalse(snapshot.holdsCapturedMaterial(0, 66, 0, Material.STONE),
+                "above the captured volume nothing was ever read");
+    }
+
+    @Test
     void belongsOnlyToTheAreaItWasTakenOf() {
         ArenaShape shape = shape(64, 65, 0, 0, 1, 0);
         ArenaBaselineSnapshot snapshot = capture(shape, Map.of(), 2);

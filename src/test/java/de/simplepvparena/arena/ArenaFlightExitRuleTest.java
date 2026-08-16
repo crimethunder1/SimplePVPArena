@@ -9,6 +9,8 @@ class ArenaFlightExitRuleTest {
 
     private static final boolean ARENA_FLIGHT = true;
     private static final boolean NOT_FLYING = false;
+    private static final boolean ACTIVE_FIGHTER = true;
+    private static final boolean NOT_FIGHTING = false;
     private static final boolean BELONGS_INTO_ARENA = true;
     private static final boolean BELONGS_OUTSIDE = false;
     private static final boolean OPERATOR = true;
@@ -23,26 +25,26 @@ class ArenaFlightExitRuleTest {
 
     @Test
     void neverStopsTheMovementThatEndsAFlight() {
-        assertFalse(ArenaMovementRule.isMovementAllowed(BELONGS_INTO_ARENA, REGULAR_PLAYER, INSIDE, OUTSIDE),
-                "the movement rule on its own stops that movement");
-        assertTrue(isMovementAllowed(BELONGS_INTO_ARENA, REGULAR_PLAYER, ARENA_FLIGHT, INSIDE, OUTSIDE),
-                "and the flying spectator is let through it anyway");
-        assertTrue(isMovementAllowed(BELONGS_INTO_ARENA, OPERATOR, ARENA_FLIGHT, INSIDE, OUTSIDE),
-                "exactly like the operator always was");
+        assertFalse(ArenaMovementRule.isMovementAllowed(NOT_FIGHTING, BELONGS_INTO_ARENA, REGULAR_PLAYER,
+                INSIDE, OUTSIDE), "the movement rule on its own stops that movement");
+        assertTrue(isMovementAllowed(NOT_FIGHTING, BELONGS_INTO_ARENA, REGULAR_PLAYER, ARENA_FLIGHT,
+                INSIDE, OUTSIDE), "and the flying spectator is let through it anyway");
+        assertTrue(isMovementAllowed(NOT_FIGHTING, BELONGS_INTO_ARENA, OPERATOR, ARENA_FLIGHT,
+                INSIDE, OUTSIDE), "exactly like the operator always was");
     }
 
     @Test
     void keepsStoppingEveryOtherMovementOfAFlyingSpectator() {
-        assertFalse(isMovementAllowed(BELONGS_OUTSIDE, REGULAR_PLAYER, ARENA_FLIGHT, OUTSIDE, INSIDE),
-                "flying back in is not an exit and stays stopped");
+        assertFalse(isMovementAllowed(NOT_FIGHTING, BELONGS_OUTSIDE, REGULAR_PLAYER, ARENA_FLIGHT,
+                OUTSIDE, INSIDE), "flying back in is not an exit and stays stopped");
     }
 
     @Test
-    void keepsStoppingEverybodyWhoIsNotFlying() {
-        assertFalse(isMovementAllowed(BELONGS_INTO_ARENA, REGULAR_PLAYER, NOT_FLYING, INSIDE, OUTSIDE),
-                "the fighter who runs against the outline");
-        assertFalse(isMovementAllowed(BELONGS_OUTSIDE, REGULAR_PLAYER, NOT_FLYING, OUTSIDE, INSIDE),
-                "and the spectator on the tribune who walks into the arena");
+    void keepsStoppingTheSpectatorWhoIsNotFlying() {
+        assertFalse(isMovementAllowed(NOT_FIGHTING, BELONGS_OUTSIDE, REGULAR_PLAYER, NOT_FLYING,
+                OUTSIDE, INSIDE), "the spectator on the tribune who walks into the arena");
+        assertTrue(isMovementAllowed(ACTIVE_FIGHTER, BELONGS_INTO_ARENA, REGULAR_PLAYER, NOT_FLYING,
+                INSIDE, OUTSIDE), "and the fighter who runs against the outline is let through");
     }
 
     @Test
@@ -70,7 +72,7 @@ class ArenaFlightExitRuleTest {
 
     @Test
     void endsTheFlightOfAnOperatorWhoLeavesTheArena() {
-        assertTrue(ArenaMovementRule.isMovementAllowed(true, OPERATOR, INSIDE, OUTSIDE),
+        assertTrue(ArenaMovementRule.isMovementAllowed(NOT_FIGHTING, BELONGS_INTO_ARENA, OPERATOR, INSIDE, OUTSIDE),
                 "the movement rule lets him pass");
         assertTrue(leavesTheArena(ARENA_FLIGHT, INSIDE, OUTSIDE),
                 "and the flight ends anyway");
@@ -78,7 +80,7 @@ class ArenaFlightExitRuleTest {
 
     @Test
     void neverSendsAnOperatorWhoIsNotFlyingToTheTribune() {
-        assertTrue(ArenaMovementRule.isMovementAllowed(false, OPERATOR, INSIDE, OUTSIDE),
+        assertTrue(ArenaMovementRule.isMovementAllowed(NOT_FIGHTING, BELONGS_OUTSIDE, OPERATOR, INSIDE, OUTSIDE),
                 "the movement rule lets him pass");
         assertFalse(leavesTheArena(NOT_FLYING, INSIDE, OUTSIDE));
     }
@@ -87,9 +89,9 @@ class ArenaFlightExitRuleTest {
         return ArenaFlightExitRule.leavesTheArena(arenaFlight, originInside, destinationInside);
     }
 
-    private static boolean isMovementAllowed(boolean belongsIntoArena, boolean operator, boolean arenaFlight,
-                                             boolean originInside, boolean destinationInside) {
-        return ArenaFlightExitRule.isMovementAllowed(belongsIntoArena, operator, arenaFlight,
+    private static boolean isMovementAllowed(boolean activeFighter, boolean belongsIntoArena, boolean operator,
+                                             boolean arenaFlight, boolean originInside, boolean destinationInside) {
+        return ArenaFlightExitRule.isMovementAllowed(activeFighter, belongsIntoArena, operator, arenaFlight,
                 originInside, destinationInside);
     }
 }
