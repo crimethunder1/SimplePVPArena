@@ -102,6 +102,10 @@ public final class TournamentMessages {
         sendReport(receiver, SUCCESS_COLOUR, lines);
     }
 
+    public static void sendErrorReport(CommandSender receiver, List<String> lines) {
+        sendReport(receiver, ERROR_COLOUR, lines);
+    }
+
     public static String toPlainText(Component message) {
         return PlainTextComponentSerializer.plainText().serialize(message);
     }

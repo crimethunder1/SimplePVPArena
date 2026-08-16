@@ -16,6 +16,9 @@ import de.simplepvparena.kit.KitSaveService;
 import de.simplepvparena.match.Match;
 import de.simplepvparena.match.MatchService;
 import de.simplepvparena.message.TournamentMessages;
+import de.simplepvparena.team.EventTeamImportFile;
+import de.simplepvparena.team.EventTeamImportResult;
+import de.simplepvparena.team.EventTeamImportService;
 import de.simplepvparena.team.Team;
 import de.simplepvparena.team.TeamCreationRequest;
 import de.simplepvparena.team.TeamMember;
@@ -70,6 +73,7 @@ public final class AdminMenuService {
     private static final int TEAMS_PREVIOUS_PAGE_SLOT = 45;
     private static final int TEAMS_INFO_SLOT = 47;
     private static final int TEAMS_BACK_SLOT = 49;
+    private static final int TEAMS_IMPORT_SLOT = 50;
     private static final int TEAMS_ADD_SLOT = 51;
     private static final int TEAMS_NEXT_PAGE_SLOT = 53;
 
@@ -94,6 +98,7 @@ public final class AdminMenuService {
     private final TournamentManager tournamentManager;
     private final TeamRegistry teamRegistry;
     private final TeamMemberLookup teamMemberLookup;
+    private final EventTeamImportService eventTeamImportService;
     private final MatchService matchService;
     private final ArenaSetupService arenaSetupService;
     private final ArenaHeightMarkerService heightMarkerService;
@@ -108,6 +113,7 @@ public final class AdminMenuService {
                             TournamentManager tournamentManager,
                             TeamRegistry teamRegistry,
                             TeamMemberLookup teamMemberLookup,
+                            EventTeamImportService eventTeamImportService,
                             MatchService matchService,
                             ArenaSetupService arenaSetupService,
                             ArenaHeightMarkerService heightMarkerService,
@@ -121,6 +127,7 @@ public final class AdminMenuService {
         this.tournamentManager = Objects.requireNonNull(tournamentManager, "tournamentManager");
         this.teamRegistry = Objects.requireNonNull(teamRegistry, "teamRegistry");
         this.teamMemberLookup = Objects.requireNonNull(teamMemberLookup, "teamMemberLookup");
+        this.eventTeamImportService = Objects.requireNonNull(eventTeamImportService, "eventTeamImportService");
         this.matchService = Objects.requireNonNull(matchService, "matchService");
         this.arenaSetupService = Objects.requireNonNull(arenaSetupService, "arenaSetupService");
         this.heightMarkerService = Objects.requireNonNull(heightMarkerService, "heightMarkerService");
@@ -445,6 +452,7 @@ public final class AdminMenuService {
                 }
             }
             case TEAMS_ADD_SLOT -> askForTeamLine(player, pagination.pageIndex());
+            case TEAMS_IMPORT_SLOT -> askForTeamImportConfirmation(player, pagination.pageIndex());
             case TEAMS_INFO_SLOT -> { }
             case TEAMS_BACK_SLOT -> openMenu(player, AdminMenuHolder.main());
             default -> openTeamActions(player, teams, pagination, slot);
@@ -476,6 +484,9 @@ public final class AdminMenuService {
                 "Asks for " + TeamCreationRequest.USAGE + " in the chat",
                 "Two player names cannot be typed into an inventory",
                 "The menu closes so you can type"));
+        inventory.setItem(TEAMS_IMPORT_SLOT, MenuItems.create(Material.WRITABLE_BOOK,
+                "Load the teams from " + EventTeamImportFile.FILE_NAME, buildTeamImportLore(teams.size(),
+                        "Asks for a confirmation first")));
         if (pagination.hasPreviousPage()) {
             inventory.setItem(TEAMS_PREVIOUS_PAGE_SLOT, MenuItems.create(MenuItems.PAGE_MATERIAL, "Previous page",
                     "Page " + pagination.getPageNumber() + " of " + pagination.getPageCount()));
@@ -485,6 +496,38 @@ public final class AdminMenuService {
                     "Page " + pagination.getPageNumber() + " of " + pagination.getPageCount()));
         }
         inventory.setItem(TEAMS_BACK_SLOT, MenuItems.back("the main menu"));
+    }
+
+    private void askForTeamImportConfirmation(Player player, int pageIndex) {
+        if (!eventTeamImportService.isImportFileAvailable()) {
+            TournamentMessages.sendError(player, eventTeamImportService.describeMissingImportFile());
+            return;
+        }
+        openMenu(player, AdminMenuHolder.confirmation(ConfirmationRequest.IMPORT_TEAMS, null, pageIndex));
+    }
+
+    private void importTeams(Player player) {
+        EventTeamImportResult result = eventTeamImportService.importTeams();
+        if (result.isImported()) {
+            TournamentMessages.sendSuccessReport(player, result.describe());
+            return;
+        }
+        TournamentMessages.sendErrorReport(player, result.describe());
+    }
+
+    private List<String> buildTeamImportLore(int registeredTeamCount, String... closingLines) {
+        List<String> lore = new ArrayList<>();
+        lore.add("Reads " + EventTeamImportFile.FILE_NAME + " of the plugin folder");
+        lore.add("Every one of the " + registeredTeamCount + " registered teams is replaced by it");
+        lore.add("An entry that cannot be used is skipped and named,");
+        lore.add("the teams around it are still imported");
+        lore.addAll(eventTeamImportService.describeImportFile());
+        if (matchService.hasActiveMatch()) {
+            lore.add("A match is running: a team that is gone afterwards");
+            lore.add("hands its opponent a walkover, like every removal");
+        }
+        lore.addAll(List.of(closingLines));
+        return lore;
     }
 
     private void handleTeamActionsClick(Player player, AdminMenuHolder holder, int slot) {
@@ -643,6 +686,7 @@ public final class AdminMenuService {
             case RESET_ARENA -> arenaSetupService.clearConfiguration(player);
             case SAVE_KIT -> saveKit(player);
             case REMOVE_TEAM -> removeTeam(player, holder.getSubject().orElseThrow());
+            case IMPORT_TEAMS -> importTeams(player);
             case CANCEL_TOURNAMENT -> reportOperation(player, tournamentManager.cancelTournament());
         }
     }
@@ -686,6 +730,9 @@ public final class AdminMenuService {
             case REMOVE_TEAM -> List.of(
                     "Team " + holder.getSubject().orElseThrow() + " is removed from the registry",
                     "A running match of that team is not stopped by it");
+            case IMPORT_TEAMS -> buildTeamImportLore(teamRegistry.getTeamCount(),
+                    "The teams that are registered now are gone afterwards",
+                    "Nothing is removed if not a single entry can be imported");
             case CANCEL_TOURNAMENT -> List.of(
                     "The running tournament is cancelled",
                     "The running match is stopped and its bracket is dropped");

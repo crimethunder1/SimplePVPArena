@@ -6,6 +6,7 @@ public enum ConfirmationRequest {
     RESET_ARENA("Reset the arena?", AdminMenuType.ARENA),
     SAVE_KIT("Save your inventory as the kit?", AdminMenuType.KIT),
     REMOVE_TEAM("Remove the team?", AdminMenuType.TEAMS),
+    IMPORT_TEAMS("Replace every team with event.json?", AdminMenuType.TEAMS),
     CANCEL_TOURNAMENT("Cancel the tournament?", AdminMenuType.MATCH);
 
     private final String title;

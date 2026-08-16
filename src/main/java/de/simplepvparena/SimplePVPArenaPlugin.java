@@ -49,6 +49,8 @@ import de.simplepvparena.listener.PlayerMoveListener;
 import de.simplepvparena.listener.PlayerRespawnListener;
 import de.simplepvparena.listener.SpectatorBorderListener;
 import de.simplepvparena.match.MatchService;
+import de.simplepvparena.team.EventTeamImportFile;
+import de.simplepvparena.team.EventTeamImportService;
 import de.simplepvparena.team.TeamMemberLookup;
 import de.simplepvparena.team.TeamRegistry;
 import de.simplepvparena.team.TeamStorage;
@@ -68,6 +70,7 @@ public final class SimplePVPArenaPlugin extends JavaPlugin {
     private ArenaRegistry arenaRegistry;
     private TeamRegistry teamRegistry;
     private TeamStorage teamStorage;
+    private EventTeamImportService eventTeamImportService;
     private KitService kitService;
     private KitSaveService kitSaveService;
     private SpectatorService spectatorService;
@@ -150,10 +153,14 @@ public final class SimplePVPArenaPlugin extends JavaPlugin {
                 borderWallPreview, arenaGapGuide, arenaCleaningService, arenaBaselineService,
                 arenaBorderConfirmation, this::saveArenaConfiguration);
         chatInputService = new ChatInputService(this);
+        TeamMemberLookup teamMemberLookup = new TeamMemberLookup(getServer());
+        eventTeamImportService = new EventTeamImportService(
+                new File(getDataFolder(), EventTeamImportFile.FILE_NAME), teamRegistry,
+                teamMemberLookup::find, this::saveTeamConfiguration);
         adminMenuService = new AdminMenuService(this, tournamentManager, teamRegistry,
-                new TeamMemberLookup(getServer()), matchService, arenaSetupService, arenaHeightMarkerService,
-                spectatorBorderService, borderSelectorModes, kitSaveService, chatInputService,
-                this::saveTeamConfiguration, this::reloadConfiguration);
+                teamMemberLookup, eventTeamImportService, matchService, arenaSetupService,
+                arenaHeightMarkerService, spectatorBorderService, borderSelectorModes, kitSaveService,
+                chatInputService, this::saveTeamConfiguration, this::reloadConfiguration);
 
         configurationReloadService = new ConfigurationReloadService(this::getConfig, this::reloadConfig,
                 new PluginLiveConfiguration(kitService, new KitConfigurationLoader(getLogger()), matchService,
