@@ -26,18 +26,23 @@ public final class TournamentManager implements MatchCompletionHandler {
     private final TeamRegistry teamRegistry;
     private final ArenaRegistry arenaRegistry;
     private final MatchService matchService;
+    private final ArenaCleanup arenaCleanup;
     private final FinalMatchGate finalMatchGate;
     private final Random seedingRandom = new Random();
 
     private TournamentState state = TournamentState.IDLE;
     private Bracket bracket;
 
+    private boolean waitingForArenaCleaning;
+
     public TournamentManager(Plugin plugin, TeamRegistry teamRegistry, ArenaRegistry arenaRegistry,
-                             MatchService matchService, OperatorNotifier operatorNotifier) {
+                             MatchService matchService, ArenaCleanup arenaCleanup,
+                             OperatorNotifier operatorNotifier) {
         this.plugin = plugin;
         this.teamRegistry = teamRegistry;
         this.arenaRegistry = arenaRegistry;
         this.matchService = matchService;
+        this.arenaCleanup = arenaCleanup;
         this.finalMatchGate = new FinalMatchGate(operatorNotifier);
         this.matchService.setMatchCompletionHandler(this);
     }
@@ -73,6 +78,7 @@ public final class TournamentManager implements MatchCompletionHandler {
         java.util.Collections.shuffle(teamNames, seedingRandom);
         bracket = Bracket.createSingleElimination(teamNames);
         finalMatchGate.reset();
+        waitingForArenaCleaning = false;
         state = TournamentState.RUNNING;
         matchService.resumeRoundTimer();
 
@@ -113,6 +119,7 @@ public final class TournamentManager implements MatchCompletionHandler {
         matchService.resumeRoundTimer();
         bracket = null;
         finalMatchGate.reset();
+        waitingForArenaCleaning = false;
         state = TournamentState.CANCELLED;
         broadcastWarning("The tournament has been cancelled");
         return TournamentOperationResult.success("Tournament cancelled");
@@ -164,6 +171,11 @@ public final class TournamentManager implements MatchCompletionHandler {
         if (arenaRejection.isPresent()) {
             return TournamentOperationResult.failure(arenaRejection.get());
         }
+        if (waitingForArenaCleaning) {
+            return TournamentOperationResult.failure("The arena is still being cleaned after the last match"
+                    + TournamentMessages.LINE_BREAK + "Start the final again in a moment, the finalists "
+                    + "are meant to fight in the arena the admin built");
+        }
         BracketMatch finalMatch = bracket.getFinalMatch();
         if (!resolveTeamsOrDeclareWalkover(finalMatch)) {
             return TournamentOperationResult.failure("The final cannot be started, at least one finalist is "
@@ -176,7 +188,29 @@ public final class TournamentManager implements MatchCompletionHandler {
 
     @Override
     public void onMatchCompleted(Match match, String winnerTeamName) {
+        cleanArenaBeforeTheNextMatch();
         recordBracketWinner(match.getMatchId(), winnerTeamName);
+    }
+
+    private void cleanArenaBeforeTheNextMatch() {
+        Optional<String> skipReason = arenaCleanup.startCleaningAfterMatch(this::onArenaCleaned);
+        if (skipReason.isEmpty()) {
+            waitingForArenaCleaning = true;
+            return;
+        }
+        plugin.getLogger().info("The arena is not cleaned automatically after this match: "
+                + toLogLine(skipReason.get()) + ". The tournament carries on");
+    }
+
+    private void onArenaCleaned(String outcome) {
+        waitingForArenaCleaning = false;
+        plugin.getLogger().info("The automatic arena cleaning after the match is over: "
+                + toLogLine(outcome));
+        startNextMatch();
+    }
+
+    private static String toLogLine(String message) {
+        return message.replace(TournamentMessages.LINE_BREAK, " ");
     }
 
     static Optional<String> findArenaRejection(boolean arenaFullyConfigured, Optional<String> runningMatchId) {
@@ -240,6 +274,9 @@ public final class TournamentManager implements MatchCompletionHandler {
     }
 
     private void startNextMatch() {
+        if (waitingForArenaCleaning) {
+            return;
+        }
         while (state == TournamentState.RUNNING && bracket != null && !matchService.hasActiveMatch()) {
             Optional<BracketMatch> nextMatch = MatchSequence.findNextMatch(bracket);
             if (nextMatch.isEmpty()) {

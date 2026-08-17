@@ -14,6 +14,7 @@ import org.bukkit.entity.Player;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.function.Consumer;
 
 public final class ArenaSetupService {
 
@@ -315,6 +316,26 @@ public final class ArenaSetupService {
                 + arenaCleaningService.getBlocksPerTick() + " per tick"
                 + TournamentMessages.LINE_BREAK + arenaCleaningService.describeAnimation());
         return true;
+    }
+
+    public Optional<String> startAutomaticCleaning(Consumer<String> completionHandler) {
+        Optional<String> rejection = findCleaningRejection();
+        if (rejection.isPresent()) {
+            return rejection;
+        }
+        if (!hasBaseline()) {
+            return Optional.of("no baseline of the fight area is stored, and a cleaning nobody asked "
+                    + "for never empties the arena"
+                    + TournamentMessages.LINE_BREAK + "Run " + Arena.CALCULATE_ACTION
+                    + " once, that takes one");
+        }
+        ArenaCleaningPlan plan = ArenaCleaningPlan.of(getShape().orElseThrow(),
+                arenaBaselineService.findStoredSnapshot());
+        if (!arenaCleaningService.startCleaning(plan,
+                report -> completionHandler.accept(report.describeOutcome()))) {
+            return Optional.of("the arena cleaning could not be started");
+        }
+        return Optional.empty();
     }
 
     private static void reportCleaningOutcome(CommandSender sender, ArenaCleaningReport report) {

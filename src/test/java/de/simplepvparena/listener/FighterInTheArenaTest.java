@@ -113,11 +113,16 @@ class FighterInTheArenaTest {
     }
 
     @Test
-    void leavesEveryPlacementOutsideTheFightAreaAlone() {
+    void leavesEveryPlacementOutsideTheFightAreaToTheWorldLock() {
+        spectator.makeOperator();
+
         assertFalse(isPlacementCancelledFor(spectator, ArenaMatchHarness.WALL_MAXIMUM + 3,
-                ArenaMatchHarness.GROUND_Y, ArenaMatchHarness.WALL_MAXIMUM + 3), "on the tribune");
+                ArenaMatchHarness.GROUND_Y, ArenaMatchHarness.WALL_MAXIMUM + 3), "the admin on the tribune");
         assertFalse(isPlacementCancelledFor(spectator, ArenaMatchHarness.WALL_MINIMUM, ArenaMatchHarness.GROUND_Y,
-                5), "and in the column the border wall stands in");
+                5), "and in the column his own border wall stands in");
+        assertTrue(isPlacementCancelledFor(fighter, ArenaMatchHarness.WALL_MAXIMUM + 3,
+                ArenaMatchHarness.GROUND_Y, ArenaMatchHarness.WALL_MAXIMUM + 3),
+                "while a fighter of the running round is no admin out there either");
     }
 
     @Test

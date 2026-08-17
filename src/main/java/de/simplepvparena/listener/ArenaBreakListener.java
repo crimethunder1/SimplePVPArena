@@ -2,10 +2,9 @@ package de.simplepvparena.listener;
 
 import de.simplepvparena.arena.ArenaBaselineService;
 import de.simplepvparena.arena.ArenaBreakRule;
-import de.simplepvparena.arena.ArenaBuildRule;
 import de.simplepvparena.arena.ArenaRegistry;
 import de.simplepvparena.arena.ArenaShape;
-import de.simplepvparena.command.TournamentCommand;
+import de.simplepvparena.arena.ArenaWorldBuildRule;
 import de.simplepvparena.match.MatchService;
 import de.simplepvparena.message.TournamentMessages;
 import org.bukkit.block.Block;
@@ -49,45 +48,34 @@ public final class ArenaBreakListener implements Listener {
 
     @EventHandler(priority = EventPriority.LOW, ignoreCancelled = true)
     public void onPlayerBucketEmpty(PlayerBucketEmptyEvent event) {
-        Player player = event.getPlayer();
-        Optional<ArenaShape> arenaShape = findFightArea(event.getBlock());
-        if (arenaShape.isEmpty()) {
-            return;
+        if (ArenaBuildListener.isPlacementRefused(matchService, arenaRegistry, event.getPlayer(),
+                event.getBlock())) {
+            event.setCancelled(true);
         }
-        Block placedBlock = event.getBlock();
-        if (ArenaBuildRule.isPlacementAllowed(matchService.isActiveFighter(player.getUniqueId()),
-                isArenaAdmin(player), arenaShape.get().containsCell(placedBlock.getX(), placedBlock.getZ()))) {
-            return;
-        }
-        event.setCancelled(true);
-        TournamentMessages.sendError(player, "Only the fighters of the running round build inside the arena");
     }
 
     private boolean isRemovalRefused(Player player, Block block) {
-        Optional<ArenaShape> arenaShape = findFightArea(block);
+        Optional<ArenaShape> arenaShape = ArenaBuildListener.findFightArea(arenaRegistry, block);
         if (arenaShape.isEmpty()) {
             return false;
         }
         ArenaShape shape = arenaShape.get();
+        boolean arenaAdmin = ArenaBuildListener.isArenaAdmin(player);
+        boolean insideFightArea = shape.containsCell(block.getX(), block.getZ());
+        if (!ArenaWorldBuildRule.isChangeAllowed(arenaAdmin, insideFightArea)) {
+            TournamentMessages.sendActionBarError(player, ArenaWorldBuildRule.REFUSAL);
+            return true;
+        }
         boolean activeFighter = matchService.isActiveFighter(player.getUniqueId());
         boolean partOfTheOriginalArena = ArenaBreakRule.isPartOfTheOriginalArena(
                 arenaBaselineService.findSnapshot(shape), block.getX(), block.getY(), block.getZ(), block.getType());
-        if (ArenaBreakRule.isBreakingAllowed(activeFighter, isArenaAdmin(player),
-                shape.containsCell(block.getX(), block.getZ()), partOfTheOriginalArena)) {
+        if (ArenaBreakRule.isBreakingAllowed(activeFighter, arenaAdmin, insideFightArea,
+                partOfTheOriginalArena)) {
             return false;
         }
         TournamentMessages.sendActionBarError(player, activeFighter
                 ? "The arena stays as it is, only what was placed during the match comes down again"
                 : "Only the fighters of the running round change blocks inside the arena");
         return true;
-    }
-
-    private Optional<ArenaShape> findFightArea(Block block) {
-        return arenaRegistry.getArena().getShape()
-                .filter(shape -> block.getWorld().getName().equals(shape.getWorldName()));
-    }
-
-    private static boolean isArenaAdmin(Player player) {
-        return player.isOp() || player.hasPermission(TournamentCommand.ADMIN_PERMISSION);
     }
 }

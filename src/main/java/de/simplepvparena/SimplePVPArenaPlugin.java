@@ -163,9 +163,6 @@ public final class SimplePVPArenaPlugin extends JavaPlugin {
         matchService = new MatchService(this, kitService, spectatorService, fighterColours,
                 startGateOpeningService);
 
-        tournamentManager = new TournamentManager(this, teamRegistry, arenaRegistry, matchService,
-                new OnlineOperatorNotifier(getServer()));
-
         BorderVisualEffect borderVisualEffect = BorderVisualEffects.create(getServer().getPluginManager(),
                 getLogger());
         borderParticleService = new BorderParticleService(this, borderMarkIndex, borderVisualEffect,
@@ -184,6 +181,10 @@ public final class SimplePVPArenaPlugin extends JavaPlugin {
         arenaSetupService = new ArenaSetupService(activeArenaState, matchService, spectatorBorderService,
                 borderWallPreview, arenaGapGuide, arenaCleaningService, arenaBaselineService,
                 arenaBorderConfirmation, this::saveArenaConfiguration);
+
+        tournamentManager = new TournamentManager(this, teamRegistry, arenaRegistry, matchService,
+                arenaSetupService::startAutomaticCleaning, new OnlineOperatorNotifier(getServer()));
+
         chatInputService = new ChatInputService(this);
         TeamMemberLookup teamMemberLookup = new TeamMemberLookup(getServer());
         eventTeamImportService = new EventTeamImportService(

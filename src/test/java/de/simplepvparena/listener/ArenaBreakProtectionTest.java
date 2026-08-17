@@ -102,11 +102,15 @@ class ArenaBreakProtectionTest {
     }
 
     @Test
-    void leavesEveryBreakOutsideTheFightAreaAlone() {
+    void leavesEveryBreakOutsideTheFightAreaToTheWorldLock() {
+        spectator.makeOperator();
+
         assertFalse(isBreakCancelledFor(spectator, ArenaMatchHarness.WALL_MAXIMUM + 3,
-                ArenaMatchHarness.GROUND_Y, ArenaMatchHarness.WALL_MAXIMUM + 3), "on the tribune");
-        assertFalse(isBreakCancelledFor(fighter, ArenaMatchHarness.WALL_MINIMUM, ArenaMatchHarness.GROUND_Y,
-                5), "and in the column the border wall stands in");
+                ArenaMatchHarness.GROUND_Y, ArenaMatchHarness.WALL_MAXIMUM + 3), "the admin on the tribune");
+        assertFalse(isBreakCancelledFor(spectator, ArenaMatchHarness.WALL_MINIMUM, ArenaMatchHarness.GROUND_Y,
+                5), "and in the column his own border wall stands in");
+        assertTrue(isBreakCancelledFor(fighter, ArenaMatchHarness.WALL_MINIMUM, ArenaMatchHarness.GROUND_Y,
+                5), "while a fighter of the running round is no admin out there either");
     }
 
     @Test
@@ -142,8 +146,14 @@ class ArenaBreakProtectionTest {
     void letsOnlyTheFightersPourALiquidIntoTheArena() {
         assertFalse(isBucketEmptyCancelledFor(fighter, OPEN_X, ArenaMatchHarness.GROUND_Y + 1, OPEN_Z));
         assertTrue(isBucketEmptyCancelledFor(spectator, OPEN_X, ArenaMatchHarness.GROUND_Y + 1, OPEN_Z));
+        assertTrue(isBucketEmptyCancelledFor(spectator, ArenaMatchHarness.WALL_MAXIMUM + 3,
+                ArenaMatchHarness.GROUND_Y, ArenaMatchHarness.WALL_MAXIMUM + 3),
+                "and nobody pours a lake over the tribune either");
+
+        spectator.makeOperator();
         assertFalse(isBucketEmptyCancelledFor(spectator, ArenaMatchHarness.WALL_MAXIMUM + 3,
-                ArenaMatchHarness.GROUND_Y, ArenaMatchHarness.WALL_MAXIMUM + 3), "the tribune is not ours");
+                ArenaMatchHarness.GROUND_Y, ArenaMatchHarness.WALL_MAXIMUM + 3),
+                "the admin fills the pond of his own tribune");
     }
 
     private void captureBaseline() {
