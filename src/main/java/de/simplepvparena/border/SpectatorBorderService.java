@@ -2,6 +2,7 @@ package de.simplepvparena.border;
 
 import de.simplepvparena.arena.ArenaShape;
 import de.simplepvparena.arena.BorderColumnReader;
+import de.simplepvparena.input.BlockItemRequest;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.TextDecoration;
 import org.bukkit.Location;
@@ -36,7 +37,7 @@ public final class SpectatorBorderService {
         return borderKey;
     }
 
-    public ItemStack createBorderItem(BorderItemRequest request) {
+    public ItemStack createBorderItem(BlockItemRequest request) {
         ItemStack itemStack = new ItemStack(request.material(), request.amount());
         ItemMeta itemMeta = itemStack.getItemMeta();
         itemMeta.displayName(Component.text("Spectator border").decoration(TextDecoration.ITALIC, false));

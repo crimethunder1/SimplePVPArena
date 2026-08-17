@@ -10,6 +10,7 @@ import de.simplepvparena.border.BorderParticleService;
 import de.simplepvparena.border.BorderVisualEffect;
 import de.simplepvparena.border.BorderWallPreview;
 import de.simplepvparena.border.ConfirmedBorderParticleSettings;
+import de.simplepvparena.gate.StartGateDuration;
 import de.simplepvparena.kit.KitConfigurationLoader;
 import de.simplepvparena.kit.KitService;
 import de.simplepvparena.match.FighterColours;
@@ -26,6 +27,7 @@ public final class PluginLiveConfiguration implements LiveConfiguration {
     private final KitService kitService;
     private final KitConfigurationLoader kitConfigurationLoader;
     private final MatchService matchService;
+    private final StartGateDuration startGateDuration;
     private final FighterColours fighterColours;
     private final ArenaCleaningService arenaCleaningService;
     private final ArenaCleaningVisualEffect arenaCleaningVisualEffect;
@@ -40,6 +42,7 @@ public final class PluginLiveConfiguration implements LiveConfiguration {
     public PluginLiveConfiguration(KitService kitService,
                                    KitConfigurationLoader kitConfigurationLoader,
                                    MatchService matchService,
+                                   StartGateDuration startGateDuration,
                                    FighterColours fighterColours,
                                    ArenaCleaningService arenaCleaningService,
                                    ArenaCleaningVisualEffect arenaCleaningVisualEffect,
@@ -53,6 +56,7 @@ public final class PluginLiveConfiguration implements LiveConfiguration {
         this.kitService = Objects.requireNonNull(kitService, "kitService");
         this.kitConfigurationLoader = Objects.requireNonNull(kitConfigurationLoader, "kitConfigurationLoader");
         this.matchService = Objects.requireNonNull(matchService, "matchService");
+        this.startGateDuration = Objects.requireNonNull(startGateDuration, "startGateDuration");
         this.fighterColours = Objects.requireNonNull(fighterColours, "fighterColours");
         this.arenaCleaningService = Objects.requireNonNull(arenaCleaningService, "arenaCleaningService");
         this.arenaCleaningVisualEffect = Objects.requireNonNull(arenaCleaningVisualEffect,
@@ -74,6 +78,11 @@ public final class PluginLiveConfiguration implements LiveConfiguration {
     @Override
     public void setRoundTimeoutSettings(RoundTimeoutSettings roundTimeoutSettings) {
         matchService.setRoundTimeoutSettings(roundTimeoutSettings);
+    }
+
+    @Override
+    public void setStartGateDurationSeconds(int durationSeconds) {
+        startGateDuration.setSeconds(durationSeconds);
     }
 
     @Override

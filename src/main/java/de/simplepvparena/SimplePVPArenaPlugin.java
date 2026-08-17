@@ -28,6 +28,12 @@ import de.simplepvparena.command.TournamentCommand;
 import de.simplepvparena.config.ConfigurationReloadReport;
 import de.simplepvparena.config.ConfigurationReloadService;
 import de.simplepvparena.config.PluginLiveConfiguration;
+import de.simplepvparena.gate.StartGateDuration;
+import de.simplepvparena.gate.StartGateItemService;
+import de.simplepvparena.gate.StartGateMarkStorage;
+import de.simplepvparena.gate.StartGateMarks;
+import de.simplepvparena.gate.StartGateOpeningService;
+import de.simplepvparena.gate.VanillaStartGateVisualEffect;
 import de.simplepvparena.gui.AdminMenuService;
 import de.simplepvparena.input.ChatInputService;
 import de.simplepvparena.config.PluginSettings;
@@ -50,6 +56,7 @@ import de.simplepvparena.listener.PlayerInteractListener;
 import de.simplepvparena.listener.PlayerMoveListener;
 import de.simplepvparena.listener.PlayerRespawnListener;
 import de.simplepvparena.listener.SpectatorBorderListener;
+import de.simplepvparena.listener.StartGateListener;
 import de.simplepvparena.match.FighterColours;
 import de.simplepvparena.match.MatchService;
 import de.simplepvparena.match.ScoreboardFighterColours;
@@ -85,6 +92,11 @@ public final class SimplePVPArenaPlugin extends JavaPlugin {
     private BorderSelectorModeRegistry borderSelectorModes;
     private BorderParticleService borderParticleService;
     private BorderWallPreview borderWallPreview;
+    private StartGateMarks startGateMarks;
+    private StartGateMarkStorage startGateMarkStorage;
+    private StartGateDuration startGateDuration;
+    private StartGateItemService startGateItemService;
+    private StartGateOpeningService startGateOpeningService;
     private ArenaCleaningService arenaCleaningService;
     private ArenaCleaningVisualEffect arenaCleaningVisualEffect;
     private ArenaBaselineService arenaBaselineService;
@@ -128,16 +140,28 @@ public final class SimplePVPArenaPlugin extends JavaPlugin {
         spectatorBorderService = new SpectatorBorderService(this, borderMarkIndex, this::onBorderMarksChanged);
         borderSelectorModes = new BorderSelectorModeRegistry();
 
-        arenaCleaningVisualEffect = new VanillaArenaCleaningVisualEffect();
-        arenaCleaningService = new ArenaCleaningService(this, spectatorBorderService::clearMarksInShape,
-                arenaCleaningVisualEffect);
-
         arenaBaselineService = new ArenaBaselineService(this, new ArenaBaselineRegistry());
 
         fighterColours = new ScoreboardFighterColours(getServer(), getLogger()::warning);
         fighterColours.clearColours();
 
-        matchService = new MatchService(this, kitService, spectatorService, fighterColours);
+        startGateMarks = new StartGateMarks();
+        startGateMarkStorage = new StartGateMarkStorage(
+                new File(getDataFolder(), StartGateMarkStorage.FILE_NAME),
+                new File(getDataFolder(), StartGateMarkStorage.LEGACY_CAGES_FILE_NAME), getLogger());
+        startGateMarkStorage.load(startGateMarks);
+        startGateDuration = new StartGateDuration();
+        startGateItemService = new StartGateItemService(this, startGateMarks, startGateDuration,
+                this::onStartGateMarksChanged);
+        startGateOpeningService = new StartGateOpeningService(this, startGateMarks, startGateDuration,
+                new VanillaStartGateVisualEffect());
+
+        arenaCleaningVisualEffect = new VanillaArenaCleaningVisualEffect();
+        arenaCleaningService = new ArenaCleaningService(this, spectatorBorderService::clearMarksInShape,
+                arenaCleaningVisualEffect, startGateMarks::isMarked);
+
+        matchService = new MatchService(this, kitService, spectatorService, fighterColours,
+                startGateOpeningService);
 
         tournamentManager = new TournamentManager(this, teamRegistry, arenaRegistry, matchService,
                 new OnlineOperatorNotifier(getServer()));
@@ -167,12 +191,13 @@ public final class SimplePVPArenaPlugin extends JavaPlugin {
                 teamMemberLookup::find, this::saveTeamConfiguration);
         adminMenuService = new AdminMenuService(this, tournamentManager, teamRegistry,
                 teamMemberLookup, eventTeamImportService, matchService, arenaSetupService,
-                arenaHeightMarkerService, spectatorBorderService, borderSelectorModes, kitSaveService,
-                chatInputService, this::saveTeamConfiguration, this::reloadConfiguration);
+                arenaHeightMarkerService, startGateItemService, spectatorBorderService,
+                borderSelectorModes, kitSaveService, chatInputService, this::saveTeamConfiguration,
+                this::reloadConfiguration);
 
         configurationReloadService = new ConfigurationReloadService(this::getConfig, this::reloadConfig,
                 new PluginLiveConfiguration(kitService, new KitConfigurationLoader(getLogger()), matchService,
-                        fighterColours, arenaCleaningService, arenaCleaningVisualEffect, arenaBaselineService,
+                        startGateDuration, fighterColours, arenaCleaningService, arenaCleaningVisualEffect, arenaBaselineService,
                         arenaSetupService, arenaSafetyZone, borderParticleService, borderWallPreview,
                         borderVisualEffect, getLogger()::warning),
                 getLogger()::warning);
@@ -207,6 +232,9 @@ public final class SimplePVPArenaPlugin extends JavaPlugin {
         if (matchService != null) {
             matchService.cancelActiveMatch();
         }
+        if (startGateOpeningService != null) {
+            startGateOpeningService.stopAndRestore();
+        }
         if (fighterColours != null) {
             fighterColours.clearColours();
         }
@@ -236,6 +264,10 @@ public final class SimplePVPArenaPlugin extends JavaPlugin {
     public void onBorderMarksChanged() {
         borderMarkStorage.save(borderMarkIndex);
         arenaBorderConfirmation.invalidate();
+    }
+
+    public void onStartGateMarksChanged() {
+        startGateMarkStorage.save(startGateMarks);
     }
 
     public TournamentManager getTournamentManager() {
@@ -289,7 +321,8 @@ public final class SimplePVPArenaPlugin extends JavaPlugin {
 
     private void registerListeners() {
         getServer().getPluginManager().registerEvents(
-                new PlayerConnectionListener(matchService, spectatorService, arenaRegistry, borderSelectorModes), this);
+                new PlayerConnectionListener(matchService, spectatorService, arenaRegistry,
+                        borderSelectorModes), this);
         getServer().getPluginManager().registerEvents(new PlayerDeathListener(matchService), this);
         getServer().getPluginManager().registerEvents(
                 new PlayerRespawnListener(this, matchService, spectatorService, arenaRegistry), this);
@@ -303,6 +336,8 @@ public final class SimplePVPArenaPlugin extends JavaPlugin {
                 new BorderSelectorListener(borderSelectorModes, spectatorBorderService), this);
         getServer().getPluginManager().registerEvents(
                 new ArenaHeightMarkerListener(arenaHeightMarkerService), this);
+        getServer().getPluginManager().registerEvents(
+                new StartGateListener(startGateItemService), this);
         getServer().getPluginManager().registerEvents(
                 new ArenaBuildListener(matchService, arenaRegistry), this);
         getServer().getPluginManager().registerEvents(

@@ -5,12 +5,13 @@ import de.simplepvparena.arena.ArenaHeightMarkerService;
 import de.simplepvparena.arena.ArenaSetupService;
 import de.simplepvparena.arena.ArenaShapeFloodFill;
 import de.simplepvparena.arena.ArenaSpawnType;
-import de.simplepvparena.border.BorderItemRequest;
-import de.simplepvparena.border.BorderItemRequestResult;
 import de.simplepvparena.border.BorderSelectorModeRegistry;
 import de.simplepvparena.border.SpectatorBorderService;
 import de.simplepvparena.command.TournamentCommand;
 import de.simplepvparena.config.ConfigurationReloadReport;
+import de.simplepvparena.gate.StartGateItemService;
+import de.simplepvparena.input.BlockItemRequest;
+import de.simplepvparena.input.BlockItemRequestResult;
 import de.simplepvparena.input.ChatInputService;
 import de.simplepvparena.kit.KitSaveService;
 import de.simplepvparena.match.Match;
@@ -69,6 +70,8 @@ public final class AdminMenuService {
     private static final int ARENA_CLEAN_SLOT = 15;
     private static final int ARENA_RESET_SLOT = 16;
     private static final int ARENA_HEIGHT_MARKER_SLOT = 19;
+    private static final int ARENA_START_GATE_SLOT = 20;
+    private static final Material START_GATE_TILE_MATERIAL = Material.IRON_BARS;
 
     private static final int TEAMS_PREVIOUS_PAGE_SLOT = 45;
     private static final int TEAMS_INFO_SLOT = 47;
@@ -102,6 +105,7 @@ public final class AdminMenuService {
     private final MatchService matchService;
     private final ArenaSetupService arenaSetupService;
     private final ArenaHeightMarkerService heightMarkerService;
+    private final StartGateItemService gateItemService;
     private final SpectatorBorderService spectatorBorderService;
     private final BorderSelectorModeRegistry borderSelectorModes;
     private final KitSaveService kitSaveService;
@@ -117,6 +121,7 @@ public final class AdminMenuService {
                             MatchService matchService,
                             ArenaSetupService arenaSetupService,
                             ArenaHeightMarkerService heightMarkerService,
+                            StartGateItemService gateItemService,
                             SpectatorBorderService spectatorBorderService,
                             BorderSelectorModeRegistry borderSelectorModes,
                             KitSaveService kitSaveService,
@@ -131,6 +136,7 @@ public final class AdminMenuService {
         this.matchService = Objects.requireNonNull(matchService, "matchService");
         this.arenaSetupService = Objects.requireNonNull(arenaSetupService, "arenaSetupService");
         this.heightMarkerService = Objects.requireNonNull(heightMarkerService, "heightMarkerService");
+        this.gateItemService = Objects.requireNonNull(gateItemService, "gateItemService");
         this.spectatorBorderService = Objects.requireNonNull(spectatorBorderService, "spectatorBorderService");
         this.borderSelectorModes = Objects.requireNonNull(borderSelectorModes, "borderSelectorModes");
         this.kitSaveService = Objects.requireNonNull(kitSaveService, "kitSaveService");
@@ -302,6 +308,7 @@ public final class AdminMenuService {
             }
             case ARENA_DIAGNOSE_SLOT -> askForDebugCellLimitLine(player);
             case ARENA_HEIGHT_MARKER_SLOT -> handOutHeightMarker(player, holder);
+            case ARENA_START_GATE_SLOT -> askForStartGateItemLine(player);
             case ARENA_FIRST_TEAM_SPAWN_SLOT -> setSpawn(player, holder, ArenaSpawnType.FIRST_TEAM);
             case ARENA_SECOND_TEAM_SPAWN_SLOT -> setSpawn(player, holder, ArenaSpawnType.SECOND_TEAM);
             case ARENA_TRIBUNE_SPAWN_SLOT -> setSpawn(player, holder, ArenaSpawnType.TRIBUNE);
@@ -333,6 +340,46 @@ public final class AdminMenuService {
         refresh(player, holder);
     }
 
+    private void askForStartGateItemLine(Player player) {
+        closeMenu(player);
+        chatInputService.await(player, "the start gate blocks", List.of(
+                        "Type: " + BlockItemRequest.USAGE + " in chat",
+                        "Example: barrier 32",
+                        "The amount has to be between " + BlockItemRequest.MINIMUM_AMOUNT
+                                + " and " + BlockItemRequest.MAXIMUM_AMOUNT),
+                line -> handleStartGateItemLine(player, line));
+    }
+
+    private void handleStartGateItemLine(Player player, String line) {
+        if (!isStillAdmin(player)) {
+            return;
+        }
+        BlockItemRequestResult requestResult = BlockItemRequest.parseLine(line,
+                AdminMenuService::isPlaceableBlock);
+        if (!requestResult.isAccepted()) {
+            TournamentMessages.sendError(player, requestResult.getRejectionMessage().orElseThrow());
+            openMenu(player, AdminMenuHolder.arena());
+            return;
+        }
+        BlockItemRequest request = requestResult.getRequest().orElseThrow();
+        Map<Integer, ItemStack> itemsThatDidNotFit = player.getInventory()
+                .addItem(gateItemService.createGateItem(request));
+        if (!itemsThatDidNotFit.isEmpty()) {
+            TournamentMessages.sendWarning(player,
+                    "Your inventory is full, not every gate block could be handed out");
+        }
+        TournamentMessages.sendSuccess(player, "You received " + request.amount() + " "
+                + request.material().name() + " start gate blocks"
+                + TournamentMessages.LINE_BREAK
+                + "Build the box around a team spawn out of whatever your map is made of and close it "
+                + "with these blocks"
+                + TournamentMessages.LINE_BREAK
+                + "Every one of them you place is part of the gate right away, breaking one takes it "
+                + "out again"
+                + TournamentMessages.LINE_BREAK
+                + "Every round start puts the whole gate back and takes it apart again from the top");
+    }
+
     private void askForCleaningConfirmation(Player player) {
         Optional<String> rejection = arenaSetupService.findCleaningRejection();
         if (rejection.isPresent()) {
@@ -356,6 +403,8 @@ public final class AdminMenuService {
                 "config.yml stays untouched"));
         inventory.setItem(ARENA_HEIGHT_MARKER_SLOT, MenuItems.create(ArenaHeightMarkerService.MARKER_MATERIAL,
                 "Mark the height of the fight area", buildHeightMarkerLore()));
+        inventory.setItem(ARENA_START_GATE_SLOT, MenuItems.create(START_GATE_TILE_MATERIAL,
+                "Give start gate blocks", buildStartGateLore()));
         inventory.setItem(ARENA_FIRST_TEAM_SPAWN_SLOT, buildSpawnItem(Material.BLUE_BED, ArenaSpawnType.FIRST_TEAM));
         inventory.setItem(ARENA_SECOND_TEAM_SPAWN_SLOT, buildSpawnItem(Material.RED_BED, ArenaSpawnType.SECOND_TEAM));
         inventory.setItem(ARENA_TRIBUNE_SPAWN_SLOT, buildSpawnItem(Material.YELLOW_BED, ArenaSpawnType.TRIBUNE));
@@ -377,6 +426,20 @@ public final class AdminMenuService {
         lore.add("The next calculation cleans exactly between them,");
         lore.add("also below the border wall, and uses both marks up");
         lore.addAll(heightMarkerService.describeMarkers());
+        return lore;
+    }
+
+    private List<String> buildStartGateLore() {
+        List<String> lore = new ArrayList<>();
+        lore.add("Asks for a material and an amount in the chat and");
+        lore.add("hands you that many start gate blocks");
+        lore.add("Build a box around each team spawn and close it");
+        lore.add("with them: every placed one is part of the gate,");
+        lore.add("breaking one takes it out again");
+        lore.add("Every round start puts the whole gate back and takes");
+        lore.add("it apart again from the top, with a countdown");
+        lore.add("A gate nobody placed is skipped, the round still starts");
+        lore.addAll(gateItemService.describeGate());
         return lore;
     }
 
@@ -796,10 +859,10 @@ public final class AdminMenuService {
     private void askForBorderItemLine(Player player) {
         closeMenu(player);
         chatInputService.await(player, "the border blocks", List.of(
-                        "Type: " + BorderItemRequest.USAGE + " in chat",
+                        "Type: " + BlockItemRequest.USAGE + " in chat",
                         "Example: glass 16",
-                        "The amount has to be between " + BorderItemRequest.MINIMUM_AMOUNT
-                                + " and " + BorderItemRequest.MAXIMUM_AMOUNT),
+                        "The amount has to be between " + BlockItemRequest.MINIMUM_AMOUNT
+                                + " and " + BlockItemRequest.MAXIMUM_AMOUNT),
                 line -> handleBorderItemLine(player, line));
     }
 
@@ -807,14 +870,14 @@ public final class AdminMenuService {
         if (!isStillAdmin(player)) {
             return;
         }
-        BorderItemRequestResult requestResult = BorderItemRequest.parseLine(line,
+        BlockItemRequestResult requestResult = BlockItemRequest.parseLine(line,
                 AdminMenuService::isPlaceableBlock);
         if (!requestResult.isAccepted()) {
             TournamentMessages.sendError(player, requestResult.getRejectionMessage().orElseThrow());
             openMainMenu(player);
             return;
         }
-        BorderItemRequest request = requestResult.getRequest().orElseThrow();
+        BlockItemRequest request = requestResult.getRequest().orElseThrow();
         ItemStack borderItem = spectatorBorderService.createBorderItem(request);
         Map<Integer, ItemStack> itemsThatDidNotFit = player.getInventory().addItem(borderItem);
         if (!itemsThatDidNotFit.isEmpty()) {

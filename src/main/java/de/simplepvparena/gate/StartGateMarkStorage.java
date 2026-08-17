@@ -1,0 +1,128 @@
+package de.simplepvparena.gate;
+
+import org.bukkit.Material;
+import org.bukkit.configuration.file.YamlConfiguration;
+
+import java.io.File;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
+public final class StartGateMarkStorage {
+
+    public static final String FILE_NAME = "startgates.yml";
+
+    public static final String LEGACY_CAGES_FILE_NAME = "startcages.yml";
+
+    private static final String GATE_KEY = "gate";
+    private static final String WORLD_NAME_KEY = "world";
+    private static final String MARKS_KEY = "marks";
+
+    private final File gatesFile;
+    private final File legacyCagesFile;
+    private final Logger logger;
+
+    public StartGateMarkStorage(File gatesFile, File legacyCagesFile, Logger logger) {
+        this.gatesFile = Objects.requireNonNull(gatesFile, "gatesFile");
+        this.legacyCagesFile = Objects.requireNonNull(legacyCagesFile, "legacyCagesFile");
+        this.logger = Objects.requireNonNull(logger, "logger");
+    }
+
+    public void load(StartGateMarks gateMarks) {
+        gateMarks.clear();
+        reportLegacyCagesFile();
+        if (!gatesFile.isFile()) {
+            logger.info("No " + gatesFile.getName() + " found, starting without a start gate");
+            return;
+        }
+        YamlConfiguration configuration = YamlConfiguration.loadConfiguration(gatesFile);
+        Map<String, Map<Long, Material>> readMarksByWorld = new LinkedHashMap<>();
+        for (Map<?, ?> worldEntry : configuration.getMapList(GATE_KEY)) {
+            readWorldEntry(readMarksByWorld, worldEntry);
+        }
+        for (Map.Entry<String, Map<Long, Material>> world : readMarksByWorld.entrySet()) {
+            gateMarks.replaceWorld(world.getKey(), world.getValue());
+        }
+        logger.info("Loaded " + gateMarks.getMarkedBlockCount() + " start gate marks from "
+                + gatesFile.getName());
+    }
+
+    public void save(StartGateMarks gateMarks) {
+        YamlConfiguration configuration = new YamlConfiguration();
+        List<Map<String, Object>> worldEntries = new ArrayList<>();
+        for (String worldName : gateMarks.getWorldNames()) {
+            Map<Long, Material> marksOfWorld = gateMarks.getMarks(worldName);
+            if (marksOfWorld.isEmpty()) {
+                continue;
+            }
+            Map<String, Object> worldEntry = new LinkedHashMap<>();
+            worldEntry.put(WORLD_NAME_KEY, worldName);
+            worldEntry.put(MARKS_KEY, toLines(marksOfWorld));
+            worldEntries.add(worldEntry);
+        }
+        configuration.set(GATE_KEY, worldEntries);
+        File parentDirectory = gatesFile.getParentFile();
+        if (parentDirectory != null && !parentDirectory.isDirectory() && !parentDirectory.mkdirs()) {
+            logger.severe("Could not create the directory of " + gatesFile.getName()
+                    + ", the start gate is not persisted");
+            return;
+        }
+        try {
+            configuration.save(gatesFile);
+        } catch (IOException failure) {
+            logger.log(Level.SEVERE, "Could not write " + gatesFile.getName(), failure);
+        }
+    }
+
+    private void reportLegacyCagesFile() {
+        if (!legacyCagesFile.isFile()) {
+            return;
+        }
+        logger.warning(legacyCagesFile.getName() + " of the former per team starting cages was found. It is "
+                + "not read and not migrated: the cages became one start gate without teams, and its blocks "
+                + "are placed with the gate item of the arena menu of /tournament instead of being clicked "
+                + "onto blocks that already stand. Hand yourself the gate blocks there, place them once, and "
+                + "delete " + legacyCagesFile.getName() + " afterwards");
+    }
+
+    private void readWorldEntry(Map<String, Map<Long, Material>> readMarksByWorld, Map<?, ?> worldEntry) {
+        Object worldName = worldEntry.get(WORLD_NAME_KEY);
+        Object marks = worldEntry.get(MARKS_KEY);
+        if (!(worldName instanceof String readableWorldName) || !(marks instanceof List<?> readableMarks)) {
+            logger.warning("Skipped an unreadable gate entry in " + gatesFile.getName());
+            return;
+        }
+        Map<Long, Material> materialsByPosition = readMarksByWorld
+                .computeIfAbsent(readableWorldName, world -> new LinkedHashMap<>());
+        int unreadableMarkCount = 0;
+        for (Object mark : readableMarks) {
+            if (!(mark instanceof String markLine)) {
+                unreadableMarkCount++;
+                continue;
+            }
+            StartGateMarkLine parsedMark = StartGateMarkLine.parse(markLine).orElse(null);
+            if (parsedMark == null) {
+                unreadableMarkCount++;
+                continue;
+            }
+            materialsByPosition.put(parsedMark.encodedPosition(), parsedMark.material());
+        }
+        if (unreadableMarkCount > 0) {
+            logger.warning("Skipped " + unreadableMarkCount + " unreadable gate marks of the world "
+                    + readableWorldName + " in " + gatesFile.getName());
+        }
+    }
+
+    private static List<String> toLines(Map<Long, Material> marksOfWorld) {
+        List<String> lines = new ArrayList<>(marksOfWorld.size());
+        for (Map.Entry<Long, Material> mark : marksOfWorld.entrySet()) {
+            lines.add(StartGateMarkLine.format(mark.getKey(), mark.getValue()));
+        }
+        return lines;
+    }
+}

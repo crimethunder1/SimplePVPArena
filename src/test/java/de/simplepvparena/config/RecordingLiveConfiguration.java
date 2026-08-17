@@ -2,6 +2,7 @@ package de.simplepvparena.config;
 
 import de.simplepvparena.arena.ArenaCleaningParticleSettings;
 import de.simplepvparena.border.ConfirmedBorderParticleSettings;
+import de.simplepvparena.gate.StartGateDuration;
 import de.simplepvparena.match.RoundTimeoutSettings;
 import de.simplepvparena.match.TeamColourSettings;
 import org.bukkit.configuration.ConfigurationSection;
@@ -15,6 +16,7 @@ final class RecordingLiveConfiguration implements LiveConfiguration {
 
     static final String ROUND_RESET_DELAY = "roundResetDelayTicks";
     static final String ROUND_TIMEOUT = "roundTimeoutSettings";
+    static final String START_GATE_DURATION = "startGateDurationSeconds";
     static final String TEAM_COLOURS = "teamColourSettings";
     static final String CLEANING_BLOCKS_PER_TICK = "arenaCleaningBlocksPerTick";
     static final String BASELINE_BLOCKS_PER_TICK = "arenaBaselineBlocksPerTick";
@@ -30,11 +32,12 @@ final class RecordingLiveConfiguration implements LiveConfiguration {
     static final String KIT = "kit";
 
     static final List<String> EVERY_APPLIED_VALUE = List.of(
-            ROUND_RESET_DELAY, ROUND_TIMEOUT, TEAM_COLOURS, CLEANING_BLOCKS_PER_TICK, BASELINE_BLOCKS_PER_TICK,
+            ROUND_RESET_DELAY, ROUND_TIMEOUT, START_GATE_DURATION, TEAM_COLOURS, CLEANING_BLOCKS_PER_TICK, BASELINE_BLOCKS_PER_TICK,
             CLEANING_PARTICLE, MAXIMUM_CELL_COUNT, SAFETY_ZONE_RADIUS, PARTICLE_PERIOD, PARTICLE_VIEW_RADIUS,
             PARTICLE_MAXIMUM_BLOCKS, PARTICLE_MAXIMUM_LINES, WALL_PREVIEW_DURATION, CONFIRMED_PARTICLE, KIT);
 
     private final Map<String, Object> appliedValues = new LinkedHashMap<>();
+    private final StartGateDuration startGateDuration = new StartGateDuration();
     private final List<String> kitSectionKeys = new ArrayList<>();
 
     @Override
@@ -45,6 +48,12 @@ final class RecordingLiveConfiguration implements LiveConfiguration {
     @Override
     public void setRoundTimeoutSettings(RoundTimeoutSettings roundTimeoutSettings) {
         appliedValues.put(ROUND_TIMEOUT, roundTimeoutSettings);
+    }
+
+    @Override
+    public void setStartGateDurationSeconds(int durationSeconds) {
+        appliedValues.put(START_GATE_DURATION, durationSeconds);
+        startGateDuration.setSeconds(durationSeconds);
     }
 
     @Override
@@ -114,6 +123,10 @@ final class RecordingLiveConfiguration implements LiveConfiguration {
         if (kitSection != null) {
             kitSectionKeys.addAll(kitSection.getKeys(false));
         }
+    }
+
+    StartGateDuration startGateDuration() {
+        return startGateDuration;
     }
 
     Object valueOf(String name) {

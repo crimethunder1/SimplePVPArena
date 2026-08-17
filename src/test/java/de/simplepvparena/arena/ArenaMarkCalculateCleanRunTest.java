@@ -6,6 +6,7 @@ import de.simplepvparena.border.BorderVisualEffect;
 import de.simplepvparena.border.BorderWallPreview;
 import de.simplepvparena.border.ConfirmedBorderParticleSettings;
 import de.simplepvparena.border.SpectatorBorderService;
+import de.simplepvparena.gate.StartGates;
 import de.simplepvparena.match.MatchService;
 import de.simplepvparena.message.TournamentMessages;
 import net.kyori.adventure.text.Component;
@@ -190,7 +191,7 @@ class ArenaMarkCalculateCleanRunTest {
                 }
             }
             setupService = new ArenaSetupService(activeArena,
-                    new MatchService(harness.getPlugin(), null, null, null),
+                    new MatchService(harness.getPlugin(), null, null, null, StartGates.NONE),
                     new SpectatorBorderService(harness.getPlugin(), borderMarks, () -> { }),
                     new BorderWallPreview(harness.getPlugin(), new SilentVisualEffect()),
                     new ArenaGapGuide(harness.getPlugin()), cleaningService, baselineService,

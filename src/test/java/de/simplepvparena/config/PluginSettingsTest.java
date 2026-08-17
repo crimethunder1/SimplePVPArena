@@ -7,6 +7,7 @@ import de.simplepvparena.arena.ArenaSafetyZone;
 import de.simplepvparena.arena.ArenaShapeFloodFill;
 import de.simplepvparena.border.BorderParticleService;
 import de.simplepvparena.border.ConfirmedBorderParticleSettings;
+import de.simplepvparena.gate.StartGateDuration;
 import de.simplepvparena.match.RoundTimeoutSettings;
 import de.simplepvparena.match.TeamColourSettings;
 import net.kyori.adventure.text.format.NamedTextColor;
@@ -33,6 +34,7 @@ class PluginSettingsTest {
         assertEquals(List.of(), problems, "a fully valid file must not report a single problem");
         assertEquals(60L, settings.roundResetDelayTicks());
         assertEquals(new RoundTimeoutSettings(120, 30, 3.5D, 0.5D), settings.roundTimeoutSettings());
+        assertEquals(4, settings.startGateDurationSeconds());
         assertEquals(new TeamColourSettings(NamedTextColor.GOLD, NamedTextColor.DARK_PURPLE),
                 settings.teamColourSettings());
         assertEquals(1024, settings.arenaCleaningBlocksPerTick());
@@ -58,6 +60,7 @@ class PluginSettingsTest {
 
         assertTrue(shipped.roundResetDelayTicks() != settings.roundResetDelayTicks());
         assertTrue(!shipped.roundTimeoutSettings().equals(settings.roundTimeoutSettings()));
+        assertTrue(shipped.startGateDurationSeconds() != settings.startGateDurationSeconds());
         assertTrue(!shipped.teamColourSettings().equals(settings.teamColourSettings()));
         assertTrue(shipped.arenaCleaningBlocksPerTick() != settings.arenaCleaningBlocksPerTick());
         assertTrue(shipped.arenaBaselineBlocksPerTick() != settings.arenaBaselineBlocksPerTick());
@@ -136,6 +139,32 @@ class PluginSettingsTest {
                 settings.roundTimeoutSettings().roundTimeoutSeconds());
         assertEquals(1, problems.size());
         assertTrue(problems.get(0).startsWith(PluginSettings.ROUND_TIMEOUT_SECONDS_PATH), problems.get(0));
+    }
+
+    @Test
+    void readsTheStartGateDurationAndFallsBackForOneBelowASecond() {
+        MemoryConfiguration shortCountdown = new MemoryConfiguration();
+        shortCountdown.set(PluginSettings.START_GATE_DURATION_SECONDS_PATH, 3);
+
+        assertEquals(3, PluginSettings.read(shortCountdown, problems::add).startGateDurationSeconds());
+        assertEquals(List.of(), problems, "a countdown of three seconds is a setting, not a problem");
+
+        MemoryConfiguration noCountdown = new MemoryConfiguration();
+        noCountdown.set(PluginSettings.START_GATE_DURATION_SECONDS_PATH, 0);
+
+        PluginSettings settings = PluginSettings.read(noCountdown, problems::add);
+
+        assertEquals(StartGateDuration.DEFAULT_SECONDS, settings.startGateDurationSeconds());
+        assertEquals(1, problems.size());
+        assertTrue(problems.get(0).startsWith(PluginSettings.START_GATE_DURATION_SECONDS_PATH),
+                "the problem has to name the entry an admin fixes: " + problems.get(0));
+    }
+
+    @Test
+    void aFileWithoutTheStartGateEntryKeepsTheShippedTenSeconds() {
+        assertEquals(StartGateDuration.DEFAULT_SECONDS,
+                PluginSettings.read(new MemoryConfiguration(), problems::add).startGateDurationSeconds());
+        assertEquals(List.of(), problems);
     }
 
     @Test
@@ -274,6 +303,7 @@ class PluginSettingsTest {
         configuration.set(PluginSettings.SUDDEN_DEATH_WARNING_SECONDS_PATH, 30);
         configuration.set(PluginSettings.SUDDEN_DEATH_DAMAGE_PER_SECOND_PATH, 3.5D);
         configuration.set(PluginSettings.SUDDEN_DEATH_DAMAGE_INCREASE_PATH, 0.5D);
+        configuration.set(PluginSettings.START_GATE_DURATION_SECONDS_PATH, 4);
         configuration.set(PluginSettings.FIRST_TEAM_COLOUR_PATH, "GOLD");
         configuration.set(PluginSettings.SECOND_TEAM_COLOUR_PATH, "dark purple");
         configuration.set(PluginSettings.ARENA_CLEAN_BLOCKS_PER_TICK_PATH, 1024);

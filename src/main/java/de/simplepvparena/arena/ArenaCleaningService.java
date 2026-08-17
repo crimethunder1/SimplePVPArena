@@ -21,6 +21,7 @@ public final class ArenaCleaningService {
     private final Plugin plugin;
     private final CleanedArenaHandler cleanedArenaHandler;
     private final ArenaCleaningVisualEffect visualEffect;
+    private final ArenaCleaningExclusion exclusion;
 
     private int blocksPerTick = DEFAULT_BLOCKS_PER_TICK;
     private long animationDurationTicks = ArenaCleaningParticleSettings.defaults().animationDurationTicks();
@@ -32,9 +33,16 @@ public final class ArenaCleaningService {
 
     public ArenaCleaningService(Plugin plugin, CleanedArenaHandler cleanedArenaHandler,
                                 ArenaCleaningVisualEffect visualEffect) {
+        this(plugin, cleanedArenaHandler, visualEffect, ArenaCleaningExclusion.NONE);
+    }
+
+    public ArenaCleaningService(Plugin plugin, CleanedArenaHandler cleanedArenaHandler,
+                                ArenaCleaningVisualEffect visualEffect,
+                                ArenaCleaningExclusion exclusion) {
         this.plugin = plugin;
         this.cleanedArenaHandler = cleanedArenaHandler;
         this.visualEffect = Objects.requireNonNull(visualEffect, "visualEffect");
+        this.exclusion = Objects.requireNonNull(exclusion, "exclusion");
     }
 
     public void setBlocksPerTick(int blocksPerTick) {
@@ -122,7 +130,7 @@ public final class ArenaCleaningService {
             long[] batch = run.nextBatchOfLayer(remainingBlocksOfThisTick);
             remainingBlocksOfThisTick -= batch.length;
             run.checkedBlockCount += batch.length;
-            run.changedBlockCount += writeBatch(world, batch, cleaningTarget);
+            run.changedBlockCount += writeBatch(world, run.shape.getWorldName(), batch, cleaningTarget);
         }
     }
 
@@ -152,12 +160,16 @@ public final class ArenaCleaningService {
         }
     }
 
-    private long writeBatch(World world, long[] batch, ArenaCleaningTarget cleaningTarget) {
+    private long writeBatch(World world, String worldName, long[] batch,
+                            ArenaCleaningTarget cleaningTarget) {
         long changedBlockCount = 0L;
         for (long encodedPosition : batch) {
             int blockX = BlockPositionCodec.decodeX(encodedPosition);
             int blockY = BlockPositionCodec.decodeY(encodedPosition);
             int blockZ = BlockPositionCodec.decodeZ(encodedPosition);
+            if (exclusion.isExcluded(worldName, blockX, blockY, blockZ)) {
+                continue;
+            }
             Material targetMaterial = cleaningTarget.findMaterial(blockX, blockY, blockZ);
             Block block = world.getBlockAt(blockX, blockY, blockZ);
             if (block.getType() == targetMaterial) {

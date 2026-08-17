@@ -2,6 +2,8 @@ package de.simplepvparena.match;
 
 import de.simplepvparena.arena.PositionSnapshot;
 import de.simplepvparena.arena.SpectatorService;
+import de.simplepvparena.gate.StartGateCountdown;
+import de.simplepvparena.gate.StartGates;
 import de.simplepvparena.kit.KitService;
 import de.simplepvparena.message.TournamentMessages;
 import de.simplepvparena.team.Team;
@@ -30,10 +32,17 @@ public final class MatchService {
     private static final Title.Times SUDDEN_DEATH_TITLE_TIMES = Title.Times.times(
             Duration.ofMillis(200L), Duration.ofSeconds(2L), Duration.ofMillis(500L));
 
+    private static final Title.Times START_GATE_SECOND_TITLE_TIMES = Title.Times.times(
+            Duration.ZERO, Duration.ofMillis(800L), Duration.ofMillis(200L));
+
+    private static final Title.Times START_GATE_RELEASE_TITLE_TIMES = Title.Times.times(
+            Duration.ZERO, Duration.ofMillis(1200L), Duration.ofMillis(400L));
+
     private final Plugin plugin;
     private final KitService kitService;
     private final SpectatorService spectatorService;
     private final FighterColours fighterColours;
+    private final StartGates startGates;
     private final SuddenDeathTick suddenDeathTick = new SuddenDeathTick(new Random());
 
     private MatchCompletionHandler matchCompletionHandler = (match, winnerTeamName) -> { };
@@ -45,11 +54,12 @@ public final class MatchService {
     private boolean roundTimersPaused;
 
     public MatchService(Plugin plugin, KitService kitService, SpectatorService spectatorService,
-                        FighterColours fighterColours) {
+                        FighterColours fighterColours, StartGates startGates) {
         this.plugin = plugin;
         this.kitService = kitService;
         this.spectatorService = spectatorService;
         this.fighterColours = fighterColours;
+        this.startGates = Objects.requireNonNull(startGates, "startGates");
     }
 
     public void setMatchCompletionHandler(MatchCompletionHandler matchCompletionHandler) {
@@ -181,6 +191,7 @@ public final class MatchService {
         }
         Match cancelledMatch = activeMatch;
         stopRoundTimer();
+        startGates.stopAndRestore();
         cancelledMatch.setState(MatchState.CANCELLED);
         activeMatch = null;
         releaseParticipants(cancelledMatch);
@@ -222,6 +233,7 @@ public final class MatchService {
         preparePlayers(match.getFirstTeam(), match.getArena().getFirstTeamSpawn());
         preparePlayers(match.getSecondTeam(), match.getArena().getSecondTeamSpawn());
         fighterColours.colourFighters(match);
+        startGates.openAtRoundStart(remainingSeconds -> announceStartGateSecond(match, remainingSeconds));
         startRoundTimer(match);
         announceToMatch(match, "Round " + match.getRoundNumber() + " of match " + match.getMatchId()
                 + " has started (" + match.getScore().describe() + "), time limit "
@@ -235,6 +247,7 @@ public final class MatchService {
 
     private void concludeRound(Match match, RoundOutcome outcome) {
         stopRoundTimer();
+        startGates.stopAndRestore();
         if (outcome.isDraw()) {
             match.setState(MatchState.BETWEEN_ROUNDS);
             for (String drawMessage : buildDrawMessages(match.getRoundNumber(), match.getMatchId(), outcome)) {
@@ -282,6 +295,7 @@ public final class MatchService {
 
     private void finishMatch(Match match, String winnerTeamName) {
         stopRoundTimer();
+        startGates.stopAndRestore();
         match.setState(MatchState.FINISHED);
         activeMatch = null;
         announceSuccessToMatch(match, "Match " + match.getMatchId() + " is over, " + winnerTeamName + " wins ("
@@ -421,6 +435,17 @@ public final class MatchService {
     private void announceActionBarToMatch(Match match, String message) {
         Component actionBarText = Component.text(message, TournamentMessages.WARNING_COLOUR);
         forEachMatchAudience(match, player -> player.sendActionBar(actionBarText));
+    }
+
+    private void announceStartGateSecond(Match match, int remainingSeconds) {
+        boolean release = StartGateCountdown.isRelease(remainingSeconds);
+        Title title = Title.title(
+                Component.text(StartGateCountdown.describeTitle(remainingSeconds),
+                        release ? TournamentMessages.SUCCESS_COLOUR : TournamentMessages.WARNING_COLOUR),
+                Component.text(StartGateCountdown.describeSubtitle(remainingSeconds),
+                        TournamentMessages.DETAIL_COLOUR),
+                release ? START_GATE_RELEASE_TITLE_TIMES : START_GATE_SECOND_TITLE_TIMES);
+        forEachMatchAudience(match, player -> player.showTitle(title));
     }
 
     private void announceTitleToMatch(Match match, String titleText, String subtitleText) {

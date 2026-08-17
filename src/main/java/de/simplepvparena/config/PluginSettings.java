@@ -8,6 +8,7 @@ import de.simplepvparena.arena.ArenaShapeFloodFill;
 import de.simplepvparena.border.BorderParticleService;
 import de.simplepvparena.border.BorderWallPreview;
 import de.simplepvparena.border.ConfirmedBorderParticleSettings;
+import de.simplepvparena.gate.StartGateDuration;
 import de.simplepvparena.match.RoundTimeoutSettings;
 import de.simplepvparena.match.TeamColourSettings;
 import net.kyori.adventure.text.format.NamedTextColor;
@@ -19,6 +20,7 @@ import java.util.function.Consumer;
 
 public record PluginSettings(long roundResetDelayTicks,
                              RoundTimeoutSettings roundTimeoutSettings,
+                             int startGateDurationSeconds,
                              TeamColourSettings teamColourSettings,
                              int arenaCleaningBlocksPerTick,
                              int arenaBaselineBlocksPerTick,
@@ -39,6 +41,7 @@ public record PluginSettings(long roundResetDelayTicks,
     public static final String SUDDEN_DEATH_WARNING_SECONDS_PATH = "match.sudden-death-warning-seconds";
     public static final String SUDDEN_DEATH_DAMAGE_PER_SECOND_PATH = "match.sudden-death-damage-per-second";
     public static final String SUDDEN_DEATH_DAMAGE_INCREASE_PATH = "match.sudden-death-damage-increase-per-second";
+    public static final String START_GATE_DURATION_SECONDS_PATH = "match.start-gate-duration-seconds";
     public static final String FIRST_TEAM_COLOUR_PATH = TeamColourSettings.FIRST_TEAM_CONFIGURATION_PATH;
     public static final String SECOND_TEAM_COLOUR_PATH = TeamColourSettings.SECOND_TEAM_CONFIGURATION_PATH;
     public static final String ARENA_CLEAN_BLOCKS_PER_TICK_PATH = "arena.clean-blocks-per-tick";
@@ -63,6 +66,7 @@ public record PluginSettings(long roundResetDelayTicks,
             SUDDEN_DEATH_WARNING_SECONDS_PATH,
             SUDDEN_DEATH_DAMAGE_PER_SECOND_PATH,
             SUDDEN_DEATH_DAMAGE_INCREASE_PATH,
+            START_GATE_DURATION_SECONDS_PATH,
             FIRST_TEAM_COLOUR_PATH,
             SECOND_TEAM_COLOUR_PATH,
             ARENA_CLEAN_BLOCKS_PER_TICK_PATH,
@@ -87,6 +91,7 @@ public record PluginSettings(long roundResetDelayTicks,
     public static PluginSettings defaults() {
         return new PluginSettings(DEFAULT_ROUND_RESET_DELAY_TICKS,
                 RoundTimeoutSettings.defaults(),
+                StartGateDuration.DEFAULT_SECONDS,
                 TeamColourSettings.defaults(),
                 ArenaCleaningService.DEFAULT_BLOCKS_PER_TICK,
                 ArenaBaselineService.DEFAULT_BLOCKS_PER_TICK,
@@ -109,6 +114,7 @@ public record PluginSettings(long roundResetDelayTicks,
         return new PluginSettings(
                 configuration.getLong(ROUND_RESET_DELAY_PATH, shipped.roundResetDelayTicks()),
                 readRoundTimeoutSettings(configuration, problemReporter),
+                readStartGateDurationSeconds(configuration, problemReporter),
                 readTeamColourSettings(configuration, problemReporter),
                 configuration.getInt(ARENA_CLEAN_BLOCKS_PER_TICK_PATH, shipped.arenaCleaningBlocksPerTick()),
                 configuration.getInt(ARENA_BASELINE_BLOCKS_PER_TICK_PATH, shipped.arenaBaselineBlocksPerTick()),
@@ -129,6 +135,7 @@ public record PluginSettings(long roundResetDelayTicks,
     public void applyTo(LiveConfiguration liveConfiguration) {
         liveConfiguration.setRoundResetDelayTicks(roundResetDelayTicks);
         liveConfiguration.setRoundTimeoutSettings(roundTimeoutSettings);
+        liveConfiguration.setStartGateDurationSeconds(startGateDurationSeconds);
         liveConfiguration.setTeamColourSettings(teamColourSettings);
         liveConfiguration.setArenaCleaningBlocksPerTick(arenaCleaningBlocksPerTick);
         liveConfiguration.setArenaBaselineBlocksPerTick(arenaBaselineBlocksPerTick);
@@ -191,6 +198,19 @@ public record PluginSettings(long roundResetDelayTicks,
                 configuration.getString(ArenaCleaningParticleSettings.TYPE_CONFIGURATION_PATH,
                         defaults.particleName()),
                 totalDurationSeconds, columnsPerTick);
+    }
+
+    private static int readStartGateDurationSeconds(ConfigurationSection configuration,
+                                                    Consumer<String> problemReporter) {
+        int durationSeconds = configuration.getInt(START_GATE_DURATION_SECONDS_PATH,
+                StartGateDuration.DEFAULT_SECONDS);
+        if (durationSeconds >= StartGateDuration.MINIMUM_SECONDS) {
+            return durationSeconds;
+        }
+        problemReporter.accept(START_GATE_DURATION_SECONDS_PATH + " must be at least "
+                + StartGateDuration.MINIMUM_SECONDS + " second, falling back to "
+                + StartGateDuration.DEFAULT_SECONDS + " seconds");
+        return StartGateDuration.DEFAULT_SECONDS;
     }
 
     private static RoundTimeoutSettings readRoundTimeoutSettings(ConfigurationSection configuration,

@@ -33,6 +33,7 @@ class ConfigurationReloadServiceTest {
         assertTrue(report.isClean(), "a valid file reports no problem: " + report.problems());
         assertEquals(60L, liveConfiguration.longValueOf(RecordingLiveConfiguration.ROUND_RESET_DELAY));
         assertEquals(new RoundTimeoutSettings(120, 30, 3.5D, 0.5D), liveConfiguration.roundTimeoutSettings());
+        assertEquals(4, liveConfiguration.intValueOf(RecordingLiveConfiguration.START_GATE_DURATION));
         assertEquals(new TeamColourSettings(NamedTextColor.GOLD, NamedTextColor.DARK_PURPLE),
                 liveConfiguration.teamColourSettings());
         assertEquals(1024, liveConfiguration.intValueOf(RecordingLiveConfiguration.CLEANING_BLOCKS_PER_TICK));
@@ -49,6 +50,39 @@ class ConfigurationReloadServiceTest {
                 liveConfiguration.longValueOf(RecordingLiveConfiguration.WALL_PREVIEW_DURATION));
         assertEquals(new ConfirmedBorderParticleSettings("DUST", 1.5D, 10, 20, 30),
                 liveConfiguration.confirmedBorderParticleSettings());
+    }
+
+    @Test
+    void reloadsTheStartGateDurationWhileTheServerRuns() {
+        MemoryConfiguration configuration = new MemoryConfiguration();
+        configuration.set(PluginSettings.START_GATE_DURATION_SECONDS_PATH, 10);
+        ConfigurationReloadService reloadService = reloadServiceFor(configuration);
+
+        reloadService.reloadFromFile();
+        assertEquals(10, liveConfiguration.startGateDuration().getSeconds());
+
+        configuration.set(PluginSettings.START_GATE_DURATION_SECONDS_PATH, 4);
+        reloadService.reloadFromFile();
+
+        assertEquals(4, liveConfiguration.startGateDuration().getSeconds(),
+                "the second reload reaches the running gate");
+        assertEquals(80L, liveConfiguration.startGateDuration().getTotalTicks(),
+                "and the next round start is four seconds long");
+        assertEquals(List.of(), loggedProblems);
+    }
+
+    @Test
+    void aStartGateDurationBelowASecondFallsBackAndIsReported() {
+        MemoryConfiguration configuration = new MemoryConfiguration();
+        configuration.set(PluginSettings.START_GATE_DURATION_SECONDS_PATH, 0);
+
+        ConfigurationReloadReport report = reloadServiceFor(configuration).reloadFromFile();
+
+        assertFalse(report.isClean());
+        assertEquals(PluginSettings.defaults().startGateDurationSeconds(),
+                liveConfiguration.startGateDuration().getSeconds());
+        assertTrue(report.problems().get(0).startsWith(PluginSettings.START_GATE_DURATION_SECONDS_PATH),
+                report.problems().toString());
     }
 
     @Test

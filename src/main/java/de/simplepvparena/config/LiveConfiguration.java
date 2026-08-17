@@ -12,6 +12,8 @@ public interface LiveConfiguration {
 
     void setRoundTimeoutSettings(RoundTimeoutSettings roundTimeoutSettings);
 
+    void setStartGateDurationSeconds(int durationSeconds);
+
     void setTeamColourSettings(TeamColourSettings teamColourSettings);
 
     void setArenaCleaningBlocksPerTick(int blocksPerTick);

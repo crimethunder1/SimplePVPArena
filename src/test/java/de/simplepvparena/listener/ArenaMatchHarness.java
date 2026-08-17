@@ -11,6 +11,10 @@ import de.simplepvparena.arena.SpectatorItemFactory;
 import de.simplepvparena.arena.SpectatorService;
 import de.simplepvparena.border.BorderMarkIndex;
 import de.simplepvparena.border.SpectatorBorderService;
+import de.simplepvparena.gate.StartGateDuration;
+import de.simplepvparena.gate.StartGateMarks;
+import de.simplepvparena.gate.StartGateOpeningService;
+import de.simplepvparena.gate.StartGateVisualEffect;
 import de.simplepvparena.kit.KitService;
 import de.simplepvparena.match.Match;
 import de.simplepvparena.match.MatchService;
@@ -62,6 +66,8 @@ final class ArenaMatchHarness {
     private final SpectatorBorderService borderService;
     private final SpectatorService spectatorService;
     private final RecordingFighterColours fighterColours = new RecordingFighterColours();
+    private final StartGateMarks gateMarks = new StartGateMarks();
+    private final StartGateOpeningService gateOpeningService;
     private final MatchService matchService;
     private final Plugin plugin;
     private final World world;
@@ -76,7 +82,10 @@ final class ArenaMatchHarness {
         installBukkitServer();
         this.borderService = new SpectatorBorderService(plugin, borderMarks, () -> { });
         this.spectatorService = new SpectatorService(arenaRegistry, new SpectatorItemFactory(plugin));
-        this.matchService = new MatchService(plugin, new KitService(), spectatorService, fighterColours);
+        this.gateOpeningService = new StartGateOpeningService(plugin, gateMarks, new StartGateDuration(),
+                StartGateVisualEffect.NONE);
+        this.matchService = new MatchService(plugin, new KitService(), spectatorService, fighterColours,
+                gateOpeningService);
         buildWallAndShape();
     }
 
@@ -94,6 +103,10 @@ final class ArenaMatchHarness {
 
     MatchService getMatchService() {
         return matchService;
+    }
+
+    StartGateMarks getGateMarks() {
+        return gateMarks;
     }
 
     RecordingFighterColours getFighterColours() {
@@ -244,6 +257,10 @@ final class ArenaMatchHarness {
             case "getZ" -> blockZ;
             case "getWorld" -> world;
             case "getType" -> findMaterial(blockX, blockY, blockZ);
+            case "setType" -> {
+                setBlock(blockX, blockY, blockZ, (Material) arguments[0]);
+                yield null;
+            }
             case "getLocation" -> new Location(world, blockX, blockY, blockZ);
             default -> throw new UnsupportedOperationException("Block." + method.getName());
         });
