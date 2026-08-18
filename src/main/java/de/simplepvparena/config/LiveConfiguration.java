@@ -12,6 +12,8 @@ public interface LiveConfiguration {
 
     void setRoundTimeoutSettings(RoundTimeoutSettings roundTimeoutSettings);
 
+    void setSuddenDeathDisabledInFinal(boolean suddenDeathDisabledInFinal);
+
     void setStartGateDurationSeconds(int durationSeconds);
 
     void setTeamColourSettings(TeamColourSettings teamColourSettings);

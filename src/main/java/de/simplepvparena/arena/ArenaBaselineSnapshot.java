@@ -80,6 +80,10 @@ public final class ArenaBaselineSnapshot implements ArenaCleaningTarget {
                 .isPresent();
     }
 
+    public boolean isBelowTheCapturedVolume(int blockY) {
+        return blockY < shape.getFloorY();
+    }
+
     @Override
     public Material findMaterial(int blockX, int blockY, int blockZ) {
         return findMaterialAt(blockX, blockY, blockZ).orElse(Material.AIR);

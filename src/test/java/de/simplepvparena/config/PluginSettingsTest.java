@@ -8,6 +8,7 @@ import de.simplepvparena.arena.ArenaShapeFloodFill;
 import de.simplepvparena.border.BorderParticleService;
 import de.simplepvparena.border.ConfirmedBorderParticleSettings;
 import de.simplepvparena.gate.StartGateDuration;
+import de.simplepvparena.match.MatchService;
 import de.simplepvparena.match.RoundTimeoutSettings;
 import de.simplepvparena.match.TeamColourSettings;
 import net.kyori.adventure.text.format.NamedTextColor;
@@ -34,6 +35,7 @@ class PluginSettingsTest {
         assertEquals(List.of(), problems, "a fully valid file must not report a single problem");
         assertEquals(60L, settings.roundResetDelayTicks());
         assertEquals(new RoundTimeoutSettings(120, 30, 3.5D, 0.5D), settings.roundTimeoutSettings());
+        assertFalse(settings.suddenDeathDisabledInFinal());
         assertEquals(4, settings.startGateDurationSeconds());
         assertEquals(new TeamColourSettings(NamedTextColor.GOLD, NamedTextColor.DARK_PURPLE),
                 settings.teamColourSettings());
@@ -60,6 +62,7 @@ class PluginSettingsTest {
 
         assertTrue(shipped.roundResetDelayTicks() != settings.roundResetDelayTicks());
         assertTrue(!shipped.roundTimeoutSettings().equals(settings.roundTimeoutSettings()));
+        assertTrue(shipped.suddenDeathDisabledInFinal() != settings.suddenDeathDisabledInFinal());
         assertTrue(shipped.startGateDurationSeconds() != settings.startGateDurationSeconds());
         assertTrue(!shipped.teamColourSettings().equals(settings.teamColourSettings()));
         assertTrue(shipped.arenaCleaningBlocksPerTick() != settings.arenaCleaningBlocksPerTick());
@@ -296,6 +299,39 @@ class PluginSettingsTest {
         assertEquals(List.of(), problems);
     }
 
+    @Test
+    void readsWhetherTheFinalIsFoughtWithoutATimeLimit() {
+        assertTrue(PluginSettings.defaults().suddenDeathDisabledInFinal(),
+                "the plugin ships with a final that is decided by the finalists and not by a clock");
+        assertEquals(MatchService.DEFAULT_SUDDEN_DEATH_DISABLED_IN_FINAL,
+                PluginSettings.defaults().suddenDeathDisabledInFinal(),
+                "the shipped value and the default of the running service are one value");
+
+        MemoryConfiguration suddenDeathEverywhere = new MemoryConfiguration();
+        suddenDeathEverywhere.set(PluginSettings.DISABLE_SUDDEN_DEATH_IN_FINAL_PATH, false);
+
+        assertFalse(PluginSettings.read(suddenDeathEverywhere, problems::add).suddenDeathDisabledInFinal());
+        assertEquals(List.of(), problems, "both values of a boolean are settings, not problems");
+
+        MemoryConfiguration switchedOn = new MemoryConfiguration();
+        switchedOn.set(PluginSettings.DISABLE_SUDDEN_DEATH_IN_FINAL_PATH, true);
+
+        assertTrue(PluginSettings.read(switchedOn, problems::add).suddenDeathDisabledInFinal());
+        assertEquals(List.of(), problems);
+    }
+
+    @Test
+    void aFileWithoutTheFinalEntryKeepsTheShippedSwitch() {
+        MemoryConfiguration configuration = new MemoryConfiguration();
+        configuration.set(PluginSettings.ROUND_TIMEOUT_SECONDS_PATH, 90);
+
+        PluginSettings settings = PluginSettings.read(configuration, problems::add);
+
+        assertTrue(settings.suddenDeathDisabledInFinal());
+        assertEquals(90, settings.roundTimeoutSettings().roundTimeoutSeconds());
+        assertEquals(List.of(), problems);
+    }
+
     static MemoryConfiguration configurationWithEveryValueChanged() {
         MemoryConfiguration configuration = new MemoryConfiguration();
         configuration.set(PluginSettings.ROUND_RESET_DELAY_PATH, 60);
@@ -303,6 +339,7 @@ class PluginSettingsTest {
         configuration.set(PluginSettings.SUDDEN_DEATH_WARNING_SECONDS_PATH, 30);
         configuration.set(PluginSettings.SUDDEN_DEATH_DAMAGE_PER_SECOND_PATH, 3.5D);
         configuration.set(PluginSettings.SUDDEN_DEATH_DAMAGE_INCREASE_PATH, 0.5D);
+        configuration.set(PluginSettings.DISABLE_SUDDEN_DEATH_IN_FINAL_PATH, false);
         configuration.set(PluginSettings.START_GATE_DURATION_SECONDS_PATH, 4);
         configuration.set(PluginSettings.FIRST_TEAM_COLOUR_PATH, "GOLD");
         configuration.set(PluginSettings.SECOND_TEAM_COLOUR_PATH, "dark purple");

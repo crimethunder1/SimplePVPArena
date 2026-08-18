@@ -315,7 +315,9 @@ public final class TournamentManager implements MatchCompletionHandler {
         Team firstTeam = teamRegistry.findTeam(bracketMatch.getFirstTeamName().orElseThrow()).orElseThrow();
         Team secondTeam = teamRegistry.findTeam(bracketMatch.getSecondTeamName().orElseThrow()).orElseThrow();
         Arena arena = arenaRegistry.getArena();
-        Match match = new Match(bracketMatch.getMatchId(), firstTeam, secondTeam, arena);
+        Match match = bracket.isFinalMatch(bracketMatch)
+                ? Match.finalMatch(bracketMatch.getMatchId(), firstTeam, secondTeam, arena)
+                : Match.regularMatch(bracketMatch.getMatchId(), firstTeam, secondTeam, arena);
         broadcast("Match " + match.getMatchId() + ": " + firstTeam.getTeamName() + " against "
                 + secondTeam.getTeamName());
         matchService.startMatch(match);

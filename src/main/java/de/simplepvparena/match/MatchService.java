@@ -29,6 +29,9 @@ public final class MatchService {
 
     private static final long DEFAULT_ROUND_RESET_DELAY_TICKS = 100L;
     private static final long ROUND_TIMER_PERIOD_TICKS = 20L;
+
+    public static final boolean DEFAULT_SUDDEN_DEATH_DISABLED_IN_FINAL = true;
+
     private static final Title.Times SUDDEN_DEATH_TITLE_TIMES = Title.Times.times(
             Duration.ofMillis(200L), Duration.ofSeconds(2L), Duration.ofMillis(500L));
 
@@ -51,6 +54,7 @@ public final class MatchService {
     private boolean insideSuddenDeathTick;
     private long roundResetDelayTicks = DEFAULT_ROUND_RESET_DELAY_TICKS;
     private RoundTimeoutSettings roundTimeoutSettings = RoundTimeoutSettings.defaults();
+    private boolean suddenDeathDisabledInFinal = DEFAULT_SUDDEN_DEATH_DISABLED_IN_FINAL;
     private boolean roundTimersPaused;
 
     public MatchService(Plugin plugin, KitService kitService, SpectatorService spectatorService,
@@ -76,6 +80,14 @@ public final class MatchService {
 
     public RoundTimeoutSettings getRoundTimeoutSettings() {
         return roundTimeoutSettings;
+    }
+
+    public void setSuddenDeathDisabledInFinal(boolean suddenDeathDisabledInFinal) {
+        this.suddenDeathDisabledInFinal = suddenDeathDisabledInFinal;
+    }
+
+    public boolean isSuddenDeathDisabledInFinal() {
+        return suddenDeathDisabledInFinal;
     }
 
     public void startMatch(Match match) {
@@ -234,10 +246,10 @@ public final class MatchService {
         preparePlayers(match.getSecondTeam(), match.getArena().getSecondTeamSpawn());
         fighterColours.colourFighters(match);
         startGates.openAtRoundStart(remainingSeconds -> announceStartGateSecond(match, remainingSeconds));
-        startRoundTimer(match);
+        boolean timeLimited = startRoundTimer(match);
         announceToMatch(match, "Round " + match.getRoundNumber() + " of match " + match.getMatchId()
-                + " has started (" + match.getScore().describe() + "), time limit "
-                + roundTimeoutSettings.roundTimeoutSeconds() + " seconds");
+                + " has started (" + match.getScore().describe() + "), "
+                + describeRoundLimit(timeLimited, roundTimeoutSettings.roundTimeoutSeconds()));
 
         Optional<RoundOutcome> immediateOutcome = match.getRoundParticipants().orElseThrow().determineOutcome();
         if (immediateOutcome.isPresent()) {
@@ -304,8 +316,11 @@ public final class MatchService {
         matchCompletionHandler.onMatchCompleted(match, winnerTeamName);
     }
 
-    private void startRoundTimer(Match match) {
+    private boolean startRoundTimer(Match match) {
         stopRoundTimer();
+        if (match.isFinalMatch() && suddenDeathDisabledInFinal) {
+            return false;
+        }
         RoundTimer roundTimer = new RoundTimer(roundTimeoutSettings);
         if (roundTimersPaused) {
             roundTimer.pause();
@@ -313,6 +328,14 @@ public final class MatchService {
         BukkitTask timerTask = plugin.getServer().getScheduler().runTaskTimer(plugin,
                 () -> handleRoundTimerTick(match), ROUND_TIMER_PERIOD_TICKS, ROUND_TIMER_PERIOD_TICKS);
         activeRoundTimer = new ScheduledRoundTimer(roundTimer, timerTask);
+        return true;
+    }
+
+    static String describeRoundLimit(boolean timeLimited, int roundTimeoutSeconds) {
+        if (timeLimited) {
+            return "time limit " + roundTimeoutSeconds + " seconds";
+        }
+        return "no time limit, the round runs until one of the teams falls";
     }
 
     private void stopRoundTimer() {

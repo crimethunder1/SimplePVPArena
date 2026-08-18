@@ -81,6 +81,11 @@ public final class PluginLiveConfiguration implements LiveConfiguration {
     }
 
     @Override
+    public void setSuddenDeathDisabledInFinal(boolean suddenDeathDisabledInFinal) {
+        matchService.setSuddenDeathDisabledInFinal(suddenDeathDisabledInFinal);
+    }
+
+    @Override
     public void setStartGateDurationSeconds(int durationSeconds) {
         startGateDuration.setSeconds(durationSeconds);
     }

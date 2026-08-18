@@ -28,6 +28,8 @@ import de.simplepvparena.command.TournamentCommand;
 import de.simplepvparena.config.ConfigurationReloadReport;
 import de.simplepvparena.config.ConfigurationReloadService;
 import de.simplepvparena.config.PluginLiveConfiguration;
+import de.simplepvparena.diagnostics.PluginDryRunArena;
+import de.simplepvparena.diagnostics.TournamentDryRun;
 import de.simplepvparena.gate.StartGateDuration;
 import de.simplepvparena.gate.StartGateItemService;
 import de.simplepvparena.gate.StartGateMarkStorage;
@@ -111,6 +113,7 @@ public final class SimplePVPArenaPlugin extends JavaPlugin {
     private FighterColours fighterColours;
     private MatchService matchService;
     private TournamentManager tournamentManager;
+    private TournamentDryRun tournamentDryRun;
     private ConfigurationReloadService configurationReloadService;
 
     @Override
@@ -185,12 +188,17 @@ public final class SimplePVPArenaPlugin extends JavaPlugin {
         tournamentManager = new TournamentManager(this, teamRegistry, arenaRegistry, matchService,
                 arenaSetupService::startAutomaticCleaning, new OnlineOperatorNotifier(getServer()));
 
+        tournamentDryRun = new TournamentDryRun(tournamentManager::getState,
+                matchService::hasActiveMatch, teamRegistry,
+                new PluginDryRunArena(arenaRegistry.getArena(), arenaSetupService), kitService,
+                startGateMarks, startGateDuration);
+
         chatInputService = new ChatInputService(this);
         TeamMemberLookup teamMemberLookup = new TeamMemberLookup(getServer());
         eventTeamImportService = new EventTeamImportService(
                 new File(getDataFolder(), EventTeamImportFile.FILE_NAME), teamRegistry,
                 teamMemberLookup::find, this::saveTeamConfiguration);
-        adminMenuService = new AdminMenuService(this, tournamentManager, teamRegistry,
+        adminMenuService = new AdminMenuService(this, tournamentManager, tournamentDryRun, teamRegistry,
                 teamMemberLookup, eventTeamImportService, matchService, arenaSetupService,
                 arenaHeightMarkerService, startGateItemService, spectatorBorderService,
                 borderSelectorModes, kitSaveService, chatInputService, this::saveTeamConfiguration,

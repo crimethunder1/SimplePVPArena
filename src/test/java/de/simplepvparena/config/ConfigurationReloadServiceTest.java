@@ -33,6 +33,7 @@ class ConfigurationReloadServiceTest {
         assertTrue(report.isClean(), "a valid file reports no problem: " + report.problems());
         assertEquals(60L, liveConfiguration.longValueOf(RecordingLiveConfiguration.ROUND_RESET_DELAY));
         assertEquals(new RoundTimeoutSettings(120, 30, 3.5D, 0.5D), liveConfiguration.roundTimeoutSettings());
+        assertFalse(liveConfiguration.booleanValueOf(RecordingLiveConfiguration.SUDDEN_DEATH_IN_FINAL));
         assertEquals(4, liveConfiguration.intValueOf(RecordingLiveConfiguration.START_GATE_DURATION));
         assertEquals(new TeamColourSettings(NamedTextColor.GOLD, NamedTextColor.DARK_PURPLE),
                 liveConfiguration.teamColourSettings());
@@ -83,6 +84,23 @@ class ConfigurationReloadServiceTest {
                 liveConfiguration.startGateDuration().getSeconds());
         assertTrue(report.problems().get(0).startsWith(PluginSettings.START_GATE_DURATION_SECONDS_PATH),
                 report.problems().toString());
+    }
+
+    @Test
+    void reloadsWhetherTheFinalIsFoughtWithoutATimeLimit() {
+        MemoryConfiguration configuration = new MemoryConfiguration();
+        ConfigurationReloadService reloadService = reloadServiceFor(configuration);
+
+        reloadService.reloadFromFile();
+        assertTrue(liveConfiguration.booleanValueOf(RecordingLiveConfiguration.SUDDEN_DEATH_IN_FINAL),
+                "a file without the entry is the shipped switch");
+
+        configuration.set(PluginSettings.DISABLE_SUDDEN_DEATH_IN_FINAL_PATH, false);
+        reloadService.reloadFromFile();
+
+        assertFalse(liveConfiguration.booleanValueOf(RecordingLiveConfiguration.SUDDEN_DEATH_IN_FINAL),
+                "the second reload reaches the running match service");
+        assertEquals(List.of(), loggedProblems);
     }
 
     @Test

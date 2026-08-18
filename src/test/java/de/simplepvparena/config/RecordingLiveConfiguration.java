@@ -16,6 +16,7 @@ final class RecordingLiveConfiguration implements LiveConfiguration {
 
     static final String ROUND_RESET_DELAY = "roundResetDelayTicks";
     static final String ROUND_TIMEOUT = "roundTimeoutSettings";
+    static final String SUDDEN_DEATH_IN_FINAL = "suddenDeathDisabledInFinal";
     static final String START_GATE_DURATION = "startGateDurationSeconds";
     static final String TEAM_COLOURS = "teamColourSettings";
     static final String CLEANING_BLOCKS_PER_TICK = "arenaCleaningBlocksPerTick";
@@ -32,7 +33,8 @@ final class RecordingLiveConfiguration implements LiveConfiguration {
     static final String KIT = "kit";
 
     static final List<String> EVERY_APPLIED_VALUE = List.of(
-            ROUND_RESET_DELAY, ROUND_TIMEOUT, START_GATE_DURATION, TEAM_COLOURS, CLEANING_BLOCKS_PER_TICK, BASELINE_BLOCKS_PER_TICK,
+            ROUND_RESET_DELAY, ROUND_TIMEOUT, SUDDEN_DEATH_IN_FINAL, START_GATE_DURATION, TEAM_COLOURS,
+            CLEANING_BLOCKS_PER_TICK, BASELINE_BLOCKS_PER_TICK,
             CLEANING_PARTICLE, MAXIMUM_CELL_COUNT, SAFETY_ZONE_RADIUS, PARTICLE_PERIOD, PARTICLE_VIEW_RADIUS,
             PARTICLE_MAXIMUM_BLOCKS, PARTICLE_MAXIMUM_LINES, WALL_PREVIEW_DURATION, CONFIRMED_PARTICLE, KIT);
 
@@ -48,6 +50,11 @@ final class RecordingLiveConfiguration implements LiveConfiguration {
     @Override
     public void setRoundTimeoutSettings(RoundTimeoutSettings roundTimeoutSettings) {
         appliedValues.put(ROUND_TIMEOUT, roundTimeoutSettings);
+    }
+
+    @Override
+    public void setSuddenDeathDisabledInFinal(boolean suddenDeathDisabledInFinal) {
+        appliedValues.put(SUDDEN_DEATH_IN_FINAL, suddenDeathDisabledInFinal);
     }
 
     @Override
@@ -131,6 +138,10 @@ final class RecordingLiveConfiguration implements LiveConfiguration {
 
     Object valueOf(String name) {
         return appliedValues.get(name);
+    }
+
+    boolean booleanValueOf(String name) {
+        return (Boolean) appliedValues.get(name);
     }
 
     long longValueOf(String name) {

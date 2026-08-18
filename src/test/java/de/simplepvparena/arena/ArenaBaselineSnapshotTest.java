@@ -122,6 +122,16 @@ class ArenaBaselineSnapshotTest {
         assertFalse(snapshot.describeChange().equals(ArenaCleaningTarget.EMPTY_ARENA.describeChange()));
     }
 
+    @Test
+    void tellsTheBlocksUnderTheFloorOfTheVolumeApartFromTheOnesAboveIt() {
+        ArenaBaselineSnapshot snapshot = capture(shape(64, 65, 0, 0, 1, 0), Map.of(), 4);
+
+        assertTrue(snapshot.isBelowTheCapturedVolume(63), "the floor the border wall was laid on");
+        assertFalse(snapshot.isBelowTheCapturedVolume(64), "the lowest block of the volume itself");
+        assertFalse(snapshot.isBelowTheCapturedVolume(65));
+        assertFalse(snapshot.isBelowTheCapturedVolume(66), "and a tower over the top of the wall");
+    }
+
     static ArenaBaselineSnapshot capture(ArenaShape shape, Map<Long, Material> world, int batchSize) {
         ArenaShapeBlockCursor cursor = new ArenaShapeBlockCursor(shape);
         ArenaBaselineSnapshotBuilder builder = new ArenaBaselineSnapshotBuilder(shape);

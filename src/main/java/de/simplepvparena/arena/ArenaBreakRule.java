@@ -20,7 +20,8 @@ public final class ArenaBreakRule {
     public static boolean isPartOfTheOriginalArena(Optional<ArenaBaselineSnapshot> baseline, int blockX, int blockY,
                                                    int blockZ, Material currentMaterial) {
         return baseline
-                .map(snapshot -> snapshot.holdsCapturedMaterial(blockX, blockY, blockZ, currentMaterial))
+                .map(snapshot -> snapshot.isBelowTheCapturedVolume(blockY)
+                        || snapshot.holdsCapturedMaterial(blockX, blockY, blockZ, currentMaterial))
                 .orElse(true);
     }
 }

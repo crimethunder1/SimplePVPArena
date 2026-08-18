@@ -133,11 +133,27 @@ final class ArenaMatchHarness {
     }
 
     Match startMatch(FakePlayer firstFighter, FakePlayer firstMate, FakePlayer secondFighter, FakePlayer secondMate) {
-        Team firstTeam = new Team("Alpha", List.of(member(firstFighter), member(firstMate)));
-        Team secondTeam = new Team("Beta", List.of(member(secondFighter), member(secondMate)));
-        Match match = new Match("M1", firstTeam, secondTeam, arenaRegistry.getArena());
+        return startMatch(Match.regularMatch("M1", buildFirstTeam(firstFighter, firstMate),
+                buildSecondTeam(secondFighter, secondMate), arenaRegistry.getArena()));
+    }
+
+    Match startFinalMatch(FakePlayer firstFighter, FakePlayer firstMate, FakePlayer secondFighter,
+                          FakePlayer secondMate) {
+        return startMatch(Match.finalMatch("M1", buildFirstTeam(firstFighter, firstMate),
+                buildSecondTeam(secondFighter, secondMate), arenaRegistry.getArena()));
+    }
+
+    private Match startMatch(Match match) {
         matchService.startMatch(match);
         return match;
+    }
+
+    private Team buildFirstTeam(FakePlayer fighter, FakePlayer mate) {
+        return new Team("Alpha", List.of(member(fighter), member(mate)));
+    }
+
+    private Team buildSecondTeam(FakePlayer fighter, FakePlayer mate) {
+        return new Team("Beta", List.of(member(fighter), member(mate)));
     }
 
     void forgetTribuneSpawn() {

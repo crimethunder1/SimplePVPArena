@@ -386,6 +386,20 @@ class ArenaShapeFloodFillTest {
     }
 
     @Test
+    void leavesTheFloorTheWallStandsOnUnderTheCleanedVolume() {
+        BorderWall wall = new BorderWall()
+                .addRectangleOutline(0, 0, 4, 4, SEED_HEIGHT + 1)
+                .addRectangleOutline(0, 0, 4, 4, SEED_HEIGHT + 2)
+                .addRectangleOutline(0, 0, 4, 4, SEED_HEIGHT + 3);
+
+        ArenaShape shape = calculateFrom(wall, 2, SEED_HEIGHT + 1, 2).getShape().orElseThrow();
+
+        assertEquals(SEED_HEIGHT + 1, shape.getFloorY(), "the lowest block of the wall, not of the arena");
+        assertTrue(shape.containsCell(2, 2), "the floor block stands in a cell of the fight area");
+        assertFalse(shape.containsBlock(2, SEED_HEIGHT, 2), "and below the volume that was captured");
+    }
+
+    @Test
     void takesTheVolumeOfAWallThatStandsBelowTheHeightOfTheFill() {
         BorderWall wall = new BorderWall().addRectangleOutline(0, 0, 4, 4, SEED_HEIGHT - 2);
 

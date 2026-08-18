@@ -9,6 +9,8 @@ import de.simplepvparena.border.BorderSelectorModeRegistry;
 import de.simplepvparena.border.SpectatorBorderService;
 import de.simplepvparena.command.TournamentCommand;
 import de.simplepvparena.config.ConfigurationReloadReport;
+import de.simplepvparena.diagnostics.DryRunReport;
+import de.simplepvparena.diagnostics.TournamentDryRun;
 import de.simplepvparena.gate.StartGateItemService;
 import de.simplepvparena.input.BlockItemRequest;
 import de.simplepvparena.input.BlockItemRequestResult;
@@ -56,6 +58,7 @@ public final class AdminMenuService {
     private static final int MAIN_FINAL_SLOT = 14;
     private static final int MAIN_STATUS_SLOT = 15;
     private static final int MAIN_BRACKET_SLOT = 16;
+    private static final int MAIN_DRY_RUN_SLOT = 18;
     private static final int MAIN_RELOAD_SLOT = 20;
     private static final int MAIN_CLOSE_SLOT = 22;
     private static final int MAIN_KIT_SLOT = 24;
@@ -99,6 +102,7 @@ public final class AdminMenuService {
 
     private final Plugin plugin;
     private final TournamentManager tournamentManager;
+    private final TournamentDryRun tournamentDryRun;
     private final TeamRegistry teamRegistry;
     private final TeamMemberLookup teamMemberLookup;
     private final EventTeamImportService eventTeamImportService;
@@ -115,6 +119,7 @@ public final class AdminMenuService {
 
     public AdminMenuService(Plugin plugin,
                             TournamentManager tournamentManager,
+                            TournamentDryRun tournamentDryRun,
                             TeamRegistry teamRegistry,
                             TeamMemberLookup teamMemberLookup,
                             EventTeamImportService eventTeamImportService,
@@ -130,6 +135,7 @@ public final class AdminMenuService {
                             Supplier<ConfigurationReloadReport> configurationReloader) {
         this.plugin = Objects.requireNonNull(plugin, "plugin");
         this.tournamentManager = Objects.requireNonNull(tournamentManager, "tournamentManager");
+        this.tournamentDryRun = Objects.requireNonNull(tournamentDryRun, "tournamentDryRun");
         this.teamRegistry = Objects.requireNonNull(teamRegistry, "teamRegistry");
         this.teamMemberLookup = Objects.requireNonNull(teamMemberLookup, "teamMemberLookup");
         this.eventTeamImportService = Objects.requireNonNull(eventTeamImportService, "eventTeamImportService");
@@ -175,6 +181,7 @@ public final class AdminMenuService {
             case MAIN_FINAL_SLOT -> runOperation(player, tournamentManager::startFinalMatch);
             case MAIN_STATUS_SLOT -> TournamentMessages.sendInfo(player, tournamentManager.describeStatus());
             case MAIN_BRACKET_SLOT -> showBracket(player);
+            case MAIN_DRY_RUN_SLOT -> runDryRun(player);
             case MAIN_RELOAD_SLOT -> reloadConfiguration(player);
             case MAIN_KIT_SLOT -> openMenu(player, AdminMenuHolder.kit());
             case MAIN_CLOSE_SLOT -> closeMenu(player);
@@ -196,6 +203,46 @@ public final class AdminMenuService {
         if (matchWasRunning) {
             TournamentMessages.sendWarning(player, describeRunningMatchDelay());
         }
+    }
+
+    private void runDryRun(Player player) {
+        closeMenu(player);
+        DryRunReport report = tournamentDryRun.run();
+        if (report.isSuccessful()) {
+            TournamentMessages.sendSuccessReport(player, report.describe());
+            return;
+        }
+        TournamentMessages.sendErrorReport(player, report.describe());
+    }
+
+    private ItemStack buildDryRunItem() {
+        Optional<String> rejection = tournamentDryRun.findRejection();
+        if (rejection.isPresent()) {
+            return MenuItems.create(MenuItems.UNAVAILABLE_MATERIAL, "Dry run of the pipeline",
+                    toLoreLines(rejection.get()));
+        }
+        return MenuItems.create(Material.OBSERVER, "Dry run of the pipeline", buildDryRunLore());
+    }
+
+    private List<String> buildDryRunLore() {
+        List<String> lore = new ArrayList<>();
+        lore.add("Walks the whole pipeline once, without an event");
+        lore.add("Registers two test teams, builds their bracket,");
+        lore.add("decides a simulated match and removes them again");
+        lore.add("Checks the arena and its spawns, the kit, the");
+        lore.add("countdown of the start gate and whether the");
+        lore.add("cleaning after a match would start");
+        lore.add("Nothing is started, taught, written or cleaned:");
+        lore.add("no block, no file and no fighter is touched");
+        lore.add("A real test player stays necessary for the kit");
+        lore.add("and the teleport really arriving");
+        lore.add("Refused while a tournament or a match runs");
+        lore.add("The menu closes so you can read the answer");
+        return lore;
+    }
+
+    private static List<String> toLoreLines(String message) {
+        return List.of(message.split(TournamentMessages.LINE_BREAK, -1));
     }
 
     private static String describeRunningMatchDelay() {
@@ -224,6 +271,7 @@ public final class AdminMenuService {
                 "Writes every round and every match into the chat",
                 "A bracket is a tree, the chat shows it better than a grid",
                 "The menu closes so you can read it"));
+        inventory.setItem(MAIN_DRY_RUN_SLOT, buildDryRunItem());
         inventory.setItem(MAIN_RELOAD_SLOT, MenuItems.create(Material.COMPARATOR, "Reload config.yml",
                 buildReloadLore()));
         inventory.setItem(MAIN_KIT_SLOT, MenuItems.create(Material.DIAMOND_CHESTPLATE, "Kit",

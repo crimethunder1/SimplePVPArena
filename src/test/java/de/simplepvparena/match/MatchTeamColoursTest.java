@@ -70,7 +70,7 @@ class MatchTeamColoursTest {
 
     @Test
     void leavesEverybodyWhoIsNotFightingTheRoundUncoloured() {
-        Match match = new Match("M1", firstTeam, secondTeam, new Arena());
+        Match match = Match.regularMatch("M1", firstTeam, secondTeam, new Arena());
         match.beginRound(Set.of(firstFighter.uniqueId()),
                 Set.of(secondFighter.uniqueId(), secondMate.uniqueId()));
 
@@ -82,7 +82,7 @@ class MatchTeamColoursTest {
 
     @Test
     void coloursNobodyOfAMatchThatHasNotStartedARoundYet() {
-        Match match = new Match("M1", firstTeam, secondTeam, new Arena());
+        Match match = Match.regularMatch("M1", firstTeam, secondTeam, new Arena());
 
         List<MatchTeamColour> colours = MatchTeamColours.of(match, TeamColourSettings.defaults());
 
@@ -105,7 +105,7 @@ class MatchTeamColoursTest {
     }
 
     private Match runningMatch() {
-        Match match = new Match("M1", firstTeam, secondTeam, new Arena());
+        Match match = Match.regularMatch("M1", firstTeam, secondTeam, new Arena());
         match.beginRound(Set.of(firstFighter.uniqueId(), firstMate.uniqueId()),
                 Set.of(secondFighter.uniqueId(), secondMate.uniqueId()));
         return match;

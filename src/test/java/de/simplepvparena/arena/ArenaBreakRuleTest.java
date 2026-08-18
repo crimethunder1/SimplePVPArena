@@ -82,6 +82,22 @@ class ArenaBreakRuleTest {
     }
 
     @Test
+    void treatsABlockBelowTheCapturedVolumeAsTheArenaItself() {
+        Optional<ArenaBaselineSnapshot> baseline = baselineOfAFloorWithOneHole();
+
+        assertTrue(ArenaBreakRule.isPartOfTheOriginalArena(baseline, 0, 63, 0, Material.STONE),
+                "the floor the border wall was laid on");
+        assertTrue(ArenaBreakRule.isPartOfTheOriginalArena(baseline, 1, 60, 0, Material.DIRT),
+                "and the ground under that floor, whatever it is made of");
+        assertFalse(ArenaBreakRule.isBreakingAllowed(ACTIVE_FIGHTER, REGULAR_PLAYER, INSIDE,
+                ArenaBreakRule.isPartOfTheOriginalArena(baseline, 0, 63, 0, Material.STONE)),
+                "so no fighter digs the arena out from under his opponent");
+        assertTrue(ArenaBreakRule.isBreakingAllowed(ACTIVE_FIGHTER, ARENA_ADMIN, INSIDE,
+                ArenaBreakRule.isPartOfTheOriginalArena(baseline, 0, 63, 0, Material.STONE)),
+                "and the admin who built it still takes it apart");
+    }
+
+    @Test
     void treatsEveryBlockAsTheArenaItselfWithoutABaseline() {
         assertTrue(ArenaBreakRule.isPartOfTheOriginalArena(Optional.empty(), 0, 64, 0, Material.OAK_PLANKS));
         assertFalse(ArenaBreakRule.isBreakingAllowed(ACTIVE_FIGHTER, REGULAR_PLAYER, INSIDE,

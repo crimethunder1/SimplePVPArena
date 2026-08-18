@@ -22,6 +22,7 @@ class ArenaBreakProtectionTest {
     private static final int POND_Z = 3;
     private static final int OPEN_X = 7;
     private static final int OPEN_Z = 7;
+    private static final int UNDER_THE_FLOOR_Y = ArenaMatchHarness.GROUND_Y - 1;
 
     private ArenaMatchHarness harness;
     private ArenaMatchHarness.FakePlayer fighter;
@@ -34,6 +35,8 @@ class ArenaBreakProtectionTest {
     void setUp() {
         harness = new ArenaMatchHarness();
         harness.setBlock(POND_X, ArenaMatchHarness.GROUND_Y, POND_Z, Material.WATER);
+        harness.setBlock(ARENA_FLOOR_X, UNDER_THE_FLOOR_Y, ARENA_FLOOR_Z, Material.STONE);
+        harness.setBlock(POND_X, UNDER_THE_FLOOR_Y, POND_Z, Material.WATER);
         fighter = harness.addPlayer("Fighter");
         ArenaMatchHarness.FakePlayer mate = harness.addPlayer("Mate");
         opponent = harness.addPlayer("Opponent");
@@ -70,6 +73,26 @@ class ArenaBreakProtectionTest {
                 "the fighter who built it");
         assertFalse(isBreakCancelledFor(opponent, OPEN_X, ArenaMatchHarness.GROUND_Y + 1, OPEN_Z),
                 "and the opponent it was built against");
+    }
+
+    @Test
+    void keepsAFighterFromDiggingOutTheGroundUnderTheArena() {
+        assertTrue(harness.getShape().containsCell(ARENA_FLOOR_X, ARENA_FLOOR_Z),
+                "the block stands in a cell of the fight area");
+        assertFalse(harness.getShape().containsBlock(ARENA_FLOOR_X, UNDER_THE_FLOOR_Y, ARENA_FLOOR_Z),
+                "and under the volume the baseline was taken of - the combination that fell through");
+
+        assertTrue(isBreakCancelledFor(fighter, ARENA_FLOOR_X, UNDER_THE_FLOOR_Y, ARENA_FLOOR_Z));
+        assertTrue(isBucketFillCancelledFor(fighter, POND_X, UNDER_THE_FLOOR_Y, POND_Z),
+                "and no bucket drains what is under the floor either");
+    }
+
+    @Test
+    void letsAnAdminBreakTheGroundUnderTheArena() {
+        spectator.makeOperator();
+
+        assertFalse(isBreakCancelledFor(spectator, ARENA_FLOOR_X, UNDER_THE_FLOOR_Y, ARENA_FLOOR_Z));
+        assertFalse(isBucketFillCancelledFor(spectator, POND_X, UNDER_THE_FLOOR_Y, POND_Z));
     }
 
     @Test

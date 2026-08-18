@@ -4,6 +4,7 @@ match:
   sudden-death-warning-seconds: 45
   sudden-death-damage-per-second: 2.0
   sudden-death-damage-increase-per-second: 1.0
+  disable-sudden-death-in-final: true
   start-gate-duration-seconds: 10
   team-colours:
     first-team: red

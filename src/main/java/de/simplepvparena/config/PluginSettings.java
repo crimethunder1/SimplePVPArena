@@ -9,6 +9,7 @@ import de.simplepvparena.border.BorderParticleService;
 import de.simplepvparena.border.BorderWallPreview;
 import de.simplepvparena.border.ConfirmedBorderParticleSettings;
 import de.simplepvparena.gate.StartGateDuration;
+import de.simplepvparena.match.MatchService;
 import de.simplepvparena.match.RoundTimeoutSettings;
 import de.simplepvparena.match.TeamColourSettings;
 import net.kyori.adventure.text.format.NamedTextColor;
@@ -20,6 +21,7 @@ import java.util.function.Consumer;
 
 public record PluginSettings(long roundResetDelayTicks,
                              RoundTimeoutSettings roundTimeoutSettings,
+                             boolean suddenDeathDisabledInFinal,
                              int startGateDurationSeconds,
                              TeamColourSettings teamColourSettings,
                              int arenaCleaningBlocksPerTick,
@@ -41,6 +43,7 @@ public record PluginSettings(long roundResetDelayTicks,
     public static final String SUDDEN_DEATH_WARNING_SECONDS_PATH = "match.sudden-death-warning-seconds";
     public static final String SUDDEN_DEATH_DAMAGE_PER_SECOND_PATH = "match.sudden-death-damage-per-second";
     public static final String SUDDEN_DEATH_DAMAGE_INCREASE_PATH = "match.sudden-death-damage-increase-per-second";
+    public static final String DISABLE_SUDDEN_DEATH_IN_FINAL_PATH = "match.disable-sudden-death-in-final";
     public static final String START_GATE_DURATION_SECONDS_PATH = "match.start-gate-duration-seconds";
     public static final String FIRST_TEAM_COLOUR_PATH = TeamColourSettings.FIRST_TEAM_CONFIGURATION_PATH;
     public static final String SECOND_TEAM_COLOUR_PATH = TeamColourSettings.SECOND_TEAM_CONFIGURATION_PATH;
@@ -66,6 +69,7 @@ public record PluginSettings(long roundResetDelayTicks,
             SUDDEN_DEATH_WARNING_SECONDS_PATH,
             SUDDEN_DEATH_DAMAGE_PER_SECOND_PATH,
             SUDDEN_DEATH_DAMAGE_INCREASE_PATH,
+            DISABLE_SUDDEN_DEATH_IN_FINAL_PATH,
             START_GATE_DURATION_SECONDS_PATH,
             FIRST_TEAM_COLOUR_PATH,
             SECOND_TEAM_COLOUR_PATH,
@@ -91,6 +95,7 @@ public record PluginSettings(long roundResetDelayTicks,
     public static PluginSettings defaults() {
         return new PluginSettings(DEFAULT_ROUND_RESET_DELAY_TICKS,
                 RoundTimeoutSettings.defaults(),
+                MatchService.DEFAULT_SUDDEN_DEATH_DISABLED_IN_FINAL,
                 StartGateDuration.DEFAULT_SECONDS,
                 TeamColourSettings.defaults(),
                 ArenaCleaningService.DEFAULT_BLOCKS_PER_TICK,
@@ -114,6 +119,8 @@ public record PluginSettings(long roundResetDelayTicks,
         return new PluginSettings(
                 configuration.getLong(ROUND_RESET_DELAY_PATH, shipped.roundResetDelayTicks()),
                 readRoundTimeoutSettings(configuration, problemReporter),
+                configuration.getBoolean(DISABLE_SUDDEN_DEATH_IN_FINAL_PATH,
+                        shipped.suddenDeathDisabledInFinal()),
                 readStartGateDurationSeconds(configuration, problemReporter),
                 readTeamColourSettings(configuration, problemReporter),
                 configuration.getInt(ARENA_CLEAN_BLOCKS_PER_TICK_PATH, shipped.arenaCleaningBlocksPerTick()),
@@ -135,6 +142,7 @@ public record PluginSettings(long roundResetDelayTicks,
     public void applyTo(LiveConfiguration liveConfiguration) {
         liveConfiguration.setRoundResetDelayTicks(roundResetDelayTicks);
         liveConfiguration.setRoundTimeoutSettings(roundTimeoutSettings);
+        liveConfiguration.setSuddenDeathDisabledInFinal(suddenDeathDisabledInFinal);
         liveConfiguration.setStartGateDurationSeconds(startGateDurationSeconds);
         liveConfiguration.setTeamColourSettings(teamColourSettings);
         liveConfiguration.setArenaCleaningBlocksPerTick(arenaCleaningBlocksPerTick);

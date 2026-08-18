@@ -7,7 +7,8 @@ public record ConfigurationReloadReport(List<String> problems) {
 
     public static final List<String> RELOADED_CATEGORIES = List.of(
             "the kit every fighter receives",
-            "the round reset delay, the round timeout and the sudden death damage",
+            "the round reset delay, the round timeout, the sudden death damage and whether the "
+                    + "final is fought without a time limit",
             "the seconds the start gate takes at the beginning of a round",
             "the cleaning and baseline batch sizes and the particles of a running cleaning",
             "the cell limit of the arena calculation",

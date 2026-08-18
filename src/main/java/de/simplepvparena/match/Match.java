@@ -16,21 +16,35 @@ public final class Match {
     private final Team secondTeam;
     private final Arena arena;
     private final MatchScore score;
+    private final boolean finalMatch;
 
     private MatchState state = MatchState.PREPARING;
     private RoundParticipants roundParticipants;
     private int roundNumber;
 
-    public Match(String matchId, Team firstTeam, Team secondTeam, Arena arena) {
+    private Match(String matchId, Team firstTeam, Team secondTeam, Arena arena, boolean finalMatch) {
         this.matchId = Objects.requireNonNull(matchId, "matchId");
         this.firstTeam = Objects.requireNonNull(firstTeam, "firstTeam");
         this.secondTeam = Objects.requireNonNull(secondTeam, "secondTeam");
         this.arena = Objects.requireNonNull(arena, "arena");
         this.score = new MatchScore(firstTeam.getTeamName(), secondTeam.getTeamName());
+        this.finalMatch = finalMatch;
+    }
+
+    public static Match regularMatch(String matchId, Team firstTeam, Team secondTeam, Arena arena) {
+        return new Match(matchId, firstTeam, secondTeam, arena, false);
+    }
+
+    public static Match finalMatch(String matchId, Team firstTeam, Team secondTeam, Arena arena) {
+        return new Match(matchId, firstTeam, secondTeam, arena, true);
     }
 
     public String getMatchId() {
         return matchId;
+    }
+
+    public boolean isFinalMatch() {
+        return finalMatch;
     }
 
     public Team getFirstTeam() {
