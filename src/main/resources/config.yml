@@ -56,8 +56,9 @@ arena:
   clean-blocks-per-tick: 4096
   # Blocks read per tick while the baseline of the fight area is captured.
   baseline-blocks-per-tick: 16384
-  # Blocks below the floor of the fight area the baseline covers and the cleaning restores, 0 to 64. Applies from the next calculation.
-  baseline-depth-below-floor: 10
+  # Layers the baseline covers and the cleaning restores, counted from the ground surface of the fight area down, 0 to 64.
+  # 11 is the surface and the 10 blocks under it. Applies from the next calculation.
+  baseline-depth-below-floor: 11
   # Particles that show a running cleaning.
   clean-particle:
     # false cleans without particles.

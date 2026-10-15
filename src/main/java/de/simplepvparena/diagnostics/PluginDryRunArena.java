@@ -49,6 +49,11 @@ public final class PluginDryRunArena implements DryRunArena {
     }
 
     @Override
+    public Optional<ArenaShape> findCleanedVolume() {
+        return arenaSetupService.findCleanedVolume();
+    }
+
+    @Override
     public long countCleaningBlocks() {
         return arenaSetupService.countCleaningBlocks();
     }

@@ -19,6 +19,8 @@ public interface DryRunArena {
 
     boolean hasBaseline();
 
+    Optional<ArenaShape> findCleanedVolume();
+
     long countCleaningBlocks();
 
     Optional<String> findCleaningRejection();

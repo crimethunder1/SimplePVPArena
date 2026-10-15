@@ -218,10 +218,10 @@ public final class TournamentDryRun {
                     "Set it in the arena menu of /tournament while standing on it");
         }
         List<String> details = new ArrayList<>();
-        arena.getVolume().ifPresent(volume -> {
-            details.add("Fight area: " + volume.describe());
-            details.add("A cleaning writes " + arena.countCleaningBlocks() + " blocks of it");
-        });
+        arena.getVolume().ifPresent(volume -> details.add("Fight area: " + volume.describe()));
+        arena.findCleanedVolume().ifPresent(cleanedVolume -> details.add("A cleaning writes "
+                + arena.countCleaningBlocks() + " blocks between y " + cleanedVolume.getFloorY()
+                + " and y " + cleanedVolume.getWallTopY()));
         details.add("Both team spawns and the tribune spawn are set");
         return DryRunStep.passed(ARENA_STEP, details);
     }
@@ -404,8 +404,8 @@ public final class TournamentDryRun {
         }
         List<String> details = new ArrayList<>();
         details.add("A cleaning would start right away and restore the baseline of the last calculation");
-        arena.getVolume().ifPresent(volume -> details.add(arena.countCleaningBlocks()
-                + " blocks between y " + volume.getFloorY() + " and y " + volume.getWallTopY()));
+        arena.findCleanedVolume().ifPresent(cleanedVolume -> details.add(arena.countCleaningBlocks()
+                + " blocks between y " + cleanedVolume.getFloorY() + " and y " + cleanedVolume.getWallTopY()));
         details.add("Nothing was written: the dry run checks the trigger, it never cleans the arena");
         return DryRunStep.passed(CLEANING_STEP, details);
     }

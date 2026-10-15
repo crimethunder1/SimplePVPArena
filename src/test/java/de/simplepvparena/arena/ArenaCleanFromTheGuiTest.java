@@ -118,6 +118,53 @@ class ArenaCleanFromTheGuiTest {
     }
 
     @Test
+    void countsTheCapturedVolumeWithABaselineAndTheFightAreaWithout() {
+        Fixture fixture = new Fixture();
+        fixture.baselineService.setDepthBelowFloor(11);
+        fixture.calculateFrom(WALL_BOTTOM_Y);
+
+        long countedBlocks = fixture.setupService.countCleaningBlocks();
+
+        assertTrue(fixture.setupService.hasBaseline());
+        assertEquals(9L * (WALL_TOP_Y - (WALL_BOTTOM_Y - 11) + 1), countedBlocks,
+                "the nine cells of the fight area over its own layers and the eleven under its floor");
+        fixture.clean();
+        assertTrue(fixture.messages.stream().anyMatch(message -> message.contains(countedBlocks
+                        + " checked blocks")),
+                "the cleaning checks exactly the counted blocks: " + fixture.messages);
+
+        fixture.baselineService.discardSnapshot();
+
+        assertEquals(9L * (WALL_TOP_Y - WALL_BOTTOM_Y + 1), fixture.setupService.countCleaningBlocks(),
+                "without a baseline only the fight area is emptied");
+    }
+
+    @Test
+    void namesTheHeightsFromTheCapturedFloorWithABaselineAndOfTheFightAreaWithout() {
+        Fixture fixture = new Fixture();
+        fixture.baselineService.setDepthBelowFloor(11);
+        fixture.calculateFrom(WALL_BOTTOM_Y);
+
+        List<String> effectWithBaseline = fixture.setupService.describeCleaningEffect();
+
+        assertTrue(effectWithBaseline.contains("Covers y " + (WALL_BOTTOM_Y - 11) + " to y " + WALL_TOP_Y
+                        + ", the fight area and the"),
+                "the heights start at the floor of the captured volume: " + effectWithBaseline);
+        assertTrue(effectWithBaseline.stream().anyMatch(line -> line.contains("11 layers under its floor")
+                        && line.contains("restored")),
+                "and the layers under the floor are named as restored: " + effectWithBaseline);
+
+        fixture.baselineService.discardSnapshot();
+        List<String> effectWithoutBaseline = fixture.setupService.describeCleaningEffect();
+
+        assertTrue(effectWithoutBaseline.contains("Covers y " + WALL_BOTTOM_Y + " to y " + WALL_TOP_Y
+                        + ", the height of the fight area"),
+                "without a baseline the heights are the ones of the fight area: " + effectWithoutBaseline);
+        assertTrue(effectWithoutBaseline.stream().noneMatch(line -> line.contains("under its floor")),
+                effectWithoutBaseline.toString());
+    }
+
+    @Test
     void staysUsableWhenTheHandlerAfterTheLastBlockThrows() {
         Fixture fixture = new Fixture();
         fixture.calculateFrom(WALL_BOTTOM_Y);

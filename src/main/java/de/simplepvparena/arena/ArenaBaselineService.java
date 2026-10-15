@@ -13,7 +13,7 @@ public final class ArenaBaselineService {
 
     public static final int DEFAULT_BLOCKS_PER_TICK = 16_384;
 
-    public static final int DEFAULT_DEPTH_BELOW_FLOOR = 10;
+    public static final int DEFAULT_DEPTH_BELOW_FLOOR = 11;
     public static final int MAXIMUM_DEPTH_BELOW_FLOOR = 64;
 
     private static final long BATCH_PERIOD_TICKS = 1L;

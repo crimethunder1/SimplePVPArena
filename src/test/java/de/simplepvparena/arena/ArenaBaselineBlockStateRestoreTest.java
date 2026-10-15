@@ -167,22 +167,22 @@ class ArenaBaselineBlockStateRestoreTest {
 
     @Test
     void closesAHoleFiveBlocksDeepAndLeavesTheGroundUnderTheCapturedVolumeAlone() {
-        fillGround(FLOOR_Y - 11, FLOOR_Y);
-        ArenaBaselineSnapshot snapshot = capture(10);
+        fillGround(FLOOR_Y - 12, FLOOR_Y);
+        ArenaBaselineSnapshot snapshot = capture(11);
 
         for (int blockY = FLOOR_Y - 4; blockY <= FLOOR_Y; blockY++) {
             harness.setBlock(1, blockY, 1, Material.AIR);
         }
-        harness.setBlock(1, FLOOR_Y - 11, 1, Material.AIR);
+        harness.setBlock(1, FLOOR_Y - 12, 1, Material.AIR);
         ArenaCleaningReport report = clean();
 
-        assertEquals(FLOOR_Y - 10, snapshot.getCapturedVolume().getFloorY());
+        assertEquals(FLOOR_Y - 11, snapshot.getCapturedVolume().getFloorY());
         for (int blockY = FLOOR_Y - 4; blockY <= FLOOR_Y; blockY++) {
             assertEquals(Material.STONE, harness.getBlock(1, blockY, 1), "the hole is closed at y " + blockY);
         }
-        assertEquals(Material.AIR, harness.getBlock(1, FLOOR_Y - 11, 1),
-                "eleven blocks under the floor lies outside the volume and is not touched");
-        assertEquals(9L * (WALL_TOP_Y - (FLOOR_Y - 10) + 1), report.checkedBlockCount());
+        assertEquals(Material.AIR, harness.getBlock(1, FLOOR_Y - 12, 1),
+                "twelve blocks under the floor lies outside the volume and is not touched");
+        assertEquals(9L * (WALL_TOP_Y - (FLOOR_Y - 11) + 1), report.checkedBlockCount());
         assertEquals(5L, report.changedBlockCount());
     }
 

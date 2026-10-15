@@ -264,8 +264,14 @@ public final class ArenaSetupService {
         return ArenaCleaningPlan.findBaselineMismatch(volume.get(), arenaBaselineService.findStoredSnapshot());
     }
 
+    public Optional<ArenaShape> findCleanedVolume() {
+        return getShape().map(shape -> arenaBaselineService.findSnapshot(shape)
+                .map(ArenaBaselineSnapshot::getCapturedVolume)
+                .orElse(shape));
+    }
+
     public long countCleaningBlocks() {
-        return getShape().map(ArenaCleaningService::countBlocks).orElse(0L);
+        return findCleanedVolume().map(ArenaCleaningService::countBlocks).orElse(0L);
     }
 
     public boolean hasBaseline() {
@@ -273,7 +279,8 @@ public final class ArenaSetupService {
     }
 
     public List<String> describeCleaningEffect() {
-        List<String> effect = new ArrayList<>(hasBaseline()
+        Optional<ArenaBaselineSnapshot> baseline = getShape().flatMap(arenaBaselineService::findSnapshot);
+        List<String> effect = new ArrayList<>(baseline.isPresent()
                 ? List.of("Restores every block of the fight area to the",
                         "state the last calculation found",
                         "Blocks placed since then become air again,",
@@ -282,8 +289,17 @@ public final class ArenaSetupService {
                         "fight area is set to air",
                         "A baseline is taken by the calculation and is",
                         "gone after a server restart"));
-        getShape().ifPresent(shape -> effect.add("Covers y " + shape.getFloorY() + " to y "
-                + shape.getWallTopY() + ", the height of the fight area"));
+        int depthBelowFloor = baseline.map(ArenaBaselineSnapshot::getDepthBelowFloor).orElse(0);
+        findCleanedVolume().ifPresent(volume -> {
+            if (depthBelowFloor == 0) {
+                effect.add("Covers y " + volume.getFloorY() + " to y " + volume.getWallTopY()
+                        + ", the height of the fight area");
+                return;
+            }
+            effect.add("Covers y " + volume.getFloorY() + " to y " + volume.getWallTopY()
+                    + ", the fight area and the");
+            effect.add(depthBelowFloor + " layers under its floor, those are restored too");
+        });
         return effect;
     }
 

@@ -1,6 +1,7 @@
 package de.simplepvparena.diagnostics;
 
 import de.simplepvparena.arena.Arena;
+import de.simplepvparena.arena.ArenaBaselineService;
 import de.simplepvparena.arena.ArenaShape;
 import de.simplepvparena.arena.HorizontalCellCodec;
 import de.simplepvparena.kit.KitService;
@@ -170,7 +171,21 @@ class TournamentDryRunTest {
         DryRunStep step = findStep(dryRun().run(), TournamentDryRun.ARENA_STEP);
 
         assertTrue(step.isPassed(), step.details().toString());
-        assertTrue(step.details().stream().anyMatch(line -> line.contains("16 blocks")),
+        assertTrue(step.details().stream().anyMatch(
+                        line -> line.contains("A cleaning writes 60 blocks between y 53 and y 67")),
+                step.details().toString());
+    }
+
+    @Test
+    void reportsTheBlockCountOfTheFightAreaAloneWithoutABaseline() {
+        makeTheServerReadyForItsEvent();
+        arena.baseline = false;
+
+        DryRunStep step = findStep(dryRun().run(), TournamentDryRun.ARENA_STEP);
+
+        assertTrue(step.isPassed(), step.details().toString());
+        assertTrue(step.details().stream().anyMatch(
+                        line -> line.contains("A cleaning writes 16 blocks between y 64 and y 67")),
                 step.details().toString());
     }
 
@@ -258,7 +273,7 @@ class TournamentDryRunTest {
 
         assertTrue(step.isPassed(), step.details().toString());
         String details = String.join(" | ", step.details());
-        assertTrue(details.contains("16 blocks between y 64 and y 67"), details);
+        assertTrue(details.contains("60 blocks between y 53 and y 67"), details);
         assertTrue(details.contains("it never cleans the arena"), details);
     }
 
@@ -374,8 +389,15 @@ class TournamentDryRunTest {
         }
 
         @Override
+        public Optional<ArenaShape> findCleanedVolume() {
+            return getVolume().map(shape -> baseline
+                    ? shape.withFloorLoweredBy(ArenaBaselineService.DEFAULT_DEPTH_BELOW_FLOOR)
+                    : shape);
+        }
+
+        @Override
         public long countCleaningBlocks() {
-            return getVolume().map(ArenaShape::getBlockCount).orElse(0L);
+            return findCleanedVolume().map(ArenaShape::getBlockCount).orElse(0L);
         }
 
         @Override
