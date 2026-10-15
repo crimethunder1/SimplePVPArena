@@ -25,6 +25,7 @@ import java.util.Random;
 import java.util.Set;
 import java.util.UUID;
 import java.util.function.Consumer;
+import java.util.logging.Level;
 
 public final class MatchService {
 
@@ -268,8 +269,13 @@ public final class MatchService {
     }
 
     private void removeTemporaryEntities(Match match) {
-        match.getArena().getShape().ifPresent(shape -> temporaryEntityRemover.removeTemporaryEntities(
-                plugin.getServer().getWorld(shape.getWorldName()), shape));
+        try {
+            match.getArena().getShape().ifPresent(shape -> temporaryEntityRemover.removeTemporaryEntities(
+                    plugin.getServer().getWorld(shape.getWorldName()), shape));
+        } catch (RuntimeException failure) {
+            plugin.getLogger().log(Level.WARNING, "The temporary entities of the arena could not be removed, "
+                    + "the round starts without that", failure);
+        }
     }
 
     private void concludeRound(Match match, RoundOutcome outcome) {

@@ -118,7 +118,7 @@ public final class ArenaSetupService {
         ArenaShape shape = update.volume();
         switch (update.origin()) {
             case MARKS_TAKEN_OVER -> TournamentMessages.sendInfo(admin,
-                    "The marked heights were taken over: the area is cleaned from y "
+                    "The marked heights were taken over: the fight area reaches from y "
                             + shape.getFloorY() + " to y " + shape.getWallTopY()
                             + " instead of the height of the border wall"
                             + TournamentMessages.LINE_BREAK + "Both marks are used up. The area keeps these two "
@@ -126,7 +126,7 @@ public final class ArenaSetupService {
                             + Arena.MARK_HEIGHT_ACTION + " to change them");
             case MARKS_KEPT -> TournamentMessages.sendInfo(admin,
                     "The same fight area was calculated again, so it keeps the "
-                            + "heights that were marked for it: it is cleaned from y " + shape.getFloorY()
+                            + "heights that were marked for it: it reaches from y " + shape.getFloorY()
                             + " to y " + shape.getWallTopY() + " instead of the height of the border wall"
                             + TournamentMessages.LINE_BREAK + "Mark two heights with " + Arena.MARK_HEIGHT_ACTION
                             + " and calculate again to replace them");
@@ -142,7 +142,7 @@ public final class ArenaSetupService {
                 TournamentMessages.sendWarning(admin, "This is not the fight area the heights y "
                         + marked.getFloorY() + " to y " + marked.getWallTopY()
                         + " were marked for any more, so they are gone"
-                        + TournamentMessages.LINE_BREAK + "It is cleaned from y " + shape.getFloorY()
+                        + TournamentMessages.LINE_BREAK + "The fight area reaches from y " + shape.getFloorY()
                         + " to y " + shape.getWallTopY() + ", the height of its own border wall. Mark two "
                         + "heights with " + Arena.MARK_HEIGHT_ACTION + " and calculate again if it needs them"));
     }
@@ -159,8 +159,10 @@ public final class ArenaSetupService {
             return;
         }
         TournamentMessages.sendInfo(admin, "Reading the " + capturedVolume.getBlockCount()
-                + " blocks of the fight area from y " + capturedVolume.getFloorY() + " to y "
-                + capturedVolume.getWallTopY() + " as the baseline " + Arena.CLEAN_ACTION + " restores"
+                + " blocks from y " + capturedVolume.getFloorY() + " to y " + capturedVolume.getWallTopY()
+                + (capturedVolume.getFloorY() < shape.getFloorY()
+                        ? ", the fight area and the layers under its floor," : ", the fight area,")
+                + " as the baseline " + Arena.CLEAN_ACTION + " restores"
                 + TournamentMessages.LINE_BREAK + "In batches of " + arenaBaselineService.getBlocksPerTick()
                 + " per tick, the arena cannot be cleaned until that is done."
                 + TournamentMessages.LINE_BREAK + "The baseline is gone when the server restarts");

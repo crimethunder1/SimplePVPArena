@@ -5,10 +5,16 @@ import de.simplepvparena.match.MatchState;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.logging.Handler;
+import java.util.logging.Level;
+import java.util.logging.LogRecord;
+import java.util.logging.Logger;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class TemporaryEntityRoundStartTest {
 
@@ -58,5 +64,48 @@ class TemporaryEntityRoundStartTest {
         assertEquals(1, harness.getRoundStartSteps().stream().filter(REMOVAL_STEP::equals).count(),
                 "and runs it once: " + harness.getRoundStartSteps());
         assertEquals(2, harness.getTemporaryEntityRemovalWorlds().size());
+    }
+
+    @Test
+    void startsTheRoundAnywayWhenTheRemovalFails() {
+        RuntimeException failure = new IllegalStateException("the entities could not be looked up");
+        harness.failTemporaryEntityRemovalWith(failure);
+        List<LogRecord> logRecords = new ArrayList<>();
+        Handler recordingHandler = recordingHandler(logRecords);
+        Logger logger = harness.getPlugin().getLogger();
+        logger.addHandler(recordingHandler);
+        try {
+            Match match = harness.startMatch(fighter, mate, opponent, opponentMate);
+
+            assertEquals(MatchState.RUNNING, match.getState(), "the round has started");
+            assertEquals(List.of(REMOVAL_STEP,
+                    "teleport Fighter", "kit Fighter", "teleport Mate", "kit Mate",
+                    "teleport Opponent", "kit Opponent", "teleport OpponentMate", "kit OpponentMate"),
+                    harness.getRoundStartSteps());
+            assertTrue(logRecords.stream().anyMatch(logRecord -> logRecord.getLevel() == Level.WARNING
+                            && logRecord.getMessage().contains("temporary entities of the arena could not be removed")
+                            && logRecord.getThrown() == failure),
+                    "the failure is logged as a warning with the exception");
+        } finally {
+            logger.removeHandler(recordingHandler);
+        }
+    }
+
+    private static Handler recordingHandler(List<LogRecord> logRecords) {
+        return new Handler() {
+
+            @Override
+            public void publish(LogRecord logRecord) {
+                logRecords.add(logRecord);
+            }
+
+            @Override
+            public void flush() {
+            }
+
+            @Override
+            public void close() {
+            }
+        };
     }
 }

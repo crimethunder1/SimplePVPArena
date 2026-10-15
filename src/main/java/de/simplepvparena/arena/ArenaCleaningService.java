@@ -142,7 +142,12 @@ public final class ArenaCleaningService {
             return;
         }
         run.temporaryEntitiesRemoved = true;
-        temporaryEntityRemover.removeTemporaryEntities(world, run.fightArea);
+        try {
+            temporaryEntityRemover.removeTemporaryEntities(world, run.fightArea);
+        } catch (RuntimeException failure) {
+            plugin.getLogger().log(Level.WARNING, "The temporary entities of the arena could not be removed, "
+                    + "the cleaning carries on without that", failure);
+        }
     }
 
     private void clearCurrentLayer(World world, CleaningRun run, ArenaCleaningTarget cleaningTarget) {

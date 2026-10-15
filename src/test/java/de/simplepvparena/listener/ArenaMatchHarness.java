@@ -72,6 +72,8 @@ final class ArenaMatchHarness {
     private final Plugin plugin;
     private final World world;
 
+    private RuntimeException temporaryEntityRemovalFailure;
+
     ArenaMatchHarness() {
         this.world = proxy(World.class, (method, arguments) -> switch (method.getName()) {
             case "getName" -> WORLD_NAME;
@@ -88,6 +90,9 @@ final class ArenaMatchHarness {
                 gateOpeningService, (removalWorld, removalShape) -> {
                     temporaryEntityRemovalWorlds.add(removalWorld);
                     roundStartSteps.add("remove temporary entities in " + removalShape.getWorldName());
+                    if (temporaryEntityRemovalFailure != null) {
+                        throw temporaryEntityRemovalFailure;
+                    }
                     return 0;
                 });
         buildWallAndShape();
@@ -131,6 +136,10 @@ final class ArenaMatchHarness {
 
     List<World> getTemporaryEntityRemovalWorlds() {
         return temporaryEntityRemovalWorlds;
+    }
+
+    void failTemporaryEntityRemovalWith(RuntimeException failure) {
+        this.temporaryEntityRemovalFailure = failure;
     }
 
     ArenaShape getShape() {

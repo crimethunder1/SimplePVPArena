@@ -2,8 +2,8 @@ package de.simplepvparena.arena;
 
 public enum ArenaHeightMarkerMode {
 
-    LOWEST("lowest point", "the floor of the cleaned fight area"),
-    HIGHEST("highest point", "the ceiling of the cleaned fight area");
+    LOWEST("lowest point", "the floor of the fight area"),
+    HIGHEST("highest point", "the ceiling of the fight area");
 
     private final String displayName;
     private final String meaning;

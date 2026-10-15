@@ -189,7 +189,7 @@ public final class ArenaShape {
         return worldName + " with " + cells.length + " cells between "
                 + boundingBox.getMinimumX() + "/" + boundingBox.getMinimumZ() + " and "
                 + boundingBox.getMaximumX() + "/" + boundingBox.getMaximumZ()
-                + ", cleaned from y " + floorY + " to y " + wallTopY
+                + ", from y " + floorY + " to y " + wallTopY
                 + ", calculated at y " + referenceY;
     }
 

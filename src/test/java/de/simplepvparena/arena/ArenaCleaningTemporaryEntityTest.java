@@ -22,6 +22,10 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import java.util.function.Consumer;
+import java.util.logging.Handler;
+import java.util.logging.Level;
+import java.util.logging.LogRecord;
+import java.util.logging.Logger;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -123,6 +127,64 @@ class ArenaCleaningTemporaryEntityTest {
         assertTrue(fixture.removals.isEmpty());
     }
 
+    @Test
+    void restoresEveryBlockAndEndsSuccessfullyWhenTheRemovalFails() {
+        Fixture fixture = new Fixture();
+        fixture.calculate();
+        fixture.cleaningService.setAnimationDurationTicks(0L);
+        RuntimeException failure = new IllegalStateException("the entities could not be looked up");
+        fixture.removalFailure = failure;
+        ArenaShape cleanedVolume = fixture.setupService.findCleanedVolume().orElseThrow();
+        fixture.harness.setBlock(PROBE_X, cleanedVolume.getFloorY(), PROBE_Z, Material.COBWEB);
+        fixture.harness.setBlock(PROBE_X, FLOOR_Y, PROBE_Z, Material.COBWEB);
+        fixture.harness.setBlock(PROBE_X, WALL_TOP_Y, PROBE_Z, Material.COBWEB);
+        List<String> outcomes = new ArrayList<>();
+        List<LogRecord> logRecords = new ArrayList<>();
+        Handler recordingHandler = recordingHandler(logRecords);
+        Logger logger = fixture.harness.getPlugin().getLogger();
+        logger.addHandler(recordingHandler);
+        try {
+            assertTrue(fixture.setupService.startAutomaticCleaning(outcomes::add).isEmpty());
+            fixture.runUntilTheCleaningIsOver();
+        } finally {
+            logger.removeHandler(recordingHandler);
+        }
+
+        assertEquals(1, fixture.removals.size(), "the failed removal is not tried again in the following ticks");
+        assertEquals(1, outcomes.size());
+        assertTrue(outcomes.get(0).startsWith("The arena is clean"), "the run ends successfully: " + outcomes);
+        assertTrue(outcomes.get(0).contains("3 of " + cleanedVolume.getBlockCount() + " checked blocks"),
+                "every block of the cleaned volume was walked: " + outcomes);
+        assertEquals(Material.AIR, fixture.harness.getBlock(PROBE_X, cleanedVolume.getFloorY(), PROBE_Z),
+                "the deepest secured layer is restored");
+        assertEquals(Material.STONE, fixture.harness.getBlock(PROBE_X, FLOOR_Y, PROBE_Z),
+                "the floor is restored");
+        assertEquals(Material.AIR, fixture.harness.getBlock(PROBE_X, WALL_TOP_Y, PROBE_Z),
+                "the top layer is restored");
+        assertTrue(logRecords.stream().anyMatch(logRecord -> logRecord.getLevel() == Level.WARNING
+                        && logRecord.getMessage().contains("temporary entities of the arena could not be removed")
+                        && logRecord.getThrown() == failure),
+                "the failure is logged as a warning with the exception");
+    }
+
+    private static Handler recordingHandler(List<LogRecord> logRecords) {
+        return new Handler() {
+
+            @Override
+            public void publish(LogRecord logRecord) {
+                logRecords.add(logRecord);
+            }
+
+            @Override
+            public void flush() {
+            }
+
+            @Override
+            public void close() {
+            }
+        };
+    }
+
     private static final class Fixture {
 
         private final FakeServerHarness harness = new FakeServerHarness(WORLD_NAME);
@@ -135,12 +197,16 @@ class ArenaCleaningTemporaryEntityTest {
         private final ArenaSetupService setupService;
 
         private int probeY = WALL_BOTTOM_Y;
+        private RuntimeException removalFailure;
 
         private final ArenaCleaningService cleaningService = new ArenaCleaningService(harness.getPlugin(),
                 (world, shape) -> 0, new RecordingVisualEffect(), ArenaCleaningExclusion.NONE,
                 (world, shape) -> {
                     steps.add("remove temporary entities");
                     removals.add(new Removal(world, shape, harness.getBlock(PROBE_X, probeY, PROBE_Z)));
+                    if (removalFailure != null) {
+                        throw removalFailure;
+                    }
                     return 0;
                 });
 

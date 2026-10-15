@@ -471,8 +471,9 @@ public final class AdminMenuService {
         lore.add("highest point of the fight area");
         lore.add("Place a block with it, only its height is kept");
         lore.add("and the block disappears again");
-        lore.add("The next calculation cleans exactly between them,");
-        lore.add("also below the border wall, and uses both marks up");
+        lore.add("The next calculation takes them over as the floor");
+        lore.add("and the ceiling of the fight area, also below the");
+        lore.add("border wall, and uses both marks up");
         lore.addAll(heightMarkerService.describeMarkers());
         return lore;
     }

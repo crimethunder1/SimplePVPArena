@@ -87,9 +87,10 @@ public final class ArenaHeightMarkerService {
     }
 
     private String describeCompletePair() {
-        return "Both heights are set. The next " + Arena.CALCULATE_ACTION + " cleans y "
-                + heightMarkers.getLowestY().orElseThrow() + " to y "
-                + heightMarkers.getHighestY().orElseThrow() + " instead of the height of the border wall"
+        return "Both heights are set. The next " + Arena.CALCULATE_ACTION + " takes y "
+                + heightMarkers.getLowestY().orElseThrow() + " and y "
+                + heightMarkers.getHighestY().orElseThrow() + " over as the floor and the ceiling of the "
+                + "fight area instead of the height of the border wall"
                 + TournamentMessages.LINE_BREAK + "They are used up by that calculation and are gone "
                 + "when the server restarts";
     }
@@ -120,7 +121,7 @@ public final class ArenaHeightMarkerService {
         lines.add("The next placed block marks the "
                 + heightMarkers.getNextEnd().getDisplayName());
         lines.add(heightMarkers.isComplete()
-                ? "The next calculation cleans exactly those heights"
+                ? "The next calculation takes them as floor and ceiling"
                 : "Both ends have to be marked, a single mark is not used");
         return lines;
     }
