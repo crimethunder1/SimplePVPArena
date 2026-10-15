@@ -4,7 +4,7 @@ import de.simplepvparena.arena.ArenaBuildRule;
 import de.simplepvparena.arena.ArenaRegistry;
 import de.simplepvparena.arena.ArenaShape;
 import de.simplepvparena.arena.ArenaWorldBuildRule;
-import de.simplepvparena.command.TournamentCommand;
+import de.simplepvparena.command.AdminPermission;
 import de.simplepvparena.match.MatchService;
 import de.simplepvparena.message.TournamentMessages;
 import org.bukkit.block.Block;
@@ -60,6 +60,6 @@ public final class ArenaBuildListener implements Listener {
     }
 
     static boolean isArenaAdmin(Player player) {
-        return player.isOp() || player.hasPermission(TournamentCommand.ADMIN_PERMISSION);
+        return AdminPermission.isAdmin(player);
     }
 }

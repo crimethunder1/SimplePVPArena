@@ -1,5 +1,6 @@
 package de.simplepvparena.tournament;
 
+import de.simplepvparena.command.AdminPermission;
 import de.simplepvparena.message.TournamentMessages;
 import net.kyori.adventure.text.Component;
 import org.bukkit.Server;
@@ -19,7 +20,7 @@ public final class OnlineOperatorNotifier implements OperatorNotifier {
     public void notifyOperators(String message) {
         Component notification = TournamentMessages.warning(message);
         for (Player player : server.getOnlinePlayers()) {
-            if (player.isOp()) {
+            if (AdminPermission.isAdmin(player)) {
                 player.sendMessage(notification);
             }
         }

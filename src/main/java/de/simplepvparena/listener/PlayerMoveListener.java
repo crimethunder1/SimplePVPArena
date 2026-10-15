@@ -5,6 +5,7 @@ import de.simplepvparena.arena.ArenaMovementRule;
 import de.simplepvparena.arena.ArenaRegistry;
 import de.simplepvparena.arena.ArenaShape;
 import de.simplepvparena.arena.SpectatorService;
+import de.simplepvparena.command.AdminPermission;
 import de.simplepvparena.match.MatchService;
 import de.simplepvparena.message.TournamentMessages;
 import org.bukkit.Location;
@@ -44,7 +45,8 @@ public final class PlayerMoveListener implements Listener {
         boolean destinationInside = arenaShape.get().contains(to);
         boolean flyingSpectator = isFlyingSpectator(player);
         boolean activeFighter = isActiveFighter(player);
-        if (!ArenaFlightExitRule.isMovementAllowed(activeFighter, belongsIntoArena(player), player.isOp(),
+        boolean admin = AdminPermission.isAdmin(player);
+        if (!ArenaFlightExitRule.isMovementAllowed(activeFighter, belongsIntoArena(player), admin,
                 flyingSpectator, originInside, destinationInside)) {
             event.setCancelled(true);
         }
@@ -78,8 +80,9 @@ public final class PlayerMoveListener implements Listener {
         if (arenaShape.isEmpty()) {
             return true;
         }
-        return ArenaMovementRule.isMovementAllowed(isActiveFighter(player), belongsIntoArena(player), player.isOp(),
-                arenaShape.get().contains(origin), arenaShape.get().contains(destination));
+        return ArenaMovementRule.isMovementAllowed(isActiveFighter(player), belongsIntoArena(player),
+                AdminPermission.isAdmin(player), arenaShape.get().contains(origin),
+                arenaShape.get().contains(destination));
     }
 
     private boolean belongsIntoArena(Player player) {

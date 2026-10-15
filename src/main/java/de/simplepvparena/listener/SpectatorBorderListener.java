@@ -2,6 +2,7 @@ package de.simplepvparena.listener;
 
 import de.simplepvparena.arena.SpectatorService;
 import de.simplepvparena.border.SpectatorBorderService;
+import de.simplepvparena.command.AdminPermission;
 import de.simplepvparena.match.MatchService;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
@@ -53,7 +54,8 @@ public final class SpectatorBorderListener implements Listener {
         }
         Player player = event.getPlayer();
         if (!spectatorBorderService.isMovementAllowed(matchService.isActiveFighter(player.getUniqueId()),
-                spectatorService.isFlyingSpectator(player.getUniqueId()), player.isOp(), origin, destination)) {
+                spectatorService.isFlyingSpectator(player.getUniqueId()), AdminPermission.isAdmin(player),
+                origin, destination)) {
             event.setCancelled(true);
         }
     }

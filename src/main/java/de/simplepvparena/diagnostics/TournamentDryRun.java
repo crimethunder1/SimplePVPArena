@@ -364,7 +364,7 @@ public final class TournamentDryRun {
         }
         if (operatorMessages.size() != 1) {
             return Optional.of("The ready final announced itself " + operatorMessages.size()
-                    + " times to the operators instead of exactly once");
+                    + " times to the admins instead of exactly once");
         }
         details.add("The final gate turns " + FinalMatchStage.READY + " and announces once: "
                 + operatorMessages.get(0));

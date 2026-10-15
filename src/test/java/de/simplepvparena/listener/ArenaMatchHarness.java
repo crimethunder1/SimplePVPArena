@@ -11,6 +11,7 @@ import de.simplepvparena.arena.SpectatorItemFactory;
 import de.simplepvparena.arena.SpectatorService;
 import de.simplepvparena.border.BorderMarkIndex;
 import de.simplepvparena.border.SpectatorBorderService;
+import de.simplepvparena.command.TournamentCommand;
 import de.simplepvparena.gate.StartGateDuration;
 import de.simplepvparena.gate.StartGateMarks;
 import de.simplepvparena.gate.StartGateOpeningService;
@@ -358,6 +359,7 @@ final class ArenaMatchHarness {
         private Location location;
         private GameMode gameMode = GameMode.SURVIVAL;
         private boolean operator;
+        private boolean adminPermissionGranted;
         private boolean online = true;
 
         private FakePlayer(String playerName, Location location) {
@@ -368,7 +370,8 @@ final class ArenaMatchHarness {
                 case "getName" -> playerName;
                 case "isOp" -> operator;
                 case "isOnline" -> online;
-                case "hasPermission" -> operator;
+                case "hasPermission" -> TournamentCommand.ADMIN_PERMISSION.equals(arguments[0])
+                        && (operator || adminPermissionGranted);
                 case "getLocation" -> this.location;
                 case "getGameMode" -> gameMode;
                 case "setGameMode" -> {
@@ -417,6 +420,10 @@ final class ArenaMatchHarness {
 
         void makeOperator() {
             this.operator = true;
+        }
+
+        void grantAdminPermission() {
+            this.adminPermissionGranted = true;
         }
 
         private Object inventory() {
