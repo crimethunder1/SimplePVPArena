@@ -1,16 +1,27 @@
+# Rounds, the round time limit, sudden death, the start gate and team colours.
 match:
+  # Ticks between the end of a round and the start of the next one (20 ticks are one second).
   round-reset-delay-ticks: 100
+  # Time limit of a round in seconds, sudden death starts when it runs out. At least 1.
   round-timeout-seconds: 300
+  # Seconds before the time limit in which the action bar counts down to sudden death.
   sudden-death-warning-seconds: 45
+  # Damage each active fighter takes in the first second of sudden death.
   sudden-death-damage-per-second: 2.0
+  # Damage added for every further second of sudden death.
   sudden-death-damage-increase-per-second: 1.0
+  # When true, the rounds of the final have no time limit and no sudden death.
   disable-sudden-death-in-final: true
+  # Seconds a placed start gate takes to open layer by layer at the start of a round. At least 1.
   start-gate-duration-seconds: 10
+  # Scoreboard colours of the two teams of a match, as Minecraft colour names. Both must differ.
   team-colours:
     first-team: red
     second-team: aqua
 
+# Equipment each fighter receives at the start of every round. Saving the kit from the menu rewrites it.
 kit:
+  # Armour per slot (head, chest, legs, feet) with a material and enchantment levels.
   armor:
     head:
       material: DIAMOND_HELMET
@@ -28,6 +39,7 @@ kit:
       material: DIAMOND_BOOTS
       enchantments:
         protection: 4
+  # Inventory items in slot order, each with a material, an amount (default 1) and optional enchantments.
   items:
     - material: DIAMOND_SWORD
       enchantments:
@@ -38,28 +50,50 @@ kit:
     - material: ARROW
       amount: 64
 
+# Cleaning and protection of the fight area.
 arena:
+  # Blocks written per tick while the arena is cleaned.
   clean-blocks-per-tick: 4096
+  # Blocks read per tick while the baseline of the fight area is captured.
   baseline-blocks-per-tick: 16384
+  # Particles that show a running cleaning.
   clean-particle:
+    # false cleans without particles.
     enabled: true
+    # Particle type. A colour carrying type such as DUST shows the red and green phases.
     type: DUST
+    # Seconds for the red flood and the green clearing together, at most 120. 0 skips both phases.
     total-duration-seconds: 6.0
+    # Particle columns drawn per tick, at most 64. 0 draws none.
     columns-per-tick: 24
+  # Largest number of cells the flood fill may visit when it calculates the fight area.
   shape-maximum-cells: 50000
+  # Blocks around the arena outline in which non-fighters take no environmental damage or hunger. 0 turns it off.
   safety-zone-radius: 64
+  # Calculated fight area, written by the plugin.
   shape: {}
+  # Spawns of both teams and the tribune, written by the plugin.
   spawns: {}
 
+# Particle display of border blocks for players who are not fighting.
 border:
+  # Ticks between two particle redraws.
   particle-period-ticks: 30
+  # Distance in blocks around a player in which border blocks are shown.
   particle-view-radius: 12
+  # Most border blocks shown to one player per redraw.
   particle-maximum-blocks-per-player: 24
+  # Most connection lines between border columns shown to one player. 0 hides them.
   particle-maximum-lines-per-player: 48
+  # Seconds the outline of a recognised wall is shown after a calculation.
   wall-preview-seconds: 4
+  # Marker on each border block once the wall is confirmed.
   confirmed-particle:
+    # Particle type.
     type: END_ROD
+    # Height in blocks of the particle stream above the block. 0 draws a single particle.
     height: 0.25
+    # RGB colour from 0 to 255, used only by colour carrying types such as DUST.
     colour:
       red: 255
       green: 255
