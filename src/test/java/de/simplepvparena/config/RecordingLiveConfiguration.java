@@ -21,6 +21,7 @@ final class RecordingLiveConfiguration implements LiveConfiguration {
     static final String TEAM_COLOURS = "teamColourSettings";
     static final String CLEANING_BLOCKS_PER_TICK = "arenaCleaningBlocksPerTick";
     static final String BASELINE_BLOCKS_PER_TICK = "arenaBaselineBlocksPerTick";
+    static final String BASELINE_DEPTH_BELOW_FLOOR = "arenaBaselineDepthBelowFloor";
     static final String CLEANING_PARTICLE = "arenaCleaningParticleSettings";
     static final String MAXIMUM_CELL_COUNT = "maximumArenaCellCount";
     static final String SAFETY_ZONE_RADIUS = "safetyZoneRadius";
@@ -34,7 +35,7 @@ final class RecordingLiveConfiguration implements LiveConfiguration {
 
     static final List<String> EVERY_APPLIED_VALUE = List.of(
             ROUND_RESET_DELAY, ROUND_TIMEOUT, SUDDEN_DEATH_IN_FINAL, START_GATE_DURATION, TEAM_COLOURS,
-            CLEANING_BLOCKS_PER_TICK, BASELINE_BLOCKS_PER_TICK,
+            CLEANING_BLOCKS_PER_TICK, BASELINE_BLOCKS_PER_TICK, BASELINE_DEPTH_BELOW_FLOOR,
             CLEANING_PARTICLE, MAXIMUM_CELL_COUNT, SAFETY_ZONE_RADIUS, PARTICLE_PERIOD, PARTICLE_VIEW_RADIUS,
             PARTICLE_MAXIMUM_BLOCKS, PARTICLE_MAXIMUM_LINES, WALL_PREVIEW_DURATION, CONFIRMED_PARTICLE, KIT);
 
@@ -76,6 +77,11 @@ final class RecordingLiveConfiguration implements LiveConfiguration {
     @Override
     public void setArenaBaselineBlocksPerTick(int blocksPerTick) {
         appliedValues.put(BASELINE_BLOCKS_PER_TICK, blocksPerTick);
+    }
+
+    @Override
+    public void setArenaBaselineDepthBelowFloor(int depthBelowFloor) {
+        appliedValues.put(BASELINE_DEPTH_BELOW_FLOOR, depthBelowFloor);
     }
 
     @Override

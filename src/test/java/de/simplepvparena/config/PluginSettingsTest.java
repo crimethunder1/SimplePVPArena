@@ -41,6 +41,7 @@ class PluginSettingsTest {
                 settings.teamColourSettings());
         assertEquals(1024, settings.arenaCleaningBlocksPerTick());
         assertEquals(2048, settings.arenaBaselineBlocksPerTick());
+        assertEquals(20, settings.arenaBaselineDepthBelowFloor());
         assertEquals(new ArenaCleaningParticleSettings(false, "COMPOSTER", 8.0D, 3),
                 settings.arenaCleaningParticleSettings());
         assertEquals(12345, settings.maximumArenaCellCount());
@@ -67,6 +68,7 @@ class PluginSettingsTest {
         assertTrue(!shipped.teamColourSettings().equals(settings.teamColourSettings()));
         assertTrue(shipped.arenaCleaningBlocksPerTick() != settings.arenaCleaningBlocksPerTick());
         assertTrue(shipped.arenaBaselineBlocksPerTick() != settings.arenaBaselineBlocksPerTick());
+        assertTrue(shipped.arenaBaselineDepthBelowFloor() != settings.arenaBaselineDepthBelowFloor());
         assertTrue(!shipped.arenaCleaningParticleSettings().equals(settings.arenaCleaningParticleSettings()));
         assertTrue(shipped.maximumArenaCellCount() != settings.maximumArenaCellCount());
         assertTrue(shipped.safetyZoneRadius() != settings.safetyZoneRadius());
@@ -86,6 +88,7 @@ class PluginSettingsTest {
         assertEquals(PluginSettings.defaults(), settings);
         assertEquals(ArenaCleaningService.DEFAULT_BLOCKS_PER_TICK, settings.arenaCleaningBlocksPerTick());
         assertEquals(ArenaBaselineService.DEFAULT_BLOCKS_PER_TICK, settings.arenaBaselineBlocksPerTick());
+        assertEquals(ArenaBaselineService.DEFAULT_DEPTH_BELOW_FLOOR, settings.arenaBaselineDepthBelowFloor());
         assertEquals(ArenaShapeFloodFill.DEFAULT_MAXIMUM_CELL_COUNT, settings.maximumArenaCellCount());
         assertEquals(ArenaSafetyZone.DEFAULT_RADIUS, settings.safetyZoneRadius());
         assertEquals(BorderParticleService.DEFAULT_PERIOD_TICKS, settings.borderParticlePeriodTicks());
@@ -108,6 +111,34 @@ class PluginSettingsTest {
         assertEquals(1, problems.size());
         assertTrue(problems.get(0).startsWith(PluginSettings.ARENA_MAXIMUM_CELLS_PATH),
                 "the problem has to name the entry an admin fixes: " + problems.get(0));
+    }
+
+    @Test
+    void aBaselineDepthOutsideOfZeroToSixtyFourFallsBackAndIsReported() {
+        for (int depthBelowFloor : new int[] {-1, ArenaBaselineService.MAXIMUM_DEPTH_BELOW_FLOOR + 1}) {
+            problems.clear();
+            MemoryConfiguration configuration = new MemoryConfiguration();
+            configuration.set(PluginSettings.ARENA_BASELINE_DEPTH_BELOW_FLOOR_PATH, depthBelowFloor);
+
+            PluginSettings settings = PluginSettings.read(configuration, problems::add);
+
+            assertEquals(ArenaBaselineService.DEFAULT_DEPTH_BELOW_FLOOR, settings.arenaBaselineDepthBelowFloor());
+            assertEquals(1, problems.size(), "a depth of " + depthBelowFloor + " is reported");
+            assertTrue(problems.get(0).startsWith(PluginSettings.ARENA_BASELINE_DEPTH_BELOW_FLOOR_PATH),
+                    problems.get(0));
+        }
+    }
+
+    @Test
+    void aBaselineDepthOfZeroAndOfSixtyFourIsTakenWithoutAProblem() {
+        for (int depthBelowFloor : new int[] {0, ArenaBaselineService.MAXIMUM_DEPTH_BELOW_FLOOR}) {
+            MemoryConfiguration configuration = new MemoryConfiguration();
+            configuration.set(PluginSettings.ARENA_BASELINE_DEPTH_BELOW_FLOOR_PATH, depthBelowFloor);
+
+            assertEquals(depthBelowFloor,
+                    PluginSettings.read(configuration, problems::add).arenaBaselineDepthBelowFloor());
+        }
+        assertEquals(List.of(), problems);
     }
 
     @Test
@@ -345,6 +376,7 @@ class PluginSettingsTest {
         configuration.set(PluginSettings.SECOND_TEAM_COLOUR_PATH, "dark purple");
         configuration.set(PluginSettings.ARENA_CLEAN_BLOCKS_PER_TICK_PATH, 1024);
         configuration.set(PluginSettings.ARENA_BASELINE_BLOCKS_PER_TICK_PATH, 2048);
+        configuration.set(PluginSettings.ARENA_BASELINE_DEPTH_BELOW_FLOOR_PATH, 20);
         configuration.set(ArenaCleaningParticleSettings.ENABLED_CONFIGURATION_PATH, false);
         configuration.set(ArenaCleaningParticleSettings.TYPE_CONFIGURATION_PATH, "minecraft:composter");
         configuration.set(ArenaCleaningParticleSettings.TOTAL_DURATION_CONFIGURATION_PATH, 8.0D);

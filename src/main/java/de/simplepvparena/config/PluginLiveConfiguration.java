@@ -106,6 +106,11 @@ public final class PluginLiveConfiguration implements LiveConfiguration {
     }
 
     @Override
+    public void setArenaBaselineDepthBelowFloor(int depthBelowFloor) {
+        arenaBaselineService.setDepthBelowFloor(depthBelowFloor);
+    }
+
+    @Override
     public void setArenaCleaningParticleSettings(ArenaCleaningParticleSettings settings) {
         arenaCleaningVisualEffect.applyParticleSettings(settings, problemReporter);
         arenaCleaningService.setAnimationDurationTicks(settings.animationDurationTicks());

@@ -107,6 +107,30 @@ class ArenaBreakRuleTest {
                 "the admin who calculates the area again is never locked out of it");
     }
 
+    @Test
+    void keepsTheRuleForABaselineThatReachesUnderTheFloor() {
+        Optional<ArenaBaselineSnapshot> baseline = Optional.of(capture(shape(64, 65, 0, 0, 1, 0),
+                Map.of(position(0, 59, 0), Material.STONE, position(0, 64, 0), Material.STONE), 4, 10));
+
+        assertTrue(ArenaBreakRule.isPartOfTheOriginalArena(baseline, 0, 59, 0, Material.STONE),
+                "the ground the baseline now covers is still the arena");
+        assertFalse(ArenaBreakRule.isBreakingAllowed(ACTIVE_FIGHTER, REGULAR_PLAYER, INSIDE,
+                ArenaBreakRule.isPartOfTheOriginalArena(baseline, 0, 64, 0, Material.STONE)),
+                "the floor stays protected from the fighters");
+        assertTrue(ArenaBreakRule.isBreakingAllowed(ACTIVE_FIGHTER, REGULAR_PLAYER, INSIDE,
+                ArenaBreakRule.isPartOfTheOriginalArena(baseline, 1, 65, 0, Material.OAK_PLANKS)),
+                "a block placed during the match comes down again");
+        assertTrue(ArenaBreakRule.isPartOfTheOriginalArena(baseline, 0, 53, 0, Material.DIRT),
+                "the first block under the captured volume counts as the arena");
+        assertFalse(ArenaBreakRule.isBreakingAllowed(ACTIVE_FIGHTER, REGULAR_PLAYER, INSIDE,
+                ArenaBreakRule.isPartOfTheOriginalArena(baseline, 0, 53, 0, Material.DIRT)));
+        assertFalse(ArenaBreakRule.isBreakingAllowed(NOT_FIGHTING, REGULAR_PLAYER, INSIDE,
+                ArenaBreakRule.isPartOfTheOriginalArena(baseline, 0, 53, 0, Material.DIRT)));
+        assertTrue(ArenaBreakRule.isBreakingAllowed(NOT_FIGHTING, ARENA_ADMIN, INSIDE,
+                ArenaBreakRule.isPartOfTheOriginalArena(baseline, 0, 53, 0, Material.DIRT)),
+                "while the admin still takes it apart");
+    }
+
     private static Optional<ArenaBaselineSnapshot> baselineOfAFloorWithOneHole() {
         return Optional.of(capture(shape(64, 65, 0, 0, 1, 0),
                 Map.of(position(0, 64, 0), Material.STONE), 4));

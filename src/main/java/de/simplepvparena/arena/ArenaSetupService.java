@@ -149,16 +149,18 @@ public final class ArenaSetupService {
 
     private void captureBaseline(Player admin) {
         ArenaShape shape = getShape().orElseThrow();
+        ArenaShape capturedVolume = arenaBaselineService.findCapturedVolume(shape);
         if (!arenaBaselineService.startCapture(shape, report -> reportBaseline(admin, report))) {
             TournamentMessages.sendWarning(admin, "No baseline is taken of the fight area"
-                    + TournamentMessages.LINE_BREAK + "It holds " + shape.getBlockCount()
+                    + TournamentMessages.LINE_BREAK + "It holds " + capturedVolume.getBlockCount()
                     + " blocks, more than the " + ArenaBaselineSnapshot.MAXIMUM_BLOCK_COUNT + " a baseline covers."
                     + TournamentMessages.LINE_BREAK + Arena.CLEAN_ACTION
                     + " sets every block of it to air, the way it always did");
             return;
         }
-        TournamentMessages.sendInfo(admin, "Reading the " + shape.getBlockCount()
-                + " blocks of the fight area as the baseline " + Arena.CLEAN_ACTION + " restores"
+        TournamentMessages.sendInfo(admin, "Reading the " + capturedVolume.getBlockCount()
+                + " blocks of the fight area from y " + capturedVolume.getFloorY() + " to y "
+                + capturedVolume.getWallTopY() + " as the baseline " + Arena.CLEAN_ACTION + " restores"
                 + TournamentMessages.LINE_BREAK + "In batches of " + arenaBaselineService.getBlocksPerTick()
                 + " per tick, the arena cannot be cleaned until that is done."
                 + TournamentMessages.LINE_BREAK + "The baseline is gone when the server restarts");
@@ -293,7 +295,7 @@ public final class ArenaSetupService {
         }
         ArenaCleaningPlan plan = ArenaCleaningPlan.of(getShape().orElseThrow(),
                 arenaBaselineService.findStoredSnapshot());
-        ArenaShape shape = plan.getVolume();
+        ArenaShape shape = plan.getCleanedVolume();
         long blockCount = plan.getBlockCount();
         boolean cleaningStarted = arenaCleaningService.startCleaning(plan,
                 report -> reportCleaningOutcome(sender, report));

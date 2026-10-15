@@ -1,61 +1,95 @@
 package de.simplepvparena.arena;
 
 import org.bukkit.Material;
+import org.bukkit.block.BlockState;
+import org.bukkit.block.data.BlockData;
 
+import java.util.BitSet;
+import java.util.EnumSet;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 
 public final class ArenaBaselineSnapshot implements ArenaCleaningTarget {
 
     public static final long MAXIMUM_BLOCK_COUNT = 8_000_000L;
 
-    private static final Material[] MATERIALS_BY_ORDINAL = Material.values();
-
-    static {
-        if (MATERIALS_BY_ORDINAL.length > Short.MAX_VALUE) {
-            throw new IllegalStateException("there are " + MATERIALS_BY_ORDINAL.length
-                    + " materials, a baseline stores them as shorts and holds at most " + Short.MAX_VALUE);
-        }
-    }
-
     private final ArenaShape shape;
-    private final short[] materialOrdinals;
+    private final ArenaShape capturedVolume;
+    private final int depthBelowFloor;
+    private final short[] paletteIndexes;
+    private final BlockData[] palette;
+    private final BitSet blockEntityPaletteIndexes;
+    private final Map<Integer, BlockState> blockEntitiesByBlockIndex;
     private final int distinctMaterialCount;
+    private final int distinctBlockStateCount;
     private final long nonAirBlockCount;
 
-    ArenaBaselineSnapshot(ArenaShape shape, short[] materialOrdinals) {
+    ArenaBaselineSnapshot(ArenaShape shape, int depthBelowFloor, short[] paletteIndexes, BlockData[] palette,
+                          BitSet blockEntityPaletteIndexes, Map<Integer, BlockState> blockEntitiesByBlockIndex) {
         this.shape = Objects.requireNonNull(shape, "shape");
-        this.materialOrdinals = Objects.requireNonNull(materialOrdinals, "materialOrdinals");
-        boolean[] seenMaterials = new boolean[MATERIALS_BY_ORDINAL.length];
-        int distinctCount = 0;
+        this.depthBelowFloor = depthBelowFloor;
+        this.capturedVolume = shape.withFloorLoweredBy(depthBelowFloor);
+        this.paletteIndexes = Objects.requireNonNull(paletteIndexes, "paletteIndexes");
+        this.palette = Objects.requireNonNull(palette, "palette");
+        this.blockEntityPaletteIndexes = Objects.requireNonNull(blockEntityPaletteIndexes,
+                "blockEntityPaletteIndexes");
+        this.blockEntitiesByBlockIndex = Objects.requireNonNull(blockEntitiesByBlockIndex,
+                "blockEntitiesByBlockIndex");
+        long[] usageByPaletteIndex = new long[palette.length];
+        for (short paletteIndex : paletteIndexes) {
+            usageByPaletteIndex[Short.toUnsignedInt(paletteIndex)]++;
+        }
+        Set<Material> usedMaterials = EnumSet.noneOf(Material.class);
+        int usedBlockStateCount = 0;
         long nonAirCount = 0L;
-        for (short materialOrdinal : materialOrdinals) {
-            if (!seenMaterials[materialOrdinal]) {
-                seenMaterials[materialOrdinal] = true;
-                distinctCount++;
+        for (int paletteIndex = 0; paletteIndex < palette.length; paletteIndex++) {
+            if (usageByPaletteIndex[paletteIndex] == 0L) {
+                continue;
             }
-            if (MATERIALS_BY_ORDINAL[materialOrdinal] != Material.AIR) {
-                nonAirCount++;
+            Material material = palette[paletteIndex].getMaterial();
+            usedMaterials.add(material);
+            usedBlockStateCount++;
+            if (material != Material.AIR) {
+                nonAirCount += usageByPaletteIndex[paletteIndex];
             }
         }
-        this.distinctMaterialCount = distinctCount;
+        this.distinctMaterialCount = usedMaterials.size();
+        this.distinctBlockStateCount = usedBlockStateCount;
         this.nonAirBlockCount = nonAirCount;
-    }
-
-    static short toOrdinal(Material material) {
-        return (short) material.ordinal();
     }
 
     public ArenaShape getShape() {
         return shape;
     }
 
+    public ArenaShape getCapturedVolume() {
+        return capturedVolume;
+    }
+
+    public int getDepthBelowFloor() {
+        return depthBelowFloor;
+    }
+
     public long getBlockCount() {
-        return materialOrdinals.length;
+        return paletteIndexes.length;
     }
 
     public int getDistinctMaterialCount() {
         return distinctMaterialCount;
+    }
+
+    public int getDistinctBlockStateCount() {
+        return distinctBlockStateCount;
+    }
+
+    public int getPaletteSize() {
+        return palette.length;
+    }
+
+    public int getBlockEntityCount() {
+        return blockEntitiesByBlockIndex.size();
     }
 
     public long getNonAirBlockCount() {
@@ -67,11 +101,15 @@ public final class ArenaBaselineSnapshot implements ArenaCleaningTarget {
     }
 
     public Optional<Material> findMaterialAt(int blockX, int blockY, int blockZ) {
-        long blockIndex = shape.findBlockIndex(blockX, blockY, blockZ);
+        return findBlockDataAt(blockX, blockY, blockZ).map(BlockData::getMaterial);
+    }
+
+    public Optional<BlockData> findBlockDataAt(int blockX, int blockY, int blockZ) {
+        long blockIndex = capturedVolume.findBlockIndex(blockX, blockY, blockZ);
         if (blockIndex < 0L) {
             return Optional.empty();
         }
-        return Optional.of(MATERIALS_BY_ORDINAL[materialOrdinals[(int) blockIndex]]);
+        return Optional.of(palette[Short.toUnsignedInt(paletteIndexes[(int) blockIndex])]);
     }
 
     public boolean holdsCapturedMaterial(int blockX, int blockY, int blockZ, Material currentMaterial) {
@@ -81,7 +119,7 @@ public final class ArenaBaselineSnapshot implements ArenaCleaningTarget {
     }
 
     public boolean isBelowTheCapturedVolume(int blockY) {
-        return blockY < shape.getFloorY();
+        return blockY < capturedVolume.getFloorY();
     }
 
     @Override
@@ -90,12 +128,29 @@ public final class ArenaBaselineSnapshot implements ArenaCleaningTarget {
     }
 
     @Override
+    public Optional<BlockData> findBlockData(int blockX, int blockY, int blockZ) {
+        return findBlockDataAt(blockX, blockY, blockZ);
+    }
+
+    @Override
+    public Optional<BlockState> findBlockEntity(int blockX, int blockY, int blockZ) {
+        long blockIndex = capturedVolume.findBlockIndex(blockX, blockY, blockZ);
+        if (blockIndex < 0L
+                || !blockEntityPaletteIndexes.get(Short.toUnsignedInt(paletteIndexes[(int) blockIndex]))) {
+            return Optional.empty();
+        }
+        return Optional.ofNullable(blockEntitiesByBlockIndex.get((int) blockIndex));
+    }
+
+    @Override
     public String describeChange() {
         return "were restored to the baseline the last calculation took";
     }
 
     public String describe() {
-        return getBlockCount() + " blocks, " + distinctMaterialCount + " different materials, "
-                + nonAirBlockCount + " of them are not air";
+        return getBlockCount() + " blocks reaching " + depthBelowFloor + " blocks below the floor, "
+                + distinctMaterialCount + " different materials in " + distinctBlockStateCount
+                + " different block states, " + nonAirBlockCount + " of them are not air, "
+                + blockEntitiesByBlockIndex.size() + " hold contents such as text, patterns or items";
     }
 }

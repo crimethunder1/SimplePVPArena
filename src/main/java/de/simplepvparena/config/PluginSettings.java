@@ -26,6 +26,7 @@ public record PluginSettings(long roundResetDelayTicks,
                              TeamColourSettings teamColourSettings,
                              int arenaCleaningBlocksPerTick,
                              int arenaBaselineBlocksPerTick,
+                             int arenaBaselineDepthBelowFloor,
                              ArenaCleaningParticleSettings arenaCleaningParticleSettings,
                              int maximumArenaCellCount,
                              int safetyZoneRadius,
@@ -49,6 +50,7 @@ public record PluginSettings(long roundResetDelayTicks,
     public static final String SECOND_TEAM_COLOUR_PATH = TeamColourSettings.SECOND_TEAM_CONFIGURATION_PATH;
     public static final String ARENA_CLEAN_BLOCKS_PER_TICK_PATH = "arena.clean-blocks-per-tick";
     public static final String ARENA_BASELINE_BLOCKS_PER_TICK_PATH = "arena.baseline-blocks-per-tick";
+    public static final String ARENA_BASELINE_DEPTH_BELOW_FLOOR_PATH = "arena.baseline-depth-below-floor";
     public static final String ARENA_MAXIMUM_CELLS_PATH = ArenaShapeFloodFill.MAXIMUM_CELL_COUNT_CONFIGURATION_PATH;
     public static final String ARENA_SAFETY_ZONE_RADIUS_PATH = ArenaSafetyZone.RADIUS_CONFIGURATION_PATH;
     public static final String BORDER_PARTICLE_PERIOD_PATH = "border.particle-period-ticks";
@@ -75,6 +77,7 @@ public record PluginSettings(long roundResetDelayTicks,
             SECOND_TEAM_COLOUR_PATH,
             ARENA_CLEAN_BLOCKS_PER_TICK_PATH,
             ARENA_BASELINE_BLOCKS_PER_TICK_PATH,
+            ARENA_BASELINE_DEPTH_BELOW_FLOOR_PATH,
             ArenaCleaningParticleSettings.ENABLED_CONFIGURATION_PATH,
             ArenaCleaningParticleSettings.TYPE_CONFIGURATION_PATH,
             ArenaCleaningParticleSettings.TOTAL_DURATION_CONFIGURATION_PATH,
@@ -100,6 +103,7 @@ public record PluginSettings(long roundResetDelayTicks,
                 TeamColourSettings.defaults(),
                 ArenaCleaningService.DEFAULT_BLOCKS_PER_TICK,
                 ArenaBaselineService.DEFAULT_BLOCKS_PER_TICK,
+                ArenaBaselineService.DEFAULT_DEPTH_BELOW_FLOOR,
                 ArenaCleaningParticleSettings.defaults(),
                 ArenaShapeFloodFill.DEFAULT_MAXIMUM_CELL_COUNT,
                 ArenaSafetyZone.DEFAULT_RADIUS,
@@ -125,6 +129,7 @@ public record PluginSettings(long roundResetDelayTicks,
                 readTeamColourSettings(configuration, problemReporter),
                 configuration.getInt(ARENA_CLEAN_BLOCKS_PER_TICK_PATH, shipped.arenaCleaningBlocksPerTick()),
                 configuration.getInt(ARENA_BASELINE_BLOCKS_PER_TICK_PATH, shipped.arenaBaselineBlocksPerTick()),
+                readBaselineDepthBelowFloor(configuration, problemReporter),
                 readArenaCleaningParticleSettings(configuration, problemReporter),
                 readMaximumArenaCellCount(configuration, problemReporter),
                 readSafetyZoneRadius(configuration, problemReporter),
@@ -147,6 +152,7 @@ public record PluginSettings(long roundResetDelayTicks,
         liveConfiguration.setTeamColourSettings(teamColourSettings);
         liveConfiguration.setArenaCleaningBlocksPerTick(arenaCleaningBlocksPerTick);
         liveConfiguration.setArenaBaselineBlocksPerTick(arenaBaselineBlocksPerTick);
+        liveConfiguration.setArenaBaselineDepthBelowFloor(arenaBaselineDepthBelowFloor);
         liveConfiguration.setArenaCleaningParticleSettings(arenaCleaningParticleSettings);
         liveConfiguration.setMaximumArenaCellCount(maximumArenaCellCount);
         liveConfiguration.setSafetyZoneRadius(safetyZoneRadius);
@@ -168,6 +174,19 @@ public record PluginSettings(long roundResetDelayTicks,
         problemReporter.accept(ARENA_MAXIMUM_CELLS_PATH + " must be at least one cell, falling back to "
                 + ArenaShapeFloodFill.DEFAULT_MAXIMUM_CELL_COUNT);
         return ArenaShapeFloodFill.DEFAULT_MAXIMUM_CELL_COUNT;
+    }
+
+    private static int readBaselineDepthBelowFloor(ConfigurationSection configuration,
+                                                   Consumer<String> problemReporter) {
+        int depthBelowFloor = configuration.getInt(ARENA_BASELINE_DEPTH_BELOW_FLOOR_PATH,
+                ArenaBaselineService.DEFAULT_DEPTH_BELOW_FLOOR);
+        if (depthBelowFloor >= 0 && depthBelowFloor <= ArenaBaselineService.MAXIMUM_DEPTH_BELOW_FLOOR) {
+            return depthBelowFloor;
+        }
+        problemReporter.accept(ARENA_BASELINE_DEPTH_BELOW_FLOOR_PATH + " must lie between 0 and "
+                + ArenaBaselineService.MAXIMUM_DEPTH_BELOW_FLOOR + " blocks, falling back to "
+                + ArenaBaselineService.DEFAULT_DEPTH_BELOW_FLOOR + " blocks");
+        return ArenaBaselineService.DEFAULT_DEPTH_BELOW_FLOOR;
     }
 
     private static int readSafetyZoneRadius(ConfigurationSection configuration, Consumer<String> problemReporter) {

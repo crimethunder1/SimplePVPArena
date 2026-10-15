@@ -11,6 +11,7 @@ public record ConfigurationReloadReport(List<String> problems) {
                     + "final is fought without a time limit",
             "the seconds the start gate takes at the beginning of a round",
             "the cleaning and baseline batch sizes and the particles of a running cleaning",
+            "the depth below the floor the next baseline is taken to",
             "the cell limit of the arena calculation",
             "the radius of the safety zone",
             "the border particles, their limits and the confirmed border marker");

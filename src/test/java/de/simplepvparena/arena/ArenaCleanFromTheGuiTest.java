@@ -323,6 +323,7 @@ class ArenaCleanFromTheGuiTest {
                 new RecordingVisualEffect());
 
         private Fixture() {
+            baselineService.setDepthBelowFloor(0);
             BorderMarkIndex borderMarks = new BorderMarkIndex();
             for (int blockX = -2; blockX <= 2; blockX++) {
                 for (int blockZ = -2; blockZ <= 2; blockZ++) {

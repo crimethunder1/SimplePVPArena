@@ -23,6 +23,8 @@ class ArenaBreakProtectionTest {
     private static final int OPEN_X = 7;
     private static final int OPEN_Z = 7;
     private static final int UNDER_THE_FLOOR_Y = ArenaMatchHarness.GROUND_Y - 1;
+    private static final int FIRST_Y_UNDER_THE_CAPTURED_VOLUME =
+            ArenaMatchHarness.GROUND_Y - ArenaBaselineService.DEFAULT_DEPTH_BELOW_FLOOR - 1;
 
     private ArenaMatchHarness harness;
     private ArenaMatchHarness.FakePlayer fighter;
@@ -85,6 +87,21 @@ class ArenaBreakProtectionTest {
         assertTrue(isBreakCancelledFor(fighter, ARENA_FLOOR_X, UNDER_THE_FLOOR_Y, ARENA_FLOOR_Z));
         assertTrue(isBucketFillCancelledFor(fighter, POND_X, UNDER_THE_FLOOR_Y, POND_Z),
                 "and no bucket drains what is under the floor either");
+    }
+
+    @Test
+    void keepsEveryoneButTheAdminFromTheFirstBlockUnderTheCapturedVolume() {
+        harness.setBlock(ARENA_FLOOR_X, FIRST_Y_UNDER_THE_CAPTURED_VOLUME, ARENA_FLOOR_Z, Material.STONE);
+
+        assertTrue(baselineService.findSnapshot(harness.getShape()).orElseThrow()
+                .isBelowTheCapturedVolume(FIRST_Y_UNDER_THE_CAPTURED_VOLUME));
+        assertTrue(isBreakCancelledFor(fighter, ARENA_FLOOR_X, FIRST_Y_UNDER_THE_CAPTURED_VOLUME, ARENA_FLOOR_Z),
+                "a fighter");
+        assertTrue(isBreakCancelledFor(spectator, ARENA_FLOOR_X, FIRST_Y_UNDER_THE_CAPTURED_VOLUME,
+                ARENA_FLOOR_Z), "and a player who is not fighting");
+        spectator.makeOperator();
+        assertFalse(isBreakCancelledFor(spectator, ARENA_FLOOR_X, FIRST_Y_UNDER_THE_CAPTURED_VOLUME,
+                ARENA_FLOOR_Z), "only the admin");
     }
 
     @Test

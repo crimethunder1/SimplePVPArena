@@ -1,6 +1,7 @@
 package de.simplepvparena.arena;
 
 import org.bukkit.World;
+import org.bukkit.block.Block;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.scheduler.BukkitTask;
 
@@ -12,12 +13,16 @@ public final class ArenaBaselineService {
 
     public static final int DEFAULT_BLOCKS_PER_TICK = 16_384;
 
+    public static final int DEFAULT_DEPTH_BELOW_FLOOR = 10;
+    public static final int MAXIMUM_DEPTH_BELOW_FLOOR = 64;
+
     private static final long BATCH_PERIOD_TICKS = 1L;
 
     private final Plugin plugin;
     private final ArenaBaselineRegistry baselineRegistry;
 
     private int blocksPerTick = DEFAULT_BLOCKS_PER_TICK;
+    private int depthBelowFloor = DEFAULT_DEPTH_BELOW_FLOOR;
     private BukkitTask activeTask;
 
     public ArenaBaselineService(Plugin plugin, ArenaBaselineRegistry baselineRegistry) {
@@ -33,12 +38,24 @@ public final class ArenaBaselineService {
         return blocksPerTick;
     }
 
+    public void setDepthBelowFloor(int depthBelowFloor) {
+        this.depthBelowFloor = Math.max(0, Math.min(MAXIMUM_DEPTH_BELOW_FLOOR, depthBelowFloor));
+    }
+
+    public int getDepthBelowFloor() {
+        return depthBelowFloor;
+    }
+
     public boolean isCapturing() {
         return activeTask != null;
     }
 
-    public static boolean isTooLargeForBaseline(ArenaShape shape) {
-        return shape.getBlockCount() > ArenaBaselineSnapshot.MAXIMUM_BLOCK_COUNT;
+    public ArenaShape findCapturedVolume(ArenaShape shape) {
+        return shape.withFloorLoweredBy(depthBelowFloor);
+    }
+
+    public boolean isTooLargeForBaseline(ArenaShape shape) {
+        return findCapturedVolume(shape).getBlockCount() > ArenaBaselineSnapshot.MAXIMUM_BLOCK_COUNT;
     }
 
     public Optional<ArenaBaselineSnapshot> findSnapshot(ArenaShape shape) {
@@ -59,8 +76,8 @@ public final class ArenaBaselineService {
         if (isTooLargeForBaseline(shape)) {
             return false;
         }
-        ArenaShapeBlockCursor cursor = new ArenaShapeBlockCursor(shape);
-        ArenaBaselineSnapshotBuilder builder = new ArenaBaselineSnapshotBuilder(shape);
+        ArenaBaselineSnapshotBuilder builder = new ArenaBaselineSnapshotBuilder(shape, depthBelowFloor);
+        ArenaShapeBlockCursor cursor = new ArenaShapeBlockCursor(builder.getCapturedVolume());
         activeTask = plugin.getServer().getScheduler().runTaskTimer(plugin,
                 () -> captureNextBatch(cursor, builder, completionHandler),
                 BATCH_PERIOD_TICKS, BATCH_PERIOD_TICKS);
@@ -114,7 +131,8 @@ public final class ArenaBaselineService {
             int blockX = BlockPositionCodec.decodeX(encodedPosition);
             int blockY = BlockPositionCodec.decodeY(encodedPosition);
             int blockZ = BlockPositionCodec.decodeZ(encodedPosition);
-            builder.record(blockX, blockY, blockZ, world.getBlockAt(blockX, blockY, blockZ).getType());
+            Block block = world.getBlockAt(blockX, blockY, blockZ);
+            builder.record(blockX, blockY, blockZ, block.getBlockData(), () -> block.getState(true));
         }
     }
 

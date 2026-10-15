@@ -107,6 +107,9 @@ public final class TournamentManager implements MatchCompletionHandler {
             return TournamentOperationResult.success("Tournament paused");
         }
         if (state == TournamentState.PAUSED) {
+            if (arenaCleanup.isCleaning() && !waitingForArenaCleaning) {
+                return TournamentOperationResult.failure(ARENA_STILL_BEING_CLEANED_MESSAGE);
+            }
             state = TournamentState.RUNNING;
             matchService.resumeRoundTimer();
             broadcast("The tournament continues");
@@ -154,6 +157,9 @@ public final class TournamentManager implements MatchCompletionHandler {
         if (resolvedTeamName.isEmpty()) {
             return TournamentOperationResult.failure(teamName + " does not take part in match " + matchId);
         }
+        if (arenaCleanup.isCleaning() && !waitingForArenaCleaning) {
+            return TournamentOperationResult.failure(ARENA_STILL_BEING_CLEANED_MESSAGE);
+        }
         recordBracketWinner(matchId, resolvedTeamName.get());
         return TournamentOperationResult.success("Match " + matchId + " was decided for " + resolvedTeamName.get());
     }
@@ -180,6 +186,9 @@ public final class TournamentManager implements MatchCompletionHandler {
             return TournamentOperationResult.failure("The arena is still being cleaned after the last match"
                     + TournamentMessages.LINE_BREAK + "Start the final again in a moment, the finalists "
                     + "are meant to fight in the arena the admin built");
+        }
+        if (arenaCleanup.isCleaning()) {
+            return TournamentOperationResult.failure(ARENA_STILL_BEING_CLEANED_MESSAGE);
         }
         BracketMatch finalMatch = bracket.getFinalMatch();
         if (!resolveTeamsOrDeclareWalkover(finalMatch)) {

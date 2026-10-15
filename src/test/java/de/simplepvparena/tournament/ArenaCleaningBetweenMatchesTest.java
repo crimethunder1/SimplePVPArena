@@ -227,6 +227,115 @@ class ArenaCleaningBetweenMatchesTest {
         assertEquals(0, fixture.cleanup.attemptCount, "starting a tournament cleans nothing by itself");
     }
 
+    @Test
+    void refusesToStartTheFinalWhileACleaningFromTheArenaMenuRuns() {
+        Fixture fixture = new Fixture();
+        fixture.startTournament();
+        fixture.decideRunningMatch();
+        fixture.cleanup.finishCleaning(CLEAN_OUTCOME);
+        fixture.decideRunningMatch();
+        fixture.cleanup.finishCleaning(CLEAN_OUTCOME);
+        assertEquals(FinalMatchStage.READY, fixture.tournamentManager.getFinalMatchStage());
+        fixture.cleanup.startCleaningFromTheArenaMenu();
+
+        TournamentOperationResult refusal = fixture.tournamentManager.startFinalMatch();
+
+        assertFalse(refusal.successful(), "the final may not start into a cleaning started from the arena menu");
+        assertEquals(EXPECTED_CLEANING_REFUSAL, refusal.message());
+        assertFalse(fixture.matchService.hasActiveMatch());
+        assertEquals(FinalMatchStage.READY, fixture.tournamentManager.getFinalMatchStage(),
+                "the refused final keeps its stage");
+
+        fixture.cleanup.finishCleaning(CLEAN_OUTCOME);
+
+        TournamentOperationResult start = fixture.tournamentManager.startFinalMatch();
+        assertTrue(start.successful(), start.message());
+        assertEquals("round2-match1", fixture.runningMatchId());
+    }
+
+    @Test
+    void refusesToResumeTheTournamentWhileACleaningFromTheArenaMenuRuns() {
+        Fixture fixture = new Fixture();
+        fixture.startTournament();
+        assertTrue(fixture.tournamentManager.togglePause().successful());
+        fixture.decideRunningMatch();
+        fixture.cleanup.finishCleaning(CLEAN_OUTCOME);
+        assertFalse(fixture.matchService.hasActiveMatch(), "a paused tournament starts no match");
+        fixture.cleanup.startCleaningFromTheArenaMenu();
+
+        TournamentOperationResult refusal = fixture.tournamentManager.togglePause();
+
+        assertFalse(refusal.successful(),
+                "the tournament may not resume into a cleaning started from the arena menu");
+        assertEquals(EXPECTED_CLEANING_REFUSAL, refusal.message());
+        assertEquals(TournamentState.PAUSED, fixture.tournamentManager.getState());
+        assertTrue(fixture.matchService.isRoundTimerPaused(), "the refused resume leaves the round timer paused");
+        assertFalse(fixture.matchService.hasActiveMatch());
+
+        fixture.cleanup.finishCleaning(CLEAN_OUTCOME);
+
+        TournamentOperationResult resume = fixture.tournamentManager.togglePause();
+        assertTrue(resume.successful(), resume.message());
+        assertEquals(TournamentState.RUNNING, fixture.tournamentManager.getState());
+        assertFalse(fixture.matchService.isRoundTimerPaused());
+        assertEquals("round1-match2", fixture.runningMatchId(), "the waiting match starts after the resume");
+    }
+
+    @Test
+    void resumesTheTournamentDuringItsOwnCleaningAndStartsTheNextMatchOnceTheCleaningIsDone() {
+        Fixture fixture = new Fixture();
+        fixture.startTournament();
+        assertTrue(fixture.tournamentManager.togglePause().successful());
+        fixture.decideRunningMatch();
+        assertTrue(fixture.cleanup.isCleaning(), "the end of the match starts the cleaning of the tournament");
+
+        TournamentOperationResult resume = fixture.tournamentManager.togglePause();
+
+        assertTrue(resume.successful(), resume.message());
+        assertEquals(TournamentState.RUNNING, fixture.tournamentManager.getState());
+        assertFalse(fixture.matchService.hasActiveMatch(),
+                "the next match waits for the cleaning the tournament started itself");
+
+        fixture.cleanup.finishCleaning(CLEAN_OUTCOME);
+
+        assertEquals("round1-match2", fixture.runningMatchId());
+    }
+
+    @Test
+    void refusesToDecideAStuckMatchWhileACleaningFromTheArenaMenuRunsAndAcceptsItAfterwards() {
+        Fixture fixture = new Fixture();
+        fixture.startTournament();
+        BracketMatch stuckMatch = fixture.tournamentManager.getBracket().orElseThrow()
+                .findMatch("round1-match2").orElseThrow();
+        String stuckWinnerTeamName = stuckMatch.getFirstTeamName().orElseThrow();
+        assertTrue(fixture.teamRegistry.removeTeam(stuckWinnerTeamName));
+        assertTrue(fixture.teamRegistry.removeTeam(stuckMatch.getSecondTeamName().orElseThrow()));
+        fixture.decideRunningMatch();
+        fixture.cleanup.finishCleaning(CLEAN_OUTCOME);
+        assertEquals(TournamentState.RUNNING, fixture.tournamentManager.getState());
+        assertFalse(fixture.matchService.hasActiveMatch(),
+                "a match without any registered team waits for an admin decision");
+        assertFalse(stuckMatch.isDecided());
+        fixture.cleanup.startCleaningFromTheArenaMenu();
+
+        TournamentOperationResult refusal = fixture.tournamentManager.forceMatchResult("round1-match2",
+                stuckWinnerTeamName);
+
+        assertFalse(refusal.successful(),
+                "the decision may not start a match into a cleaning started from the arena menu");
+        assertEquals(EXPECTED_CLEANING_REFUSAL, refusal.message());
+        assertFalse(fixture.matchService.hasActiveMatch());
+        assertFalse(stuckMatch.isDecided(), "the refused decision leaves the bracket as it is");
+        assertEquals(TournamentState.RUNNING, fixture.tournamentManager.getState());
+
+        fixture.cleanup.finishCleaning(CLEAN_OUTCOME);
+
+        TournamentOperationResult decision = fixture.tournamentManager.forceMatchResult("round1-match2",
+                stuckWinnerTeamName);
+        assertTrue(decision.successful(), decision.message());
+        assertEquals(Optional.of(stuckWinnerTeamName), stuckMatch.getWinnerTeamName());
+    }
+
     private static final class Fixture {
 
         private static final String WORLD_NAME = "tournament-flow";

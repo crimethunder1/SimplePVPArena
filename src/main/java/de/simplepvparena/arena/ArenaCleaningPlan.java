@@ -39,6 +39,10 @@ public final class ArenaCleaningPlan {
         return volume;
     }
 
+    public ArenaShape getCleanedVolume() {
+        return baseline == null ? volume : baseline.getCapturedVolume();
+    }
+
     public ArenaCleaningTarget getTarget() {
         return baseline == null ? ArenaCleaningTarget.EMPTY_ARENA : baseline;
     }
@@ -52,6 +56,6 @@ public final class ArenaCleaningPlan {
     }
 
     public long getBlockCount() {
-        return volume.getBlockCount();
+        return getCleanedVolume().getBlockCount();
     }
 }

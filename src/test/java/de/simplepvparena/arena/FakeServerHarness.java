@@ -1,8 +1,12 @@
 package de.simplepvparena.arena;
 
+import de.simplepvparena.support.FakeBlockData;
 import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.block.Block;
+import org.bukkit.block.BlockState;
+import org.bukkit.block.TileState;
+import org.bukkit.block.data.BlockData;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.scheduler.BukkitScheduler;
 import org.bukkit.scheduler.BukkitTask;
@@ -19,12 +23,14 @@ import java.util.logging.Logger;
 final class FakeServerHarness {
 
     private final String worldName;
-    private final Map<Long, Material> blocks = new HashMap<>();
+    private final Map<Long, BlockData> blocks = new HashMap<>();
+    private final Map<Long, String> blockEntityContents = new HashMap<>();
     private final List<ScheduledTask> scheduledTasks = new ArrayList<>();
     private final Plugin plugin;
 
     private boolean worldLoaded = true;
     private RuntimeException blockAccessFailure;
+    private int writesWithPhysicsCount;
 
     FakeServerHarness(String worldName) {
         this.worldName = worldName;
@@ -58,11 +64,31 @@ final class FakeServerHarness {
     }
 
     void setBlock(int blockX, int blockY, int blockZ, Material material) {
-        blocks.put(BlockPositionCodec.encode(blockX, blockY, blockZ), material);
+        setBlockData(blockX, blockY, blockZ, FakeBlockData.of(material));
     }
 
     Material getBlock(int blockX, int blockY, int blockZ) {
-        return blocks.getOrDefault(BlockPositionCodec.encode(blockX, blockY, blockZ), Material.AIR);
+        return getBlockData(blockX, blockY, blockZ).getMaterial();
+    }
+
+    void setBlockData(int blockX, int blockY, int blockZ, BlockData blockData) {
+        writeBlockData(BlockPositionCodec.encode(blockX, blockY, blockZ), blockData);
+    }
+
+    BlockData getBlockData(int blockX, int blockY, int blockZ) {
+        return readBlockData(BlockPositionCodec.encode(blockX, blockY, blockZ));
+    }
+
+    void setBlockEntityContent(int blockX, int blockY, int blockZ, String content) {
+        blockEntityContents.put(BlockPositionCodec.encode(blockX, blockY, blockZ), content);
+    }
+
+    String getBlockEntityContent(int blockX, int blockY, int blockZ) {
+        return blockEntityContents.get(BlockPositionCodec.encode(blockX, blockY, blockZ));
+    }
+
+    int getWritesWithPhysicsCount() {
+        return writesWithPhysicsCount;
     }
 
     void runTick() {
@@ -151,18 +177,78 @@ final class FakeServerHarness {
         return proxy(Block.class, (method, arguments) -> switch (method.getName()) {
             case "getType" -> {
                 failBlockAccessIfAsked();
-                yield blocks.getOrDefault(encodedPosition, Material.AIR);
+                yield readBlockData(encodedPosition).getMaterial();
             }
             case "setType" -> {
                 failBlockAccessIfAsked();
-                blocks.put(encodedPosition, (Material) arguments[0]);
+                countPhysics(arguments);
+                writeBlockData(encodedPosition, FakeBlockData.of((Material) arguments[0]));
                 yield null;
+            }
+            case "getBlockData" -> {
+                failBlockAccessIfAsked();
+                yield readBlockData(encodedPosition);
+            }
+            case "setBlockData" -> {
+                failBlockAccessIfAsked();
+                countPhysics(arguments);
+                writeBlockData(encodedPosition, (BlockData) arguments[0]);
+                yield null;
+            }
+            case "getState" -> {
+                failBlockAccessIfAsked();
+                yield createBlockEntitySnapshot(blockX, blockY, blockZ);
             }
             case "getX" -> blockX;
             case "getY" -> blockY;
             case "getZ" -> blockZ;
             default -> throw new UnsupportedOperationException("Block." + method.getName());
         });
+    }
+
+    private Object createBlockEntitySnapshot(int blockX, int blockY, int blockZ) {
+        long encodedPosition = BlockPositionCodec.encode(blockX, blockY, blockZ);
+        BlockData capturedBlockData = readBlockData(encodedPosition);
+        String capturedContent = blockEntityContents.get(encodedPosition);
+        Class<? extends BlockState> stateType = FakeBlockData.holdsBlockEntity(capturedBlockData)
+                ? TileState.class : BlockState.class;
+        return proxy(stateType, (method, arguments) -> switch (method.getName()) {
+            case "getBlockData" -> capturedBlockData;
+            case "getType" -> capturedBlockData.getMaterial();
+            case "getX" -> blockX;
+            case "getY" -> blockY;
+            case "getZ" -> blockZ;
+            case "update" -> {
+                failBlockAccessIfAsked();
+                countPhysics(arguments);
+                writeBlockData(encodedPosition, capturedBlockData);
+                if (capturedContent == null) {
+                    blockEntityContents.remove(encodedPosition);
+                } else {
+                    blockEntityContents.put(encodedPosition, capturedContent);
+                }
+                yield true;
+            }
+            default -> throw new UnsupportedOperationException("BlockState." + method.getName());
+        });
+    }
+
+    private BlockData readBlockData(long encodedPosition) {
+        BlockData blockData = blocks.get(encodedPosition);
+        return blockData == null ? FakeBlockData.of(Material.AIR) : blockData;
+    }
+
+    private void writeBlockData(long encodedPosition, BlockData blockData) {
+        if (readBlockData(encodedPosition).getMaterial() != blockData.getMaterial()) {
+            blockEntityContents.remove(encodedPosition);
+        }
+        blocks.put(encodedPosition, blockData);
+    }
+
+    private void countPhysics(Object[] arguments) {
+        if (arguments == null || arguments.length < 2 || (Boolean) arguments[1]) {
+            writesWithPhysicsCount++;
+        }
     }
 
     private void failBlockAccessIfAsked() {

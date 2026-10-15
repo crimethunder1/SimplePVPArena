@@ -3,10 +3,13 @@ package de.simplepvparena.arena;
 import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.block.Block;
+import org.bukkit.block.BlockState;
+import org.bukkit.block.data.BlockData;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.scheduler.BukkitTask;
 
 import java.util.Objects;
+import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.logging.Level;
 
@@ -84,7 +87,7 @@ public final class ArenaCleaningService {
         if (isCleaning()) {
             return false;
         }
-        ArenaShape shape = plan.getVolume();
+        ArenaShape shape = plan.getCleanedVolume();
         ArenaCleaningTarget cleaningTarget = plan.getTarget();
         CleaningRun run = new CleaningRun(shape,
                 ArenaCleaningLayerSchedule.of(shape.getHeight(), animationDurationTicks));
@@ -170,8 +173,23 @@ public final class ArenaCleaningService {
             if (exclusion.isExcluded(worldName, blockX, blockY, blockZ)) {
                 continue;
             }
-            Material targetMaterial = cleaningTarget.findMaterial(blockX, blockY, blockZ);
+            Optional<BlockState> targetBlockEntity = cleaningTarget.findBlockEntity(blockX, blockY, blockZ);
+            if (targetBlockEntity.isPresent()) {
+                targetBlockEntity.get().update(true, false);
+                changedBlockCount++;
+                continue;
+            }
             Block block = world.getBlockAt(blockX, blockY, blockZ);
+            Optional<BlockData> targetBlockData = cleaningTarget.findBlockData(blockX, blockY, blockZ);
+            if (targetBlockData.isPresent()) {
+                if (block.getBlockData().equals(targetBlockData.get())) {
+                    continue;
+                }
+                block.setBlockData(targetBlockData.get(), false);
+                changedBlockCount++;
+                continue;
+            }
+            Material targetMaterial = cleaningTarget.findMaterial(blockX, blockY, blockZ);
             if (block.getType() == targetMaterial) {
                 continue;
             }

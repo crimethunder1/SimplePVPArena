@@ -39,6 +39,7 @@ class ConfigurationReloadServiceTest {
                 liveConfiguration.teamColourSettings());
         assertEquals(1024, liveConfiguration.intValueOf(RecordingLiveConfiguration.CLEANING_BLOCKS_PER_TICK));
         assertEquals(2048, liveConfiguration.intValueOf(RecordingLiveConfiguration.BASELINE_BLOCKS_PER_TICK));
+        assertEquals(20, liveConfiguration.intValueOf(RecordingLiveConfiguration.BASELINE_DEPTH_BELOW_FLOOR));
         assertEquals(new ArenaCleaningParticleSettings(false, "COMPOSTER", 8.0D, 3),
                 liveConfiguration.arenaCleaningParticleSettings());
         assertEquals(12345, liveConfiguration.intValueOf(RecordingLiveConfiguration.MAXIMUM_CELL_COUNT));

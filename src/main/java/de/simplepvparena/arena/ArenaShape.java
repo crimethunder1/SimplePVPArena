@@ -60,6 +60,13 @@ public final class ArenaShape {
         return new ArenaShape(worldName, referenceY, floorY, wallTopY, cells, true);
     }
 
+    public ArenaShape withFloorLoweredBy(int blockCount) {
+        if (blockCount < 0) {
+            throw new IllegalArgumentException("the floor cannot be lowered by " + blockCount + " blocks");
+        }
+        return new ArenaShape(worldName, referenceY, floorY - blockCount, wallTopY, cells, heightsMarked);
+    }
+
     public int getHeight() {
         return wallTopY - floorY + 1;
     }

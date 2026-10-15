@@ -22,6 +22,8 @@ public interface LiveConfiguration {
 
     void setArenaBaselineBlocksPerTick(int blocksPerTick);
 
+    void setArenaBaselineDepthBelowFloor(int depthBelowFloor);
+
     void setArenaCleaningParticleSettings(ArenaCleaningParticleSettings settings);
 
     void setMaximumArenaCellCount(int maximumArenaCellCount);

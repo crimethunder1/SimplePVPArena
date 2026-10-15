@@ -18,6 +18,7 @@ import de.simplepvparena.gate.StartGateVisualEffect;
 import de.simplepvparena.kit.KitService;
 import de.simplepvparena.match.Match;
 import de.simplepvparena.match.MatchService;
+import de.simplepvparena.support.FakeBlockData;
 import de.simplepvparena.support.SharedBukkitServer;
 import de.simplepvparena.team.Team;
 import de.simplepvparena.team.TeamMember;
@@ -265,6 +266,7 @@ final class ArenaMatchHarness {
             case "getZ" -> blockZ;
             case "getWorld" -> world;
             case "getType" -> findMaterial(blockX, blockY, blockZ);
+            case "getBlockData" -> FakeBlockData.of(findMaterial(blockX, blockY, blockZ));
             case "setType" -> {
                 setBlock(blockX, blockY, blockZ, (Material) arguments[0]);
                 yield null;
