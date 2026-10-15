@@ -13,6 +13,8 @@ import de.simplepvparena.arena.ArenaHeightMarkers;
 import de.simplepvparena.arena.ArenaRegistry;
 import de.simplepvparena.arena.ArenaSafetyZone;
 import de.simplepvparena.arena.ArenaSetupService;
+import de.simplepvparena.arena.ArenaTemporaryEntityRemover;
+import de.simplepvparena.arena.BukkitArenaTemporaryEntityRemover;
 import de.simplepvparena.arena.SpectatorItemFactory;
 import de.simplepvparena.arena.SpectatorService;
 import de.simplepvparena.arena.VanillaArenaCleaningVisualEffect;
@@ -160,12 +162,14 @@ public final class SimplePVPArenaPlugin extends JavaPlugin {
         startGateOpeningService = new StartGateOpeningService(this, startGateMarks, startGateDuration,
                 new VanillaStartGateVisualEffect());
 
+        ArenaTemporaryEntityRemover temporaryEntityRemover = new BukkitArenaTemporaryEntityRemover();
+
         arenaCleaningVisualEffect = new VanillaArenaCleaningVisualEffect();
         arenaCleaningService = new ArenaCleaningService(this, spectatorBorderService::clearMarksInShape,
-                arenaCleaningVisualEffect, startGateMarks::isMarked);
+                arenaCleaningVisualEffect, startGateMarks::isMarked, temporaryEntityRemover);
 
         matchService = new MatchService(this, kitService, spectatorService, fighterColours,
-                startGateOpeningService);
+                startGateOpeningService, temporaryEntityRemover);
 
         BorderVisualEffect borderVisualEffect = BorderVisualEffects.create(getServer().getPluginManager(),
                 getLogger());

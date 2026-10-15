@@ -64,6 +64,8 @@ final class ArenaMatchHarness {
     private final SpectatorBorderService borderService;
     private final SpectatorService spectatorService;
     private final RecordingFighterColours fighterColours = new RecordingFighterColours();
+    private final List<String> roundStartSteps = new ArrayList<>();
+    private final List<World> temporaryEntityRemovalWorlds = new ArrayList<>();
     private final StartGateMarks gateMarks = new StartGateMarks();
     private final StartGateOpeningService gateOpeningService;
     private final MatchService matchService;
@@ -83,7 +85,11 @@ final class ArenaMatchHarness {
         this.gateOpeningService = new StartGateOpeningService(plugin, gateMarks, new StartGateDuration(),
                 StartGateVisualEffect.NONE);
         this.matchService = new MatchService(plugin, new KitService(), spectatorService, fighterColours,
-                gateOpeningService);
+                gateOpeningService, (removalWorld, removalShape) -> {
+                    temporaryEntityRemovalWorlds.add(removalWorld);
+                    roundStartSteps.add("remove temporary entities in " + removalShape.getWorldName());
+                    return 0;
+                });
         buildWallAndShape();
     }
 
@@ -117,6 +123,14 @@ final class ArenaMatchHarness {
 
     SpectatorBorderService getBorderService() {
         return borderService;
+    }
+
+    List<String> getRoundStartSteps() {
+        return roundStartSteps;
+    }
+
+    List<World> getTemporaryEntityRemovalWorlds() {
+        return temporaryEntityRemovalWorlds;
     }
 
     ArenaShape getShape() {
@@ -354,10 +368,15 @@ final class ArenaMatchHarness {
                 }
                 case "teleport" -> {
                     this.location = (Location) arguments[0];
+                    roundStartSteps.add("teleport " + playerName);
                     yield true;
                 }
+                case "setHealth" -> {
+                    roundStartSteps.add("kit " + playerName);
+                    yield null;
+                }
                 case "sendMessage", "sendActionBar", "showTitle", "setFallDistance", "setFireTicks",
-                     "setFoodLevel", "setSaturation", "setExp", "setLevel", "setHealth", "damage",
+                     "setFoodLevel", "setSaturation", "setExp", "setLevel", "damage",
                      "removePotionEffect" -> null;
                 case "getFoodLevel" -> 20;
                 case "getActivePotionEffects" -> List.of();

@@ -1,5 +1,6 @@
 package de.simplepvparena.match;
 
+import de.simplepvparena.arena.ArenaTemporaryEntityRemover;
 import de.simplepvparena.arena.PositionSnapshot;
 import de.simplepvparena.arena.SpectatorService;
 import de.simplepvparena.gate.StartGateCountdown;
@@ -46,6 +47,7 @@ public final class MatchService {
     private final SpectatorService spectatorService;
     private final FighterColours fighterColours;
     private final StartGates startGates;
+    private final ArenaTemporaryEntityRemover temporaryEntityRemover;
     private final SuddenDeathTick suddenDeathTick = new SuddenDeathTick(new Random());
 
     private MatchCompletionHandler matchCompletionHandler = (match, winnerTeamName) -> { };
@@ -59,11 +61,18 @@ public final class MatchService {
 
     public MatchService(Plugin plugin, KitService kitService, SpectatorService spectatorService,
                         FighterColours fighterColours, StartGates startGates) {
+        this(plugin, kitService, spectatorService, fighterColours, startGates, ArenaTemporaryEntityRemover.NONE);
+    }
+
+    public MatchService(Plugin plugin, KitService kitService, SpectatorService spectatorService,
+                        FighterColours fighterColours, StartGates startGates,
+                        ArenaTemporaryEntityRemover temporaryEntityRemover) {
         this.plugin = plugin;
         this.kitService = kitService;
         this.spectatorService = spectatorService;
         this.fighterColours = fighterColours;
         this.startGates = Objects.requireNonNull(startGates, "startGates");
+        this.temporaryEntityRemover = Objects.requireNonNull(temporaryEntityRemover, "temporaryEntityRemover");
     }
 
     public void setMatchCompletionHandler(MatchCompletionHandler matchCompletionHandler) {
@@ -238,6 +247,7 @@ public final class MatchService {
     }
 
     private void beginRound(Match match) {
+        removeTemporaryEntities(match);
         Set<UUID> firstTeamPlayers = collectOnlineMembers(match.getFirstTeam());
         Set<UUID> secondTeamPlayers = collectOnlineMembers(match.getSecondTeam());
         match.beginRound(firstTeamPlayers, secondTeamPlayers);
@@ -255,6 +265,11 @@ public final class MatchService {
         if (immediateOutcome.isPresent()) {
             concludeRound(match, immediateOutcome.get());
         }
+    }
+
+    private void removeTemporaryEntities(Match match) {
+        match.getArena().getShape().ifPresent(shape -> temporaryEntityRemover.removeTemporaryEntities(
+                plugin.getServer().getWorld(shape.getWorldName()), shape));
     }
 
     private void concludeRound(Match match, RoundOutcome outcome) {

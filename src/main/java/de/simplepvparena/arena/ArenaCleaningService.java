@@ -25,6 +25,7 @@ public final class ArenaCleaningService {
     private final CleanedArenaHandler cleanedArenaHandler;
     private final ArenaCleaningVisualEffect visualEffect;
     private final ArenaCleaningExclusion exclusion;
+    private final ArenaTemporaryEntityRemover temporaryEntityRemover;
 
     private int blocksPerTick = DEFAULT_BLOCKS_PER_TICK;
     private long animationDurationTicks = ArenaCleaningParticleSettings.defaults().animationDurationTicks();
@@ -42,10 +43,18 @@ public final class ArenaCleaningService {
     public ArenaCleaningService(Plugin plugin, CleanedArenaHandler cleanedArenaHandler,
                                 ArenaCleaningVisualEffect visualEffect,
                                 ArenaCleaningExclusion exclusion) {
+        this(plugin, cleanedArenaHandler, visualEffect, exclusion, ArenaTemporaryEntityRemover.NONE);
+    }
+
+    public ArenaCleaningService(Plugin plugin, CleanedArenaHandler cleanedArenaHandler,
+                                ArenaCleaningVisualEffect visualEffect,
+                                ArenaCleaningExclusion exclusion,
+                                ArenaTemporaryEntityRemover temporaryEntityRemover) {
         this.plugin = plugin;
         this.cleanedArenaHandler = cleanedArenaHandler;
         this.visualEffect = Objects.requireNonNull(visualEffect, "visualEffect");
         this.exclusion = Objects.requireNonNull(exclusion, "exclusion");
+        this.temporaryEntityRemover = Objects.requireNonNull(temporaryEntityRemover, "temporaryEntityRemover");
     }
 
     public void setBlocksPerTick(int blocksPerTick) {
@@ -89,7 +98,7 @@ public final class ArenaCleaningService {
         }
         ArenaShape shape = plan.getCleanedVolume();
         ArenaCleaningTarget cleaningTarget = plan.getTarget();
-        CleaningRun run = new CleaningRun(shape,
+        CleaningRun run = new CleaningRun(plan.getVolume(), shape,
                 ArenaCleaningLayerSchedule.of(shape.getHeight(), animationDurationTicks));
         activeTask = plugin.getServer().getScheduler().runTaskTimer(plugin,
                 () -> runNextTick(run, cleaningTarget, completionHandler),
@@ -109,6 +118,7 @@ public final class ArenaCleaningService {
             return;
         }
         try {
+            removeTemporaryEntitiesOnce(world, run);
             showFloodedLayer(world, run);
             if (run.phase.writesBlocks()) {
                 clearCurrentLayer(world, run, cleaningTarget);
@@ -125,6 +135,14 @@ public final class ArenaCleaningService {
             return;
         }
         finish(cleaningTarget, run, null, completionHandler);
+    }
+
+    private void removeTemporaryEntitiesOnce(World world, CleaningRun run) {
+        if (run.temporaryEntitiesRemoved) {
+            return;
+        }
+        run.temporaryEntitiesRemoved = true;
+        temporaryEntityRemover.removeTemporaryEntities(world, run.fightArea);
     }
 
     private void clearCurrentLayer(World world, CleaningRun run, ArenaCleaningTarget cleaningTarget) {
@@ -208,6 +226,7 @@ public final class ArenaCleaningService {
 
     private static final class CleaningRun {
 
+        private final ArenaShape fightArea;
         private final ArenaShape shape;
         private final ArenaCleaningLayerSchedule schedule;
         private final ArenaShapeBlockCursor cursor;
@@ -224,8 +243,10 @@ public final class ArenaCleaningService {
         private int clearedBorderMarkCount;
 
         private boolean visualEffectStopped;
+        private boolean temporaryEntitiesRemoved;
 
-        private CleaningRun(ArenaShape shape, ArenaCleaningLayerSchedule schedule) {
+        private CleaningRun(ArenaShape fightArea, ArenaShape shape, ArenaCleaningLayerSchedule schedule) {
+            this.fightArea = fightArea;
             this.shape = shape;
             this.schedule = schedule;
             this.cursor = new ArenaShapeBlockCursor(shape);

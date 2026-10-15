@@ -444,6 +444,7 @@ class ArenaCleaningBetweenMatchesTest {
                     (method, arguments) -> switch (method.getName()) {
                         case "getScheduler" -> scheduler;
                         case "getPlayer" -> null;
+                        case "getWorld" -> null;
                         case "broadcast" -> 0;
                         default -> throw new UnsupportedOperationException("Server." + method.getName());
                     });
