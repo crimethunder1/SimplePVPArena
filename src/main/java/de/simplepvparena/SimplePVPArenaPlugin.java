@@ -67,6 +67,7 @@ import de.simplepvparena.team.EventTeamImportService;
 import de.simplepvparena.team.TeamMemberLookup;
 import de.simplepvparena.team.TeamRegistry;
 import de.simplepvparena.team.TeamStorage;
+import de.simplepvparena.tournament.AutomaticArenaCleanup;
 import de.simplepvparena.tournament.OnlineOperatorNotifier;
 import de.simplepvparena.tournament.TournamentManager;
 import org.bukkit.command.PluginCommand;
@@ -186,7 +187,8 @@ public final class SimplePVPArenaPlugin extends JavaPlugin {
                 arenaBorderConfirmation, this::saveArenaConfiguration);
 
         tournamentManager = new TournamentManager(this, teamRegistry, arenaRegistry, matchService,
-                arenaSetupService::startAutomaticCleaning, new OnlineOperatorNotifier(getServer()));
+                new AutomaticArenaCleanup(arenaSetupService, arenaCleaningService),
+                new OnlineOperatorNotifier(getServer()));
 
         tournamentDryRun = new TournamentDryRun(tournamentManager::getState,
                 matchService::hasActiveMatch, teamRegistry,

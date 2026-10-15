@@ -34,11 +34,14 @@ import java.util.logging.Logger;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class ArenaCleaningBetweenMatchesTest {
 
     private static final String CLEAN_OUTCOME = "The arena is clean\n4 of 27 checked blocks were restored";
+
+    private static final String EXPECTED_CLEANING_REFUSAL = "The arena is still being cleaned. Try again in a moment.";
 
     @Test
     void startsTheNextMatchOnlyAfterTheAutomaticCleaningIsDone() {
@@ -129,6 +132,101 @@ class ArenaCleaningBetweenMatchesTest {
         assertEquals("round2-match1", fixture.runningMatchId());
     }
 
+    @Test
+    void refusesToStartATournamentWhileTheArenaIsBeingCleanedAndKeepsTheStateAsItIs() {
+        Fixture fixture = new Fixture();
+        fixture.startTournament();
+        fixture.playUntilTheTournamentIsOver();
+        assertTrue(fixture.cleanup.isCleaning(), "the end of the final starts a cleaning");
+        Bracket finishedBracket = fixture.tournamentManager.getBracket().orElseThrow();
+        FinalMatchStage finishedFinalStage = fixture.tournamentManager.getFinalMatchStage();
+        int attemptCountBeforeTheStart = fixture.cleanup.attemptCount;
+
+        TournamentOperationResult refusal = fixture.tournamentManager.startTournament(false);
+
+        assertFalse(refusal.successful(), "no tournament may start into an arena that is being cleaned");
+        assertEquals(EXPECTED_CLEANING_REFUSAL, refusal.message());
+        assertEquals(TournamentState.FINISHED, fixture.tournamentManager.getState());
+        assertSame(finishedBracket, fixture.tournamentManager.getBracket().orElseThrow(),
+                "the refused start may not build a new bracket");
+        assertEquals(finishedFinalStage, fixture.tournamentManager.getFinalMatchStage());
+        assertFalse(fixture.matchService.hasActiveMatch());
+        assertTrue(fixture.cleanup.isCleaning(), "the running cleaning is left alone");
+        assertEquals(attemptCountBeforeTheStart, fixture.cleanup.attemptCount);
+    }
+
+    @Test
+    void refusesToStartATournamentWhileACleaningNotStartedByATournamentRuns() {
+        Fixture fixture = new Fixture();
+        fixture.cleanup.startCleaningFromTheArenaMenu();
+
+        TournamentOperationResult refusal = fixture.tournamentManager.startTournament(false);
+
+        assertFalse(refusal.successful(), "every cleaning counts, not only the one of a tournament");
+        assertEquals(EXPECTED_CLEANING_REFUSAL, refusal.message());
+        assertEquals(TournamentState.IDLE, fixture.tournamentManager.getState());
+        assertTrue(fixture.tournamentManager.getBracket().isEmpty());
+        assertFalse(fixture.matchService.hasActiveMatch());
+    }
+
+    @Test
+    void startsTheTournamentOnceTheCleaningIsDone() {
+        Fixture fixture = new Fixture();
+        fixture.startTournament();
+        fixture.playUntilTheTournamentIsOver();
+        assertFalse(fixture.tournamentManager.startTournament(false).successful());
+
+        fixture.cleanup.finishCleaning(CLEAN_OUTCOME);
+
+        TournamentOperationResult start = fixture.tournamentManager.startTournament(false);
+        assertTrue(start.successful(), start.message());
+        assertEquals(TournamentState.RUNNING, fixture.tournamentManager.getState());
+        assertEquals("round1-match1", fixture.runningMatchId());
+    }
+
+    @Test
+    void refusesTheStartAfterACancelDuringACleaningUntilTheCleaningIsDone() {
+        Fixture fixture = new Fixture();
+        fixture.startTournament();
+        fixture.decideRunningMatch();
+        assertTrue(fixture.cleanup.isCleaning());
+
+        assertTrue(fixture.tournamentManager.cancelTournament().successful());
+        assertEquals(TournamentState.CANCELLED, fixture.tournamentManager.getState());
+        assertTrue(fixture.tournamentManager.getBracket().isEmpty());
+
+        TournamentOperationResult refusal = fixture.tournamentManager.startTournament(false);
+        assertFalse(refusal.successful());
+        assertEquals(EXPECTED_CLEANING_REFUSAL, refusal.message());
+        assertEquals(TournamentState.CANCELLED, fixture.tournamentManager.getState());
+        assertTrue(fixture.tournamentManager.getBracket().isEmpty());
+
+        fixture.cleanup.finishCleaning(CLEAN_OUTCOME);
+
+        assertFalse(fixture.matchService.hasActiveMatch(),
+                "the cleaning of the cancelled tournament may not start a match");
+        assertEquals(TournamentState.CANCELLED, fixture.tournamentManager.getState());
+
+        TournamentOperationResult start = fixture.tournamentManager.startTournament(false);
+        assertTrue(start.successful(), start.message());
+        assertEquals("round1-match1", fixture.runningMatchId());
+        assertTrue(fixture.tournamentManager.getBracket().orElseThrow().findMatch("round1-match1")
+                .orElseThrow().getWinnerTeamName().isEmpty(), "the new tournament starts with an open bracket");
+    }
+
+    @Test
+    void startsATournamentWithoutARunningCleaningAsBefore() {
+        Fixture fixture = new Fixture();
+
+        TournamentOperationResult start = fixture.tournamentManager.startTournament(false);
+
+        assertTrue(start.successful(), start.message());
+        assertEquals("Tournament started", start.message());
+        assertEquals(TournamentState.RUNNING, fixture.tournamentManager.getState());
+        assertEquals("round1-match1", fixture.runningMatchId());
+        assertEquals(0, fixture.cleanup.attemptCount, "starting a tournament cleans nothing by itself");
+    }
+
     private static final class Fixture {
 
         private static final String WORLD_NAME = "tournament-flow";
@@ -166,6 +264,16 @@ class ArenaCleaningBetweenMatchesTest {
             Match match = runningMatch();
             assertTrue(tournamentManager.forceMatchResult(match.getMatchId(),
                     match.getFirstTeam().getTeamName()).successful());
+        }
+
+        private void playUntilTheTournamentIsOver() {
+            decideRunningMatch();
+            cleanup.finishCleaning(CLEAN_OUTCOME);
+            decideRunningMatch();
+            cleanup.finishCleaning(CLEAN_OUTCOME);
+            assertTrue(tournamentManager.startFinalMatch().successful());
+            decideRunningMatch();
+            assertEquals(TournamentState.FINISHED, tournamentManager.getState());
         }
 
         private Match runningMatch() {
@@ -298,8 +406,13 @@ class ArenaCleaningBetweenMatchesTest {
             this.skipReason = reason;
         }
 
-        private boolean isCleaning() {
+        @Override
+        public boolean isCleaning() {
             return completionHandler != null;
+        }
+
+        private void startCleaningFromTheArenaMenu() {
+            this.completionHandler = outcome -> { };
         }
 
         private void finishCleaning(String outcome) {

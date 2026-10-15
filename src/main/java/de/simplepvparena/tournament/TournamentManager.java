@@ -22,6 +22,8 @@ public final class TournamentManager implements MatchCompletionHandler {
             + TournamentMessages.LINE_BREAK + "Calculate its fight area with " + Arena.CALCULATE_ACTION
             + " and set the tribune spawn with " + Arena.TRIBUNE_SPAWN_ACTION;
 
+    static final String ARENA_STILL_BEING_CLEANED_MESSAGE = "The arena is still being cleaned. Try again in a moment.";
+
     private final Plugin plugin;
     private final TeamRegistry teamRegistry;
     private final ArenaRegistry arenaRegistry;
@@ -73,6 +75,9 @@ public final class TournamentManager implements MatchCompletionHandler {
         }
         if (!arenaRegistry.isArenaFullyConfigured()) {
             return TournamentOperationResult.failure(ARENA_NOT_CONFIGURED_MESSAGE);
+        }
+        if (arenaCleanup.isCleaning()) {
+            return TournamentOperationResult.failure(ARENA_STILL_BEING_CLEANED_MESSAGE);
         }
 
         java.util.Collections.shuffle(teamNames, seedingRandom);
