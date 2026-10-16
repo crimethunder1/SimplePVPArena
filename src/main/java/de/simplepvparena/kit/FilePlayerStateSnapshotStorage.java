@@ -20,6 +20,7 @@ public final class FilePlayerStateSnapshotStorage implements PlayerStateSnapshot
     private static final int FORMAT_VERSION = 1;
     private static final String FILE_EXTENSION = ".yml";
     private static final String BROKEN_FILE_EXTENSION = ".broken";
+    private static final String RESTORED_FILE_EXTENSION = ".restored";
     private static final String TEMPORARY_FILE_EXTENSION = ".tmp";
     private static final String FORMAT_VERSION_KEY = "format-version";
     private static final String SAVED_AT_KEY = "saved-at";
@@ -73,6 +74,15 @@ public final class FilePlayerStateSnapshotStorage implements PlayerStateSnapshot
         Path snapshotFile = resolveSnapshotFile(playerUniqueId);
         if (Files.isRegularFile(snapshotFile)) {
             Files.delete(snapshotFile);
+        }
+    }
+
+    @Override
+    public void setAsideAsRestored(UUID playerUniqueId) throws IOException {
+        Path snapshotFile = resolveSnapshotFile(playerUniqueId);
+        if (Files.isRegularFile(snapshotFile)) {
+            Path restoredFile = snapshotFile.resolveSibling(snapshotFile.getFileName() + RESTORED_FILE_EXTENSION);
+            Files.move(snapshotFile, restoredFile, StandardCopyOption.REPLACE_EXISTING);
         }
     }
 

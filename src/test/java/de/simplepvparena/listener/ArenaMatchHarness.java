@@ -382,6 +382,7 @@ final class ArenaMatchHarness {
         private float exp;
         private int level;
         private RuntimeException inventoryClearFailure;
+        private RuntimeException teleportFailure;
 
         private FakePlayer(String playerName, Location location) {
             this.playerName = playerName;
@@ -400,6 +401,9 @@ final class ArenaMatchHarness {
                     yield null;
                 }
                 case "teleport" -> {
+                    if (teleportFailure != null) {
+                        throw teleportFailure;
+                    }
                     this.location = (Location) arguments[0];
                     roundStartSteps.add("teleport " + playerName);
                     yield true;
@@ -497,6 +501,10 @@ final class ArenaMatchHarness {
 
         void failInventoryClearWith(RuntimeException failure) {
             this.inventoryClearFailure = failure;
+        }
+
+        void failTeleportWith(RuntimeException failure) {
+            this.teleportFailure = failure;
         }
 
         private Object inventory() {

@@ -271,6 +271,106 @@ class KitServicePlayerStateSnapshotTest {
     }
 
     @Test
+    void leavesAPlayerWithoutTheMarkerUntouchedAndWarnsWhenTheFileIsUnreadable(@TempDir Path snapshotDirectory)
+            throws IOException {
+        StatefulPlayer player = playerWithPrivateState("Visitor");
+        ItemStack[] privateContents = player.contents.clone();
+        Path snapshotFile = snapshotFileOf(snapshotDirectory, player);
+        Path brokenFile = snapshotDirectory.resolve(snapshotFile.getFileName() + ".broken");
+        String brokenContent = "format-version: [1\nlevel: 3\n";
+        Files.createDirectories(snapshotDirectory);
+        Files.writeString(snapshotFile, brokenContent, StandardCharsets.UTF_8);
+        KitService kitService = kitServiceIn(snapshotDirectory);
+
+        kitService.clearKit(player.player);
+
+        assertArrayEquals(privateContents, player.contents);
+        assertEquals(List.of(), player.inventoryEvents, "the inventory is not touched");
+        assertEquals(7, player.level);
+        assertEquals(0.25f, player.exp);
+        assertEquals(12, player.foodLevel);
+        assertEquals(3.5f, player.saturation);
+        assertEquals(14.0, player.health);
+        assertFalse(kitService.hasAppliedKit(player.player));
+        assertFalse(Files.exists(snapshotFile));
+        assertEquals(brokenContent, Files.readString(brokenFile, StandardCharsets.UTF_8));
+        assertEquals(1, warnings.size(), warnings.toString());
+        assertTrue(warnings.get(0).contains("Visitor"), warnings.get(0));
+        assertTrue(warnings.get(0).contains(brokenFile.getFileName().toString()), warnings.get(0));
+        assertTrue(warnings.get(0).contains("nothing was cleared"), warnings.get(0));
+    }
+
+    @Test
+    void setsTheFileAsideAsRestoredWhenItCannotBeDeletedAfterTheRestore(@TempDir Path snapshotDirectory)
+            throws IOException {
+        KitService kitService = new KitService(PLUGIN, new DeleteFailingSnapshotStorage(snapshotDirectory, null),
+                warnings::add);
+        StatefulPlayer player = playerWithPrivateState("Locked");
+        ItemStack[] privateContents = player.contents.clone();
+        kitService.applyKit(player.player);
+        Path snapshotFile = snapshotFileOf(snapshotDirectory, player);
+        Path restoredFile = snapshotDirectory.resolve(snapshotFile.getFileName() + ".restored");
+        String storedContent = Files.readString(snapshotFile, StandardCharsets.UTF_8);
+        Files.writeString(restoredFile, "older restored file", StandardCharsets.UTF_8);
+        player.wearKitState();
+
+        kitService.clearKit(player.player);
+
+        assertArrayEquals(privateContents, player.contents);
+        assertEquals(7, player.level);
+        assertFalse(kitService.hasAppliedKit(player.player));
+        assertFalse(Files.exists(snapshotFile));
+        assertEquals(storedContent, Files.readString(restoredFile, StandardCharsets.UTF_8),
+                "an older restored file is replaced");
+        assertEquals(1, warnings.size(), warnings.toString());
+        assertTrue(warnings.get(0).contains("Locked"), warnings.get(0));
+        assertTrue(warnings.get(0).contains(DeleteFailingSnapshotStorage.DELETE_FAILURE_MESSAGE), warnings.get(0));
+        assertTrue(warnings.get(0).contains(".restored"), warnings.get(0));
+
+        player.contents[1] = new FakeItemStack("golden apple");
+        player.level = 9;
+        ItemStack[] currentContents = player.contents.clone();
+        player.inventoryEvents.clear();
+
+        kitService.clearKit(player.player);
+        kitServiceIn(snapshotDirectory).clearKit(player.player);
+
+        assertArrayEquals(currentContents, player.contents);
+        assertEquals(List.of(), player.inventoryEvents, "the inventory is not touched");
+        assertEquals(9, player.level);
+        assertEquals(1, warnings.size(), warnings.toString());
+    }
+
+    @Test
+    void warnsWithTheFailureAndForgetsTheSnapshotInMemoryWhenTheFileCanNeitherBeDeletedNorSetAside(
+            @TempDir Path snapshotDirectory) throws IOException {
+        KitService kitService = new KitService(PLUGIN, new DeleteFailingSnapshotStorage(snapshotDirectory,
+                new IOException("the folder is read only")), warnings::add);
+        StatefulPlayer player = playerWithPrivateState("Locked");
+        ItemStack[] privateContents = player.contents.clone();
+        kitService.applyKit(player.player);
+        Path snapshotFile = snapshotFileOf(snapshotDirectory, player);
+        player.wearKitState();
+
+        kitService.clearKit(player.player);
+
+        assertArrayEquals(privateContents, player.contents);
+        assertTrue(Files.exists(snapshotFile), "the file stays where it is");
+        assertEquals(1, warnings.size(), warnings.toString());
+        assertTrue(warnings.get(0).contains("Locked"), warnings.get(0));
+        assertTrue(warnings.get(0).contains(DeleteFailingSnapshotStorage.DELETE_FAILURE_MESSAGE), warnings.get(0));
+        assertFalse(warnings.get(0).contains(".restored"), warnings.get(0));
+
+        Files.delete(snapshotFile);
+        player.inventoryEvents.clear();
+        kitService.clearKit(player.player);
+
+        assertEquals(List.of(), player.inventoryEvents, "the snapshot is gone from memory as well");
+        assertArrayEquals(privateContents, player.contents);
+        assertEquals(1, warnings.size(), warnings.toString());
+    }
+
+    @Test
     void keepsTheSnapshotInMemoryWhenTheFileCannotBeWritten(@TempDir Path pluginFolder) throws IOException {
         Path snapshotDirectory = pluginFolder.resolve(FilePlayerStateSnapshotStorage.DIRECTORY_NAME);
         Files.writeString(snapshotDirectory, "a file where the directory belongs", StandardCharsets.UTF_8);
@@ -366,6 +466,42 @@ class KitServicePlayerStateSnapshotTest {
             case "getName", "namespace" -> PLUGIN_NAMESPACE;
             default -> throw new UnsupportedOperationException("Plugin." + method.getName());
         });
+    }
+
+    private static final class DeleteFailingSnapshotStorage implements PlayerStateSnapshotStorage {
+
+        private static final String DELETE_FAILURE_MESSAGE = "the file is locked";
+
+        private final FilePlayerStateSnapshotStorage fileStorage;
+        private final IOException setAsideFailure;
+
+        private DeleteFailingSnapshotStorage(Path snapshotDirectory, IOException setAsideFailure) {
+            this.fileStorage = new FilePlayerStateSnapshotStorage(snapshotDirectory, new FakeItemStackCodec());
+            this.setAsideFailure = setAsideFailure;
+        }
+
+        @Override
+        public void save(UUID playerUniqueId, PlayerStateSnapshot snapshot) throws IOException {
+            fileStorage.save(playerUniqueId, snapshot);
+        }
+
+        @Override
+        public PlayerStateSnapshotLookup find(UUID playerUniqueId) {
+            return fileStorage.find(playerUniqueId);
+        }
+
+        @Override
+        public void delete(UUID playerUniqueId) throws IOException {
+            throw new IOException(DELETE_FAILURE_MESSAGE);
+        }
+
+        @Override
+        public void setAsideAsRestored(UUID playerUniqueId) throws IOException {
+            if (setAsideFailure != null) {
+                throw setAsideFailure;
+            }
+            fileStorage.setAsideAsRestored(playerUniqueId);
+        }
     }
 
     private static final class StatefulPlayer {

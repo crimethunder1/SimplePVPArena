@@ -428,10 +428,16 @@ public final class MatchService {
             for (Player player : collectOnlinePlayers(team)) {
                 try {
                     kitService.clearKit(player);
+                } catch (RuntimeException failure) {
+                    plugin.getLogger().log(Level.WARNING, "The participant " + player.getName()
+                            + " could not be reset after match " + match.getMatchId()
+                            + ", they are sent to the tribune anyway", failure);
+                }
+                try {
                     spectatorService.sendToTribune(player);
                 } catch (RuntimeException failure) {
                     plugin.getLogger().log(Level.WARNING, "The participant " + player.getName()
-                            + " could not be released after match " + match.getMatchId()
+                            + " could not be sent to the tribune after match " + match.getMatchId()
                             + ", the remaining participants are released anyway", failure);
                 }
             }

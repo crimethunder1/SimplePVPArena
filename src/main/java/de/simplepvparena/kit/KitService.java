@@ -100,10 +100,16 @@ public final class KitService {
                 }
             }
             case BROKEN -> {
-                clearWithoutSnapshot(player);
-                warningReporter.accept("The saved inventory and state of " + player.getName()
-                        + " could not be read, the kit was cleared without restoring anything, the file is kept as "
-                        + lookup.fileName());
+                if (hasAppliedKit(player)) {
+                    clearWithoutSnapshot(player);
+                    warningReporter.accept("The saved inventory and state of " + player.getName()
+                            + " could not be read, the kit was cleared without restoring anything, the file is kept as "
+                            + lookup.fileName());
+                } else {
+                    warningReporter.accept("The saved inventory and state of " + player.getName()
+                            + " could not be read, nothing was cleared because no kit is marked as applied,"
+                            + " the file is kept as " + lookup.fileName());
+                }
             }
         }
     }
@@ -159,11 +165,23 @@ public final class KitService {
     private void forgetSnapshot(Player player) {
         try {
             snapshotStorage.delete(player.getUniqueId());
-        } catch (IOException failure) {
-            warningReporter.accept("The saved inventory and state of " + player.getName()
-                    + " were restored, but the file could not be deleted (" + failure.getMessage() + ")");
+        } catch (IOException deleteFailure) {
+            setSnapshotAsideAsRestored(player, deleteFailure);
         }
         snapshotsInMemory.remove(player.getUniqueId());
+    }
+
+    private void setSnapshotAsideAsRestored(Player player, IOException deleteFailure) {
+        try {
+            snapshotStorage.setAsideAsRestored(player.getUniqueId());
+        } catch (IOException setAsideFailure) {
+            warningReporter.accept("The saved inventory and state of " + player.getName()
+                    + " were restored, but the file could not be deleted (" + deleteFailure.getMessage() + ")");
+            return;
+        }
+        warningReporter.accept("The saved inventory and state of " + player.getName()
+                + " were restored, but the file could not be deleted (" + deleteFailure.getMessage()
+                + "), it was set aside as a .restored file and is not restored again");
     }
 
     private void removeMarker(Player player) {

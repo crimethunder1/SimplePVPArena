@@ -10,4 +10,6 @@ public interface PlayerStateSnapshotStorage {
     PlayerStateSnapshotLookup find(UUID playerUniqueId);
 
     void delete(UUID playerUniqueId) throws IOException;
+
+    void setAsideAsRestored(UUID playerUniqueId) throws IOException;
 }

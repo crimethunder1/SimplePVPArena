@@ -67,6 +67,50 @@ class MatchReleaseFailureTest {
         }
     }
 
+    @Test
+    void sendsAParticipantToTheTribuneWhenClearingTheKitFailsAndReleasesTheOthersWhenTheTribuneFails() {
+        Match match = harness.startMatch(fighter, mate, opponent, opponentMate);
+        RuntimeException clearFailure = new IllegalStateException("the inventory could not be cleared");
+        RuntimeException tribuneFailure = new IllegalStateException("the teleport was refused");
+        fighter.failInventoryClearWith(clearFailure);
+        mate.failTeleportWith(tribuneFailure);
+        List<LogRecord> logRecords = new ArrayList<>();
+        Handler recordingHandler = recordingHandler(logRecords);
+        Logger logger = harness.getPlugin().getLogger();
+        logger.addHandler(recordingHandler);
+        try {
+            assertTrue(harness.getMatchService().forceResult(match.getMatchId(),
+                    match.getFirstTeam().getTeamName()));
+
+            assertEquals(Optional.of(SpectatorMode.TRIBUNE),
+                    harness.getSpectatorService().findSpectatorMode(fighter.uniqueId()),
+                    "Fighter is sent to the tribune although clearing the kit failed");
+            assertFalse(kitService.hasAppliedKit(mate.player()), "the kit of Mate is cleared");
+            assertEquals(Optional.empty(), harness.getSpectatorService().findSpectatorMode(mate.uniqueId()),
+                    "Mate could not be sent to the tribune");
+            for (ArenaMatchHarness.FakePlayer participant : List.of(opponent, opponentMate)) {
+                String participantName = participant.player().getName();
+                assertFalse(kitService.hasAppliedKit(participant.player()),
+                        "the kit of " + participantName + " is cleared");
+                assertEquals(Optional.of(SpectatorMode.TRIBUNE),
+                        harness.getSpectatorService().findSpectatorMode(participant.uniqueId()),
+                        participantName + " is sent to the tribune");
+            }
+            assertTrue(logRecords.stream().anyMatch(logRecord -> logRecord.getLevel() == Level.WARNING
+                            && logRecord.getMessage().contains("Fighter")
+                            && logRecord.getMessage().contains("could not be reset")
+                            && logRecord.getThrown() == clearFailure),
+                    "the failed reset is logged as a warning with the exception");
+            assertTrue(logRecords.stream().anyMatch(logRecord -> logRecord.getLevel() == Level.WARNING
+                            && logRecord.getMessage().contains("Mate")
+                            && logRecord.getMessage().contains("could not be sent to the tribune")
+                            && logRecord.getThrown() == tribuneFailure),
+                    "the failed tribune is logged as a warning with the exception");
+        } finally {
+            logger.removeHandler(recordingHandler);
+        }
+    }
+
     private static Handler recordingHandler(List<LogRecord> logRecords) {
         return new Handler() {
 
