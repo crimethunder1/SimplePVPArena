@@ -28,10 +28,8 @@ import de.simplepvparena.team.TeamMemberLookup;
 import de.simplepvparena.team.TeamRegistry;
 import de.simplepvparena.tournament.TournamentManager;
 import de.simplepvparena.tournament.TournamentOperationResult;
-import net.kyori.adventure.text.Component;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
-import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.Plugin;
 
@@ -44,9 +42,6 @@ import java.util.OptionalInt;
 import java.util.function.Supplier;
 
 public final class AdminMenuService {
-
-    private static final int SMALL_MENU_SIZE = 27;
-    private static final int TEAM_MENU_SIZE = 54;
 
     private static final int INFO_SLOT = 4;
 
@@ -99,7 +94,7 @@ public final class AdminMenuService {
 
     private static final int BACK_SLOT = 22;
 
-    private final Plugin plugin;
+    private final AdminMenuNavigator navigator;
     private final TournamentManager tournamentManager;
     private final TournamentDryRun tournamentDryRun;
     private final TeamRegistry teamRegistry;
@@ -130,7 +125,30 @@ public final class AdminMenuService {
                             ChatInputService chatInputService,
                             Runnable teamConfigurationSaver,
                             Supplier<ConfigurationReloadReport> configurationReloader) {
-        this.plugin = Objects.requireNonNull(plugin, "plugin");
+        this(plugin, tournamentManager, tournamentDryRun, teamRegistry, teamMemberLookup, eventTeamImportService,
+                matchService, arenaSetupService, heightMarkerService, gateItemService, borderSelectorModes,
+                kitSaveService, chatInputService, teamConfigurationSaver, configurationReloader,
+                new InventoryAdminMenuWindows(plugin));
+    }
+
+    AdminMenuService(Plugin plugin,
+                     TournamentManager tournamentManager,
+                     TournamentDryRun tournamentDryRun,
+                     TeamRegistry teamRegistry,
+                     TeamMemberLookup teamMemberLookup,
+                     EventTeamImportService eventTeamImportService,
+                     MatchService matchService,
+                     ArenaSetupService arenaSetupService,
+                     ArenaHeightMarkerService heightMarkerService,
+                     StartGateItemService gateItemService,
+                     BorderSelectorModeRegistry borderSelectorModes,
+                     KitSaveService kitSaveService,
+                     ChatInputService chatInputService,
+                     Runnable teamConfigurationSaver,
+                     Supplier<ConfigurationReloadReport> configurationReloader,
+                     AdminMenuWindows windows) {
+        Objects.requireNonNull(plugin, "plugin");
+        this.navigator = new AdminMenuNavigator(windows, this::titleOf, this::fillMenu);
         this.tournamentManager = Objects.requireNonNull(tournamentManager, "tournamentManager");
         this.tournamentDryRun = Objects.requireNonNull(tournamentDryRun, "tournamentDryRun");
         this.teamRegistry = Objects.requireNonNull(teamRegistry, "teamRegistry");
@@ -211,7 +229,7 @@ public final class AdminMenuService {
         TournamentMessages.sendErrorReport(player, report.describe());
     }
 
-    private ItemStack buildDryRunItem() {
+    private MenuTile buildDryRunItem() {
         Optional<String> rejection = tournamentDryRun.findRejection();
         if (rejection.isPresent()) {
             return MenuItems.create(MenuItems.UNAVAILABLE_MATERIAL, "Dry run of the pipeline",
@@ -247,33 +265,33 @@ public final class AdminMenuService {
                 + "The running round keeps its timer and its fighters keep the kit they were given";
     }
 
-    private void fillMainMenu(Player player, Inventory inventory) {
-        inventory.setItem(INFO_SLOT, MenuItems.info("Tournament", buildMainInfoLore()));
-        inventory.setItem(MAIN_ARENA_SLOT, MenuItems.create(Material.GRASS_BLOCK, "Arena",
+    private void fillMainMenu(Player player, AdminMenuCanvas canvas) {
+        canvas.set(INFO_SLOT, MenuItems.info("Tournament", buildMainInfoLore()));
+        canvas.set(MAIN_ARENA_SLOT, MenuItems.create(Material.GRASS_BLOCK, "Arena",
                 "Fight area, spawns, cleaning and reset",
                 "Arena " + (arenaSetupService.isArenaReady() ? "ready" : "incomplete")));
-        inventory.setItem(MAIN_TEAMS_SLOT, MenuItems.create(Material.PLAYER_HEAD, "Teams",
+        canvas.set(MAIN_TEAMS_SLOT, MenuItems.create(Material.PLAYER_HEAD, "Teams",
                 "Registered teams: " + teamRegistry.getTeamCount(),
                 "Shows every team, adds one and removes one"));
-        inventory.setItem(MAIN_MATCH_SLOT, MenuItems.create(Material.DIAMOND_SWORD, "Match and tournament",
+        canvas.set(MAIN_MATCH_SLOT, MenuItems.create(Material.DIAMOND_SWORD, "Match and tournament",
                 "Start, pause, cancel and force a result",
                 "Running match: " + describeActiveMatch()));
-        inventory.setItem(MAIN_BORDER_SELECTOR_SLOT, MenuItems.create(Material.BRUSH,
+        canvas.set(MAIN_BORDER_SELECTOR_SLOT, MenuItems.create(Material.BRUSH,
                 "Mark border blocks by clicking them", buildBorderSelectorLore(player)));
-        inventory.setItem(MAIN_FINAL_SLOT, buildFinalItem());
-        inventory.setItem(MAIN_STATUS_SLOT, MenuItems.create(Material.PAPER, "Tournament status",
+        canvas.set(MAIN_FINAL_SLOT, buildFinalItem());
+        canvas.set(MAIN_STATUS_SLOT, MenuItems.create(Material.PAPER, "Tournament status",
                 "Writes the state, the rounds and the running match into the chat"));
-        inventory.setItem(MAIN_BRACKET_SLOT, MenuItems.create(Material.WRITTEN_BOOK, "Bracket",
+        canvas.set(MAIN_BRACKET_SLOT, MenuItems.create(Material.WRITTEN_BOOK, "Bracket",
                 "Writes every round and every match into the chat",
                 "A bracket is a tree, the chat shows it better than a grid",
                 "The menu closes so you can read it"));
-        inventory.setItem(MAIN_DRY_RUN_SLOT, buildDryRunItem());
-        inventory.setItem(MAIN_RELOAD_SLOT, MenuItems.create(Material.COMPARATOR, "Reload config.yml",
+        canvas.set(MAIN_DRY_RUN_SLOT, buildDryRunItem());
+        canvas.set(MAIN_RELOAD_SLOT, MenuItems.create(Material.COMPARATOR, "Reload config.yml",
                 buildReloadLore()));
-        inventory.setItem(MAIN_KIT_SLOT, MenuItems.create(Material.DIAMOND_CHESTPLATE, "Kit",
+        canvas.set(MAIN_KIT_SLOT, MenuItems.create(Material.DIAMOND_CHESTPLATE, "Kit",
                 "The items every fighter is given when a round starts",
                 "Saves your own inventory as that kit"));
-        inventory.setItem(MAIN_CLOSE_SLOT, MenuItems.create(Material.BARRIER, "Close", "Closes the menu"));
+        canvas.set(MAIN_CLOSE_SLOT, MenuItems.create(Material.BARRIER, "Close", "Closes the menu"));
     }
 
     private List<String> buildReloadLore() {
@@ -299,7 +317,7 @@ public final class AdminMenuService {
         return lore;
     }
 
-    private ItemStack buildFinalItem() {
+    private MenuTile buildFinalItem() {
         if (!currentOptions().finalStartOffered()) {
             return MenuItems.unavailable("Start the final",
                     "The final is not ready, its stage is " + tournamentManager.getFinalMatchStage());
@@ -433,32 +451,32 @@ public final class AdminMenuService {
         openMenu(player, AdminMenuHolder.confirmation(ConfirmationRequest.CLEAN_ARENA, null, 0));
     }
 
-    private void fillArenaMenu(Inventory inventory) {
-        inventory.setItem(INFO_SLOT, MenuItems.info("Arena", arenaSetupService.describeArena()));
-        inventory.setItem(ARENA_CALCULATE_SLOT, MenuItems.create(Material.SPYGLASS, "Calculate the fight area",
+    private void fillArenaMenu(AdminMenuCanvas canvas) {
+        canvas.set(INFO_SLOT, MenuItems.info("Arena", arenaSetupService.describeArena()));
+        canvas.set(ARENA_CALCULATE_SLOT, MenuItems.create(Material.SPYGLASS, "Calculate the fight area",
                 "Runs the calculation for the position you stand on",
                 "Stand inside the closed border wall before you click",
                 "The menu closes so you can see the recognized wall"));
-        inventory.setItem(ARENA_DIAGNOSE_SLOT, MenuItems.create(Material.REDSTONE_TORCH,
+        canvas.set(ARENA_DIAGNOSE_SLOT, MenuItems.create(Material.REDSTONE_TORCH,
                 "Diagnose with a higher cell limit",
                 "One calculation with a limit you type, up to "
                         + ArenaShapeFloodFill.MAXIMUM_DEBUG_CELL_COUNT + " cells",
                 "Shows how far a fill through a gap really gets",
                 "config.yml stays untouched"));
-        inventory.setItem(ARENA_HEIGHT_MARKER_SLOT, MenuItems.create(ArenaHeightMarkerService.MARKER_MATERIAL,
+        canvas.set(ARENA_HEIGHT_MARKER_SLOT, MenuItems.create(ArenaHeightMarkerService.MARKER_MATERIAL,
                 "Mark the height of the fight area", buildHeightMarkerLore()));
-        inventory.setItem(ARENA_START_GATE_SLOT, MenuItems.create(START_GATE_TILE_MATERIAL,
+        canvas.set(ARENA_START_GATE_SLOT, MenuItems.create(START_GATE_TILE_MATERIAL,
                 "Give start gate blocks", buildStartGateLore()));
-        inventory.setItem(ARENA_FIRST_TEAM_SPAWN_SLOT, buildSpawnItem(Material.BLUE_BED, ArenaSpawnType.FIRST_TEAM));
-        inventory.setItem(ARENA_SECOND_TEAM_SPAWN_SLOT, buildSpawnItem(Material.RED_BED, ArenaSpawnType.SECOND_TEAM));
-        inventory.setItem(ARENA_TRIBUNE_SPAWN_SLOT, buildSpawnItem(Material.YELLOW_BED, ArenaSpawnType.TRIBUNE));
-        inventory.setItem(ARENA_CLEAN_SLOT, MenuItems.create(Material.TNT, "Clean the arena",
+        canvas.set(ARENA_FIRST_TEAM_SPAWN_SLOT, buildSpawnItem(Material.BLUE_BED, ArenaSpawnType.FIRST_TEAM));
+        canvas.set(ARENA_SECOND_TEAM_SPAWN_SLOT, buildSpawnItem(Material.RED_BED, ArenaSpawnType.SECOND_TEAM));
+        canvas.set(ARENA_TRIBUNE_SPAWN_SLOT, buildSpawnItem(Material.YELLOW_BED, ArenaSpawnType.TRIBUNE));
+        canvas.set(ARENA_CLEAN_SLOT, MenuItems.create(Material.TNT, "Clean the arena",
                 buildCleaningLore("Asks for a confirmation first")));
-        inventory.setItem(ARENA_RESET_SLOT, MenuItems.create(MenuItems.DESTRUCTIVE_MATERIAL, "Reset the arena",
+        canvas.set(ARENA_RESET_SLOT, MenuItems.create(MenuItems.DESTRUCTIVE_MATERIAL, "Reset the arena",
                 "Drops the fight area and all three spawns",
                 "The blocks and the border blocks stay untouched",
                 "Asks for a confirmation first"));
-        inventory.setItem(BACK_SLOT, MenuItems.back("the main menu"));
+        canvas.set(BACK_SLOT, MenuItems.back("the main menu"));
     }
 
     private List<String> buildHeightMarkerLore() {
@@ -495,7 +513,7 @@ public final class AdminMenuService {
         return lore;
     }
 
-    private ItemStack buildSpawnItem(Material material, ArenaSpawnType spawnType) {
+    private MenuTile buildSpawnItem(Material material, ArenaSpawnType spawnType) {
         return MenuItems.create(material, "Set the " + spawnType.getDisplayName(),
                 "Sets it to the position you stand on",
                 "Stand " + spawnType.getPlacementHint(),
@@ -516,11 +534,11 @@ public final class AdminMenuService {
         TournamentMessages.sendSuccessReport(player, kitSaveService.saveFromInventory(player).describe());
     }
 
-    private void fillKitMenu(Inventory inventory) {
-        inventory.setItem(INFO_SLOT, MenuItems.info("Kit", buildKitInfoLore()));
-        inventory.setItem(KIT_SAVE_SLOT, MenuItems.create(Material.CHEST, "Save your inventory as the kit",
+    private void fillKitMenu(AdminMenuCanvas canvas) {
+        canvas.set(INFO_SLOT, MenuItems.info("Kit", buildKitInfoLore()));
+        canvas.set(KIT_SAVE_SLOT, MenuItems.create(Material.CHEST, "Save your inventory as the kit",
                 buildKitSaveLore("Asks for a confirmation first")));
-        inventory.setItem(BACK_SLOT, MenuItems.back("the main menu"));
+        canvas.set(BACK_SLOT, MenuItems.back("the main menu"));
     }
 
     private List<String> buildKitInfoLore() {
@@ -576,34 +594,34 @@ public final class AdminMenuService {
                 pagination.pageIndex()));
     }
 
-    private void fillTeamsMenu(Inventory inventory, int pageIndex) {
+    private void fillTeamsMenu(AdminMenuCanvas canvas, int pageIndex) {
         List<Team> teams = collectTeams();
         MenuPagination pagination = MenuPagination.of(teams.size(), pageIndex);
         for (int slot = 0; slot < pagination.getItemCountOnPage(); slot++) {
             Team team = teams.get(pagination.getFirstItemIndex() + slot);
-            inventory.setItem(slot, MenuItems.create(Material.PLAYER_HEAD, team.getTeamName(),
+            canvas.set(slot, MenuItems.create(Material.PLAYER_HEAD, team.getTeamName(),
                     "Members: " + team.getMemberNamesJoined(), "Click for the options of this team"));
         }
-        inventory.setItem(TEAMS_INFO_SLOT, MenuItems.info("Teams", List.of(
+        canvas.set(TEAMS_INFO_SLOT, MenuItems.info("Teams", List.of(
                 "Registered teams: " + teams.size(),
                 "Page " + pagination.getPageNumber() + " of " + pagination.getPageCount(),
                 "A click on a team opens its options")));
-        inventory.setItem(TEAMS_ADD_SLOT, MenuItems.create(MenuItems.CONFIRM_MATERIAL, "Add a team",
+        canvas.set(TEAMS_ADD_SLOT, MenuItems.create(MenuItems.CONFIRM_MATERIAL, "Add a team",
                 "Asks for " + TeamCreationRequest.USAGE + " in the chat",
                 "Two player names cannot be typed into an inventory",
                 "The menu closes so you can type"));
-        inventory.setItem(TEAMS_IMPORT_SLOT, MenuItems.create(Material.WRITABLE_BOOK,
+        canvas.set(TEAMS_IMPORT_SLOT, MenuItems.create(Material.WRITABLE_BOOK,
                 "Load the teams from " + EventTeamImportFile.FILE_NAME, buildTeamImportLore(teams.size(),
                         "Asks for a confirmation first")));
         if (pagination.hasPreviousPage()) {
-            inventory.setItem(TEAMS_PREVIOUS_PAGE_SLOT, MenuItems.create(MenuItems.PAGE_MATERIAL, "Previous page",
+            canvas.set(TEAMS_PREVIOUS_PAGE_SLOT, MenuItems.create(MenuItems.PAGE_MATERIAL, "Previous page",
                     "Page " + pagination.getPageNumber() + " of " + pagination.getPageCount()));
         }
         if (pagination.hasNextPage()) {
-            inventory.setItem(TEAMS_NEXT_PAGE_SLOT, MenuItems.create(MenuItems.PAGE_MATERIAL, "Next page",
+            canvas.set(TEAMS_NEXT_PAGE_SLOT, MenuItems.create(MenuItems.PAGE_MATERIAL, "Next page",
                     "Page " + pagination.getPageNumber() + " of " + pagination.getPageCount()));
         }
-        inventory.setItem(TEAMS_BACK_SLOT, MenuItems.back("the main menu"));
+        canvas.set(TEAMS_BACK_SLOT, MenuItems.back("the main menu"));
     }
 
     private void askForTeamImportConfirmation(Player player, int pageIndex) {
@@ -648,15 +666,15 @@ public final class AdminMenuService {
         }
     }
 
-    private void fillTeamActionsMenu(Inventory inventory, String teamName) {
+    private void fillTeamActionsMenu(AdminMenuCanvas canvas, String teamName) {
         Optional<Team> team = teamRegistry.findTeam(teamName);
-        inventory.setItem(INFO_SLOT, MenuItems.info(teamName, team
+        canvas.set(INFO_SLOT, MenuItems.info(teamName, team
                 .map(registeredTeam -> List.of("Members: " + registeredTeam.getMemberNamesJoined()))
                 .orElse(List.of("This team is not registered any more"))));
-        inventory.setItem(TEAM_REMOVE_SLOT, MenuItems.create(MenuItems.REFUSE_MATERIAL, "Remove the team",
+        canvas.set(TEAM_REMOVE_SLOT, MenuItems.create(MenuItems.REFUSE_MATERIAL, "Remove the team",
                 "Removes " + teamName + " from the registry",
                 "Asks for a confirmation first"));
-        inventory.setItem(BACK_SLOT, MenuItems.back("the team list"));
+        canvas.set(BACK_SLOT, MenuItems.back("the team list"));
     }
 
     private void handleMatchClick(Player player, AdminMenuHolder holder, int slot) {
@@ -682,34 +700,34 @@ public final class AdminMenuService {
         openMenu(player, AdminMenuHolder.forceResult(activeMatch.get().getMatchId()));
     }
 
-    private void fillMatchMenu(Inventory inventory) {
+    private void fillMatchMenu(AdminMenuCanvas canvas) {
         TournamentMenuOptions options = currentOptions();
-        inventory.setItem(INFO_SLOT, MenuItems.info("Tournament", List.of(
+        canvas.set(INFO_SLOT, MenuItems.info("Tournament", List.of(
                 tournamentManager.describeStatus(),
                 "Running match: " + describeActiveMatch(),
                 "Round timer: " + (matchService.isRoundTimerPaused() ? "paused" : "running"))));
-        inventory.setItem(MATCH_START_SLOT, options.startOffered()
+        canvas.set(MATCH_START_SLOT, options.startOffered()
                 ? MenuItems.create(MenuItems.CONFIRM_MATERIAL, "Start the tournament",
                         "Needs an even number of teams")
                 : MenuItems.unavailable("Start the tournament", "A tournament is already in progress"));
-        inventory.setItem(MATCH_FORCE_START_SLOT, options.forceStartOffered()
+        canvas.set(MATCH_FORCE_START_SLOT, options.forceStartOffered()
                 ? MenuItems.create(Material.YELLOW_WOOL, "Force start",
                         "Starts the tournament with an uneven number of teams")
                 : MenuItems.unavailable("Force start", "A tournament is already in progress"));
-        inventory.setItem(MATCH_PAUSE_SLOT, buildPauseItem(options));
-        inventory.setItem(MATCH_CANCEL_SLOT, options.cancelOffered()
+        canvas.set(MATCH_PAUSE_SLOT, buildPauseItem(options));
+        canvas.set(MATCH_CANCEL_SLOT, options.cancelOffered()
                 ? MenuItems.create(MenuItems.REFUSE_MATERIAL, "Cancel the tournament",
                         "Stops the running match and the bracket", "Asks for a confirmation first")
                 : MenuItems.unavailable("Cancel the tournament", "No tournament is in progress"));
-        inventory.setItem(MATCH_FINAL_SLOT, buildFinalItem());
-        inventory.setItem(MATCH_FORCE_RESULT_SLOT, options.forceResultOffered()
+        canvas.set(MATCH_FINAL_SLOT, buildFinalItem());
+        canvas.set(MATCH_FORCE_RESULT_SLOT, options.forceResultOffered()
                 ? MenuItems.create(Material.ANVIL, "Force a result",
                         "Decides the running match for one of its two teams")
                 : MenuItems.unavailable("Force a result", "No match is running"));
-        inventory.setItem(BACK_SLOT, MenuItems.back("the main menu"));
+        canvas.set(BACK_SLOT, MenuItems.back("the main menu"));
     }
 
-    private ItemStack buildPauseItem(TournamentMenuOptions options) {
+    private MenuTile buildPauseItem(TournamentMenuOptions options) {
         if (options.resumeOffered()) {
             return MenuItems.create(Material.CLOCK, "Continue the tournament",
                     "The round timer continues with its remaining time");
@@ -751,25 +769,25 @@ public final class AdminMenuService {
         };
     }
 
-    private void fillForceResultMenu(Inventory inventory, String matchId) {
+    private void fillForceResultMenu(AdminMenuCanvas canvas, String matchId) {
         Optional<Match> activeMatch = matchService.findMatchById(matchId);
         if (activeMatch.isEmpty()) {
-            inventory.setItem(INFO_SLOT, MenuItems.info("Force a result",
+            canvas.set(INFO_SLOT, MenuItems.info("Force a result",
                     List.of("Match " + matchId + " is not running any more")));
-            inventory.setItem(BACK_SLOT, MenuItems.back("the match menu"));
+            canvas.set(BACK_SLOT, MenuItems.back("the match menu"));
             return;
         }
         Match match = activeMatch.get();
-        inventory.setItem(INFO_SLOT, MenuItems.info("Force a result", List.of(
+        canvas.set(INFO_SLOT, MenuItems.info("Force a result", List.of(
                 "Match " + match.describe(),
                 "Round " + match.getRoundNumber(),
                 "A click decides the match for that team")));
-        inventory.setItem(FORCE_RESULT_FIRST_TEAM_SLOT, buildWinnerItem(match.getFirstTeam()));
-        inventory.setItem(FORCE_RESULT_SECOND_TEAM_SLOT, buildWinnerItem(match.getSecondTeam()));
-        inventory.setItem(BACK_SLOT, MenuItems.back("the match menu"));
+        canvas.set(FORCE_RESULT_FIRST_TEAM_SLOT, buildWinnerItem(match.getFirstTeam()));
+        canvas.set(FORCE_RESULT_SECOND_TEAM_SLOT, buildWinnerItem(match.getSecondTeam()));
+        canvas.set(BACK_SLOT, MenuItems.back("the match menu"));
     }
 
-    private ItemStack buildWinnerItem(Team team) {
+    private MenuTile buildWinnerItem(Team team) {
         List<String> lore = new ArrayList<>();
         for (TeamMember member : team.getMembers()) {
             lore.add(member.playerName());
@@ -817,12 +835,12 @@ public final class AdminMenuService {
         }
     }
 
-    private void fillConfirmationMenu(Inventory inventory, AdminMenuHolder holder) {
+    private void fillConfirmationMenu(AdminMenuCanvas canvas, AdminMenuHolder holder) {
         ConfirmationRequest request = holder.getConfirmationRequest().orElseThrow();
-        inventory.setItem(INFO_SLOT, MenuItems.info(request.getTitle(), buildConfirmationLore(request, holder)));
-        inventory.setItem(CONFIRM_YES_SLOT, MenuItems.create(MenuItems.CONFIRM_MATERIAL, "Yes",
+        canvas.set(INFO_SLOT, MenuItems.info(request.getTitle(), buildConfirmationLore(request, holder)));
+        canvas.set(CONFIRM_YES_SLOT, MenuItems.create(MenuItems.CONFIRM_MATERIAL, "Yes",
                 "Carries the action out"));
-        inventory.setItem(CONFIRM_NO_SLOT, MenuItems.create(MenuItems.REFUSE_MATERIAL, "No",
+        canvas.set(CONFIRM_NO_SLOT, MenuItems.create(MenuItems.REFUSE_MATERIAL, "No",
                 "Changes nothing and returns"));
     }
 
@@ -968,38 +986,28 @@ public final class AdminMenuService {
     }
 
     private void openMenu(Player player, AdminMenuHolder holder) {
-        Inventory inventory = plugin.getServer().createInventory(holder, sizeOf(holder.getMenuType()),
-                Component.text(titleOf(holder)));
-        holder.setInventory(inventory);
-        fill(player, holder);
-        plugin.getServer().getScheduler().runTask(plugin, () -> player.openInventory(inventory));
+        navigator.open(player, holder);
     }
 
     private void closeMenu(Player player) {
-        plugin.getServer().getScheduler().runTask(plugin, () -> player.closeInventory());
+        navigator.close(player);
     }
 
     private void refresh(Player player, AdminMenuHolder holder) {
-        fill(player, holder);
+        navigator.refresh(player, holder);
     }
 
-    private void fill(Player player, AdminMenuHolder holder) {
-        Inventory inventory = holder.getInventory();
-        inventory.clear();
+    private void fillMenu(Player player, AdminMenuHolder holder, AdminMenuCanvas canvas) {
         switch (holder.getMenuType()) {
-            case MAIN -> fillMainMenu(player, inventory);
-            case ARENA -> fillArenaMenu(inventory);
-            case KIT -> fillKitMenu(inventory);
-            case TEAMS -> fillTeamsMenu(inventory, holder.getPageIndex());
-            case TEAM_ACTIONS -> fillTeamActionsMenu(inventory, holder.getSubject().orElseThrow());
-            case MATCH -> fillMatchMenu(inventory);
-            case FORCE_RESULT -> fillForceResultMenu(inventory, holder.getSubject().orElseThrow());
-            case CONFIRMATION -> fillConfirmationMenu(inventory, holder);
+            case MAIN -> fillMainMenu(player, canvas);
+            case ARENA -> fillArenaMenu(canvas);
+            case KIT -> fillKitMenu(canvas);
+            case TEAMS -> fillTeamsMenu(canvas, holder.getPageIndex());
+            case TEAM_ACTIONS -> fillTeamActionsMenu(canvas, holder.getSubject().orElseThrow());
+            case MATCH -> fillMatchMenu(canvas);
+            case FORCE_RESULT -> fillForceResultMenu(canvas, holder.getSubject().orElseThrow());
+            case CONFIRMATION -> fillConfirmationMenu(canvas, holder);
         }
-    }
-
-    private static int sizeOf(AdminMenuType menuType) {
-        return menuType == AdminMenuType.TEAMS ? TEAM_MENU_SIZE : SMALL_MENU_SIZE;
     }
 
     private String titleOf(AdminMenuHolder holder) {
