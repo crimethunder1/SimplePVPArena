@@ -36,7 +36,7 @@ public final class PlayerConnectionListener implements Listener {
     @EventHandler
     public void onPlayerJoin(PlayerJoinEvent event) {
         Player player = event.getPlayer();
-        clearLeftoverKit(player);
+        restoreLeftoverState(player);
         Optional<Match> matchOfPlayer = matchService.findMatchOfPlayer(player.getUniqueId());
         if (matchOfPlayer.isPresent()) {
             spectatorService.sendToTribune(player);
@@ -49,7 +49,7 @@ public final class PlayerConnectionListener implements Listener {
         }
     }
 
-    private void clearLeftoverKit(Player player) {
+    private void restoreLeftoverState(Player player) {
         if (kitService.hasAppliedKit(player) && !matchService.isActiveFighter(player.getUniqueId())) {
             kitService.clearKit(player);
         }

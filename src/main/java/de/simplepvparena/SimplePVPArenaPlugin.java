@@ -41,6 +41,8 @@ import de.simplepvparena.gate.StartGateOpeningService;
 import de.simplepvparena.gate.VanillaStartGateVisualEffect;
 import de.simplepvparena.gui.AdminMenuService;
 import de.simplepvparena.input.ChatInputService;
+import de.simplepvparena.kit.BukkitItemStackCodec;
+import de.simplepvparena.kit.FilePlayerStateSnapshotStorage;
 import de.simplepvparena.kit.KitConfigurationLoader;
 import de.simplepvparena.kit.KitSaveService;
 import de.simplepvparena.kit.KitService;
@@ -70,6 +72,7 @@ import de.simplepvparena.team.EventTeamImportService;
 import de.simplepvparena.team.TeamMemberLookup;
 import de.simplepvparena.team.TeamRegistry;
 import de.simplepvparena.team.TeamStorage;
+import de.simplepvparena.tournament.AdminNotifier;
 import de.simplepvparena.tournament.AutomaticArenaCleanup;
 import de.simplepvparena.tournament.OnlineAdminNotifier;
 import de.simplepvparena.tournament.TournamentManager;
@@ -135,7 +138,13 @@ public final class SimplePVPArenaPlugin extends JavaPlugin {
         teamStorage = new TeamStorage(new File(getDataFolder(), TEAMS_FILE_NAME), getLogger());
         teamStorage.load(teamRegistry);
 
-        kitService = new KitService(this);
+        AdminNotifier adminNotifier = new OnlineAdminNotifier(getServer());
+        kitService = new KitService(this, new FilePlayerStateSnapshotStorage(
+                new File(getDataFolder(), FilePlayerStateSnapshotStorage.DIRECTORY_NAME).toPath(),
+                new BukkitItemStackCodec()), warningMessage -> {
+                    getLogger().warning(warningMessage);
+                    adminNotifier.notifyAdmins(warningMessage);
+                });
         kitSaveService = new KitSaveService(kitService, this::saveKitConfiguration, getLogger()::warning);
 
         spectatorService = new SpectatorService(arenaRegistry, new SpectatorItemFactory(this));
@@ -192,7 +201,7 @@ public final class SimplePVPArenaPlugin extends JavaPlugin {
 
         tournamentManager = new TournamentManager(this, teamRegistry, arenaRegistry, matchService,
                 new AutomaticArenaCleanup(arenaSetupService, arenaCleaningService),
-                new OnlineAdminNotifier(getServer()));
+                adminNotifier);
 
         tournamentDryRun = new TournamentDryRun(tournamentManager::getState,
                 matchService::hasActiveMatch, teamRegistry,

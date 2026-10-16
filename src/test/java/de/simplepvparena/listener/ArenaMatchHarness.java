@@ -30,6 +30,7 @@ import org.bukkit.Server;
 import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
+import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.scheduler.BukkitScheduler;
 import org.bukkit.scheduler.BukkitTask;
@@ -54,6 +55,7 @@ final class ArenaMatchHarness {
     static final int GROUND_Y = 64;
     static final int WALL_HEIGHT = 4;
     static final int WALL_TOP_Y = GROUND_Y + WALL_HEIGHT - 1;
+    static final int INVENTORY_SLOT_COUNT = 43;
 
     private static final Logger LOGGER = Logger.getLogger("ArenaMatchHarness");
 
@@ -373,6 +375,12 @@ final class ArenaMatchHarness {
         private boolean adminPermissionGranted;
         private boolean online = true;
         private int inventoryClearCount;
+        private ItemStack[] contents = new ItemStack[INVENTORY_SLOT_COUNT];
+        private double health = 20.0;
+        private int foodLevel = 20;
+        private float saturation;
+        private float exp;
+        private int level;
 
         private FakePlayer(String playerName, Location location) {
             this.playerName = playerName;
@@ -396,16 +404,36 @@ final class ArenaMatchHarness {
                     yield true;
                 }
                 case "setHealth" -> {
+                    health = (Double) arguments[0];
                     roundStartSteps.add("kit " + playerName);
                     yield null;
                 }
-                case "sendMessage", "sendActionBar", "showTitle", "setFallDistance", "setFireTicks",
-                     "setFoodLevel", "setSaturation", "setExp", "setLevel", "damage",
+                case "setFoodLevel" -> {
+                    foodLevel = (Integer) arguments[0];
+                    yield null;
+                }
+                case "setSaturation" -> {
+                    saturation = (Float) arguments[0];
+                    yield null;
+                }
+                case "setExp" -> {
+                    exp = (Float) arguments[0];
+                    yield null;
+                }
+                case "setLevel" -> {
+                    level = (Integer) arguments[0];
+                    yield null;
+                }
+                case "sendMessage", "sendActionBar", "showTitle", "setFallDistance", "setFireTicks", "damage",
                      "removePotionEffect", "setAbsorptionAmount", "setArrowsInBody", "setFreezeTicks",
                      "setRemainingAir", "setVelocity", "setCooldown" -> null;
                 case "getMaximumAir" -> 300;
                 case "getCooldown" -> 0;
-                case "getFoodLevel" -> 20;
+                case "getHealth" -> health;
+                case "getFoodLevel" -> foodLevel;
+                case "getSaturation" -> saturation;
+                case "getExp" -> exp;
+                case "getLevel" -> level;
                 case "getActivePotionEffects" -> List.of();
                 case "getAttribute" -> null;
                 case "getInventory" -> inventory();
@@ -450,10 +478,32 @@ final class ArenaMatchHarness {
             return inventoryClearCount;
         }
 
+        ItemStack[] contents() {
+            return contents.clone();
+        }
+
+        void setContents(ItemStack[] contents) {
+            this.contents = contents.clone();
+        }
+
+        int level() {
+            return level;
+        }
+
+        void setLevel(int level) {
+            this.level = level;
+        }
+
         private Object inventory() {
             return proxy(org.bukkit.inventory.PlayerInventory.class, (method, arguments) -> switch (method.getName()) {
                 case "clear" -> {
                     inventoryClearCount++;
+                    contents = new ItemStack[INVENTORY_SLOT_COUNT];
+                    yield null;
+                }
+                case "getContents" -> contents.clone();
+                case "setContents" -> {
+                    contents = ((ItemStack[]) arguments[0]).clone();
                     yield null;
                 }
                 case "setItem" -> null;
