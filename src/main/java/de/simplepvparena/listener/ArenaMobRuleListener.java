@@ -3,6 +3,7 @@ package de.simplepvparena.listener;
 import de.simplepvparena.arena.ArenaFightRegion;
 import de.simplepvparena.arena.ArenaRegistry;
 import org.bukkit.block.Block;
+import org.bukkit.entity.ArmorStand;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
@@ -25,6 +26,9 @@ public final class ArenaMobRuleListener implements Listener {
 
     @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
     public void onCreatureSpawn(CreatureSpawnEvent event) {
+        if (event.getEntity() instanceof ArmorStand) {
+            return;
+        }
         if (ArenaFightRegion.contains(arenaRegistry.getArena().getShape(), event.getLocation())) {
             event.setCancelled(true);
         }

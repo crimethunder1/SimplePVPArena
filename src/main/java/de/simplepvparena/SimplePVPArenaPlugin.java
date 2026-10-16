@@ -51,6 +51,7 @@ import de.simplepvparena.kit.SerializedKit;
 import de.simplepvparena.listener.AdminMenuListener;
 import de.simplepvparena.listener.ArenaBreakListener;
 import de.simplepvparena.listener.ArenaBuildListener;
+import de.simplepvparena.listener.ArenaDamageListener;
 import de.simplepvparena.listener.ArenaEnvironmentProtectionListener;
 import de.simplepvparena.listener.ArenaHeightMarkerListener;
 import de.simplepvparena.listener.ArenaItemRuleListener;
@@ -383,5 +384,7 @@ public final class SimplePVPArenaPlugin extends JavaPlugin {
         getServer().getPluginManager().registerEvents(new ChatInputListener(chatInputService), this);
         getServer().getPluginManager().registerEvents(new GlobalPvpLockListener(matchService), this);
         getServer().getPluginManager().registerEvents(new FriendlyFireListener(matchService), this);
+        getServer().getPluginManager().registerEvents(
+                new ArenaDamageListener(matchService, spectatorService, arenaRegistry, getServer()), this);
     }
 }

@@ -6,6 +6,7 @@ import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.block.Block;
+import org.bukkit.entity.ArmorStand;
 import org.bukkit.entity.Cow;
 import org.bukkit.entity.Creeper;
 import org.bukkit.entity.Enderman;
@@ -116,12 +117,30 @@ class ArenaMobRuleTest {
         assertEquals(2, creeperOnTheTribune.blockList().size(), "a creeper outside the fight area");
     }
 
+    @Test
+    void letsAnArmorStandBePlacedInsideTheFightArea() {
+        Location insideTheFightArea = harness.at(INSIDE_X + 0.5D, INSIDE_Z + 0.5D);
+
+        for (CreatureSpawnEvent.SpawnReason spawnReason : List.of(CreatureSpawnEvent.SpawnReason.DEFAULT,
+                CreatureSpawnEvent.SpawnReason.SPAWNER_EGG, CreatureSpawnEvent.SpawnReason.CUSTOM)) {
+            assertFalse(isSpawnCancelled(ArmorStand.class, insideTheFightArea, spawnReason),
+                    "an armor stand: " + spawnReason.name());
+            assertTrue(isSpawnCancelled(Cow.class, insideTheFightArea, spawnReason),
+                    "a cow: " + spawnReason.name());
+        }
+    }
+
     private boolean isSpawnCancelled(Location location, CreatureSpawnEvent.SpawnReason spawnReason) {
-        LivingEntity spawnedCow = ArenaMatchHarness.proxy(Cow.class, (method, arguments) -> switch (method.getName()) {
+        return isSpawnCancelled(Cow.class, location, spawnReason);
+    }
+
+    private boolean isSpawnCancelled(Class<? extends LivingEntity> type, Location location,
+                                     CreatureSpawnEvent.SpawnReason spawnReason) {
+        LivingEntity spawnedEntity = ArenaMatchHarness.proxy(type, (method, arguments) -> switch (method.getName()) {
             case "getLocation" -> location.clone();
-            default -> throw new UnsupportedOperationException("Cow." + method.getName());
+            default -> throw new UnsupportedOperationException(type.getSimpleName() + "." + method.getName());
         });
-        CreatureSpawnEvent event = new CreatureSpawnEvent(spawnedCow, spawnReason);
+        CreatureSpawnEvent event = new CreatureSpawnEvent(spawnedEntity, spawnReason);
         mobRuleListener.onCreatureSpawn(event);
         return event.isCancelled();
     }
