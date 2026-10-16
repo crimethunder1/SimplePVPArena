@@ -1,6 +1,8 @@
 package de.simplepvparena.listener;
 
 import de.simplepvparena.match.MatchService;
+import de.simplepvparena.permission.AdminPermission;
+import org.bukkit.Server;
 import org.bukkit.entity.AreaEffectCloud;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
@@ -18,9 +20,11 @@ import java.util.UUID;
 public final class GlobalPvpLockListener implements Listener {
 
     private final MatchService matchService;
+    private final Server server;
 
-    public GlobalPvpLockListener(MatchService matchService) {
+    public GlobalPvpLockListener(MatchService matchService, Server server) {
         this.matchService = matchService;
+        this.server = server;
     }
 
     @EventHandler(priority = EventPriority.NORMAL, ignoreCancelled = true)
@@ -32,7 +36,7 @@ public final class GlobalPvpLockListener implements Listener {
         if (attackerUniqueId.isEmpty()) {
             return;
         }
-        if (!matchService.isPvpAllowed(attackerUniqueId.get(), victim.getUniqueId())) {
+        if (isLocked(attackerUniqueId.get(), victim.getUniqueId())) {
             event.setCancelled(true);
         }
     }
@@ -60,8 +64,24 @@ public final class GlobalPvpLockListener implements Listener {
         event.getAffectedEntities().removeIf(affectedEntity -> isLockedTarget(ownerUniqueId.get(), affectedEntity));
     }
 
-    private boolean isLockedTarget(UUID attackerUniqueId, LivingEntity affectedEntity) {
+    boolean isLockedTarget(UUID attackerUniqueId, LivingEntity affectedEntity) {
         return affectedEntity instanceof Player victim
-                && !matchService.isPvpAllowed(attackerUniqueId, victim.getUniqueId());
+                && isLocked(attackerUniqueId, victim.getUniqueId());
+    }
+
+    private boolean isLocked(UUID attackerUniqueId, UUID victimUniqueId) {
+        if (matchService.isPvpAllowed(attackerUniqueId, victimUniqueId)) {
+            return false;
+        }
+        return !isAdminAgainstActiveFighter(isAdmin(attackerUniqueId), matchService.isActiveFighter(victimUniqueId));
+    }
+
+    static boolean isAdminAgainstActiveFighter(boolean attackerAdmin, boolean victimActiveFighter) {
+        return attackerAdmin && victimActiveFighter;
+    }
+
+    private boolean isAdmin(UUID playerUniqueId) {
+        Player player = server.getPlayer(playerUniqueId);
+        return player != null && AdminPermission.isAdmin(player);
     }
 }

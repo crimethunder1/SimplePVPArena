@@ -22,7 +22,6 @@ public final class ArenaSafetyZoneListener implements Listener {
             EntityDamageEvent.DamageCause.FIRE,
             EntityDamageEvent.DamageCause.FIRE_TICK,
             EntityDamageEvent.DamageCause.LAVA,
-            EntityDamageEvent.DamageCause.VOID,
             EntityDamageEvent.DamageCause.STARVATION);
 
     private final ArenaSafetyZone safetyZone;

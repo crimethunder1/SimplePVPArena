@@ -382,7 +382,7 @@ public final class SimplePVPArenaPlugin extends JavaPlugin {
         getServer().getPluginManager().registerEvents(new ArenaSafetyZoneListener(arenaSafetyZone), this);
         getServer().getPluginManager().registerEvents(new AdminMenuListener(adminMenuService), this);
         getServer().getPluginManager().registerEvents(new ChatInputListener(chatInputService), this);
-        getServer().getPluginManager().registerEvents(new GlobalPvpLockListener(matchService), this);
+        getServer().getPluginManager().registerEvents(new GlobalPvpLockListener(matchService, getServer()), this);
         getServer().getPluginManager().registerEvents(new FriendlyFireListener(matchService), this);
         getServer().getPluginManager().registerEvents(
                 new ArenaDamageListener(matchService, spectatorService, arenaRegistry, getServer()), this);

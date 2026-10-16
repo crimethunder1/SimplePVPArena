@@ -61,6 +61,7 @@ final class ArenaMatchHarness {
 
     private final Map<UUID, FakePlayer> playersByUniqueId = new LinkedHashMap<>();
     private final List<ScheduledTask> scheduledTasks = new ArrayList<>();
+    private final List<ScheduledTask> repeatingTasks = new ArrayList<>();
     private final Map<Long, Material> blockMaterials = new LinkedHashMap<>();
     private final BorderMarkIndex borderMarks = new BorderMarkIndex();
     private final ArenaRegistry arenaRegistry = new ArenaRegistry();
@@ -206,6 +207,16 @@ final class ArenaMatchHarness {
         }
     }
 
+    void runRepeatingTasks() {
+        for (ScheduledTask task : new ArrayList<>(repeatingTasks)) {
+            if (task.cancelled) {
+                repeatingTasks.remove(task);
+            } else {
+                task.runnable.run();
+            }
+        }
+    }
+
     int getScheduledTaskCount() {
         return scheduledTasks.size();
     }
@@ -275,14 +286,19 @@ final class ArenaMatchHarness {
 
     private Object createScheduler() {
         return proxy(BukkitScheduler.class, (method, arguments) -> switch (method.getName()) {
-            case "runTaskTimer" -> schedule((Runnable) arguments[1]);
-            case "runTask", "runTaskLater" -> schedule((Runnable) arguments[1]);
+            case "runTaskTimer" -> scheduleRepeating((Runnable) arguments[1]);
+            case "runTask", "runTaskLater" -> schedule(new ScheduledTask((Runnable) arguments[1]));
             default -> throw new UnsupportedOperationException("BukkitScheduler." + method.getName());
         });
     }
 
-    private Object schedule(Runnable runnable) {
+    private Object scheduleRepeating(Runnable runnable) {
         ScheduledTask task = new ScheduledTask(runnable);
+        repeatingTasks.add(task);
+        return schedule(task);
+    }
+
+    private Object schedule(ScheduledTask task) {
         scheduledTasks.add(task);
         return proxy(BukkitTask.class, (method, arguments) -> switch (method.getName()) {
             case "cancel" -> {
@@ -383,6 +399,7 @@ final class ArenaMatchHarness {
         private int level;
         private RuntimeException inventoryClearFailure;
         private RuntimeException teleportFailure;
+        private Runnable damageReaction = () -> { };
 
         private FakePlayer(String playerName, Location location) {
             this.playerName = playerName;
@@ -429,7 +446,11 @@ final class ArenaMatchHarness {
                     level = (Integer) arguments[0];
                     yield null;
                 }
-                case "sendMessage", "sendActionBar", "showTitle", "setFallDistance", "setFireTicks", "damage",
+                case "damage" -> {
+                    damageReaction.run();
+                    yield null;
+                }
+                case "sendMessage", "sendActionBar", "showTitle", "setFallDistance", "setFireTicks",
                      "removePotionEffect", "setAbsorptionAmount", "setArrowsInBody", "setFreezeTicks",
                      "setRemainingAir", "setVelocity", "setCooldown" -> null;
                 case "getMaximumAir" -> 300;
@@ -505,6 +526,10 @@ final class ArenaMatchHarness {
 
         void failTeleportWith(RuntimeException failure) {
             this.teleportFailure = failure;
+        }
+
+        void reactToDamageWith(Runnable damageReaction) {
+            this.damageReaction = damageReaction;
         }
 
         private Object inventory() {

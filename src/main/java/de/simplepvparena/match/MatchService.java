@@ -175,6 +175,10 @@ public final class MatchService {
                 && roundParticipants.isActive(victimUniqueId);
     }
 
+    public boolean isApplyingSuddenDeathDamage() {
+        return insideSuddenDeathTick;
+    }
+
     public void handlePlayerEliminated(UUID playerUniqueId) {
         Optional<Match> matchOfPlayer = findMatchOfPlayer(playerUniqueId);
         if (matchOfPlayer.isEmpty()) {

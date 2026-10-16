@@ -42,6 +42,9 @@ public final class ArenaDamageListener implements Listener {
         if (!(event.getEntity() instanceof Player victim)) {
             return;
         }
+        if (matchService.isApplyingSuddenDeathDamage()) {
+            return;
+        }
         ArenaDamageVictimRole victimRole = findVictimRole(victim);
         if (victimRole == ArenaDamageVictimRole.NONE) {
             return;
