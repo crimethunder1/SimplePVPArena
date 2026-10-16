@@ -10,6 +10,7 @@ import de.simplepvparena.arena.ArenaCleaningVisualEffect;
 import de.simplepvparena.arena.ArenaGapGuide;
 import de.simplepvparena.arena.ArenaHeightMarkerService;
 import de.simplepvparena.arena.ArenaHeightMarkers;
+import de.simplepvparena.arena.ArenaMobRemovalService;
 import de.simplepvparena.arena.ArenaRegistry;
 import de.simplepvparena.arena.ArenaSafetyZone;
 import de.simplepvparena.arena.ArenaSetupService;
@@ -52,6 +53,8 @@ import de.simplepvparena.listener.ArenaBreakListener;
 import de.simplepvparena.listener.ArenaBuildListener;
 import de.simplepvparena.listener.ArenaEnvironmentProtectionListener;
 import de.simplepvparena.listener.ArenaHeightMarkerListener;
+import de.simplepvparena.listener.ArenaItemRuleListener;
+import de.simplepvparena.listener.ArenaMobRuleListener;
 import de.simplepvparena.listener.ArenaSafetyZoneListener;
 import de.simplepvparena.listener.BorderSelectorListener;
 import de.simplepvparena.listener.ChatInputListener;
@@ -113,6 +116,7 @@ public final class SimplePVPArenaPlugin extends JavaPlugin {
     private ArenaSafetyZone arenaSafetyZone;
     private ArenaHeightMarkers arenaHeightMarkers;
     private ArenaHeightMarkerService arenaHeightMarkerService;
+    private ArenaMobRemovalService arenaMobRemovalService;
     private ActiveArenaState activeArenaState;
     private ArenaSetupService arenaSetupService;
     private ChatInputService chatInputService;
@@ -169,6 +173,7 @@ public final class SimplePVPArenaPlugin extends JavaPlugin {
                 new VanillaStartGateVisualEffect());
 
         ArenaTemporaryEntityRemover temporaryEntityRemover = new BukkitArenaTemporaryEntityRemover();
+        arenaMobRemovalService = new ArenaMobRemovalService(this, arenaRegistry);
 
         arenaCleaningVisualEffect = new VanillaArenaCleaningVisualEffect();
         arenaCleaningService = new ArenaCleaningService(this, spectatorBorderService::clearMarksInShape,
@@ -228,6 +233,7 @@ public final class SimplePVPArenaPlugin extends JavaPlugin {
         registerCommand();
         registerListeners();
         borderParticleService.start();
+        arenaMobRemovalService.start();
         chatInputService.start();
     }
 
@@ -238,6 +244,9 @@ public final class SimplePVPArenaPlugin extends JavaPlugin {
         }
         if (borderParticleService != null) {
             borderParticleService.stop();
+        }
+        if (arenaMobRemovalService != null) {
+            arenaMobRemovalService.stop();
         }
         if (borderWallPreview != null) {
             borderWallPreview.stopAll();
@@ -366,6 +375,9 @@ public final class SimplePVPArenaPlugin extends JavaPlugin {
                 new ArenaBreakListener(matchService, arenaRegistry, arenaBaselineService), this);
         getServer().getPluginManager().registerEvents(
                 new ArenaEnvironmentProtectionListener(arenaRegistry, arenaBaselineService), this);
+        getServer().getPluginManager().registerEvents(
+                new ArenaItemRuleListener(matchService, spectatorService, arenaRegistry), this);
+        getServer().getPluginManager().registerEvents(new ArenaMobRuleListener(arenaRegistry), this);
         getServer().getPluginManager().registerEvents(new ArenaSafetyZoneListener(arenaSafetyZone), this);
         getServer().getPluginManager().registerEvents(new AdminMenuListener(adminMenuService), this);
         getServer().getPluginManager().registerEvents(new ChatInputListener(chatInputService), this);

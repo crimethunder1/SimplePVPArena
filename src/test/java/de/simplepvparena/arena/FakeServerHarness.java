@@ -7,9 +7,11 @@ import org.bukkit.block.Block;
 import org.bukkit.block.BlockState;
 import org.bukkit.block.TileState;
 import org.bukkit.block.data.BlockData;
+import org.bukkit.entity.Entity;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.scheduler.BukkitScheduler;
 import org.bukkit.scheduler.BukkitTask;
+import org.bukkit.util.BoundingBox;
 
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
@@ -26,6 +28,8 @@ final class FakeServerHarness {
     private final Map<Long, BlockData> blocks = new HashMap<>();
     private final Map<Long, String> blockEntityContents = new HashMap<>();
     private final List<ScheduledTask> scheduledTasks = new ArrayList<>();
+    private final List<Entity> nearbyEntities = new ArrayList<>();
+    private final List<BoundingBox> searchedBoxes = new ArrayList<>();
     private final Plugin plugin;
 
     private boolean worldLoaded = true;
@@ -89,6 +93,14 @@ final class FakeServerHarness {
 
     int getWritesWithPhysicsCount() {
         return writesWithPhysicsCount;
+    }
+
+    void addNearbyEntity(Entity entity) {
+        nearbyEntities.add(entity);
+    }
+
+    List<BoundingBox> getSearchedBoxes() {
+        return searchedBoxes;
     }
 
     void runTick() {
@@ -168,6 +180,10 @@ final class FakeServerHarness {
             case "getName" -> worldName;
             case "getBlockAt" -> createBlock((Integer) arguments[0], (Integer) arguments[1],
                     (Integer) arguments[2]);
+            case "getNearbyEntities" -> {
+                searchedBoxes.add((BoundingBox) arguments[0]);
+                yield new ArrayList<>(nearbyEntities);
+            }
             default -> throw new UnsupportedOperationException("World." + method.getName());
         });
     }
