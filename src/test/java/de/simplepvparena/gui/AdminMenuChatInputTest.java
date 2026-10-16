@@ -1,0 +1,391 @@
+package de.simplepvparena.gui;
+
+import org.junit.jupiter.api.Test;
+
+import java.util.List;
+import java.util.Optional;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
+class AdminMenuChatInputTest {
+
+    private static final int MAIN_ARENA_SLOT = 10;
+    private static final int MAIN_TEAMS_SLOT = 11;
+
+    private static final int ARENA_DIAGNOSE_SLOT = 11;
+    private static final int ARENA_START_GATE_SLOT = 20;
+    private static final int TEAMS_ADD_SLOT = 51;
+    private static final int TEAMS_NEXT_PAGE_SLOT = 53;
+
+    private static final String NOT_ALLOWED = "You are not allowed to use the tournament menu";
+
+    private final AdminMenuFixture fixture = new AdminMenuFixture();
+
+    @Test
+    void closesTheTeamsMenuRegistersOneRequestAndAsksForTheTeamToAdd() {
+        fixture.registerTeams("Alpha");
+        fixture.openMenuFromTheMainMenu(MAIN_TEAMS_SLOT);
+
+        fixture.click(TEAMS_ADD_SLOT);
+
+        assertTrue(fixture.isMenuClosed());
+        assertEquals(1, fixture.pendingChatInputCount());
+        assertEquals(List.of(
+                "Type: <teamName> <firstPlayer> <secondPlayer> in chat",
+                "Example: Alpha Steve Alex",
+                "Both players have to be online or known to the server",
+                "Type cancel to abort, the request expires in 60 seconds"), fixture.messages());
+        assertEquals(0, fixture.scheduledTaskCount());
+    }
+
+    @Test
+    void registersAndSavesTheTypedTeamOnlyOnTheNextTickAndReopensTheTeamList() {
+        askForTheTeamToAdd();
+
+        assertTrue(fixture.typeInChat("Bravo Steve Alex"));
+
+        assertNothingDoneBeforeTheNextTick();
+        assertTrue(fixture.teamRegistry().findTeam("Bravo").isEmpty());
+        assertEquals(0, fixture.teamConfigurationSaveCount());
+
+        fixture.runNextTick();
+
+        assertEquals(List.of("Team Bravo registered with Steve, Alex"), fixture.messages());
+        assertEquals("Steve, Alex", fixture.teamRegistry().findTeam("Bravo").orElseThrow().getMemberNamesJoined());
+        assertEquals(1, fixture.teamConfigurationSaveCount());
+        assertTeamsReopened(0, "Teams (page 1)");
+        assertEquals("Bravo", fixture.lastMenu().findTile(1).orElseThrow().displayName());
+    }
+
+    @Test
+    void reopensTheTeamListOnThePageTheTeamWasAskedFrom() {
+        fixture.makePlayersKnown("Steve", "Alex");
+        fixture.registerNumberedTeams(46);
+        fixture.openMenuFromTheMainMenu(MAIN_TEAMS_SLOT);
+        fixture.click(TEAMS_NEXT_PAGE_SLOT);
+        fixture.click(TEAMS_ADD_SLOT);
+        fixture.messages().clear();
+
+        fixture.typeInChat("Bravo Steve Alex");
+        fixture.runNextTick();
+
+        assertEquals(List.of("Team Bravo registered with Steve, Alex"), fixture.messages());
+        assertTeamsReopened(1, "Teams (page 2)");
+        assertEquals("Bravo", fixture.lastMenu().findTile(1).orElseThrow().displayName());
+    }
+
+    @Test
+    void rejectsATeamLineWithTooFewValuesAndReopensTheTeamList() {
+        askForTheTeamToAdd();
+
+        fixture.typeInChat("Bravo Steve");
+        fixture.runNextTick();
+
+        assertEquals(List.of("Expected 3 values separated by spaces (<teamName> <firstPlayer> <secondPlayer>), "
+                + "but got 2: Bravo Steve"), fixture.messages());
+        assertNoTeamAdded();
+        assertTeamsReopened(0, "Teams (page 1)");
+    }
+
+    @Test
+    void rejectsATeamLineThatNamesOnePlayerTwiceAndReopensTheTeamList() {
+        askForTheTeamToAdd();
+
+        fixture.typeInChat("Bravo Steve steve");
+        fixture.runNextTick();
+
+        assertEquals(List.of("A team needs two different players, Steve was named twice"), fixture.messages());
+        assertNoTeamAdded();
+        assertTeamsReopened(0, "Teams (page 1)");
+    }
+
+    @Test
+    void rejectsATeamNameThatIsAlreadyRegisteredAndReopensTheTeamList() {
+        askForTheTeamToAdd();
+
+        fixture.typeInChat("alpha Steve Alex");
+        fixture.runNextTick();
+
+        assertEquals(List.of("a team named alpha already exists"), fixture.messages());
+        assertNoTeamAdded();
+        assertEquals("Alpha-first, Alpha-second",
+                fixture.teamRegistry().findTeam("Alpha").orElseThrow().getMemberNamesJoined());
+        assertTeamsReopened(0, "Teams (page 1)");
+    }
+
+    @Test
+    void rejectsAFirstPlayerThatTheLookupDoesNotFindAndReopensTheTeamList() {
+        askForTheTeamToAdd();
+
+        fixture.typeInChat("Bravo Herobrine Alex");
+        fixture.runNextTick();
+
+        assertEquals(List.of("Unknown player Herobrine\nThe player has to be online or known to the server"),
+                fixture.messages());
+        assertNoTeamAdded();
+        assertTeamsReopened(0, "Teams (page 1)");
+    }
+
+    @Test
+    void rejectsASecondPlayerThatTheLookupDoesNotFindAndReopensTheTeamList() {
+        askForTheTeamToAdd();
+
+        fixture.typeInChat("Bravo Steve Herobrine");
+        fixture.runNextTick();
+
+        assertEquals(List.of("Unknown player Herobrine\nThe player has to be online or known to the server"),
+                fixture.messages());
+        assertNoTeamAdded();
+        assertTeamsReopened(0, "Teams (page 1)");
+    }
+
+    @Test
+    void cancelsTheTeamInputOnTheNextTickWithoutReopeningTheMenu() {
+        askForTheTeamToAdd();
+
+        assertTrue(fixture.typeInChat("cancel"));
+
+        assertNothingDoneBeforeTheNextTick();
+
+        fixture.runNextTick();
+
+        assertEquals(List.of("The input for the team to add was cancelled, nothing was changed"), fixture.messages());
+        assertNoTeamAdded();
+        assertTrue(fixture.isMenuClosed());
+    }
+
+    @Test
+    void refusesTheTypedTeamWhenThePermissionWasRevokedBeforeTheAnswer() {
+        askForTheTeamToAdd();
+        fixture.revokeAdminPermission();
+
+        fixture.typeInChat("Bravo Steve Alex");
+        fixture.runNextTick();
+
+        assertEquals(List.of(NOT_ALLOWED), fixture.messages());
+        assertNoTeamAdded();
+        assertTrue(fixture.isMenuClosed());
+    }
+
+    @Test
+    void closesTheArenaMenuRegistersOneRequestAndAsksForTheDiagnosisCellLimit() {
+        openTheArenaMenuOfAReadyArena();
+
+        fixture.click(ARENA_DIAGNOSE_SLOT);
+
+        assertTrue(fixture.isMenuClosed());
+        assertEquals(1, fixture.pendingChatInputCount());
+        assertEquals(List.of(
+                "Type: <cells> in chat",
+                "A number between 1 and 5000000",
+                "Stand inside the border wall, the calculation runs from where you stand",
+                "config.yml is not changed by it",
+                "Type cancel to abort, the request expires in 60 seconds"), fixture.messages());
+        assertEquals(0, fixture.scheduledTaskCount());
+    }
+
+    @Test
+    void runsTheDiagnosisWithTheTypedCellLimitOnlyOnTheNextTick() {
+        askForTheDiagnosisCellLimit();
+
+        assertTrue(fixture.typeInChat("60000"));
+
+        assertNothingDoneBeforeTheNextTick();
+
+        fixture.runNextTick();
+
+        assertEquals(List.of(
+                "Calculating once with a limit of 60000 cells\n"
+                        + "instead of the 50000 of arena.shape-maximum-cells, config.yml is not changed",
+                "The fight area was calculated from the border blocks\n"
+                        + "admin-menu with 25 cells between 1/1 and 5/5, from y 64 to y 67, calculated at y 64",
+                "Reading the 375 blocks from y 53 to y 67, the fight area and the layers under its floor, as the "
+                        + "baseline \"Clean the arena\" in the arena menu of /tournament restores\n"
+                        + "In batches of 16384 per tick, the arena cannot be cleaned until that is done.\n"
+                        + "The baseline is gone when the server restarts",
+                "The recognized wall is shown for a few seconds\n96 border blocks connected by 184 lines"),
+                fixture.messages());
+        assertEquals(1, fixture.arenaConfigurationSaveCount());
+        assertTrue(fixture.isMenuClosed());
+    }
+
+    @Test
+    void rejectsACellLimitThatIsNoNumberAndReopensTheArenaMenu() {
+        askForTheDiagnosisCellLimit();
+
+        fixture.typeInChat("many");
+        fixture.runNextTick();
+
+        assertEquals(List.of("The cell limit many is not a number"), fixture.messages());
+        assertArenaReopened();
+    }
+
+    @Test
+    void rejectsACellLimitOutsideOfTheAllowedRangeAndReopensTheArenaMenu() {
+        askForTheDiagnosisCellLimit();
+
+        fixture.typeInChat("0");
+        fixture.runNextTick();
+
+        assertEquals(List.of("The cell limit has to be between 1 and 5000000"), fixture.messages());
+        assertArenaReopened();
+    }
+
+    @Test
+    void cancelsTheDiagnosisInputOnTheNextTickWithoutReopeningTheMenu() {
+        askForTheDiagnosisCellLimit();
+
+        assertTrue(fixture.typeInChat("CANCEL"));
+
+        assertNothingDoneBeforeTheNextTick();
+
+        fixture.runNextTick();
+
+        assertEquals(List.of("The input for the diagnosis cell limit was cancelled, nothing was changed"),
+                fixture.messages());
+        assertTrue(fixture.isMenuClosed());
+    }
+
+    @Test
+    void refusesTheDiagnosisWhenThePermissionWasRevokedBeforeTheAnswer() {
+        askForTheDiagnosisCellLimit();
+        fixture.revokeAdminPermission();
+
+        fixture.typeInChat("10");
+        fixture.runNextTick();
+
+        assertEquals(List.of(NOT_ALLOWED), fixture.messages());
+        assertTrue(fixture.isMenuClosed());
+    }
+
+    @Test
+    void closesTheArenaMenuRegistersOneRequestAndAsksForTheStartGateBlocks() {
+        openTheArenaMenuOfAReadyArena();
+
+        fixture.click(ARENA_START_GATE_SLOT);
+
+        assertTrue(fixture.isMenuClosed());
+        assertEquals(1, fixture.pendingChatInputCount());
+        assertEquals(List.of(
+                "Type: <material> <amount> in chat",
+                "Example: barrier 32",
+                "The amount has to be between 1 and 64",
+                "Type cancel to abort, the request expires in 60 seconds"), fixture.messages());
+        assertEquals(0, fixture.scheduledTaskCount());
+    }
+
+    @Test
+    void rejectsAnUnknownStartGateMaterialOnlyOnTheNextTickAndReopensTheArenaMenu() {
+        askForTheStartGateBlocks();
+
+        assertTrue(fixture.typeInChat("unobtainium 32"));
+
+        assertNothingDoneBeforeTheNextTick();
+
+        fixture.runNextTick();
+
+        assertEquals(List.of("Unknown material unobtainium"), fixture.messages());
+        assertTrue(fixture.handedOutItems().isEmpty());
+        assertArenaReopened();
+    }
+
+    @Test
+    void rejectsAStartGateLineWithoutAnAmountAndReopensTheArenaMenu() {
+        askForTheStartGateBlocks();
+
+        fixture.typeInChat("barrier");
+        fixture.runNextTick();
+
+        assertEquals(List.of("Expected 2 values separated by spaces (<material> <amount>), but got 1: barrier"),
+                fixture.messages());
+        assertTrue(fixture.handedOutItems().isEmpty());
+        assertArenaReopened();
+    }
+
+    @Test
+    void cancelsTheStartGateInputOnTheNextTickWithoutReopeningTheMenu() {
+        askForTheStartGateBlocks();
+
+        assertTrue(fixture.typeInChat(" cancel "));
+
+        assertNothingDoneBeforeTheNextTick();
+
+        fixture.runNextTick();
+
+        assertEquals(List.of("The input for the start gate blocks was cancelled, nothing was changed"),
+                fixture.messages());
+        assertTrue(fixture.handedOutItems().isEmpty());
+        assertTrue(fixture.isMenuClosed());
+    }
+
+    @Test
+    void refusesTheStartGateBlocksWhenThePermissionWasRevokedBeforeTheAnswer() {
+        askForTheStartGateBlocks();
+        fixture.revokeAdminPermission();
+
+        fixture.typeInChat("barrier 32");
+        fixture.runNextTick();
+
+        assertEquals(List.of(NOT_ALLOWED), fixture.messages());
+        assertTrue(fixture.handedOutItems().isEmpty());
+        assertTrue(fixture.isMenuClosed());
+    }
+
+    private void askForTheTeamToAdd() {
+        fixture.makePlayersKnown("Steve", "Alex");
+        fixture.registerTeams("Alpha");
+        fixture.openMenuFromTheMainMenu(MAIN_TEAMS_SLOT);
+        fixture.click(TEAMS_ADD_SLOT);
+        fixture.messages().clear();
+    }
+
+    private void askForTheDiagnosisCellLimit() {
+        openTheArenaMenuOfAReadyArena();
+        fixture.standInsideTheFightArea();
+        fixture.click(ARENA_DIAGNOSE_SLOT);
+        fixture.messages().clear();
+    }
+
+    private void askForTheStartGateBlocks() {
+        openTheArenaMenuOfAReadyArena();
+        fixture.click(ARENA_START_GATE_SLOT);
+        fixture.messages().clear();
+    }
+
+    private void openTheArenaMenuOfAReadyArena() {
+        fixture.configureArena();
+        fixture.openMenuFromTheMainMenu(MAIN_ARENA_SLOT);
+    }
+
+    private void assertNothingDoneBeforeTheNextTick() {
+        assertTrue(fixture.messages().isEmpty(), fixture.messages().toString());
+        assertEquals(0, fixture.pendingChatInputCount());
+        assertEquals(1, fixture.scheduledTaskCount());
+        assertTrue(fixture.isMenuClosed());
+    }
+
+    private void assertNoTeamAdded() {
+        assertEquals(List.of("Alpha"), fixture.teamRegistry().getTeamNames());
+        assertEquals(0, fixture.teamConfigurationSaveCount());
+    }
+
+    private void assertTeamsReopened(int pageIndex, String title) {
+        RecordingAdminMenuWindows.RecordedMenu menu = fixture.lastMenu();
+        assertEquals(AdminMenuType.TEAMS, menu.holder().getMenuType());
+        assertEquals(pageIndex, menu.holder().getPageIndex());
+        assertEquals(title, menu.title());
+        assertFalse(fixture.isMenuClosed());
+        assertEquals(0, fixture.pendingChatInputCount());
+    }
+
+    private void assertArenaReopened() {
+        RecordingAdminMenuWindows.RecordedMenu menu = fixture.lastMenu();
+        assertEquals(AdminMenuType.ARENA, menu.holder().getMenuType());
+        assertEquals(Optional.empty(), menu.holder().getSubject());
+        assertEquals("Arena", menu.title());
+        assertFalse(fixture.isMenuClosed());
+        assertEquals(0, fixture.pendingChatInputCount());
+    }
+}

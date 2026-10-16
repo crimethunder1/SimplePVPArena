@@ -4,6 +4,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.World;
 
+import java.util.Locale;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -31,6 +32,6 @@ public record PositionSnapshot(String worldName, double x, double y, double z, f
     }
 
     public String describe() {
-        return worldName + " " + String.format("%.1f/%.1f/%.1f", x, y, z);
+        return worldName + " " + String.format(Locale.ROOT, "%.1f/%.1f/%.1f", x, y, z);
     }
 }

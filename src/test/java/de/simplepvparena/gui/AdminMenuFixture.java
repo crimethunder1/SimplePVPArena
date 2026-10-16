@@ -27,11 +27,13 @@ import de.simplepvparena.gate.StartGateDuration;
 import de.simplepvparena.gate.StartGateItemService;
 import de.simplepvparena.gate.StartGateMarks;
 import de.simplepvparena.gate.StartGates;
+import de.simplepvparena.input.ChatInputRegistry;
 import de.simplepvparena.input.ChatInputService;
 import de.simplepvparena.kit.KitDefinition;
 import de.simplepvparena.kit.KitEquipmentSlot;
 import de.simplepvparena.kit.KitSaveService;
 import de.simplepvparena.kit.KitService;
+import de.simplepvparena.kit.SerializedKit;
 import de.simplepvparena.match.FighterColours;
 import de.simplepvparena.match.Match;
 import de.simplepvparena.match.MatchService;
@@ -49,16 +51,26 @@ import de.simplepvparena.tournament.TournamentManager;
 import de.simplepvparena.tournament.TournamentOperationResult;
 import net.kyori.adventure.text.Component;
 import org.bukkit.Location;
+import org.bukkit.OfflinePlayer;
 import org.bukkit.Server;
 import org.bukkit.World;
 import org.bukkit.entity.Player;
+import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.PlayerInventory;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.scheduler.BukkitScheduler;
 import org.bukkit.scheduler.BukkitTask;
 
 import java.io.File;
+import java.io.IOException;
+import java.io.UncheckedIOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
@@ -92,6 +104,13 @@ final class AdminMenuFixture {
     private final BorderSelectorModeRegistry borderSelectorModes = new BorderSelectorModeRegistry();
     private final KitService kitService = new KitService();
     private final List<List<String>> reloadedConfigurations = new ArrayList<>();
+    private final ChatInputRegistry chatInputRegistry = new ChatInputRegistry();
+    private final List<Runnable> scheduledTasks = new ArrayList<>();
+    private final Map<String, TeamMember> knownPlayersByLowerCaseName = new LinkedHashMap<>();
+    private final List<ItemStack> handedOutItems = new ArrayList<>();
+    private final List<SerializedKit> savedKits = new ArrayList<>();
+    private final File importFile = new File("target/admin-menu-fixture/" + adminUniqueId + "/"
+            + EventTeamImportFile.FILE_NAME);
     private final World world;
     private final Plugin plugin;
     private final MatchService matchService;
@@ -99,10 +118,13 @@ final class AdminMenuFixture {
     private final TournamentManager tournamentManager;
     private final ChatInputService chatInputService;
     private final AdminMenuService menuService;
+    private final PlayerInventory adminInventory;
     private final Player admin;
 
     private boolean adminPermissionGranted = true;
     private Location adminLocation;
+    private int teamConfigurationSaveCount;
+    private int arenaConfigurationSaveCount;
 
     AdminMenuFixture() {
         SharedBukkitServer.install();
@@ -123,25 +145,27 @@ final class AdminMenuFixture {
                         (method, arguments) -> null)),
                 new ArenaGapGuide(plugin), cleaningService,
                 new ArenaBaselineService(plugin, new ArenaBaselineRegistry()),
-                new ArenaBorderConfirmation(arenaRegistry.getArena()::hasShape), () -> { });
+                new ArenaBorderConfirmation(arenaRegistry.getArena()::hasShape),
+                () -> arenaConfigurationSaveCount++);
         tournamentManager = new TournamentManager(plugin, teamRegistry, arenaRegistry, matchService,
                 new AutomaticArenaCleanup(arenaSetupService, cleaningService), message -> { });
         TournamentDryRun tournamentDryRun = new TournamentDryRun(tournamentManager::getState,
                 matchService::hasActiveMatch, teamRegistry,
                 new PluginDryRunArena(arenaRegistry.getArena(), arenaSetupService), kitService, gateMarks,
                 gateDuration);
-        chatInputService = new ChatInputService(plugin);
+        chatInputService = new ChatInputService(plugin, chatInputRegistry);
+        adminInventory = createAdminInventory();
         admin = createAdmin();
         Server server = plugin.getServer();
         menuService = new AdminMenuService(plugin, tournamentManager, tournamentDryRun, teamRegistry,
                 new TeamMemberLookup(server),
-                new EventTeamImportService(new File("target/admin-menu-fixture/" + EventTeamImportFile.FILE_NAME),
-                        teamRegistry, playerName -> Optional.empty(), () -> { }),
+                new EventTeamImportService(importFile, teamRegistry, this::findKnownPlayer,
+                        this::saveTeamConfiguration),
                 matchService, arenaSetupService, new ArenaHeightMarkerService(plugin, heightMarkers),
                 new StartGateItemService(plugin, gateMarks, gateDuration, () -> { }),
                 borderSelectorModes,
-                new KitSaveService(kitService, serializedKit -> { }, problem -> { }),
-                chatInputService, () -> { },
+                new KitSaveService(kitService, savedKits::add, problem -> { }),
+                chatInputService, this::saveTeamConfiguration,
                 this::reloadConfiguration,
                 windows);
     }
@@ -151,6 +175,32 @@ final class AdminMenuFixture {
             teamRegistry.registerTeam(teamName,
                     new TeamMember(UUID.randomUUID(), teamName + "-first"),
                     new TeamMember(UUID.randomUUID(), teamName + "-second"));
+        }
+    }
+
+    void registerNumberedTeams(int teamCount) {
+        for (int teamNumber = 1; teamNumber <= teamCount; teamNumber++) {
+            registerTeams(numberedTeamName(teamNumber));
+        }
+    }
+
+    static String numberedTeamName(int teamNumber) {
+        return String.format(Locale.ROOT, "Team%02d", teamNumber);
+    }
+
+    void makePlayersKnown(String... playerNames) {
+        for (String playerName : playerNames) {
+            knownPlayersByLowerCaseName.put(playerName.toLowerCase(Locale.ROOT),
+                    new TeamMember(UUID.randomUUID(), playerName));
+        }
+    }
+
+    void placeImportFile(String json) {
+        try {
+            Files.createDirectories(importFile.toPath().getParent());
+            Files.writeString(importFile.toPath(), json, StandardCharsets.UTF_8);
+        } catch (IOException failure) {
+            throw new UncheckedIOException(failure);
         }
     }
 
@@ -250,6 +300,32 @@ final class AdminMenuFixture {
         menuService.handleClick(admin, lastMenu().holder(), slot);
     }
 
+    void clickIn(AdminMenuHolder holder, int slot) {
+        menuService.handleClick(admin, holder, slot);
+    }
+
+    void refillLastMenu() {
+        windows.refillLastOpenedMenu(admin);
+    }
+
+    boolean typeInChat(String line) {
+        return chatInputService.handleLine(admin, line);
+    }
+
+    void runNextTick() {
+        List<Runnable> tasksOfThisTick = new ArrayList<>(scheduledTasks);
+        scheduledTasks.clear();
+        tasksOfThisTick.forEach(Runnable::run);
+    }
+
+    int scheduledTaskCount() {
+        return scheduledTasks.size();
+    }
+
+    int pendingChatInputCount() {
+        return chatInputRegistry.getPendingCount();
+    }
+
     RecordingAdminMenuWindows.RecordedMenu lastMenu() {
         return windows.lastOpenedMenu(admin);
     }
@@ -285,6 +361,22 @@ final class AdminMenuFixture {
         return reloadedConfigurations;
     }
 
+    int teamConfigurationSaveCount() {
+        return teamConfigurationSaveCount;
+    }
+
+    int arenaConfigurationSaveCount() {
+        return arenaConfigurationSaveCount;
+    }
+
+    List<SerializedKit> savedKits() {
+        return savedKits;
+    }
+
+    List<ItemStack> handedOutItems() {
+        return handedOutItems;
+    }
+
     Player admin() {
         return admin;
     }
@@ -305,6 +397,10 @@ final class AdminMenuFixture {
         return teamRegistry;
     }
 
+    ArenaSetupService arenaSetupService() {
+        return arenaSetupService;
+    }
+
     ChatInputService chatInputService() {
         return chatInputService;
     }
@@ -319,6 +415,25 @@ final class AdminMenuFixture {
         return report;
     }
 
+    private Optional<TeamMember> findKnownPlayer(String playerName) {
+        return Optional.ofNullable(knownPlayersByLowerCaseName.get(playerName.toLowerCase(Locale.ROOT)));
+    }
+
+    private OfflinePlayer findKnownOfflinePlayer(String playerName) {
+        return findKnownPlayer(playerName)
+                .map(member -> SharedBukkitServer.proxy(OfflinePlayer.class, (method, arguments) ->
+                        switch (method.getName()) {
+                            case "getUniqueId" -> member.uniqueId();
+                            case "getName" -> member.playerName();
+                            default -> throw new UnsupportedOperationException("OfflinePlayer." + method.getName());
+                        }))
+                .orElse(null);
+    }
+
+    private void saveTeamConfiguration() {
+        teamConfigurationSaveCount++;
+    }
+
     private static void assertSuccessful(TournamentOperationResult result) {
         assertTrue(result.successful(), result.message());
     }
@@ -330,11 +445,23 @@ final class AdminMenuFixture {
             case "hasPermission" -> AdminPermission.ADMIN_PERMISSION_NAME.equals(arguments[0])
                     && adminPermissionGranted;
             case "getLocation" -> adminLocation.clone();
+            case "getInventory" -> adminInventory;
             case "sendMessage" -> {
                 messages.add(TournamentMessages.toPlainBody((Component) arguments[0]));
                 yield null;
             }
             default -> throw new UnsupportedOperationException("Player." + method.getName());
+        });
+    }
+
+    private PlayerInventory createAdminInventory() {
+        return SharedBukkitServer.proxy(PlayerInventory.class, (method, arguments) -> switch (method.getName()) {
+            case "getItem" -> null;
+            case "addItem" -> {
+                handedOutItems.addAll(List.of((ItemStack[]) arguments[0]));
+                yield new HashMap<Integer, ItemStack>();
+            }
+            default -> throw new UnsupportedOperationException("PlayerInventory." + method.getName());
         });
     }
 
@@ -351,17 +478,24 @@ final class AdminMenuFixture {
     private Server createServer() {
         BukkitScheduler scheduler = SharedBukkitServer.proxy(BukkitScheduler.class,
                 (method, arguments) -> switch (method.getName()) {
-                    case "runTask", "runTaskLater", "runTaskTimer" -> schedule();
+                    case "runTask" -> scheduleForTheNextTick((Runnable) arguments[1]);
+                    case "runTaskLater", "runTaskTimer" -> schedule();
                     default -> throw new UnsupportedOperationException("BukkitScheduler." + method.getName());
                 });
         return SharedBukkitServer.proxy(Server.class, (method, arguments) -> switch (method.getName()) {
             case "getScheduler" -> scheduler;
             case "getWorld" -> WORLD_NAME.equals(arguments[0]) ? world : null;
-            case "getPlayer" -> null;
+            case "getPlayer", "getPlayerExact" -> null;
+            case "getOfflinePlayerIfCached" -> findKnownOfflinePlayer((String) arguments[0]);
             case "getLogger" -> LOGGER;
             case "broadcast" -> 0;
             default -> throw new UnsupportedOperationException("Server." + method.getName());
         });
+    }
+
+    private BukkitTask scheduleForTheNextTick(Runnable task) {
+        scheduledTasks.add(task);
+        return schedule();
     }
 
     private static BukkitTask schedule() {

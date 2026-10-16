@@ -21,7 +21,7 @@ final class RecordingAdminMenuWindows implements AdminMenuWindows {
     @Override
     public void open(Player player, AdminMenuHolder holder, int size, String title,
                      Consumer<AdminMenuCanvas> filler) {
-        RecordedMenu menu = new RecordedMenu(holder, title, size);
+        RecordedMenu menu = new RecordedMenu(holder, title, size, filler);
         menusByHolder.put(holder, menu);
         filler.accept(menu);
         lastOpenedMenus.put(player.getUniqueId(), menu);
@@ -52,6 +52,11 @@ final class RecordingAdminMenuWindows implements AdminMenuWindows {
                 () -> new AssertionError("no menu was opened for " + player.getName()));
     }
 
+    void refillLastOpenedMenu(Player player) {
+        RecordedMenu menu = lastOpenedMenu(player);
+        menu.filler.accept(menu);
+    }
+
     boolean isMenuClosed(Player player) {
         return playersWithClosedMenu.contains(player.getUniqueId());
     }
@@ -61,14 +66,16 @@ final class RecordingAdminMenuWindows implements AdminMenuWindows {
         private final AdminMenuHolder holder;
         private final String title;
         private final int size;
+        private final Consumer<AdminMenuCanvas> filler;
         private final Map<Integer, MenuTile> tilesBySlot = new TreeMap<>();
 
         private int refreshCount;
 
-        private RecordedMenu(AdminMenuHolder holder, String title, int size) {
+        private RecordedMenu(AdminMenuHolder holder, String title, int size, Consumer<AdminMenuCanvas> filler) {
             this.holder = holder;
             this.title = title;
             this.size = size;
+            this.filler = filler;
         }
 
         @Override
