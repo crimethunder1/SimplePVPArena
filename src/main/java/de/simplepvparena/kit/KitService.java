@@ -80,20 +80,56 @@ public final class KitService {
     }
 
     public void clearKit(Player player) {
-        PlayerStateSnapshot snapshot = snapshotStorage == null ? null : findSnapshot(player);
-        resetPlayerState(player);
-        if (snapshot != null) {
-            restoreSnapshot(player, snapshot);
+        if (snapshotStorage == null) {
+            clearWithoutSnapshot(player);
+            return;
         }
-        removeMarker(player);
-        if (snapshot != null) {
-            forgetSnapshot(player);
+        PlayerStateSnapshot snapshotInMemory = snapshotsInMemory.get(player.getUniqueId());
+        if (snapshotInMemory != null) {
+            restoreFromSnapshot(player, snapshotInMemory);
+            return;
+        }
+        PlayerStateSnapshotLookup lookup = snapshotStorage.find(player.getUniqueId());
+        switch (lookup.outcome()) {
+            case FOUND -> restoreFromSnapshot(player, lookup.snapshot().orElseThrow());
+            case MISSING -> {
+                if (hasAppliedKit(player)) {
+                    clearWithoutSnapshot(player);
+                    warningReporter.accept("No saved inventory and state of " + player.getName()
+                            + " was found, the kit was cleared without restoring anything");
+                }
+            }
+            case BROKEN -> {
+                clearWithoutSnapshot(player);
+                warningReporter.accept("The saved inventory and state of " + player.getName()
+                        + " could not be read, the kit was cleared without restoring anything, the file is kept as "
+                        + lookup.fileName());
+            }
         }
     }
 
     public boolean hasAppliedKit(Player player) {
         return kitAppliedKey != null
                 && player.getPersistentDataContainer().has(kitAppliedKey, PersistentDataType.BYTE);
+    }
+
+    private void clearWithoutSnapshot(Player player) {
+        resetPlayerState(player);
+        removeMarker(player);
+    }
+
+    private void restoreFromSnapshot(Player player, PlayerStateSnapshot snapshot) {
+        try {
+            resetPlayerState(player);
+            restoreSnapshot(player, snapshot);
+        } catch (RuntimeException failure) {
+            warningReporter.accept("The saved inventory and state of " + player.getName()
+                    + " could not be restored (" + failure.getMessage()
+                    + "), the saved state is kept for the next attempt");
+            return;
+        }
+        removeMarker(player);
+        forgetSnapshot(player);
     }
 
     private void saveSnapshot(Player player) {
@@ -108,26 +144,6 @@ public final class KitService {
                     + " could not be written to disk (" + failure.getMessage()
                     + "), they are kept in memory only and are lost if the server stops unexpectedly");
         }
-    }
-
-    private PlayerStateSnapshot findSnapshot(Player player) {
-        PlayerStateSnapshot snapshotInMemory = snapshotsInMemory.get(player.getUniqueId());
-        return snapshotInMemory != null ? snapshotInMemory : findStoredSnapshot(player);
-    }
-
-    private PlayerStateSnapshot findStoredSnapshot(Player player) {
-        PlayerStateSnapshotLookup lookup = snapshotStorage.find(player.getUniqueId());
-        switch (lookup.outcome()) {
-            case FOUND -> {
-                return lookup.snapshot().orElseThrow();
-            }
-            case MISSING -> warningReporter.accept("No saved inventory and state of " + player.getName()
-                    + " was found, the kit was cleared without restoring anything");
-            case BROKEN -> warningReporter.accept("The saved inventory and state of " + player.getName()
-                    + " could not be read, the kit was cleared without restoring anything, the file is kept as "
-                    + lookup.fileName());
-        }
-        return null;
     }
 
     private void restoreSnapshot(Player player, PlayerStateSnapshot snapshot) {

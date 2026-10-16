@@ -107,11 +107,103 @@ class KitServicePlayerStateSnapshotTest {
         assertFalse(Files.exists(snapshotFileOf(snapshotDirectory, player)));
         assertTrue(warnings.isEmpty());
 
+        player.persistentData.put(KIT_APPLIED_KEY, (byte) 1);
         kitService.clearKit(player.player);
 
         assertArrayEquals(new ItemStack[privateContents.length], player.contents,
                 "the snapshot is gone from memory as well");
         assertEquals(1, warnings.size());
+    }
+
+    @Test
+    void leavesAPlayerWithoutTheMarkerAndWithoutASnapshotUntouched(@TempDir Path snapshotDirectory) {
+        StatefulPlayer player = playerWithPrivateState("Visitor");
+        ItemStack[] privateContents = player.contents.clone();
+
+        kitServiceIn(snapshotDirectory).clearKit(player.player);
+
+        assertArrayEquals(privateContents, player.contents);
+        assertEquals(List.of(), player.inventoryEvents, "the inventory is not touched");
+        assertEquals(7, player.level);
+        assertEquals(0.25f, player.exp);
+        assertEquals(12, player.foodLevel);
+        assertEquals(3.5f, player.saturation);
+        assertEquals(14.0, player.health);
+        assertFalse(Files.exists(snapshotFileOf(snapshotDirectory, player)));
+        assertTrue(warnings.isEmpty(), warnings.toString());
+    }
+
+    @Test
+    void restoresAPlayerWithoutTheMarkerFromAReadableFile(@TempDir Path snapshotDirectory) {
+        StatefulPlayer player = playerWithPrivateState("Forgotten");
+        ItemStack[] privateContents = player.contents.clone();
+        kitServiceIn(snapshotDirectory).applyKit(player.player);
+        player.wearKitState();
+        player.persistentData.clear();
+
+        KitService kitServiceAfterARestart = kitServiceIn(snapshotDirectory);
+        kitServiceAfterARestart.clearKit(player.player);
+
+        assertArrayEquals(privateContents, player.contents);
+        assertEquals(7, player.level);
+        assertEquals(0.25f, player.exp);
+        assertEquals(12, player.foodLevel);
+        assertEquals(3.5f, player.saturation);
+        assertEquals(14.0, player.health);
+        assertFalse(Files.exists(snapshotFileOf(snapshotDirectory, player)));
+        assertTrue(warnings.isEmpty(), warnings.toString());
+    }
+
+    @Test
+    void keepsTheSnapshotAndTheMarkerWhenTheRestoreFails(@TempDir Path snapshotDirectory) throws IOException {
+        KitService kitService = kitServiceIn(snapshotDirectory);
+        StatefulPlayer player = playerWithPrivateState("Stubborn");
+        ItemStack[] privateContents = player.contents.clone();
+        kitService.applyKit(player.player);
+        Path snapshotFile = snapshotFileOf(snapshotDirectory, player);
+        String storedContent = Files.readString(snapshotFile, StandardCharsets.UTF_8);
+        player.wearKitState();
+        player.setContentsFailure = new IllegalArgumentException("the slot count does not match");
+
+        kitService.clearKit(player.player);
+
+        assertEquals(1, warnings.size());
+        assertTrue(warnings.get(0).contains("Stubborn"), warnings.get(0));
+        assertTrue(warnings.get(0).contains("the slot count does not match"), warnings.get(0));
+        assertTrue(kitService.hasAppliedKit(player.player), "the marker is kept for the next join");
+        assertEquals(storedContent, Files.readString(snapshotFile, StandardCharsets.UTF_8),
+                "the file is kept unchanged");
+
+        Files.delete(snapshotFile);
+        player.setContentsFailure = null;
+        kitService.clearKit(player.player);
+
+        assertArrayEquals(privateContents, player.contents, "the snapshot in memory is kept as well");
+        assertEquals(7, player.level);
+        assertEquals(14.0, player.health);
+        assertFalse(kitService.hasAppliedKit(player.player));
+        assertEquals(1, warnings.size(), warnings.toString());
+    }
+
+    @Test
+    void restoresFromTheKeptFileAfterAFailedRestoreAndARestart(@TempDir Path snapshotDirectory) {
+        StatefulPlayer player = playerWithPrivateState("Stubborn");
+        ItemStack[] privateContents = player.contents.clone();
+        KitService kitService = kitServiceIn(snapshotDirectory);
+        kitService.applyKit(player.player);
+        player.wearKitState();
+        player.setContentsFailure = new IllegalArgumentException("the slot count does not match");
+        kitService.clearKit(player.player);
+        player.setContentsFailure = null;
+
+        KitService kitServiceAfterARestart = kitServiceIn(snapshotDirectory);
+        kitServiceAfterARestart.clearKit(player.player);
+
+        assertArrayEquals(privateContents, player.contents);
+        assertEquals(7, player.level);
+        assertFalse(kitServiceAfterARestart.hasAppliedKit(player.player));
+        assertFalse(Files.exists(snapshotFileOf(snapshotDirectory, player)));
+        assertEquals(1, warnings.size(), warnings.toString());
     }
 
     @Test
@@ -292,6 +384,7 @@ class KitServicePlayerStateSnapshotTest {
         private float saturation;
         private double health;
         private double maximumHealth = 20.0;
+        private RuntimeException setContentsFailure;
 
         private StatefulPlayer(String playerName) {
             PlayerInventory inventory = SharedBukkitServer.proxy(PlayerInventory.class,
@@ -302,6 +395,9 @@ class KitServicePlayerStateSnapshotTest {
                         }
                         case "setContents" -> {
                             inventoryEvents.add("setContents");
+                            if (setContentsFailure != null) {
+                                throw setContentsFailure;
+                            }
                             contents = ((ItemStack[]) arguments[0]).clone();
                             yield null;
                         }

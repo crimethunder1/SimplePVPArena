@@ -141,10 +141,7 @@ public final class SimplePVPArenaPlugin extends JavaPlugin {
         AdminNotifier adminNotifier = new OnlineAdminNotifier(getServer());
         kitService = new KitService(this, new FilePlayerStateSnapshotStorage(
                 new File(getDataFolder(), FilePlayerStateSnapshotStorage.DIRECTORY_NAME).toPath(),
-                new BukkitItemStackCodec()), warningMessage -> {
-                    getLogger().warning(warningMessage);
-                    adminNotifier.notifyAdmins(warningMessage);
-                });
+                new BukkitItemStackCodec()), adminNotifier::notifyAdmins);
         kitSaveService = new KitSaveService(kitService, this::saveKitConfiguration, getLogger()::warning);
 
         spectatorService = new SpectatorService(arenaRegistry, new SpectatorItemFactory(this));

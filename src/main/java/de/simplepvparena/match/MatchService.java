@@ -426,8 +426,14 @@ public final class MatchService {
     private void releaseParticipants(Match match) {
         for (Team team : match.getTeams()) {
             for (Player player : collectOnlinePlayers(team)) {
-                kitService.clearKit(player);
-                spectatorService.sendToTribune(player);
+                try {
+                    kitService.clearKit(player);
+                    spectatorService.sendToTribune(player);
+                } catch (RuntimeException failure) {
+                    plugin.getLogger().log(Level.WARNING, "The participant " + player.getName()
+                            + " could not be released after match " + match.getMatchId()
+                            + ", the remaining participants are released anyway", failure);
+                }
             }
         }
         fighterColours.clearColours();

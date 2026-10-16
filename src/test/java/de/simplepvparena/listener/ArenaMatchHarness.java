@@ -381,6 +381,7 @@ final class ArenaMatchHarness {
         private float saturation;
         private float exp;
         private int level;
+        private RuntimeException inventoryClearFailure;
 
         private FakePlayer(String playerName, Location location) {
             this.playerName = playerName;
@@ -494,9 +495,16 @@ final class ArenaMatchHarness {
             this.level = level;
         }
 
+        void failInventoryClearWith(RuntimeException failure) {
+            this.inventoryClearFailure = failure;
+        }
+
         private Object inventory() {
             return proxy(org.bukkit.inventory.PlayerInventory.class, (method, arguments) -> switch (method.getName()) {
                 case "clear" -> {
+                    if (inventoryClearFailure != null) {
+                        throw inventoryClearFailure;
+                    }
                     inventoryClearCount++;
                     contents = new ItemStack[INVENTORY_SLOT_COUNT];
                     yield null;

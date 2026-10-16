@@ -3,6 +3,7 @@ package de.simplepvparena.listener;
 import de.simplepvparena.border.BorderSelectorModeRegistry;
 import de.simplepvparena.kit.FilePlayerStateSnapshotStorage;
 import de.simplepvparena.kit.KitService;
+import de.simplepvparena.match.Match;
 import de.simplepvparena.support.FakeItemStack;
 import de.simplepvparena.support.FakeItemStackCodec;
 import net.kyori.adventure.text.Component;
@@ -81,6 +82,31 @@ class PlayerConnectionStateRestoreTest {
         assertEquals(0, fighter.level());
         assertEquals(inventoryClearCountBeforeTheJoin, fighter.inventoryClearCount());
         assertTrue(Files.isRegularFile(snapshotFileOf(fighter)), "the snapshot stays for the end of the match");
+        assertTrue(warnings.isEmpty(), warnings.toString());
+    }
+
+    @Test
+    void doesNotClearAnEliminatedFighterAgainAtTheEndOfTheMatchAfterTheJoinRestoredTheState() {
+        ArenaMatchHarness.FakePlayer fighter = harness.addPlayer("Fighter");
+        ArenaMatchHarness.FakePlayer mate = harness.addPlayer("Mate");
+        ArenaMatchHarness.FakePlayer opponent = harness.addPlayer("Opponent");
+        ArenaMatchHarness.FakePlayer opponentMate = harness.addPlayer("OpponentMate");
+        ItemStack[] privateContents = privateContents();
+        fighter.setContents(privateContents);
+        fighter.setLevel(30);
+        Match match = harness.startMatch(fighter, mate, opponent, opponentMate);
+        harness.getMatchService().handlePlayerEliminated(fighter.uniqueId());
+        join(fighter);
+        ItemStack[] contentsAfterTheJoin = fighter.contents();
+        assertArrayEquals(privateContents, contentsAfterTheJoin, "the join restored the private inventory");
+        int inventoryClearCountAfterTheJoin = fighter.inventoryClearCount();
+
+        assertTrue(harness.getMatchService().forceResult(match.getMatchId(), match.getFirstTeam().getTeamName()));
+
+        assertArrayEquals(contentsAfterTheJoin, fighter.contents());
+        assertEquals(30, fighter.level());
+        assertEquals(inventoryClearCountAfterTheJoin, fighter.inventoryClearCount(),
+                "the end of the match does not clear the inventory again");
         assertTrue(warnings.isEmpty(), warnings.toString());
     }
 
