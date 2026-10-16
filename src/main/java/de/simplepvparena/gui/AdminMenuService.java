@@ -17,7 +17,6 @@ import de.simplepvparena.kit.KitSaveService;
 import de.simplepvparena.match.Match;
 import de.simplepvparena.match.MatchService;
 import de.simplepvparena.message.TournamentMessages;
-import de.simplepvparena.permission.AdminPermission;
 import de.simplepvparena.team.EventTeamImportFile;
 import de.simplepvparena.team.EventTeamImportResult;
 import de.simplepvparena.team.EventTeamImportService;
@@ -43,7 +42,7 @@ import java.util.function.Supplier;
 
 public final class AdminMenuService {
 
-    private static final int INFO_SLOT = 4;
+    private static final int TEAM_MENU_SIZE = 54;
 
     private static final int MAIN_ARENA_SLOT = 10;
     private static final int MAIN_TEAMS_SLOT = 11;
@@ -56,8 +55,6 @@ public final class AdminMenuService {
     private static final int MAIN_RELOAD_SLOT = 20;
     private static final int MAIN_CLOSE_SLOT = 22;
     private static final int MAIN_KIT_SLOT = 24;
-
-    private static final int KIT_SAVE_SLOT = 13;
 
     private static final int ARENA_CALCULATE_SLOT = 10;
     private static final int ARENA_DIAGNOSE_SLOT = 11;
@@ -77,8 +74,6 @@ public final class AdminMenuService {
     private static final int TEAMS_ADD_SLOT = 51;
     private static final int TEAMS_NEXT_PAGE_SLOT = 53;
 
-    private static final int TEAM_REMOVE_SLOT = 13;
-
     private static final int MATCH_START_SLOT = 10;
     private static final int MATCH_FORCE_START_SLOT = 11;
     private static final int MATCH_PAUSE_SLOT = 12;
@@ -86,13 +81,8 @@ public final class AdminMenuService {
     private static final int MATCH_FINAL_SLOT = 15;
     private static final int MATCH_FORCE_RESULT_SLOT = 16;
 
-    private static final int FORCE_RESULT_FIRST_TEAM_SLOT = 11;
-    private static final int FORCE_RESULT_SECOND_TEAM_SLOT = 15;
-
     private static final int CONFIRM_YES_SLOT = 11;
     private static final int CONFIRM_NO_SLOT = 15;
-
-    private static final int BACK_SLOT = 22;
 
     private final AdminMenuNavigator navigator;
     private final TournamentManager tournamentManager;
@@ -105,10 +95,12 @@ public final class AdminMenuService {
     private final ArenaHeightMarkerService heightMarkerService;
     private final StartGateItemService gateItemService;
     private final BorderSelectorModeRegistry borderSelectorModes;
-    private final KitSaveService kitSaveService;
+    private final KitAdminMenu kitAdminMenu;
     private final ChatInputService chatInputService;
     private final Runnable teamConfigurationSaver;
     private final Supplier<ConfigurationReloadReport> configurationReloader;
+    private final TeamActionsAdminMenu teamActionsAdminMenu;
+    private final ForceResultAdminMenu forceResultAdminMenu;
 
     public AdminMenuService(Plugin plugin,
                             TournamentManager tournamentManager,
@@ -148,7 +140,7 @@ public final class AdminMenuService {
                      Supplier<ConfigurationReloadReport> configurationReloader,
                      AdminMenuWindows windows) {
         Objects.requireNonNull(plugin, "plugin");
-        this.navigator = new AdminMenuNavigator(windows, this::titleOf, this::fillMenu);
+        this.navigator = new AdminMenuNavigator(windows);
         this.tournamentManager = Objects.requireNonNull(tournamentManager, "tournamentManager");
         this.tournamentDryRun = Objects.requireNonNull(tournamentDryRun, "tournamentDryRun");
         this.teamRegistry = Objects.requireNonNull(teamRegistry, "teamRegistry");
@@ -159,10 +151,21 @@ public final class AdminMenuService {
         this.heightMarkerService = Objects.requireNonNull(heightMarkerService, "heightMarkerService");
         this.gateItemService = Objects.requireNonNull(gateItemService, "gateItemService");
         this.borderSelectorModes = Objects.requireNonNull(borderSelectorModes, "borderSelectorModes");
-        this.kitSaveService = Objects.requireNonNull(kitSaveService, "kitSaveService");
+        this.kitAdminMenu = new KitAdminMenu(navigator, kitSaveService, matchService::hasActiveMatch);
         this.chatInputService = Objects.requireNonNull(chatInputService, "chatInputService");
         this.teamConfigurationSaver = Objects.requireNonNull(teamConfigurationSaver, "teamConfigurationSaver");
         this.configurationReloader = Objects.requireNonNull(configurationReloader, "configurationReloader");
+        this.teamActionsAdminMenu = new TeamActionsAdminMenu(navigator, teamRegistry, teamConfigurationSaver);
+        this.forceResultAdminMenu = new ForceResultAdminMenu(navigator, tournamentManager, matchService);
+        navigator.register(AdminMenuType.MAIN, new LegacyMenu(AdminMenuLayout.SMALL_MENU_SIZE));
+        navigator.register(AdminMenuType.ARENA, new LegacyMenu(AdminMenuLayout.SMALL_MENU_SIZE));
+        navigator.register(AdminMenuType.KIT, kitAdminMenu);
+        navigator.register(AdminMenuType.TEAMS, new LegacyMenu(TEAM_MENU_SIZE));
+        navigator.register(AdminMenuType.TEAM_ACTIONS, teamActionsAdminMenu);
+        navigator.register(AdminMenuType.MATCH, new LegacyMenu(AdminMenuLayout.SMALL_MENU_SIZE));
+        navigator.register(AdminMenuType.FORCE_RESULT, forceResultAdminMenu);
+        navigator.register(AdminMenuType.CONFIRMATION, new LegacyMenu(AdminMenuLayout.SMALL_MENU_SIZE));
+        navigator.requireEveryMenuRegistered();
     }
 
     public void openMainMenu(Player player) {
@@ -170,18 +173,19 @@ public final class AdminMenuService {
     }
 
     public void handleClick(Player player, AdminMenuHolder holder, int slot) {
-        if (!isStillAdmin(player)) {
+        if (!AdminMenuReplies.isStillAdmin(player)) {
             closeMenu(player);
             return;
         }
+        navigator.menuOf(holder.getMenuType()).handleClick(player, holder, slot);
+    }
+
+    private void handleLegacyClick(Player player, AdminMenuHolder holder, int slot) {
         switch (holder.getMenuType()) {
             case MAIN -> handleMainClick(player, slot);
             case ARENA -> handleArenaClick(player, holder, slot);
-            case KIT -> handleKitClick(player, slot);
             case TEAMS -> handleTeamsClick(player, holder, slot);
-            case TEAM_ACTIONS -> handleTeamActionsClick(player, holder, slot);
             case MATCH -> handleMatchClick(player, holder, slot);
-            case FORCE_RESULT -> handleForceResultClick(player, holder, slot);
             case CONFIRMATION -> handleConfirmationClick(player, holder, slot);
         }
     }
@@ -233,7 +237,7 @@ public final class AdminMenuService {
         Optional<String> rejection = tournamentDryRun.findRejection();
         if (rejection.isPresent()) {
             return MenuItems.create(MenuItems.UNAVAILABLE_MATERIAL, "Dry run of the pipeline",
-                    toLoreLines(rejection.get()));
+                    AdminMenuReplies.toLoreLines(rejection.get()));
         }
         return MenuItems.create(Material.OBSERVER, "Dry run of the pipeline", buildDryRunLore());
     }
@@ -255,10 +259,6 @@ public final class AdminMenuService {
         return lore;
     }
 
-    private static List<String> toLoreLines(String message) {
-        return List.of(message.split(TournamentMessages.LINE_BREAK, -1));
-    }
-
     private static String describeRunningMatchDelay() {
         return "A match is running, the new settings arrive with the next round"
                 + TournamentMessages.LINE_BREAK
@@ -266,7 +266,7 @@ public final class AdminMenuService {
     }
 
     private void fillMainMenu(Player player, AdminMenuCanvas canvas) {
-        canvas.set(INFO_SLOT, MenuItems.info("Tournament", buildMainInfoLore()));
+        canvas.set(AdminMenuLayout.INFO_SLOT, MenuItems.info("Tournament", buildMainInfoLore()));
         canvas.set(MAIN_ARENA_SLOT, MenuItems.create(Material.GRASS_BLOCK, "Arena",
                 "Fight area, spawns, cleaning and reset",
                 "Arena " + (arenaSetupService.isArenaReady() ? "ready" : "incomplete")));
@@ -377,7 +377,7 @@ public final class AdminMenuService {
             case ARENA_CLEAN_SLOT -> askForCleaningConfirmation(player);
             case ARENA_RESET_SLOT -> openMenu(player,
                     AdminMenuHolder.confirmation(ConfirmationRequest.RESET_ARENA, null, 0));
-            case BACK_SLOT -> openMenu(player, AdminMenuHolder.main());
+            case AdminMenuLayout.BACK_SLOT -> openMenu(player, AdminMenuHolder.main());
             default -> { }
         }
     }
@@ -413,7 +413,7 @@ public final class AdminMenuService {
     }
 
     private void handleStartGateItemLine(Player player, String line) {
-        if (!isStillAdmin(player)) {
+        if (!AdminMenuReplies.isStillAdmin(player)) {
             return;
         }
         BlockItemRequestResult requestResult = BlockItemRequest.parseLine(line,
@@ -452,7 +452,7 @@ public final class AdminMenuService {
     }
 
     private void fillArenaMenu(AdminMenuCanvas canvas) {
-        canvas.set(INFO_SLOT, MenuItems.info("Arena", arenaSetupService.describeArena()));
+        canvas.set(AdminMenuLayout.INFO_SLOT, MenuItems.info("Arena", arenaSetupService.describeArena()));
         canvas.set(ARENA_CALCULATE_SLOT, MenuItems.create(Material.SPYGLASS, "Calculate the fight area",
                 "Runs the calculation for the position you stand on",
                 "Stand inside the closed border wall before you click",
@@ -476,7 +476,7 @@ public final class AdminMenuService {
                 "Drops the fight area and all three spawns",
                 "The blocks and the border blocks stay untouched",
                 "Asks for a confirmation first"));
-        canvas.set(BACK_SLOT, MenuItems.back("the main menu"));
+        canvas.set(AdminMenuLayout.BACK_SLOT, MenuItems.back("the main menu"));
     }
 
     private List<String> buildHeightMarkerLore() {
@@ -519,48 +519,6 @@ public final class AdminMenuService {
                 "Stand " + spawnType.getPlacementHint(),
                 "A position on the wrong side of the fight area",
                 "is refused once the area is calculated");
-    }
-
-    private void handleKitClick(Player player, int slot) {
-        switch (slot) {
-            case KIT_SAVE_SLOT -> openMenu(player,
-                    AdminMenuHolder.confirmation(ConfirmationRequest.SAVE_KIT, null, 0));
-            case BACK_SLOT -> openMenu(player, AdminMenuHolder.main());
-            default -> { }
-        }
-    }
-
-    private void saveKit(Player player) {
-        TournamentMessages.sendSuccessReport(player, kitSaveService.saveFromInventory(player).describe());
-    }
-
-    private void fillKitMenu(AdminMenuCanvas canvas) {
-        canvas.set(INFO_SLOT, MenuItems.info("Kit", buildKitInfoLore()));
-        canvas.set(KIT_SAVE_SLOT, MenuItems.create(Material.CHEST, "Save your inventory as the kit",
-                buildKitSaveLore("Asks for a confirmation first")));
-        canvas.set(BACK_SLOT, MenuItems.back("the main menu"));
-    }
-
-    private List<String> buildKitInfoLore() {
-        List<String> lore = new ArrayList<>(kitSaveService.describeKit());
-        lore.add("Every fighter is given it when a round starts");
-        return lore;
-    }
-
-    private List<String> buildKitSaveLore(String... closingLines) {
-        List<String> lore = new ArrayList<>();
-        lore.add("Takes your helmet, chestplate, leggings, boots,");
-        lore.add("your offhand and the 36 slots of your inventory");
-        lore.add("Enchantments, names, lore and damage are kept exactly");
-        lore.add("An empty slot stays empty in the kit");
-        lore.add("The item on your cursor is not taken, it lies in no slot");
-        lore.add("It replaces the kit section of config.yml");
-        if (matchService.hasActiveMatch()) {
-            lore.add("A match is running: its fighters keep their items,");
-            lore.add("the new kit is handed out from the next round on");
-        }
-        lore.addAll(List.of(closingLines));
-        return lore;
     }
 
     private void handleTeamsClick(Player player, AdminMenuHolder holder, int slot) {
@@ -656,27 +614,6 @@ public final class AdminMenuService {
         return lore;
     }
 
-    private void handleTeamActionsClick(Player player, AdminMenuHolder holder, int slot) {
-        String teamName = holder.getSubject().orElseThrow();
-        switch (slot) {
-            case TEAM_REMOVE_SLOT -> openMenu(player, AdminMenuHolder.confirmation(ConfirmationRequest.REMOVE_TEAM,
-                    teamName, holder.getPageIndex()));
-            case BACK_SLOT -> openMenu(player, AdminMenuHolder.teams(holder.getPageIndex()));
-            default -> { }
-        }
-    }
-
-    private void fillTeamActionsMenu(AdminMenuCanvas canvas, String teamName) {
-        Optional<Team> team = teamRegistry.findTeam(teamName);
-        canvas.set(INFO_SLOT, MenuItems.info(teamName, team
-                .map(registeredTeam -> List.of("Members: " + registeredTeam.getMemberNamesJoined()))
-                .orElse(List.of("This team is not registered any more"))));
-        canvas.set(TEAM_REMOVE_SLOT, MenuItems.create(MenuItems.REFUSE_MATERIAL, "Remove the team",
-                "Removes " + teamName + " from the registry",
-                "Asks for a confirmation first"));
-        canvas.set(BACK_SLOT, MenuItems.back("the team list"));
-    }
-
     private void handleMatchClick(Player player, AdminMenuHolder holder, int slot) {
         switch (slot) {
             case MATCH_START_SLOT -> runOperation(player, holder, () -> tournamentManager.startTournament(false));
@@ -685,24 +622,15 @@ public final class AdminMenuService {
             case MATCH_CANCEL_SLOT -> openMenu(player,
                     AdminMenuHolder.confirmation(ConfirmationRequest.CANCEL_TOURNAMENT, null, 0));
             case MATCH_FINAL_SLOT -> runOperation(player, holder, tournamentManager::startFinalMatch);
-            case MATCH_FORCE_RESULT_SLOT -> openForceResultMenu(player);
-            case BACK_SLOT -> openMenu(player, AdminMenuHolder.main());
+            case MATCH_FORCE_RESULT_SLOT -> forceResultAdminMenu.openForceResultMenu(player);
+            case AdminMenuLayout.BACK_SLOT -> openMenu(player, AdminMenuHolder.main());
             default -> { }
         }
     }
 
-    private void openForceResultMenu(Player player) {
-        Optional<Match> activeMatch = matchService.getActiveMatch();
-        if (activeMatch.isEmpty()) {
-            TournamentMessages.sendError(player, "No match is running");
-            return;
-        }
-        openMenu(player, AdminMenuHolder.forceResult(activeMatch.get().getMatchId()));
-    }
-
     private void fillMatchMenu(AdminMenuCanvas canvas) {
         TournamentMenuOptions options = currentOptions();
-        canvas.set(INFO_SLOT, MenuItems.info("Tournament", List.of(
+        canvas.set(AdminMenuLayout.INFO_SLOT, MenuItems.info("Tournament", List.of(
                 tournamentManager.describeStatus(),
                 "Running match: " + describeActiveMatch(),
                 "Round timer: " + (matchService.isRoundTimerPaused() ? "paused" : "running"))));
@@ -724,7 +652,7 @@ public final class AdminMenuService {
                 ? MenuItems.create(Material.ANVIL, "Force a result",
                         "Decides the running match for one of its two teams")
                 : MenuItems.unavailable("Force a result", "No match is running"));
-        canvas.set(BACK_SLOT, MenuItems.back("the main menu"));
+        canvas.set(AdminMenuLayout.BACK_SLOT, MenuItems.back("the main menu"));
     }
 
     private MenuTile buildPauseItem(TournamentMenuOptions options) {
@@ -738,62 +666,6 @@ public final class AdminMenuService {
                     "The round timer keeps its remaining time");
         }
         return MenuItems.unavailable("Pause the tournament", "No tournament is in progress");
-    }
-
-    private void handleForceResultClick(Player player, AdminMenuHolder holder, int slot) {
-        if (slot == BACK_SLOT) {
-            openMenu(player, AdminMenuHolder.match());
-            return;
-        }
-        Optional<Match> activeMatch = findMatchOfMenu(holder);
-        if (activeMatch.isEmpty()) {
-            TournamentMessages.sendWarning(player,
-                    "Match " + holder.getSubject().orElseThrow() + " is not running any more");
-            openMenu(player, AdminMenuHolder.match());
-            return;
-        }
-        Optional<Team> winningTeam = findWinningTeam(activeMatch.get(), slot);
-        if (winningTeam.isEmpty()) {
-            return;
-        }
-        reportOperation(player, tournamentManager.forceMatchResult(activeMatch.get().getMatchId(),
-                winningTeam.get().getTeamName()));
-        openMenu(player, AdminMenuHolder.match());
-    }
-
-    private Optional<Team> findWinningTeam(Match match, int slot) {
-        return switch (slot) {
-            case FORCE_RESULT_FIRST_TEAM_SLOT -> Optional.of(match.getFirstTeam());
-            case FORCE_RESULT_SECOND_TEAM_SLOT -> Optional.of(match.getSecondTeam());
-            default -> Optional.empty();
-        };
-    }
-
-    private void fillForceResultMenu(AdminMenuCanvas canvas, String matchId) {
-        Optional<Match> activeMatch = matchService.findMatchById(matchId);
-        if (activeMatch.isEmpty()) {
-            canvas.set(INFO_SLOT, MenuItems.info("Force a result",
-                    List.of("Match " + matchId + " is not running any more")));
-            canvas.set(BACK_SLOT, MenuItems.back("the match menu"));
-            return;
-        }
-        Match match = activeMatch.get();
-        canvas.set(INFO_SLOT, MenuItems.info("Force a result", List.of(
-                "Match " + match.describe(),
-                "Round " + match.getRoundNumber(),
-                "A click decides the match for that team")));
-        canvas.set(FORCE_RESULT_FIRST_TEAM_SLOT, buildWinnerItem(match.getFirstTeam()));
-        canvas.set(FORCE_RESULT_SECOND_TEAM_SLOT, buildWinnerItem(match.getSecondTeam()));
-        canvas.set(BACK_SLOT, MenuItems.back("the match menu"));
-    }
-
-    private MenuTile buildWinnerItem(Team team) {
-        List<String> lore = new ArrayList<>();
-        for (TeamMember member : team.getMembers()) {
-            lore.add(member.playerName());
-        }
-        lore.add("Decides the match for this team");
-        return MenuItems.create(Material.PLAYER_HEAD, team.getTeamName(), lore);
     }
 
     private void handleConfirmationClick(Player player, AdminMenuHolder holder, int slot) {
@@ -810,20 +682,11 @@ public final class AdminMenuService {
         switch (holder.getConfirmationRequest().orElseThrow()) {
             case CLEAN_ARENA -> arenaSetupService.startCleaning(player);
             case RESET_ARENA -> arenaSetupService.clearConfiguration(player);
-            case SAVE_KIT -> saveKit(player);
-            case REMOVE_TEAM -> removeTeam(player, holder.getSubject().orElseThrow());
+            case SAVE_KIT -> kitAdminMenu.saveKit(player);
+            case REMOVE_TEAM -> teamActionsAdminMenu.removeTeam(player, holder.getSubject().orElseThrow());
             case IMPORT_TEAMS -> importTeams(player);
-            case CANCEL_TOURNAMENT -> reportOperation(player, tournamentManager.cancelTournament());
+            case CANCEL_TOURNAMENT -> AdminMenuReplies.reportOperation(player, tournamentManager.cancelTournament());
         }
-    }
-
-    private void removeTeam(Player player, String teamName) {
-        if (!teamRegistry.removeTeam(teamName)) {
-            TournamentMessages.sendError(player, "Unknown team " + teamName);
-            return;
-        }
-        teamConfigurationSaver.run();
-        TournamentMessages.sendSuccess(player, "Team " + teamName + " removed");
     }
 
     private void openReturnMenu(Player player, AdminMenuHolder holder) {
@@ -837,7 +700,8 @@ public final class AdminMenuService {
 
     private void fillConfirmationMenu(AdminMenuCanvas canvas, AdminMenuHolder holder) {
         ConfirmationRequest request = holder.getConfirmationRequest().orElseThrow();
-        canvas.set(INFO_SLOT, MenuItems.info(request.getTitle(), buildConfirmationLore(request, holder)));
+        canvas.set(AdminMenuLayout.INFO_SLOT, MenuItems.info(request.getTitle(),
+                buildConfirmationLore(request, holder)));
         canvas.set(CONFIRM_YES_SLOT, MenuItems.create(MenuItems.CONFIRM_MATERIAL, "Yes",
                 "Carries the action out"));
         canvas.set(CONFIRM_NO_SLOT, MenuItems.create(MenuItems.REFUSE_MATERIAL, "No",
@@ -848,7 +712,7 @@ public final class AdminMenuService {
         return switch (request) {
             case CLEAN_ARENA -> buildCleaningLore("The change cannot be undone",
                     "The border wall around it stays untouched");
-            case SAVE_KIT -> buildKitSaveLore("The kit that stands in config.yml now is gone afterwards");
+            case SAVE_KIT -> kitAdminMenu.describeSaveConfirmation();
             case RESET_ARENA -> List.of(
                     "The fight area and all three spawns are dropped",
                     "The blocks of the arena and the border blocks stay untouched",
@@ -875,7 +739,7 @@ public final class AdminMenuService {
     }
 
     private void handleTeamLine(Player player, int pageIndex, String line) {
-        if (!isStillAdmin(player)) {
+        if (!AdminMenuReplies.isStillAdmin(player)) {
             return;
         }
         TeamCreationRequest request = TeamCreationRequest.parse(line);
@@ -930,7 +794,7 @@ public final class AdminMenuService {
     }
 
     private void handleDebugCellLimitLine(Player player, String line) {
-        if (!isStillAdmin(player)) {
+        if (!AdminMenuReplies.isStillAdmin(player)) {
             return;
         }
         ArenaDebugCellLimit debugCellLimit = ArenaDebugCellLimit.parseLine(line);
@@ -942,24 +806,8 @@ public final class AdminMenuService {
         arenaSetupService.calculateShape(player, debugCellLimit.getCellCount());
     }
 
-    private boolean isStillAdmin(Player player) {
-        if (AdminPermission.isAdmin(player)) {
-            return true;
-        }
-        TournamentMessages.sendError(player, "You are not allowed to use the tournament menu");
-        return false;
-    }
-
     private void runOperation(Player player, Supplier<TournamentOperationResult> operation) {
-        reportOperation(player, operation.get());
-    }
-
-    private static void reportOperation(Player player, TournamentOperationResult result) {
-        if (result.successful()) {
-            TournamentMessages.sendSuccess(player, result.message());
-            return;
-        }
-        TournamentMessages.sendError(player, result.message());
+        AdminMenuReplies.reportOperation(player, operation.get());
     }
 
     private void runOperation(Player player, AdminMenuHolder holder,
@@ -975,10 +823,6 @@ public final class AdminMenuService {
 
     private String describeActiveMatch() {
         return matchService.getActiveMatch().map(Match::describe).orElse("none");
-    }
-
-    private Optional<Match> findMatchOfMenu(AdminMenuHolder holder) {
-        return matchService.findMatchById(holder.getSubject().orElseThrow());
     }
 
     private List<Team> collectTeams() {
@@ -1001,11 +845,8 @@ public final class AdminMenuService {
         switch (holder.getMenuType()) {
             case MAIN -> fillMainMenu(player, canvas);
             case ARENA -> fillArenaMenu(canvas);
-            case KIT -> fillKitMenu(canvas);
             case TEAMS -> fillTeamsMenu(canvas, holder.getPageIndex());
-            case TEAM_ACTIONS -> fillTeamActionsMenu(canvas, holder.getSubject().orElseThrow());
             case MATCH -> fillMatchMenu(canvas);
-            case FORCE_RESULT -> fillForceResultMenu(canvas, holder.getSubject().orElseThrow());
             case CONFIRMATION -> fillConfirmationMenu(canvas, holder);
         }
     }
@@ -1014,13 +855,40 @@ public final class AdminMenuService {
         return switch (holder.getMenuType()) {
             case MAIN -> "Tournament administration";
             case ARENA -> "Arena";
-            case KIT -> "Kit";
             case TEAMS -> "Teams (page "
                     + MenuPagination.of(teamRegistry.getTeamCount(), holder.getPageIndex()).getPageNumber() + ")";
-            case TEAM_ACTIONS -> "Team " + holder.getSubject().orElseThrow();
             case MATCH -> "Match and tournament";
-            case FORCE_RESULT -> "Result of " + holder.getSubject().orElseThrow();
             case CONFIRMATION -> holder.getConfirmationRequest().orElseThrow().getTitle();
+            default -> throw new IllegalStateException("the " + holder.getMenuType() + " menu has its own class");
         };
+    }
+
+    private final class LegacyMenu implements AdminMenu {
+
+        private final int size;
+
+        private LegacyMenu(int size) {
+            this.size = size;
+        }
+
+        @Override
+        public String title(AdminMenuHolder holder) {
+            return titleOf(holder);
+        }
+
+        @Override
+        public int size() {
+            return size;
+        }
+
+        @Override
+        public void fill(Player player, AdminMenuHolder holder, AdminMenuCanvas canvas) {
+            fillMenu(player, holder, canvas);
+        }
+
+        @Override
+        public void handleClick(Player player, AdminMenuHolder holder, int slot) {
+            handleLegacyClick(player, holder, slot);
+        }
     }
 }
