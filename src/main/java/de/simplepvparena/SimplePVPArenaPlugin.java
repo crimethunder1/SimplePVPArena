@@ -135,7 +135,7 @@ public final class SimplePVPArenaPlugin extends JavaPlugin {
         teamStorage = new TeamStorage(new File(getDataFolder(), TEAMS_FILE_NAME), getLogger());
         teamStorage.load(teamRegistry);
 
-        kitService = new KitService();
+        kitService = new KitService(this);
         kitSaveService = new KitSaveService(kitService, this::saveKitConfiguration, getLogger()::warning);
 
         spectatorService = new SpectatorService(arenaRegistry, new SpectatorItemFactory(this));
@@ -338,7 +338,7 @@ public final class SimplePVPArenaPlugin extends JavaPlugin {
     private void registerListeners() {
         getServer().getPluginManager().registerEvents(
                 new PlayerConnectionListener(matchService, spectatorService, arenaRegistry,
-                        borderSelectorModes), this);
+                        borderSelectorModes, kitService), this);
         getServer().getPluginManager().registerEvents(new PlayerDeathListener(matchService), this);
         getServer().getPluginManager().registerEvents(
                 new PlayerRespawnListener(this, matchService, spectatorService, arenaRegistry), this);

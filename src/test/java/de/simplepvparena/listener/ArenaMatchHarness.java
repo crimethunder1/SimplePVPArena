@@ -43,6 +43,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.function.Function;
 import java.util.logging.Logger;
 
 final class ArenaMatchHarness {
@@ -69,6 +70,7 @@ final class ArenaMatchHarness {
     private final List<World> temporaryEntityRemovalWorlds = new ArrayList<>();
     private final StartGateMarks gateMarks = new StartGateMarks();
     private final StartGateOpeningService gateOpeningService;
+    private final KitService kitService;
     private final MatchService matchService;
     private final Plugin plugin;
     private final World world;
@@ -76,6 +78,10 @@ final class ArenaMatchHarness {
     private RuntimeException temporaryEntityRemovalFailure;
 
     ArenaMatchHarness() {
+        this(plugin -> new KitService());
+    }
+
+    ArenaMatchHarness(Function<Plugin, KitService> kitServiceFactory) {
         this.world = proxy(World.class, (method, arguments) -> switch (method.getName()) {
             case "getName" -> WORLD_NAME;
             case "getBlockAt" -> createBlock((Integer) arguments[0], (Integer) arguments[1], (Integer) arguments[2]);
@@ -87,7 +93,8 @@ final class ArenaMatchHarness {
         this.spectatorService = new SpectatorService(arenaRegistry, new SpectatorItemFactory(plugin));
         this.gateOpeningService = new StartGateOpeningService(plugin, gateMarks, new StartGateDuration(),
                 StartGateVisualEffect.NONE);
-        this.matchService = new MatchService(plugin, new KitService(), spectatorService, fighterColours,
+        this.kitService = kitServiceFactory.apply(plugin);
+        this.matchService = new MatchService(plugin, kitService, spectatorService, fighterColours,
                 gateOpeningService, (removalWorld, removalShape) -> {
                     temporaryEntityRemovalWorlds.add(removalWorld);
                     roundStartSteps.add("remove temporary entities in " + removalShape.getWorldName());
@@ -113,6 +120,10 @@ final class ArenaMatchHarness {
 
     MatchService getMatchService() {
         return matchService;
+    }
+
+    KitService getKitService() {
+        return kitService;
     }
 
     StartGateMarks getGateMarks() {
@@ -354,6 +365,7 @@ final class ArenaMatchHarness {
 
         private final UUID uniqueId = UUID.randomUUID();
         private final String playerName;
+        private final Map<Object, Object> persistentData = new LinkedHashMap<>();
         private final Player player;
 
         private Location location;
@@ -361,6 +373,7 @@ final class ArenaMatchHarness {
         private boolean operator;
         private boolean adminPermissionGranted;
         private boolean online = true;
+        private int inventoryClearCount;
 
         private FakePlayer(String playerName, Location location) {
             this.playerName = playerName;
@@ -397,6 +410,7 @@ final class ArenaMatchHarness {
                 case "getActivePotionEffects" -> List.of();
                 case "getAttribute" -> null;
                 case "getInventory" -> inventory();
+                case "getPersistentDataContainer" -> SharedBukkitServer.createPersistentDataContainer(persistentData);
                 default -> throw new UnsupportedOperationException("Player." + method.getName());
             });
         }
@@ -429,9 +443,21 @@ final class ArenaMatchHarness {
             this.adminPermissionGranted = true;
         }
 
+        void setOnline(boolean online) {
+            this.online = online;
+        }
+
+        int inventoryClearCount() {
+            return inventoryClearCount;
+        }
+
         private Object inventory() {
             return proxy(org.bukkit.inventory.PlayerInventory.class, (method, arguments) -> switch (method.getName()) {
-                case "clear", "setItem" -> null;
+                case "clear" -> {
+                    inventoryClearCount++;
+                    yield null;
+                }
+                case "setItem" -> null;
                 default -> throw new UnsupportedOperationException("PlayerInventory." + method.getName());
             });
         }

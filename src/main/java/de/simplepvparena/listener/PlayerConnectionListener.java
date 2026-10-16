@@ -3,6 +3,7 @@ package de.simplepvparena.listener;
 import de.simplepvparena.arena.ArenaRegistry;
 import de.simplepvparena.arena.SpectatorService;
 import de.simplepvparena.border.BorderSelectorModeRegistry;
+import de.simplepvparena.kit.KitService;
 import de.simplepvparena.match.Match;
 import de.simplepvparena.match.MatchService;
 import de.simplepvparena.message.TournamentMessages;
@@ -20,18 +21,22 @@ public final class PlayerConnectionListener implements Listener {
     private final SpectatorService spectatorService;
     private final ArenaRegistry arenaRegistry;
     private final BorderSelectorModeRegistry selectorModes;
+    private final KitService kitService;
 
     public PlayerConnectionListener(MatchService matchService, SpectatorService spectatorService,
-                                    ArenaRegistry arenaRegistry, BorderSelectorModeRegistry selectorModes) {
+                                    ArenaRegistry arenaRegistry, BorderSelectorModeRegistry selectorModes,
+                                    KitService kitService) {
         this.matchService = matchService;
         this.spectatorService = spectatorService;
         this.arenaRegistry = arenaRegistry;
         this.selectorModes = selectorModes;
+        this.kitService = kitService;
     }
 
     @EventHandler
     public void onPlayerJoin(PlayerJoinEvent event) {
         Player player = event.getPlayer();
+        clearLeftoverKit(player);
         Optional<Match> matchOfPlayer = matchService.findMatchOfPlayer(player.getUniqueId());
         if (matchOfPlayer.isPresent()) {
             spectatorService.sendToTribune(player);
@@ -41,6 +46,12 @@ public final class PlayerConnectionListener implements Listener {
         }
         if (arenaRegistry.isArenaFullyConfigured()) {
             spectatorService.sendToTribune(player);
+        }
+    }
+
+    private void clearLeftoverKit(Player player) {
+        if (kitService.hasAppliedKit(player) && !matchService.isActiveFighter(player.getUniqueId())) {
+            kitService.clearKit(player);
         }
     }
 

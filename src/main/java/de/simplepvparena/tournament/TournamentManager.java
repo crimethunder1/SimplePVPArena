@@ -220,14 +220,23 @@ public final class TournamentManager implements MatchCompletionHandler {
             waitingForArenaCleaning = true;
             return;
         }
-        plugin.getLogger().info("The arena is not cleaned automatically after this match: "
-                + toLogLine(skipReason.get()) + ". The tournament carries on");
-        operatorNotifier.notifyOperators(buildSkippedCleaningWarning(match.getMatchId(), skipReason.get()));
+        if (match.isFinalMatch()) {
+            plugin.getLogger().info("The arena is not cleaned automatically after the final: "
+                    + toLogLine(skipReason.get()));
+        } else {
+            plugin.getLogger().info("The arena is not cleaned automatically after this match: "
+                    + toLogLine(skipReason.get()) + ". The tournament carries on");
+        }
+        operatorNotifier.notifyOperators(buildSkippedCleaningWarning(match.getMatchId(), skipReason.get(),
+                match.isFinalMatch()));
     }
 
-    static String buildSkippedCleaningWarning(String matchId, String skipReason) {
-        return "The arena was not cleaned after match " + matchId + ": " + toFirstLine(skipReason)
-                + ". The next match starts in the arena as it is now";
+    static String buildSkippedCleaningWarning(String matchId, String skipReason, boolean finalMatch) {
+        String warning = "The arena was not cleaned after match " + matchId + ": " + toFirstLine(skipReason);
+        if (finalMatch) {
+            return warning + ". " + Arena.CALCULATE_ACTION + " again before the next tournament";
+        }
+        return warning + ". The next match starts in the arena as it is now";
     }
 
     private static String toFirstLine(String message) {

@@ -2,27 +2,40 @@ package de.simplepvparena.kit;
 
 import org.bukkit.GameMode;
 import org.bukkit.Material;
+import org.bukkit.NamespacedKey;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.attribute.AttributeInstance;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.PlayerInventory;
+import org.bukkit.persistence.PersistentDataType;
+import org.bukkit.plugin.Plugin;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 import org.bukkit.util.Vector;
 
 import java.util.List;
-import java.util.UUID;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.Objects;
 
 public final class KitService {
 
+    public static final String KIT_APPLIED_KEY_NAME = "kit_applied";
+
+    private static final byte KIT_APPLIED_VALUE = 1;
     private static final double FALLBACK_MAXIMUM_HEALTH = 20.0;
     private static final int FULL_FOOD_LEVEL = 20;
     private static final float FULL_SATURATION = 20.0f;
 
-    private final ConcurrentHashMap.KeySetView<UUID, Boolean> playersWithAppliedKit = ConcurrentHashMap.newKeySet();
+    private final NamespacedKey kitAppliedKey;
 
     private KitDefinition kitDefinition = KitDefinition.empty();
+
+    public KitService() {
+        this.kitAppliedKey = null;
+    }
+
+    public KitService(Plugin plugin) {
+        this.kitAppliedKey = new NamespacedKey(Objects.requireNonNull(plugin, "plugin"), KIT_APPLIED_KEY_NAME);
+    }
 
     public void setKitDefinition(KitDefinition kitDefinition) {
         this.kitDefinition = kitDefinition;
@@ -39,16 +52,21 @@ public final class KitService {
                 inventory.setItem(equipmentSlot.getEquipmentSlot(), itemStack.clone()));
         kitDefinition.inventoryItems().forEach((slotIndex, itemStack) ->
                 inventory.setItem(slotIndex, itemStack.clone()));
-        playersWithAppliedKit.add(player.getUniqueId());
+        if (kitAppliedKey != null) {
+            player.getPersistentDataContainer().set(kitAppliedKey, PersistentDataType.BYTE, KIT_APPLIED_VALUE);
+        }
     }
 
     public void clearKit(Player player) {
-        player.getInventory().clear();
-        playersWithAppliedKit.remove(player.getUniqueId());
+        resetPlayerState(player);
+        if (kitAppliedKey != null) {
+            player.getPersistentDataContainer().remove(kitAppliedKey);
+        }
     }
 
     public boolean hasAppliedKit(Player player) {
-        return playersWithAppliedKit.contains(player.getUniqueId());
+        return kitAppliedKey != null
+                && player.getPersistentDataContainer().has(kitAppliedKey, PersistentDataType.BYTE);
     }
 
     private void resetPlayerState(Player player) {

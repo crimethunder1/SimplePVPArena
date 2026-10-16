@@ -99,7 +99,7 @@ public final class SharedBukkitServer {
         return self[0];
     }
 
-    private static Object createPersistentDataContainer(Map<Object, Object> persistentData) {
+    public static PersistentDataContainer createPersistentDataContainer(Map<Object, Object> persistentData) {
         return proxy(PersistentDataContainer.class, (method, arguments) -> switch (method.getName()) {
             case "set" -> {
                 persistentData.put(arguments[0], arguments[2]);
@@ -107,6 +107,10 @@ public final class SharedBukkitServer {
             }
             case "get" -> persistentData.get(arguments[0]);
             case "has" -> persistentData.containsKey(arguments[0]);
+            case "remove" -> {
+                persistentData.remove(arguments[0]);
+                yield null;
+            }
             default -> throw new UnsupportedOperationException(
                     "PersistentDataContainer." + method.getName());
         });

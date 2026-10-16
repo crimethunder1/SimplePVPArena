@@ -121,6 +121,54 @@ class ArenaCleaningBetweenMatchesTest {
     }
 
     @Test
+    void keepsTheWordingOfTheSkippedCleaningWarningForAMatchBeforeTheFinal() {
+        Fixture fixture = new Fixture();
+        fixture.cleanup.skipWith("no baseline of the fight area is stored");
+        fixture.startTournament();
+
+        fixture.decideRunningMatch();
+
+        assertEquals(List.of("The arena was not cleaned after match round1-match1: no baseline of the fight area "
+                        + "is stored. The next match starts in the arena as it is now"),
+                fixture.operatorMessages.stream().filter(message -> message.contains("not cleaned")).toList());
+        assertTrue(fixture.logMessages.stream().anyMatch(
+                        message -> message.contains("not cleaned automatically after this match")
+                                && message.contains("The tournament carries on")),
+                fixture.logMessages.toString());
+    }
+
+    @Test
+    void asksForANewCalculationWhenTheCleaningAfterTheFinalIsSkipped() {
+        Fixture fixture = new Fixture();
+        fixture.cleanup.skipWith("no baseline of the fight area is stored"
+                + "\nRun the calculation once, that takes one");
+        fixture.startTournament();
+        fixture.decideRunningMatch();
+        fixture.decideRunningMatch();
+        assertTrue(fixture.tournamentManager.startFinalMatch().successful());
+        assertEquals("round2-match1", fixture.runningMatchId());
+        fixture.operatorMessages.clear();
+        fixture.logMessages.clear();
+
+        fixture.decideRunningMatch();
+
+        assertEquals(TournamentState.FINISHED, fixture.tournamentManager.getState());
+        List<String> skippedCleaningWarnings = fixture.operatorMessages.stream()
+                .filter(message -> message.contains("not cleaned"))
+                .toList();
+        assertEquals(1, skippedCleaningWarnings.size(), "exactly one warning: " + fixture.operatorMessages);
+        String warning = skippedCleaningWarnings.get(0);
+        assertEquals("The arena was not cleaned after match round2-match1: no baseline of the fight area is "
+                + "stored. " + Arena.CALCULATE_ACTION + " again before the next tournament", warning);
+        assertFalse(warning.contains("The next match starts"), warning);
+        assertTrue(fixture.logMessages.contains("The arena is not cleaned automatically after the final: "
+                        + "no baseline of the fight area is stored Run the calculation once, that takes one"),
+                fixture.logMessages.toString());
+        assertFalse(fixture.logMessages.stream().anyMatch(message -> message.contains("carries on")),
+                "no match follows the final: " + fixture.logMessages);
+    }
+
+    @Test
     void sendsNoSkippedCleaningWarningWhileTheCleaningRuns() {
         Fixture fixture = new Fixture();
         fixture.startTournament();
