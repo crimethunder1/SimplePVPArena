@@ -4,6 +4,7 @@ import de.simplepvparena.arena.SpectatorService;
 import de.simplepvparena.gui.AdminMenuService;
 import de.simplepvparena.match.MatchService;
 import de.simplepvparena.message.TournamentMessages;
+import de.simplepvparena.permission.AdminPermission;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.TabExecutor;
@@ -16,7 +17,6 @@ import java.util.Objects;
 
 public final class TournamentCommand implements TabExecutor {
 
-    public static final String ADMIN_PERMISSION = "tournament.admin";
     public static final String SPECTATE_PERMISSION = "tournament.spectate";
 
     private static final String SPECTATE_ARGUMENT = "spectate";
@@ -46,7 +46,7 @@ public final class TournamentCommand implements TabExecutor {
     }
 
     private void openAdminMenu(CommandSender sender) {
-        if (!sender.hasPermission(ADMIN_PERMISSION)) {
+        if (!AdminPermission.isAdmin(sender)) {
             TournamentMessages.sendError(sender, "You are not allowed to use this command");
             return;
         }

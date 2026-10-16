@@ -6,8 +6,6 @@ import de.simplepvparena.arena.ArenaSetupService;
 import de.simplepvparena.arena.ArenaShapeFloodFill;
 import de.simplepvparena.arena.ArenaSpawnType;
 import de.simplepvparena.border.BorderSelectorModeRegistry;
-import de.simplepvparena.border.SpectatorBorderService;
-import de.simplepvparena.command.TournamentCommand;
 import de.simplepvparena.config.ConfigurationReloadReport;
 import de.simplepvparena.diagnostics.DryRunReport;
 import de.simplepvparena.diagnostics.TournamentDryRun;
@@ -19,6 +17,7 @@ import de.simplepvparena.kit.KitSaveService;
 import de.simplepvparena.match.Match;
 import de.simplepvparena.match.MatchService;
 import de.simplepvparena.message.TournamentMessages;
+import de.simplepvparena.permission.AdminPermission;
 import de.simplepvparena.team.EventTeamImportFile;
 import de.simplepvparena.team.EventTeamImportResult;
 import de.simplepvparena.team.EventTeamImportService;
@@ -110,7 +109,6 @@ public final class AdminMenuService {
     private final ArenaSetupService arenaSetupService;
     private final ArenaHeightMarkerService heightMarkerService;
     private final StartGateItemService gateItemService;
-    private final SpectatorBorderService spectatorBorderService;
     private final BorderSelectorModeRegistry borderSelectorModes;
     private final KitSaveService kitSaveService;
     private final ChatInputService chatInputService;
@@ -127,7 +125,6 @@ public final class AdminMenuService {
                             ArenaSetupService arenaSetupService,
                             ArenaHeightMarkerService heightMarkerService,
                             StartGateItemService gateItemService,
-                            SpectatorBorderService spectatorBorderService,
                             BorderSelectorModeRegistry borderSelectorModes,
                             KitSaveService kitSaveService,
                             ChatInputService chatInputService,
@@ -143,7 +140,6 @@ public final class AdminMenuService {
         this.arenaSetupService = Objects.requireNonNull(arenaSetupService, "arenaSetupService");
         this.heightMarkerService = Objects.requireNonNull(heightMarkerService, "heightMarkerService");
         this.gateItemService = Objects.requireNonNull(gateItemService, "gateItemService");
-        this.spectatorBorderService = Objects.requireNonNull(spectatorBorderService, "spectatorBorderService");
         this.borderSelectorModes = Objects.requireNonNull(borderSelectorModes, "borderSelectorModes");
         this.kitSaveService = Objects.requireNonNull(kitSaveService, "kitSaveService");
         this.chatInputService = Objects.requireNonNull(chatInputService, "chatInputService");
@@ -929,7 +925,7 @@ public final class AdminMenuService {
     }
 
     private boolean isStillAdmin(Player player) {
-        if (player.hasPermission(TournamentCommand.ADMIN_PERMISSION)) {
+        if (AdminPermission.isAdmin(player)) {
             return true;
         }
         TournamentMessages.sendError(player, "You are not allowed to use the tournament menu");

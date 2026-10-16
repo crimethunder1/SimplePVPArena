@@ -11,8 +11,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class FinalMatchGateTest {
 
-    private final RecordingOperatorNotifier operatorNotifier = new RecordingOperatorNotifier();
-    private final FinalMatchGate gate = new FinalMatchGate(operatorNotifier);
+    private final RecordingAdminNotifier adminNotifier = new RecordingAdminNotifier();
+    private final FinalMatchGate gate = new FinalMatchGate(adminNotifier);
     private final Bracket bracket = Bracket.createSingleElimination(List.of("alpha", "bravo", "charlie", "delta"));
 
     @Test
@@ -24,7 +24,7 @@ class FinalMatchGateTest {
         synchronizeGate();
 
         assertEquals(FinalMatchStage.PENDING, gate.getStage());
-        assertEquals(List.of(), operatorNotifier.messages);
+        assertEquals(List.of(), adminNotifier.messages);
     }
 
     @Test
@@ -34,17 +34,17 @@ class FinalMatchGateTest {
 
         assertEquals(FinalMatchStage.READY, gate.getStage());
         assertEquals(List.of("The final alpha against bravo is ready, "
-                + "an admin starts it with \"Start the final\" in /tournament"), operatorNotifier.messages);
+                + "an admin starts it with \"Start the final\" in /tournament"), adminNotifier.messages);
     }
 
     @Test
-    void notifiesTheOperatorsOnlyOnceWhileTheFinalStaysReady() {
+    void notifiesTheAdminsOnlyOnceWhileTheFinalStaysReady() {
         determineBothFinalists();
         synchronizeGate();
         synchronizeGate();
         synchronizeGate();
 
-        assertEquals(1, operatorNotifier.messages.size());
+        assertEquals(1, adminNotifier.messages.size());
     }
 
     @Test
@@ -77,7 +77,7 @@ class FinalMatchGateTest {
         synchronizeGate();
 
         assertEquals(FinalMatchStage.RUNNING, gate.getStage());
-        assertEquals(1, operatorNotifier.messages.size());
+        assertEquals(1, adminNotifier.messages.size());
     }
 
     @Test
@@ -103,7 +103,7 @@ class FinalMatchGateTest {
         synchronizeGate();
 
         assertEquals(FinalMatchStage.READY, gate.getStage());
-        assertEquals(2, operatorNotifier.messages.size());
+        assertEquals(2, adminNotifier.messages.size());
     }
 
     private void determineBothFinalists() {
@@ -115,12 +115,12 @@ class FinalMatchGateTest {
         gate.synchronizeWith(bracket.getFinalMatch());
     }
 
-    private static final class RecordingOperatorNotifier implements OperatorNotifier {
+    private static final class RecordingAdminNotifier implements AdminNotifier {
 
         private final List<String> messages = new ArrayList<>();
 
         @Override
-        public void notifyOperators(String message) {
+        public void notifyAdmins(String message) {
             messages.add(message);
         }
     }

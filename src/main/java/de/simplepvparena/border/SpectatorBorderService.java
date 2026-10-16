@@ -2,19 +2,14 @@ package de.simplepvparena.border;
 
 import de.simplepvparena.arena.ArenaShape;
 import de.simplepvparena.arena.BorderColumnReader;
-import de.simplepvparena.input.BlockItemRequest;
-import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.format.TextDecoration;
 import org.bukkit.Location;
 import org.bukkit.NamespacedKey;
 import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.plugin.Plugin;
 
-import java.util.List;
 import java.util.Objects;
 
 public final class SpectatorBorderService {
@@ -35,17 +30,6 @@ public final class SpectatorBorderService {
 
     public NamespacedKey getBorderKey() {
         return borderKey;
-    }
-
-    public ItemStack createBorderItem(BlockItemRequest request) {
-        ItemStack itemStack = new ItemStack(request.material(), request.amount());
-        ItemMeta itemMeta = itemStack.getItemMeta();
-        itemMeta.displayName(Component.text("Spectator border").decoration(TextDecoration.ITALIC, false));
-        itemMeta.lore(List.of(Component.text("Blocks everybody who is not fighting")
-                .decoration(TextDecoration.ITALIC, false)));
-        itemMeta.getPersistentDataContainer().set(borderKey, PersistentDataType.STRING, ITEM_MARKER_VALUE);
-        itemStack.setItemMeta(itemMeta);
-        return itemStack;
     }
 
     public boolean isBorderItem(ItemStack itemStack) {
@@ -82,7 +66,7 @@ public final class SpectatorBorderService {
         return toggle;
     }
 
-    public boolean isMovementAllowed(boolean activeFighter, boolean arenaFlightSpectator, boolean operator,
+    public boolean isMovementAllowed(boolean activeFighter, boolean arenaFlightSpectator, boolean admin,
                                      Location origin, Location destination) {
         if (destination == null || destination.getWorld() == null) {
             return true;
@@ -94,7 +78,7 @@ public final class SpectatorBorderService {
             originBlockX = origin.getBlockX();
             originBlockZ = origin.getBlockZ();
         }
-        return SpectatorBorderMovementRule.isMovementAllowed(activeFighter, arenaFlightSpectator, operator,
+        return SpectatorBorderMovementRule.isMovementAllowed(activeFighter, arenaFlightSpectator, admin,
                 borderMarks.lookupIn(worldName), originBlockX, originBlockZ,
                 destination.getBlockX(), destination.getBlockZ());
     }

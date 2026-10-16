@@ -5,9 +5,9 @@ public final class ArenaMovementRule {
     private ArenaMovementRule() {
     }
 
-    public static boolean isMovementAllowed(boolean activeFighter, boolean belongsIntoArena, boolean operator,
+    public static boolean isMovementAllowed(boolean activeFighter, boolean belongsIntoArena, boolean admin,
                                             boolean originInside, boolean destinationInside) {
-        if (activeFighter || operator) {
+        if (activeFighter || admin) {
             return true;
         }
         if (originInside == destinationInside) {

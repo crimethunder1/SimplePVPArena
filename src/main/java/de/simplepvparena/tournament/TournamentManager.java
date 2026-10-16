@@ -33,7 +33,7 @@ public final class TournamentManager implements MatchCompletionHandler {
     private final ArenaRegistry arenaRegistry;
     private final MatchService matchService;
     private final ArenaCleanup arenaCleanup;
-    private final OperatorNotifier operatorNotifier;
+    private final AdminNotifier adminNotifier;
     private final FinalMatchGate finalMatchGate;
     private final Random seedingRandom = new Random();
 
@@ -44,14 +44,14 @@ public final class TournamentManager implements MatchCompletionHandler {
 
     public TournamentManager(Plugin plugin, TeamRegistry teamRegistry, ArenaRegistry arenaRegistry,
                              MatchService matchService, ArenaCleanup arenaCleanup,
-                             OperatorNotifier operatorNotifier) {
+                             AdminNotifier adminNotifier) {
         this.plugin = plugin;
         this.teamRegistry = teamRegistry;
         this.arenaRegistry = arenaRegistry;
         this.matchService = matchService;
         this.arenaCleanup = arenaCleanup;
-        this.operatorNotifier = operatorNotifier;
-        this.finalMatchGate = new FinalMatchGate(operatorNotifier);
+        this.adminNotifier = adminNotifier;
+        this.finalMatchGate = new FinalMatchGate(adminNotifier);
         this.matchService.setMatchCompletionHandler(this);
     }
 
@@ -100,7 +100,7 @@ public final class TournamentManager implements MatchCompletionHandler {
                     + String.join(", ", bracket.getTeamNamesWithFirstRoundBye()));
         }
         if (!arenaCleanup.hasBaseline()) {
-            operatorNotifier.notifyOperators(NO_BASELINE_WARNING);
+            adminNotifier.notifyAdmins(NO_BASELINE_WARNING);
         }
         startNextMatch();
         synchronizeFinalMatchStage();
@@ -229,7 +229,7 @@ public final class TournamentManager implements MatchCompletionHandler {
             plugin.getLogger().info("The arena is not cleaned automatically after this match: "
                     + toLogLine(skipReason.get()) + ". The tournament carries on");
         }
-        operatorNotifier.notifyOperators(buildSkippedCleaningWarning(match.getMatchId(), skipReason.get(),
+        adminNotifier.notifyAdmins(buildSkippedCleaningWarning(match.getMatchId(), skipReason.get(),
                 match.isFinalMatch()));
     }
 

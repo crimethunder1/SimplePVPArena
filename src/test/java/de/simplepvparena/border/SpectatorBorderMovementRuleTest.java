@@ -15,7 +15,7 @@ class SpectatorBorderMovementRuleTest {
     private static final boolean SPECTATOR = false;
     private static final boolean ARENA_FLIGHT = true;
     private static final boolean ON_THE_TRIBUNE = false;
-    private static final boolean OPERATOR = true;
+    private static final boolean ADMIN = true;
     private static final boolean REGULAR_PLAYER = false;
 
     @Test
@@ -132,20 +132,20 @@ class SpectatorBorderMovementRuleTest {
     }
 
     @Test
-    void letsOperatorsPassSilently() {
+    void letsAdminsPassSilently() {
         BlockedColumnLookup wall = wall(10, 20, 11, 21);
 
-        assertTrue(SpectatorBorderMovementRule.isMovementAllowed(SPECTATOR, ON_THE_TRIBUNE, OPERATOR,
+        assertTrue(SpectatorBorderMovementRule.isMovementAllowed(SPECTATOR, ON_THE_TRIBUNE, ADMIN,
                 wall, 9, 20, 10, 20), "the step into the wall");
-        assertTrue(SpectatorBorderMovementRule.isMovementAllowed(SPECTATOR, ON_THE_TRIBUNE, OPERATOR,
+        assertTrue(SpectatorBorderMovementRule.isMovementAllowed(SPECTATOR, ON_THE_TRIBUNE, ADMIN,
                 wall, 10, 20, 10, 21), "and the step along inside it");
-        assertTrue(SpectatorBorderMovementRule.isMovementAllowed(SPECTATOR, ON_THE_TRIBUNE, OPERATOR,
+        assertTrue(SpectatorBorderMovementRule.isMovementAllowed(SPECTATOR, ON_THE_TRIBUNE, ADMIN,
                 wall, 10, 21, 11, 20), "and the diagonal gap between two border blocks");
     }
 
     @Test
-    void letsAnOperatorMoveWhereNoBorderIsInTheWayAtAll() {
-        assertTrue(SpectatorBorderMovementRule.isMovementAllowed(SPECTATOR, ON_THE_TRIBUNE, OPERATOR,
+    void letsAnAdminMoveWhereNoBorderIsInTheWayAtAll() {
+        assertTrue(SpectatorBorderMovementRule.isMovementAllowed(SPECTATOR, ON_THE_TRIBUNE, ADMIN,
                 wall(10, 20), 12, 20, 11, 20));
     }
 

@@ -11,7 +11,7 @@ class ArenaMovementRuleTest {
     private static final boolean NOT_FIGHTING = false;
     private static final boolean BELONGS_INTO_ARENA = true;
     private static final boolean BELONGS_OUTSIDE = false;
-    private static final boolean OPERATOR = true;
+    private static final boolean ADMIN = true;
     private static final boolean REGULAR_PLAYER = false;
     private static final boolean INSIDE = true;
     private static final boolean OUTSIDE = false;
@@ -61,30 +61,30 @@ class ArenaMovementRuleTest {
     }
 
     @Test
-    void letsAnOperatorCrossTheOutlineInBothDirections() {
-        assertTrue(isAllowed(NOT_FIGHTING, BELONGS_OUTSIDE, OPERATOR, OUTSIDE, INSIDE), "walking into the arena");
-        assertTrue(isAllowed(NOT_FIGHTING, BELONGS_OUTSIDE, OPERATOR, INSIDE, OUTSIDE), "and back out of it");
+    void letsAnAdminCrossTheOutlineInBothDirections() {
+        assertTrue(isAllowed(NOT_FIGHTING, BELONGS_OUTSIDE, ADMIN, OUTSIDE, INSIDE), "walking into the arena");
+        assertTrue(isAllowed(NOT_FIGHTING, BELONGS_OUTSIDE, ADMIN, INSIDE, OUTSIDE), "and back out of it");
     }
 
     @Test
-    void letsAnOperatorPassNoMatterWhichSideHeBelongsTo() {
+    void letsAnAdminPassNoMatterWhichSideHeBelongsTo() {
         for (boolean belongsIntoArena : new boolean[] {BELONGS_INTO_ARENA, BELONGS_OUTSIDE}) {
-            assertTrue(isAllowed(NOT_FIGHTING, belongsIntoArena, OPERATOR, INSIDE, OUTSIDE));
-            assertTrue(isAllowed(NOT_FIGHTING, belongsIntoArena, OPERATOR, OUTSIDE, INSIDE));
-            assertTrue(isAllowed(NOT_FIGHTING, belongsIntoArena, OPERATOR, INSIDE, INSIDE));
-            assertTrue(isAllowed(NOT_FIGHTING, belongsIntoArena, OPERATOR, OUTSIDE, OUTSIDE));
+            assertTrue(isAllowed(NOT_FIGHTING, belongsIntoArena, ADMIN, INSIDE, OUTSIDE));
+            assertTrue(isAllowed(NOT_FIGHTING, belongsIntoArena, ADMIN, OUTSIDE, INSIDE));
+            assertTrue(isAllowed(NOT_FIGHTING, belongsIntoArena, ADMIN, INSIDE, INSIDE));
+            assertTrue(isAllowed(NOT_FIGHTING, belongsIntoArena, ADMIN, OUTSIDE, OUTSIDE));
         }
     }
 
     @Test
-    void letsAFightingOperatorLeaveTheArena() {
-        assertTrue(isAllowed(ACTIVE_FIGHTER, BELONGS_INTO_ARENA, OPERATOR, INSIDE, OUTSIDE));
+    void letsAFightingAdminLeaveTheArena() {
+        assertTrue(isAllowed(ACTIVE_FIGHTER, BELONGS_INTO_ARENA, ADMIN, INSIDE, OUTSIDE));
         assertTrue(isAllowed(ACTIVE_FIGHTER, BELONGS_INTO_ARENA, REGULAR_PLAYER, INSIDE, OUTSIDE));
     }
 
-    private static boolean isAllowed(boolean activeFighter, boolean belongsIntoArena, boolean operator,
+    private static boolean isAllowed(boolean activeFighter, boolean belongsIntoArena, boolean admin,
                                      boolean originInside, boolean destinationInside) {
-        return ArenaMovementRule.isMovementAllowed(activeFighter, belongsIntoArena, operator,
+        return ArenaMovementRule.isMovementAllowed(activeFighter, belongsIntoArena, admin,
                 originInside, destinationInside);
     }
 }

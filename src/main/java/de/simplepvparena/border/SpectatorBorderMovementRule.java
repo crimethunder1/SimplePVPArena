@@ -5,11 +5,11 @@ public final class SpectatorBorderMovementRule {
     private SpectatorBorderMovementRule() {
     }
 
-    public static boolean isMovementAllowed(boolean activeFighter, boolean arenaFlightSpectator, boolean operator,
+    public static boolean isMovementAllowed(boolean activeFighter, boolean arenaFlightSpectator, boolean admin,
                                             BlockedColumnLookup blockedColumns,
                                             int originBlockX, int originBlockZ,
                                             int destinationBlockX, int destinationBlockZ) {
-        if (activeFighter || arenaFlightSpectator || operator) {
+        if (activeFighter || arenaFlightSpectator || admin) {
             return true;
         }
         return !isMovementBlocked(blockedColumns, originBlockX, originBlockZ,

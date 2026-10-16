@@ -107,10 +107,10 @@ class ArenaCleaningBetweenMatchesTest {
 
         fixture.decideRunningMatch();
 
-        List<String> skippedCleaningWarnings = fixture.operatorMessages.stream()
+        List<String> skippedCleaningWarnings = fixture.adminMessages.stream()
                 .filter(message -> message.contains("not cleaned"))
                 .toList();
-        assertEquals(1, skippedCleaningWarnings.size(), "exactly one warning: " + fixture.operatorMessages);
+        assertEquals(1, skippedCleaningWarnings.size(), "exactly one warning: " + fixture.adminMessages);
         String warning = skippedCleaningWarnings.get(0);
         assertTrue(warning.contains("round1-match1"), warning);
         assertTrue(warning.contains("no baseline of the fight area is stored"), warning);
@@ -130,7 +130,7 @@ class ArenaCleaningBetweenMatchesTest {
 
         assertEquals(List.of("The arena was not cleaned after match round1-match1: no baseline of the fight area "
                         + "is stored. The next match starts in the arena as it is now"),
-                fixture.operatorMessages.stream().filter(message -> message.contains("not cleaned")).toList());
+                fixture.adminMessages.stream().filter(message -> message.contains("not cleaned")).toList());
         assertTrue(fixture.logMessages.stream().anyMatch(
                         message -> message.contains("not cleaned automatically after this match")
                                 && message.contains("The tournament carries on")),
@@ -147,16 +147,16 @@ class ArenaCleaningBetweenMatchesTest {
         fixture.decideRunningMatch();
         assertTrue(fixture.tournamentManager.startFinalMatch().successful());
         assertEquals("round2-match1", fixture.runningMatchId());
-        fixture.operatorMessages.clear();
+        fixture.adminMessages.clear();
         fixture.logMessages.clear();
 
         fixture.decideRunningMatch();
 
         assertEquals(TournamentState.FINISHED, fixture.tournamentManager.getState());
-        List<String> skippedCleaningWarnings = fixture.operatorMessages.stream()
+        List<String> skippedCleaningWarnings = fixture.adminMessages.stream()
                 .filter(message -> message.contains("not cleaned"))
                 .toList();
-        assertEquals(1, skippedCleaningWarnings.size(), "exactly one warning: " + fixture.operatorMessages);
+        assertEquals(1, skippedCleaningWarnings.size(), "exactly one warning: " + fixture.adminMessages);
         String warning = skippedCleaningWarnings.get(0);
         assertEquals("The arena was not cleaned after match round2-match1: no baseline of the fight area is "
                 + "stored. Run " + Arena.CALCULATE_ACTION + " again before the next tournament", warning);
@@ -176,7 +176,7 @@ class ArenaCleaningBetweenMatchesTest {
         fixture.decideRunningMatch();
         fixture.cleanup.finishCleaning(CLEAN_OUTCOME);
 
-        assertEquals(List.of(), fixture.operatorMessages);
+        assertEquals(List.of(), fixture.adminMessages);
         assertEquals("round1-match2", fixture.runningMatchId());
     }
 
@@ -189,8 +189,8 @@ class ArenaCleaningBetweenMatchesTest {
 
         assertTrue(start.successful(), start.message());
         assertEquals("Tournament started", start.message());
-        assertEquals(List.of(TournamentManager.NO_BASELINE_WARNING), fixture.operatorMessages);
-        assertTrue(fixture.operatorMessages.get(0).contains(Arena.CALCULATE_ACTION));
+        assertEquals(List.of(TournamentManager.NO_BASELINE_WARNING), fixture.adminMessages);
+        assertTrue(fixture.adminMessages.get(0).contains(Arena.CALCULATE_ACTION));
         assertEquals("round1-match1", fixture.runningMatchId());
     }
 
@@ -201,7 +201,7 @@ class ArenaCleaningBetweenMatchesTest {
         TournamentOperationResult start = fixture.tournamentManager.startTournament(false);
 
         assertTrue(start.successful(), start.message());
-        assertEquals(List.of(), fixture.operatorMessages);
+        assertEquals(List.of(), fixture.adminMessages);
     }
 
     @Test
@@ -453,7 +453,7 @@ class ArenaCleaningBetweenMatchesTest {
 
         private final List<Object> scheduledTasks = new ArrayList<>();
         private final List<String> logMessages = new ArrayList<>();
-        private final List<String> operatorMessages = new ArrayList<>();
+        private final List<String> adminMessages = new ArrayList<>();
         private final TeamRegistry teamRegistry = new TeamRegistry();
         private final ArenaRegistry arenaRegistry = new ArenaRegistry();
         private final RecordingArenaCleanup cleanup = new RecordingArenaCleanup();
@@ -468,7 +468,7 @@ class ArenaCleaningBetweenMatchesTest {
                     new SpectatorService(arenaRegistry, new SpectatorItemFactory(plugin)),
                     new SilentFighterColours(), StartGates.NONE);
             this.tournamentManager = new TournamentManager(plugin, teamRegistry, arenaRegistry,
-                    matchService, cleanup, operatorMessages::add);
+                    matchService, cleanup, adminMessages::add);
             buildArena();
             registerTeams("Alpha", "Bravo", "Charlie", "Delta");
         }

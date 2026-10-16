@@ -11,7 +11,6 @@ import de.simplepvparena.arena.SpectatorItemFactory;
 import de.simplepvparena.arena.SpectatorService;
 import de.simplepvparena.border.BorderMarkIndex;
 import de.simplepvparena.border.SpectatorBorderService;
-import de.simplepvparena.command.TournamentCommand;
 import de.simplepvparena.gate.StartGateDuration;
 import de.simplepvparena.gate.StartGateMarks;
 import de.simplepvparena.gate.StartGateOpeningService;
@@ -19,6 +18,7 @@ import de.simplepvparena.gate.StartGateVisualEffect;
 import de.simplepvparena.kit.KitService;
 import de.simplepvparena.match.Match;
 import de.simplepvparena.match.MatchService;
+import de.simplepvparena.permission.AdminPermission;
 import de.simplepvparena.support.FakeBlockData;
 import de.simplepvparena.support.SharedBukkitServer;
 import de.simplepvparena.team.Team;
@@ -382,7 +382,7 @@ final class ArenaMatchHarness {
                 case "getName" -> playerName;
                 case "isOp" -> operator;
                 case "isOnline" -> online;
-                case "hasPermission" -> TournamentCommand.ADMIN_PERMISSION.equals(arguments[0])
+                case "hasPermission" -> AdminPermission.ADMIN_PERMISSION_NAME.equals(arguments[0])
                         && (operator || adminPermissionGranted);
                 case "getLocation" -> this.location;
                 case "getGameMode" -> gameMode;

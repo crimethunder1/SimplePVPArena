@@ -1,5 +1,6 @@
 package de.simplepvparena.command;
 
+import de.simplepvparena.permission.AdminPermission;
 import org.bukkit.permissions.Permission;
 import org.bukkit.permissions.PermissionDefault;
 import org.bukkit.plugin.InvalidDescriptionException;
@@ -19,7 +20,7 @@ class ShippedPluginDescriptionTest {
 
     @Test
     void grantsTheAdminPermissionToOperatorsByDefault() {
-        assertEquals(PermissionDefault.OP, findPermission(TournamentCommand.ADMIN_PERMISSION).getDefault());
+        assertEquals(PermissionDefault.OP, findPermission(AdminPermission.ADMIN_PERMISSION_NAME).getDefault());
     }
 
     @Test

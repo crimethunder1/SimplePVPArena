@@ -3,8 +3,8 @@ package de.simplepvparena.listener;
 import de.simplepvparena.border.BorderMarkToggle;
 import de.simplepvparena.border.BorderSelectorModeRegistry;
 import de.simplepvparena.border.SpectatorBorderService;
-import de.simplepvparena.command.TournamentCommand;
 import de.simplepvparena.message.TournamentMessages;
+import de.simplepvparena.permission.AdminPermission;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -51,7 +51,7 @@ public final class BorderSelectorListener implements Listener {
     }
 
     private boolean isStillAdmin(Player player) {
-        if (player.hasPermission(TournamentCommand.ADMIN_PERMISSION)) {
+        if (AdminPermission.isAdmin(player)) {
             return true;
         }
         selectorModes.deactivate(player.getUniqueId());

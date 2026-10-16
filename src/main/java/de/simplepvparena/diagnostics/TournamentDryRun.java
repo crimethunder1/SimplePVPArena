@@ -351,8 +351,8 @@ public final class TournamentDryRun {
 
     private Optional<String> walkThroughTheFinalGate(BracketMatch finalMatch, Bracket bracket,
                                                      List<String> details) {
-        List<String> operatorMessages = new ArrayList<>();
-        FinalMatchGate finalGate = new FinalMatchGate(operatorMessages::add);
+        List<String> adminMessages = new ArrayList<>();
+        FinalMatchGate finalGate = new FinalMatchGate(adminMessages::add);
         finalGate.synchronizeWith(finalMatch);
         if (finalGate.getStage() != FinalMatchStage.READY) {
             return Optional.of("Both finalists are known, but the final gate stands at "
@@ -362,12 +362,12 @@ public final class TournamentDryRun {
             return Optional.of("The final is ready but would be refused: "
                     + finalGate.findStartRejection().orElseThrow());
         }
-        if (operatorMessages.size() != 1) {
-            return Optional.of("The ready final announced itself " + operatorMessages.size()
+        if (adminMessages.size() != 1) {
+            return Optional.of("The ready final announced itself " + adminMessages.size()
                     + " times to the admins instead of exactly once");
         }
         details.add("The final gate turns " + FinalMatchStage.READY + " and announces once: "
-                + operatorMessages.get(0));
+                + adminMessages.get(0));
         finalGate.markRunning();
         String winnerTeamName = finalMatch.getFirstTeamName().orElseThrow();
         bracket.recordWinner(finalMatch.getMatchId(), winnerTeamName);

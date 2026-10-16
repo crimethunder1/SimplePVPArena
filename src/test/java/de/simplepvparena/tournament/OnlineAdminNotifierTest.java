@@ -1,7 +1,7 @@
 package de.simplepvparena.tournament;
 
-import de.simplepvparena.command.TournamentCommand;
 import de.simplepvparena.message.TournamentMessages;
+import de.simplepvparena.permission.AdminPermission;
 import net.kyori.adventure.text.Component;
 import org.bukkit.Server;
 import org.bukkit.command.ConsoleCommandSender;
@@ -15,21 +15,21 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 
-class OnlineOperatorNotifierTest {
+class OnlineAdminNotifierTest {
 
     private static final String READY_MESSAGE = "The final alpha against bravo is ready, "
             + "an admin starts it with \"Start the final\" in /tournament";
 
     private final List<Player> onlinePlayers = new ArrayList<>();
     private final List<String> consoleMessages = new ArrayList<>();
-    private final OnlineOperatorNotifier notifier = new OnlineOperatorNotifier(createServer());
+    private final OnlineAdminNotifier notifier = new OnlineAdminNotifier(createServer());
 
     @Test
     void tellsAnAdminWithThePermissionButWithoutOperatorStatusThatTheFinalIsReady() {
         FakePlayer permittedAdmin = addPlayer(false);
         permittedAdmin.adminPermissionGranted = true;
 
-        notifier.notifyOperators(READY_MESSAGE);
+        notifier.notifyAdmins(READY_MESSAGE);
 
         assertFalse(permittedAdmin.player.isOp(), "the admin is no operator");
         assertEquals(List.of(READY_MESSAGE), permittedAdmin.messages);
@@ -39,7 +39,7 @@ class OnlineOperatorNotifierTest {
     void keepsTheReadyFinalFromAPlayerWithoutThePermissionAndWithoutOperatorStatus() {
         FakePlayer ordinaryPlayer = addPlayer(false);
 
-        notifier.notifyOperators(READY_MESSAGE);
+        notifier.notifyAdmins(READY_MESSAGE);
 
         assertEquals(List.of(), ordinaryPlayer.messages);
         assertEquals(List.of(READY_MESSAGE), consoleMessages, "while the console still reads it");
@@ -49,7 +49,7 @@ class OnlineOperatorNotifierTest {
     void tellsAnOperatorWithoutAnExplicitPermissionThatTheFinalIsReady() {
         FakePlayer operator = addPlayer(true);
 
-        notifier.notifyOperators(READY_MESSAGE);
+        notifier.notifyAdmins(READY_MESSAGE);
 
         assertEquals(List.of(READY_MESSAGE), operator.messages);
     }
@@ -109,7 +109,7 @@ class OnlineOperatorNotifierTest {
             this.operator = operator;
             this.player = proxy(Player.class, (methodName, arguments) -> switch (methodName) {
                 case "isOp" -> this.operator;
-                case "hasPermission" -> TournamentCommand.ADMIN_PERMISSION.equals(arguments[0])
+                case "hasPermission" -> AdminPermission.ADMIN_PERMISSION_NAME.equals(arguments[0])
                         && (this.operator || adminPermissionGranted);
                 case "sendMessage" -> {
                     messages.add(recordedText(arguments[0]));

@@ -152,7 +152,9 @@ public final class ArenaSetupService {
         ArenaShape capturedVolume = arenaBaselineService.findCapturedVolume(shape);
         if (!arenaBaselineService.startCapture(shape, report -> reportBaseline(admin, report))) {
             TournamentMessages.sendWarning(admin, "No baseline is taken of the fight area"
-                    + TournamentMessages.LINE_BREAK + "The fight area with the layers under its floor holds "
+                    + TournamentMessages.LINE_BREAK
+                    + (capturedVolume.getFloorY() < shape.getFloorY()
+                            ? "The fight area with the layers under its floor holds " : "The fight area holds ")
                     + capturedVolume.getBlockCount() + " blocks, more than the "
                     + ArenaBaselineSnapshot.MAXIMUM_BLOCK_COUNT + " a baseline covers."
                     + TournamentMessages.LINE_BREAK + Arena.CLEAN_ACTION

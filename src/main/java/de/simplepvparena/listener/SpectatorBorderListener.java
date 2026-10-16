@@ -2,8 +2,8 @@ package de.simplepvparena.listener;
 
 import de.simplepvparena.arena.SpectatorService;
 import de.simplepvparena.border.SpectatorBorderService;
-import de.simplepvparena.command.AdminPermission;
 import de.simplepvparena.match.MatchService;
+import de.simplepvparena.permission.AdminPermission;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;

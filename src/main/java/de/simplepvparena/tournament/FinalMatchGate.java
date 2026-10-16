@@ -7,12 +7,12 @@ public final class FinalMatchGate {
 
     public static final String FINAL_START_ACTION = "\"Start the final\" in /tournament";
 
-    private final OperatorNotifier operatorNotifier;
+    private final AdminNotifier adminNotifier;
 
     private FinalMatchStage stage = FinalMatchStage.PENDING;
 
-    public FinalMatchGate(OperatorNotifier operatorNotifier) {
-        this.operatorNotifier = Objects.requireNonNull(operatorNotifier, "operatorNotifier");
+    public FinalMatchGate(AdminNotifier adminNotifier) {
+        this.adminNotifier = Objects.requireNonNull(adminNotifier, "adminNotifier");
     }
 
     public FinalMatchStage getStage() {
@@ -27,7 +27,7 @@ public final class FinalMatchGate {
         }
         stage = nextStage;
         if (stage == FinalMatchStage.READY) {
-            operatorNotifier.notifyOperators(buildReadyMessage(finalMatch));
+            adminNotifier.notifyAdmins(buildReadyMessage(finalMatch));
         }
     }
 
