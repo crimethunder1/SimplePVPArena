@@ -1,12 +1,14 @@
 package de.simplepvparena.kit;
 
 import org.bukkit.GameMode;
+import org.bukkit.Material;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.attribute.AttributeInstance;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.PlayerInventory;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
+import org.bukkit.util.Vector;
 
 import java.util.List;
 import java.util.UUID;
@@ -61,6 +63,21 @@ public final class KitService {
         for (PotionEffect activeEffect : List.copyOf(player.getActivePotionEffects())) {
             PotionEffectType effectType = activeEffect.getType();
             player.removePotionEffect(effectType);
+        }
+        player.setAbsorptionAmount(0.0);
+        player.setArrowsInBody(0, false);
+        player.setFreezeTicks(0);
+        player.setRemainingAir(player.getMaximumAir());
+        player.setFallDistance(0.0f);
+        player.setVelocity(new Vector());
+        resetItemCooldowns(player);
+    }
+
+    private static void resetItemCooldowns(Player player) {
+        for (Material material : Material.values()) {
+            if (!material.isLegacy() && material.isItem() && player.getCooldown(material) > 0) {
+                player.setCooldown(material, 0);
+            }
         }
     }
 

@@ -389,7 +389,10 @@ final class ArenaMatchHarness {
                 }
                 case "sendMessage", "sendActionBar", "showTitle", "setFallDistance", "setFireTicks",
                      "setFoodLevel", "setSaturation", "setExp", "setLevel", "damage",
-                     "removePotionEffect" -> null;
+                     "removePotionEffect", "setAbsorptionAmount", "setArrowsInBody", "setFreezeTicks",
+                     "setRemainingAir", "setVelocity", "setCooldown" -> null;
+                case "getMaximumAir" -> 300;
+                case "getCooldown" -> 0;
                 case "getFoodLevel" -> 20;
                 case "getActivePotionEffects" -> List.of();
                 case "getAttribute" -> null;

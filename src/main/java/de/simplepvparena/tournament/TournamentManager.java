@@ -24,11 +24,15 @@ public final class TournamentManager implements MatchCompletionHandler {
 
     static final String ARENA_STILL_BEING_CLEANED_MESSAGE = "The arena is still being cleaned. Try again in a moment.";
 
+    static final String NO_BASELINE_WARNING = "No baseline of the fight area is stored, so the arena is not "
+            + "cleaned between the matches. A baseline is taken by " + Arena.CALCULATE_ACTION;
+
     private final Plugin plugin;
     private final TeamRegistry teamRegistry;
     private final ArenaRegistry arenaRegistry;
     private final MatchService matchService;
     private final ArenaCleanup arenaCleanup;
+    private final OperatorNotifier operatorNotifier;
     private final FinalMatchGate finalMatchGate;
     private final Random seedingRandom = new Random();
 
@@ -45,6 +49,7 @@ public final class TournamentManager implements MatchCompletionHandler {
         this.arenaRegistry = arenaRegistry;
         this.matchService = matchService;
         this.arenaCleanup = arenaCleanup;
+        this.operatorNotifier = operatorNotifier;
         this.finalMatchGate = new FinalMatchGate(operatorNotifier);
         this.matchService.setMatchCompletionHandler(this);
     }
@@ -92,6 +97,9 @@ public final class TournamentManager implements MatchCompletionHandler {
         if (!bracket.getTeamNamesWithFirstRoundBye().isEmpty()) {
             broadcast("Teams advancing without a first round opponent: "
                     + String.join(", ", bracket.getTeamNamesWithFirstRoundBye()));
+        }
+        if (!arenaCleanup.hasBaseline()) {
+            operatorNotifier.notifyOperators(NO_BASELINE_WARNING);
         }
         startNextMatch();
         synchronizeFinalMatchStage();
@@ -202,11 +210,11 @@ public final class TournamentManager implements MatchCompletionHandler {
 
     @Override
     public void onMatchCompleted(Match match, String winnerTeamName) {
-        cleanArenaBeforeTheNextMatch();
+        cleanArenaBeforeTheNextMatch(match);
         recordBracketWinner(match.getMatchId(), winnerTeamName);
     }
 
-    private void cleanArenaBeforeTheNextMatch() {
+    private void cleanArenaBeforeTheNextMatch(Match match) {
         Optional<String> skipReason = arenaCleanup.startCleaningAfterMatch(this::onArenaCleaned);
         if (skipReason.isEmpty()) {
             waitingForArenaCleaning = true;
@@ -214,6 +222,17 @@ public final class TournamentManager implements MatchCompletionHandler {
         }
         plugin.getLogger().info("The arena is not cleaned automatically after this match: "
                 + toLogLine(skipReason.get()) + ". The tournament carries on");
+        operatorNotifier.notifyOperators(buildSkippedCleaningWarning(match.getMatchId(), skipReason.get()));
+    }
+
+    static String buildSkippedCleaningWarning(String matchId, String skipReason) {
+        return "The arena was not cleaned after match " + matchId + ": " + toFirstLine(skipReason)
+                + ". The next match starts in the arena as it is now";
+    }
+
+    private static String toFirstLine(String message) {
+        int lineBreakIndex = message.indexOf(TournamentMessages.LINE_BREAK);
+        return lineBreakIndex < 0 ? message : message.substring(0, lineBreakIndex);
     }
 
     private void onArenaCleaned(String outcome) {

@@ -1,5 +1,6 @@
 package de.simplepvparena.tournament;
 
+import de.simplepvparena.arena.Arena;
 import de.simplepvparena.arena.ArenaRegistry;
 import de.simplepvparena.arena.ArenaShape;
 import de.simplepvparena.arena.ArenaShapeFloodFill;
@@ -95,6 +96,64 @@ class ArenaCleaningBetweenMatchesTest {
                         message -> message.contains("not cleaned automatically")
                                 && message.contains("no baseline of the fight area is stored")),
                 "the skipped cleaning is written into the log: " + fixture.logMessages);
+    }
+
+    @Test
+    void warnsTheAdminsOnceWhenTheCleaningAfterAMatchIsSkipped() {
+        Fixture fixture = new Fixture();
+        fixture.cleanup.skipWith("no baseline of the fight area is stored"
+                + "\nRun the calculation once, that takes one");
+        fixture.startTournament();
+
+        fixture.decideRunningMatch();
+
+        List<String> skippedCleaningWarnings = fixture.operatorMessages.stream()
+                .filter(message -> message.contains("not cleaned"))
+                .toList();
+        assertEquals(1, skippedCleaningWarnings.size(), "exactly one warning: " + fixture.operatorMessages);
+        String warning = skippedCleaningWarnings.get(0);
+        assertTrue(warning.contains("round1-match1"), warning);
+        assertTrue(warning.contains("no baseline of the fight area is stored"), warning);
+        assertFalse(warning.contains("Run the calculation once"), "only the first line of the reason: " + warning);
+        assertFalse(warning.contains("\n"), warning);
+        assertTrue(warning.contains("as it is now"), warning);
+        assertEquals("round1-match2", fixture.runningMatchId(), "the warning never holds the tournament back");
+    }
+
+    @Test
+    void sendsNoSkippedCleaningWarningWhileTheCleaningRuns() {
+        Fixture fixture = new Fixture();
+        fixture.startTournament();
+
+        fixture.decideRunningMatch();
+        fixture.cleanup.finishCleaning(CLEAN_OUTCOME);
+
+        assertEquals(List.of(), fixture.operatorMessages);
+        assertEquals("round1-match2", fixture.runningMatchId());
+    }
+
+    @Test
+    void warnsTheAdminsOnceWhenATournamentStartsWithoutABaseline() {
+        Fixture fixture = new Fixture();
+        fixture.cleanup.forgetBaseline();
+
+        TournamentOperationResult start = fixture.tournamentManager.startTournament(false);
+
+        assertTrue(start.successful(), start.message());
+        assertEquals("Tournament started", start.message());
+        assertEquals(List.of(TournamentManager.NO_BASELINE_WARNING), fixture.operatorMessages);
+        assertTrue(fixture.operatorMessages.get(0).contains(Arena.CALCULATE_ACTION));
+        assertEquals("round1-match1", fixture.runningMatchId());
+    }
+
+    @Test
+    void sendsNoBaselineWarningWhenATournamentStartsWithABaseline() {
+        Fixture fixture = new Fixture();
+
+        TournamentOperationResult start = fixture.tournamentManager.startTournament(false);
+
+        assertTrue(start.successful(), start.message());
+        assertEquals(List.of(), fixture.operatorMessages);
     }
 
     @Test
@@ -346,6 +405,7 @@ class ArenaCleaningBetweenMatchesTest {
 
         private final List<Object> scheduledTasks = new ArrayList<>();
         private final List<String> logMessages = new ArrayList<>();
+        private final List<String> operatorMessages = new ArrayList<>();
         private final TeamRegistry teamRegistry = new TeamRegistry();
         private final ArenaRegistry arenaRegistry = new ArenaRegistry();
         private final RecordingArenaCleanup cleanup = new RecordingArenaCleanup();
@@ -360,7 +420,7 @@ class ArenaCleaningBetweenMatchesTest {
                     new SpectatorService(arenaRegistry, new SpectatorItemFactory(plugin)),
                     new SilentFighterColours(), StartGates.NONE);
             this.tournamentManager = new TournamentManager(plugin, teamRegistry, arenaRegistry,
-                    matchService, cleanup, message -> { });
+                    matchService, cleanup, operatorMessages::add);
             buildArena();
             registerTeams("Alpha", "Bravo", "Charlie", "Delta");
         }
@@ -501,6 +561,7 @@ class ArenaCleaningBetweenMatchesTest {
         private int attemptCount;
         private String skipReason;
         private Consumer<String> completionHandler;
+        private boolean baselineStored = true;
 
         @Override
         public Optional<String> startCleaningAfterMatch(Consumer<String> completionHandler) {
@@ -519,6 +580,15 @@ class ArenaCleaningBetweenMatchesTest {
         @Override
         public boolean isCleaning() {
             return completionHandler != null;
+        }
+
+        @Override
+        public boolean hasBaseline() {
+            return baselineStored;
+        }
+
+        private void forgetBaseline() {
+            this.baselineStored = false;
         }
 
         private void startCleaningFromTheArenaMenu() {

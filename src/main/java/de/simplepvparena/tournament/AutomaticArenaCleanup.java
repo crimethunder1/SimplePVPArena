@@ -26,4 +26,9 @@ public final class AutomaticArenaCleanup implements ArenaCleanup {
     public boolean isCleaning() {
         return arenaCleaningService.isCleaning();
     }
+
+    @Override
+    public boolean hasBaseline() {
+        return arenaSetupService.hasBaseline();
+    }
 }

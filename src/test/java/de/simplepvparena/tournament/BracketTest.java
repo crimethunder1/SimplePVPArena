@@ -3,6 +3,7 @@ package de.simplepvparena.tournament;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
+import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -61,9 +62,10 @@ class BracketTest {
 
         assertEquals(2, bracket.getRoundCount());
         assertEquals(1, bracket.getPlayableMatches().size());
-        assertEquals(List.of("bravo"), List.copyOf(bracket.getTeamNamesWithFirstRoundBye()));
-        assertEquals("bravo", bracket.findMatch("round1-match2").orElseThrow().getWinnerTeamName().orElseThrow());
-        assertEquals("bravo", bracket.findMatch("round2-match1").orElseThrow().getSecondTeamName().orElseThrow());
+        assertEquals(List.of("alpha"), List.copyOf(bracket.getTeamNamesWithFirstRoundBye()));
+        assertEquals("alpha", bracket.findMatch("round1-match1").orElseThrow().getWinnerTeamName().orElseThrow());
+        assertEquals("alpha", bracket.findMatch("round2-match1").orElseThrow().getFirstTeamName().orElseThrow());
+        assertTrue(bracket.findMatch("round1-match2").orElseThrow().isPlayable());
     }
 
     @Test
@@ -71,9 +73,19 @@ class BracketTest {
         Bracket bracket = Bracket.createSingleElimination(List.of("alpha", "bravo", "charlie", "delta", "echo", "foxtrot"));
 
         assertEquals(3, bracket.getRoundCount());
-        assertEquals(2, bracket.getTeamNamesWithFirstRoundBye().size());
-        assertEquals(3, bracket.getPlayableMatches().size());
-        assertTrue(bracket.findMatch("round2-match2").orElseThrow().isPlayable());
+        assertEquals(List.of(1, 8, 4, 5, 2, 7, 3, 6), Bracket.buildSeedingOrder(8));
+        assertEquals(Set.of("alpha", "bravo"), bracket.getTeamNamesWithFirstRoundBye());
+        assertEquals("alpha", bracket.findMatch("round1-match1").orElseThrow().getWinnerTeamName().orElseThrow(),
+                "match 1 holds the seeds 1 and 8, seed 8 stays empty, so seed 1 advances without opponent");
+        assertEquals("bravo", bracket.findMatch("round1-match3").orElseThrow().getWinnerTeamName().orElseThrow(),
+                "match 3 holds the seeds 2 and 7, seed 7 stays empty, so seed 2 advances without opponent");
+        assertEquals(2, bracket.getPlayableMatches().size());
+        assertTrue(bracket.findMatch("round1-match2").orElseThrow().isPlayable(), "seed 4 against seed 5");
+        assertTrue(bracket.findMatch("round1-match4").orElseThrow().isPlayable(), "seed 3 against seed 6");
+        assertTrue(bracket.findMatch("round2-match1").orElseThrow().getSecondTeamName().isEmpty(),
+                "the bye in the upper half meets the winner of a played match, not another bye");
+        assertTrue(bracket.findMatch("round2-match2").orElseThrow().getSecondTeamName().isEmpty(),
+                "the bye in the lower half meets the winner of a played match, not another bye");
     }
 
     @Test

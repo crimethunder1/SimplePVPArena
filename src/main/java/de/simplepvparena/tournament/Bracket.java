@@ -56,9 +56,13 @@ public final class Bracket {
         }
 
         List<BracketMatch> firstRound = rounds.get(0);
-        for (int teamIndex = 0; teamIndex < teamNames.size(); teamIndex++) {
-            BracketMatch match = firstRound.get(teamIndex % firstRound.size());
-            match.assignParticipant(teamIndex / firstRound.size(), teamNames.get(teamIndex));
+        List<Integer> seedingOrder = buildSeedingOrder(bracketSize);
+        for (int slotPosition = 0; slotPosition < seedingOrder.size(); slotPosition++) {
+            int seed = seedingOrder.get(slotPosition);
+            if (seed <= teamNames.size()) {
+                BracketMatch match = firstRound.get(slotPosition / 2);
+                match.assignParticipant(slotPosition % 2, teamNames.get(seed - 1));
+            }
         }
 
         Bracket bracket = new Bracket(rounds, teamNames, collectFirstRoundByeTeams(firstRound));
@@ -154,6 +158,20 @@ public final class Bracket {
             }
         }
         return byeTeams;
+    }
+
+    static List<Integer> buildSeedingOrder(int bracketSize) {
+        List<Integer> seedingOrder = List.of(1);
+        while (seedingOrder.size() < bracketSize) {
+            int doubledSize = seedingOrder.size() * 2;
+            List<Integer> doubledSeedingOrder = new ArrayList<>(doubledSize);
+            for (int seed : seedingOrder) {
+                doubledSeedingOrder.add(seed);
+                doubledSeedingOrder.add(doubledSize + 1 - seed);
+            }
+            seedingOrder = doubledSeedingOrder;
+        }
+        return seedingOrder;
     }
 
     private static String buildMatchId(int roundIndex, int positionIndex) {

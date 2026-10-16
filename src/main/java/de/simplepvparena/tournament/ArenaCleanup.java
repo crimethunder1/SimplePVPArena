@@ -8,4 +8,6 @@ public interface ArenaCleanup {
     Optional<String> startCleaningAfterMatch(Consumer<String> completionHandler);
 
     boolean isCleaning();
+
+    boolean hasBaseline();
 }
