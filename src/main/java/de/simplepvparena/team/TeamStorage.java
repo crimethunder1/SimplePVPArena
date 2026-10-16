@@ -25,7 +25,8 @@ public final class TeamStorage {
             logger.info("No " + teamsFile.getName() + " found, starting with an empty team registry");
             return;
         }
-        List<String> skippedTeamNames = teamRegistry.loadFromConfiguration(YamlConfiguration.loadConfiguration(teamsFile));
+        List<String> skippedTeamNames = teamRegistry.loadFromConfiguration(
+                YamlConfiguration.loadConfiguration(teamsFile));
         for (String skippedTeamName : skippedTeamNames) {
             logger.warning("Skipped unreadable team " + skippedTeamName + " in " + teamsFile.getName());
         }

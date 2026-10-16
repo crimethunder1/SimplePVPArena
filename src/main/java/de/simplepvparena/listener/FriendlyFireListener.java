@@ -57,7 +57,8 @@ public final class FriendlyFireListener implements Listener {
         if (ownerUniqueId.isEmpty() || !PlayerDamageSource.containsHarmfulEffect(areaEffectCloud.getCustomEffects())) {
             return;
         }
-        event.getAffectedEntities().removeIf(affectedEntity -> isProtectedTeamMate(ownerUniqueId.get(), affectedEntity));
+        event.getAffectedEntities().removeIf(affectedEntity ->
+                isProtectedTeamMate(ownerUniqueId.get(), affectedEntity));
     }
 
     private boolean isProtectedTeamMate(UUID attackerUniqueId, LivingEntity affectedEntity) {

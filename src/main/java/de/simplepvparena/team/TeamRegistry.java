@@ -148,7 +148,8 @@ public final class TeamRegistry {
 
     private void rejectAlreadyRegisteredPlayer(TeamMember member) {
         findTeamByPlayer(member.uniqueId()).ifPresent(team -> {
-            throw new IllegalStateException(member.playerName() + " is already registered in team " + team.getTeamName());
+            throw new IllegalStateException(member.playerName() + " is already registered in team "
+                    + team.getTeamName());
         });
     }
 

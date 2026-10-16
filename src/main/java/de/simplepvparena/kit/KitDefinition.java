@@ -17,7 +17,8 @@ public record KitDefinition(Map<KitEquipmentSlot, ItemStack> equipmentItems,
         Objects.requireNonNull(equipmentItems, "equipmentItems");
         Objects.requireNonNull(inventoryItems, "inventoryItems");
         Map<KitEquipmentSlot, ItemStack> copiedEquipmentItems = new EnumMap<>(KitEquipmentSlot.class);
-        equipmentItems.forEach((equipmentSlot, itemStack) -> copiedEquipmentItems.put(equipmentSlot, itemStack.clone()));
+        equipmentItems.forEach((equipmentSlot, itemStack) ->
+                copiedEquipmentItems.put(equipmentSlot, itemStack.clone()));
         Map<Integer, ItemStack> copiedInventoryItems = new TreeMap<>();
         inventoryItems.forEach((slotIndex, itemStack) -> copiedInventoryItems.put(slotIndex, itemStack.clone()));
         equipmentItems = Collections.unmodifiableMap(copiedEquipmentItems);

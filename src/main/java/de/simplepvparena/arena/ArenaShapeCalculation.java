@@ -46,7 +46,7 @@ public final class ArenaShapeCalculation {
                         + " cells, the limit of " + ArenaShapeFloodFill.MAXIMUM_CELL_COUNT_CONFIGURATION_PATH
                         + TournamentMessages.LINE_BREAK + describeHeightMismatch(diagnostics)
                         + "Either your border wall has a gap the fill ran through, or the area you "
-                        + "enclosed is larger than that limit - the calculation cannot tell the two apart, "
+                        + "enclosed is larger than that limit. The calculation cannot tell the two apart, "
                         + "it would have to keep filling to do so."
                         + TournamentMessages.LINE_BREAK + "The fill spread furthest "
                         + diagnostics.describeEscapeDirection() + ", it covers "
@@ -83,7 +83,7 @@ public final class ArenaShapeCalculation {
         return finding + diagnostics.describeHeightMismatchColumns() + "."
                 + TournamentMessages.LINE_BREAK
                 + "A border block only bars its column from its own height upwards, so the wall is built "
-                + "there and the fill still walked underneath it - that is what it looks like when you run "
+                + "there and the fill still walked underneath it. That is what it looks like when you run "
                 + "the calculation standing in a dip while that part of the wall stands on a rise."
                 + TournamentMessages.LINE_BREAK
                 + "Build the wall down to your own height there, or use " + Arena.CALCULATE_ACTION

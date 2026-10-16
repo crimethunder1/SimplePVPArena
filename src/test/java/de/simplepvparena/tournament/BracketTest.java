@@ -69,8 +69,9 @@ class BracketTest {
     }
 
     @Test
-    void distributesByesAcrossAllFirstRoundMatches() {
-        Bracket bracket = Bracket.createSingleElimination(List.of("alpha", "bravo", "charlie", "delta", "echo", "foxtrot"));
+    void distributesByesAcrossBothHalvesOfTheFirstRound() {
+        Bracket bracket = Bracket.createSingleElimination(
+                List.of("alpha", "bravo", "charlie", "delta", "echo", "foxtrot"));
 
         assertEquals(3, bracket.getRoundCount());
         assertEquals(List.of(1, 8, 4, 5, 2, 7, 3, 6), Bracket.buildSeedingOrder(8));
@@ -86,6 +87,17 @@ class BracketTest {
                 "the bye in the upper half meets the winner of a played match, not another bye");
         assertTrue(bracket.findMatch("round2-match2").orElseThrow().getSecondTeamName().isEmpty(),
                 "the bye in the lower half meets the winner of a played match, not another bye");
+    }
+
+    @Test
+    void listsTheFirstRoundByesInTheOrderOfTheirMatches() {
+        Bracket bracket = Bracket.createSingleElimination(
+                List.of("foxtrot", "echo", "delta", "charlie", "bravo", "alpha"));
+
+        assertEquals(List.of("foxtrot", "echo"), List.copyOf(bracket.getTeamNamesWithFirstRoundBye()),
+                "foxtrot advances from match 1, echo from match 3");
+        assertThrows(UnsupportedOperationException.class,
+                () -> bracket.getTeamNamesWithFirstRoundBye().add("golf"));
     }
 
     @Test

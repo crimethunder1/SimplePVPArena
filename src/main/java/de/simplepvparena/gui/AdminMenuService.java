@@ -904,42 +904,6 @@ public final class AdminMenuService {
                 + TournamentMessages.LINE_BREAK + "The player has to be online or known to the server";
     }
 
-    @SuppressWarnings("unused")
-    private void askForBorderItemLine(Player player) {
-        closeMenu(player);
-        chatInputService.await(player, "the border blocks", List.of(
-                        "Type: " + BlockItemRequest.USAGE + " in chat",
-                        "Example: glass 16",
-                        "The amount has to be between " + BlockItemRequest.MINIMUM_AMOUNT
-                                + " and " + BlockItemRequest.MAXIMUM_AMOUNT),
-                line -> handleBorderItemLine(player, line));
-    }
-
-    private void handleBorderItemLine(Player player, String line) {
-        if (!isStillAdmin(player)) {
-            return;
-        }
-        BlockItemRequestResult requestResult = BlockItemRequest.parseLine(line,
-                AdminMenuService::isPlaceableBlock);
-        if (!requestResult.isAccepted()) {
-            TournamentMessages.sendError(player, requestResult.getRejectionMessage().orElseThrow());
-            openMainMenu(player);
-            return;
-        }
-        BlockItemRequest request = requestResult.getRequest().orElseThrow();
-        ItemStack borderItem = spectatorBorderService.createBorderItem(request);
-        Map<Integer, ItemStack> itemsThatDidNotFit = player.getInventory().addItem(borderItem);
-        if (!itemsThatDidNotFit.isEmpty()) {
-            TournamentMessages.sendWarning(player,
-                    "Your inventory is full, not every border block could be handed out");
-        }
-        TournamentMessages.sendSuccess(player, "You received " + request.amount() + " "
-                + request.material().name() + " border blocks"
-                + TournamentMessages.LINE_BREAK
-                + "Every block you place with them stops everybody who is not fighting");
-        openMainMenu(player);
-    }
-
     private void askForDebugCellLimitLine(Player player) {
         closeMenu(player);
         chatInputService.await(player, "the diagnosis cell limit", List.of(

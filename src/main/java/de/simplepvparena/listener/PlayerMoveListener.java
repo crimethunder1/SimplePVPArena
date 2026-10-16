@@ -23,7 +23,9 @@ public final class PlayerMoveListener implements Listener {
     private final SpectatorService spectatorService;
     private final ArenaRegistry arenaRegistry;
 
-    public PlayerMoveListener(MatchService matchService, SpectatorService spectatorService, ArenaRegistry arenaRegistry) {
+    public PlayerMoveListener(MatchService matchService,
+                              SpectatorService spectatorService,
+                              ArenaRegistry arenaRegistry) {
         this.matchService = matchService;
         this.spectatorService = spectatorService;
         this.arenaRegistry = arenaRegistry;

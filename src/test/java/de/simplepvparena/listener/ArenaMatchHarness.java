@@ -23,7 +23,6 @@ import de.simplepvparena.support.FakeBlockData;
 import de.simplepvparena.support.SharedBukkitServer;
 import de.simplepvparena.team.Team;
 import de.simplepvparena.team.TeamMember;
-import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
 import org.bukkit.Location;
 import org.bukkit.Material;

@@ -94,36 +94,6 @@ class StartGateMarkStorageTest {
     }
 
     @Test
-    void reportsTheFileOfTheFormerCagesAndReadsNothingOutOfIt(@TempDir Path pluginFolder) throws IOException {
-        Files.writeString(pluginFolder.resolve(StartGateMarkStorage.LEGACY_CAGES_FILE_NAME), """
-                cages:
-                  - team: FIRST_TEAM
-                    world: event
-                    marks:
-                      - '%s BARRIER'
-                """.formatted(BlockPositionCodec.encode(10, 65, 20)), StandardCharsets.UTF_8);
-        StartGateMarks gateMarks = new StartGateMarks();
-
-        storageIn(pluginFolder).load(gateMarks);
-
-        assertEquals(0, gateMarks.getMarkedBlockCount(), "not a single mark of the old file is taken over");
-        assertTrue(loggedMessages.stream().anyMatch(message ->
-                        message.contains(StartGateMarkStorage.LEGACY_CAGES_FILE_NAME)),
-                "the start has to name the file an admin deletes: " + loggedMessages);
-        assertTrue(loggedMessages.stream().anyMatch(message -> message.contains("not migrated")),
-                "and has to say that nothing of it was taken over: " + loggedMessages);
-    }
-
-    @Test
-    void saysNothingAboutTheOldFileWhenThereIsNone(@TempDir Path pluginFolder) {
-        storageIn(pluginFolder).load(new StartGateMarks());
-
-        assertTrue(loggedMessages.stream().noneMatch(message ->
-                        message.contains(StartGateMarkStorage.LEGACY_CAGES_FILE_NAME)),
-                "a server that never had cages reads nothing about them: " + loggedMessages);
-    }
-
-    @Test
     void readsAndWritesTheLineOfASingleMark() {
         long encodedPosition = BlockPositionCodec.encode(-8, 65, 320);
 
@@ -154,7 +124,6 @@ class StartGateMarkStorageTest {
     private StartGateMarkStorage storageIn(Path pluginFolder) {
         return new StartGateMarkStorage(
                 new File(pluginFolder.toFile(), StartGateMarkStorage.FILE_NAME),
-                new File(pluginFolder.toFile(), StartGateMarkStorage.LEGACY_CAGES_FILE_NAME),
                 recordingLogger);
     }
 

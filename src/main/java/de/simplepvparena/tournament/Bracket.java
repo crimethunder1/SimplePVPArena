@@ -1,6 +1,7 @@
 package de.simplepvparena.tournament;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -23,7 +24,7 @@ public final class Bracket {
                     Set<String> teamNamesWithFirstRoundBye) {
         this.rounds = rounds;
         this.participatingTeamNames = List.copyOf(participatingTeamNames);
-        this.teamNamesWithFirstRoundBye = Set.copyOf(teamNamesWithFirstRoundBye);
+        this.teamNamesWithFirstRoundBye = Collections.unmodifiableSet(new LinkedHashSet<>(teamNamesWithFirstRoundBye));
         this.matchesById = new LinkedHashMap<>();
         for (List<BracketMatch> round : rounds) {
             for (BracketMatch match : round) {

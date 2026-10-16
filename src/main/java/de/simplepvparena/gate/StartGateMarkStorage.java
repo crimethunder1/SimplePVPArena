@@ -17,25 +17,20 @@ public final class StartGateMarkStorage {
 
     public static final String FILE_NAME = "startgates.yml";
 
-    public static final String LEGACY_CAGES_FILE_NAME = "startcages.yml";
-
     private static final String GATE_KEY = "gate";
     private static final String WORLD_NAME_KEY = "world";
     private static final String MARKS_KEY = "marks";
 
     private final File gatesFile;
-    private final File legacyCagesFile;
     private final Logger logger;
 
-    public StartGateMarkStorage(File gatesFile, File legacyCagesFile, Logger logger) {
+    public StartGateMarkStorage(File gatesFile, Logger logger) {
         this.gatesFile = Objects.requireNonNull(gatesFile, "gatesFile");
-        this.legacyCagesFile = Objects.requireNonNull(legacyCagesFile, "legacyCagesFile");
         this.logger = Objects.requireNonNull(logger, "logger");
     }
 
     public void load(StartGateMarks gateMarks) {
         gateMarks.clear();
-        reportLegacyCagesFile();
         if (!gatesFile.isFile()) {
             logger.info("No " + gatesFile.getName() + " found, starting without a start gate");
             return;
@@ -77,17 +72,6 @@ public final class StartGateMarkStorage {
         } catch (IOException failure) {
             logger.log(Level.SEVERE, "Could not write " + gatesFile.getName(), failure);
         }
-    }
-
-    private void reportLegacyCagesFile() {
-        if (!legacyCagesFile.isFile()) {
-            return;
-        }
-        logger.warning(legacyCagesFile.getName() + " of the former per team starting cages was found. It is "
-                + "not read and not migrated: the cages became one start gate without teams, and its blocks "
-                + "are placed with the gate item of the arena menu of /tournament instead of being clicked "
-                + "onto blocks that already stand. Hand yourself the gate blocks there, place them once, and "
-                + "delete " + legacyCagesFile.getName() + " afterwards");
     }
 
     private void readWorldEntry(Map<String, Map<Long, Material>> readMarksByWorld, Map<?, ?> worldEntry) {

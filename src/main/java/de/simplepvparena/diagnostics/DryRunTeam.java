@@ -1,7 +1,6 @@
 package de.simplepvparena.diagnostics;
 
 import de.simplepvparena.team.TeamMember;
-import de.simplepvparena.team.TeamRegistry;
 
 import java.util.List;
 import java.util.Objects;

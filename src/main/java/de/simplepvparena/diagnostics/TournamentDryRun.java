@@ -328,7 +328,7 @@ public final class TournamentDryRun {
         for (String teamName : teamNames) {
             if (teamRegistry.findTeam(teamName).isEmpty()) {
                 return DryRunStep.failed(MATCH_STEP, "The bracket holds " + teamName
-                        + ", but the registry does not - a real match would declare a walkover");
+                        + ", but the registry does not. A real match would declare a walkover");
             }
         }
         details.add("Match " + finalMatch.getMatchId() + ": " + finalMatch.getFirstTeamName().orElseThrow()

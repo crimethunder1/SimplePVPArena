@@ -82,7 +82,7 @@ class ArenaBreakProtectionTest {
         assertTrue(harness.getShape().containsCell(ARENA_FLOOR_X, ARENA_FLOOR_Z),
                 "the block stands in a cell of the fight area");
         assertFalse(harness.getShape().containsBlock(ARENA_FLOOR_X, UNDER_THE_FLOOR_Y, ARENA_FLOOR_Z),
-                "and under the volume the baseline was taken of - the combination that fell through");
+                "and under the volume the baseline was taken of: the combination that fell through");
 
         assertTrue(isBreakCancelledFor(fighter, ARENA_FLOOR_X, UNDER_THE_FLOOR_Y, ARENA_FLOOR_Z));
         assertTrue(isBucketFillCancelledFor(fighter, POND_X, UNDER_THE_FLOOR_Y, POND_Z),

@@ -1,5 +1,6 @@
 package de.simplepvparena;
 
+import de.simplepvparena.arena.ActiveArenaState;
 import de.simplepvparena.arena.Arena;
 import de.simplepvparena.arena.ArenaBaselineRegistry;
 import de.simplepvparena.arena.ArenaBaselineService;
@@ -7,7 +8,6 @@ import de.simplepvparena.arena.ArenaBorderConfirmation;
 import de.simplepvparena.arena.ArenaCleaningService;
 import de.simplepvparena.arena.ArenaCleaningVisualEffect;
 import de.simplepvparena.arena.ArenaGapGuide;
-import de.simplepvparena.arena.ActiveArenaState;
 import de.simplepvparena.arena.ArenaHeightMarkerService;
 import de.simplepvparena.arena.ArenaHeightMarkers;
 import de.simplepvparena.arena.ArenaRegistry;
@@ -30,6 +30,7 @@ import de.simplepvparena.command.TournamentCommand;
 import de.simplepvparena.config.ConfigurationReloadReport;
 import de.simplepvparena.config.ConfigurationReloadService;
 import de.simplepvparena.config.PluginLiveConfiguration;
+import de.simplepvparena.config.PluginSettings;
 import de.simplepvparena.diagnostics.PluginDryRunArena;
 import de.simplepvparena.diagnostics.TournamentDryRun;
 import de.simplepvparena.gate.StartGateDuration;
@@ -40,7 +41,6 @@ import de.simplepvparena.gate.StartGateOpeningService;
 import de.simplepvparena.gate.VanillaStartGateVisualEffect;
 import de.simplepvparena.gui.AdminMenuService;
 import de.simplepvparena.input.ChatInputService;
-import de.simplepvparena.config.PluginSettings;
 import de.simplepvparena.kit.KitConfigurationLoader;
 import de.simplepvparena.kit.KitSaveService;
 import de.simplepvparena.kit.KitService;
@@ -154,8 +154,7 @@ public final class SimplePVPArenaPlugin extends JavaPlugin {
 
         startGateMarks = new StartGateMarks();
         startGateMarkStorage = new StartGateMarkStorage(
-                new File(getDataFolder(), StartGateMarkStorage.FILE_NAME),
-                new File(getDataFolder(), StartGateMarkStorage.LEGACY_CAGES_FILE_NAME), getLogger());
+                new File(getDataFolder(), StartGateMarkStorage.FILE_NAME), getLogger());
         startGateMarkStorage.load(startGateMarks);
         startGateDuration = new StartGateDuration();
         startGateItemService = new StartGateItemService(this, startGateMarks, startGateDuration,
@@ -213,8 +212,9 @@ public final class SimplePVPArenaPlugin extends JavaPlugin {
 
         configurationReloadService = new ConfigurationReloadService(this::getConfig, this::reloadConfig,
                 new PluginLiveConfiguration(kitService, new KitConfigurationLoader(getLogger()), matchService,
-                        startGateDuration, fighterColours, arenaCleaningService, arenaCleaningVisualEffect, arenaBaselineService,
-                        arenaSetupService, arenaSafetyZone, borderParticleService, borderWallPreview,
+                        startGateDuration, fighterColours, arenaCleaningService, arenaCleaningVisualEffect,
+                        arenaBaselineService, arenaSetupService, arenaSafetyZone, borderParticleService,
+                        borderWallPreview,
                         borderVisualEffect, getLogger()::warning),
                 getLogger()::warning);
         configurationReloadService.applyStoredConfiguration();

@@ -8,13 +8,13 @@ public record ArenaGapTarget(String worldName, int blockX, int blockY, int block
 
         FILL_FRONT("The flood fill got that far before it was stopped",
                 "That is the column the fill reached first of the ones it was stopped on, not a hole "
-                        + "anybody found - start looking around there",
+                        + "anybody found. Start looking around there",
                 "This is where the flood fill was when it was stopped, look for a missing green connection "
                         + "line between two border blocks around you"),
 
         BORDER_TOO_HIGH("A border block stands there, above your calculation height",
                 "A border block stands in that column, but above the height you ran the calculation at, "
-                        + "so it never barred the fill - this is not a guess, it is a piece of wall that "
+                        + "so it never barred the fill. This is not a guess, it is a piece of wall that "
                         + "does not close",
                 "This is a column where you built the wall, above the height you calculated at, so the "
                         + "fill walked underneath it. Build it down to your own height here, or run the "

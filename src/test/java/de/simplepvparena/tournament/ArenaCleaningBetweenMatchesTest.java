@@ -159,7 +159,7 @@ class ArenaCleaningBetweenMatchesTest {
         assertEquals(1, skippedCleaningWarnings.size(), "exactly one warning: " + fixture.operatorMessages);
         String warning = skippedCleaningWarnings.get(0);
         assertEquals("The arena was not cleaned after match round2-match1: no baseline of the fight area is "
-                + "stored. " + Arena.CALCULATE_ACTION + " again before the next tournament", warning);
+                + "stored. Run " + Arena.CALCULATE_ACTION + " again before the next tournament", warning);
         assertFalse(warning.contains("The next match starts"), warning);
         assertTrue(fixture.logMessages.contains("The arena is not cleaned automatically after the final: "
                         + "no baseline of the fight area is stored Run the calculation once, that takes one"),

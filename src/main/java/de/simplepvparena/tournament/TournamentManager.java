@@ -12,6 +12,7 @@ import net.kyori.adventure.text.Component;
 import org.bukkit.plugin.Plugin;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.Random;
@@ -85,7 +86,7 @@ public final class TournamentManager implements MatchCompletionHandler {
             return TournamentOperationResult.failure(ARENA_STILL_BEING_CLEANED_MESSAGE);
         }
 
-        java.util.Collections.shuffle(teamNames, seedingRandom);
+        Collections.shuffle(teamNames, seedingRandom);
         bracket = Bracket.createSingleElimination(teamNames);
         finalMatchGate.reset();
         waitingForArenaCleaning = false;
@@ -152,7 +153,8 @@ public final class TournamentManager implements MatchCompletionHandler {
                 return TournamentOperationResult.failure(teamName + " does not take part in match " + matchId);
             }
             matchService.forceResult(activeMatch.get().getMatchId(), winningTeam.get().getTeamName());
-            return TournamentOperationResult.success("Match " + matchId + " was decided for " + winningTeam.get().getTeamName());
+            return TournamentOperationResult.success("Match " + matchId + " was decided for "
+                    + winningTeam.get().getTeamName());
         }
         Optional<BracketMatch> bracketMatch = bracket.findMatch(matchId);
         if (bracketMatch.isEmpty()) {
@@ -234,7 +236,7 @@ public final class TournamentManager implements MatchCompletionHandler {
     static String buildSkippedCleaningWarning(String matchId, String skipReason, boolean finalMatch) {
         String warning = "The arena was not cleaned after match " + matchId + ": " + toFirstLine(skipReason);
         if (finalMatch) {
-            return warning + ". " + Arena.CALCULATE_ACTION + " again before the next tournament";
+            return warning + ". Run " + Arena.CALCULATE_ACTION + " again before the next tournament";
         }
         return warning + ". The next match starts in the arena as it is now";
     }

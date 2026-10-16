@@ -139,7 +139,7 @@ public final class ArenaHeightMarkerService {
                         + " by itself once this end is marked"),
                 lore("Right click in the air marks an end again"),
                 lore("Which end is marked is kept by the plugin, this"),
-                lore("name only shows it - both ends are taken over by"),
+                lore("name only shows it. Both ends are taken over by"),
                 lore("the next calculation")));
         itemMeta.getPersistentDataContainer().set(markerKey, PersistentDataType.STRING, MARKER_KEY_VALUE);
         markerItem.setItemMeta(itemMeta);

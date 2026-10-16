@@ -24,7 +24,8 @@ public final class RoundParticipants {
             throw new IllegalArgumentException("a round needs two different teams");
         }
         this.firstTeamActivePlayers = new LinkedHashSet<>(Objects.requireNonNull(firstTeamPlayers, "firstTeamPlayers"));
-        this.secondTeamActivePlayers = new LinkedHashSet<>(Objects.requireNonNull(secondTeamPlayers, "secondTeamPlayers"));
+        this.secondTeamActivePlayers = new LinkedHashSet<>(
+                Objects.requireNonNull(secondTeamPlayers, "secondTeamPlayers"));
     }
 
     public boolean eliminate(UUID playerUniqueId) {
