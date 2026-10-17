@@ -14,8 +14,8 @@
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <java.version>21</java.version>
-        <paper.api.version>1.21.11-R0.1-SNAPSHOT</paper.api.version>
+        <java.version>25</java.version>
+        <paper.api.version>26.2.build.134-stable</paper.api.version>
         <junit.version>5.14.4</junit.version>
     </properties>
 
