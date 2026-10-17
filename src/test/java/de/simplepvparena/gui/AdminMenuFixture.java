@@ -29,6 +29,7 @@ import de.simplepvparena.gate.StartGateMarks;
 import de.simplepvparena.gate.StartGates;
 import de.simplepvparena.input.ChatInputRegistry;
 import de.simplepvparena.input.ChatInputService;
+import de.simplepvparena.kit.KitDefinition;
 import de.simplepvparena.kit.KitEquipmentSlot;
 import de.simplepvparena.kit.KitLibrary;
 import de.simplepvparena.kit.KitSaveService;
@@ -42,14 +43,17 @@ import de.simplepvparena.support.FakeKitItemSerializer;
 import de.simplepvparena.support.FakeSerializedKits;
 import de.simplepvparena.support.InMemoryKitLibraryStorage;
 import de.simplepvparena.support.SharedBukkitServer;
+import de.simplepvparena.support.TickingScheduler;
 import de.simplepvparena.team.EventTeamImportFile;
 import de.simplepvparena.team.EventTeamImportService;
 import de.simplepvparena.team.TeamMember;
 import de.simplepvparena.team.TeamMemberLookup;
 import de.simplepvparena.team.TeamRegistry;
 import de.simplepvparena.tournament.AutomaticArenaCleanup;
+import de.simplepvparena.tournament.KitChoiceService;
 import de.simplepvparena.tournament.TournamentManager;
 import de.simplepvparena.tournament.TournamentOperationResult;
+import de.simplepvparena.tournament.TournamentStateStorage;
 import net.kyori.adventure.text.Component;
 import org.bukkit.Location;
 import org.bukkit.OfflinePlayer;
@@ -116,6 +120,10 @@ final class AdminMenuFixture {
     private final Map<Integer, ItemStack> adminInventoryItems = new HashMap<>();
     private final File importFile = new File("target/admin-menu-fixture/" + adminUniqueId + "/"
             + EventTeamImportFile.FILE_NAME);
+    private final List<Player> onlinePlayers = new ArrayList<>();
+    private final List<String> adminNotifications = new ArrayList<>();
+    private final TickingScheduler kitChoiceScheduler = new TickingScheduler();
+    private final KitChoiceService kitChoiceService;
     private final World world;
     private final Plugin plugin;
     private final MatchService matchService;
@@ -132,6 +140,10 @@ final class AdminMenuFixture {
     private int arenaConfigurationSaveCount;
 
     AdminMenuFixture() {
+        this(false);
+    }
+
+    private AdminMenuFixture(boolean kitChoiceEnabled) {
         SharedBukkitServer.install();
         world = SharedBukkitServer.proxy(World.class, (method, arguments) -> switch (method.getName()) {
             case "getName" -> WORLD_NAME;
@@ -152,8 +164,17 @@ final class AdminMenuFixture {
                 new ArenaBaselineService(plugin, new ArenaBaselineRegistry()),
                 new ArenaBorderConfirmation(arenaRegistry.getArena()::hasShape),
                 () -> arenaConfigurationSaveCount++);
-        tournamentManager = new TournamentManager(plugin, teamRegistry, arenaRegistry, matchService,
-                new AutomaticArenaCleanup(arenaSetupService, cleaningService), message -> { });
+        if (kitChoiceEnabled) {
+            kitChoiceService = new KitChoiceService(kitChoiceScheduler.plugin(), kitLibrary,
+                    adminNotifications::add, kitChoiceScheduler.clock());
+            tournamentManager = new TournamentManager(plugin, teamRegistry, arenaRegistry, matchService,
+                    new AutomaticArenaCleanup(arenaSetupService, cleaningService), message -> { },
+                    TournamentStateStorage.NONE, kitChoiceService);
+        } else {
+            tournamentManager = new TournamentManager(plugin, teamRegistry, arenaRegistry, matchService,
+                    new AutomaticArenaCleanup(arenaSetupService, cleaningService), message -> { });
+            kitChoiceService = tournamentManager.getKitChoiceService();
+        }
         TournamentDryRun tournamentDryRun = new TournamentDryRun(tournamentManager::getState,
                 matchService::hasActiveMatch, teamRegistry,
                 new PluginDryRunArena(arenaRegistry.getArena(), arenaSetupService), kitService, gateMarks,
@@ -161,6 +182,7 @@ final class AdminMenuFixture {
         chatInputService = new ChatInputService(plugin, chatInputRegistry);
         adminInventory = createAdminInventory();
         admin = createAdmin();
+        onlinePlayers.add(admin);
         Server server = plugin.getServer();
         menuService = new AdminMenuService(plugin, tournamentManager, tournamentDryRun, teamRegistry,
                 new TeamMemberLookup(server),
@@ -173,7 +195,64 @@ final class AdminMenuFixture {
                 new KitSaveService(kitLibrary, new FakeKitItemSerializer()),
                 chatInputService, this::saveTeamConfiguration,
                 this::reloadConfiguration,
-                windows);
+                windows,
+                () -> List.copyOf(onlinePlayers));
+    }
+
+    static AdminMenuFixture withKitChoice() {
+        return new AdminMenuFixture(true);
+    }
+
+    OnlinePlayer letAnotherPlayerJoin(String playerName, boolean adminPermission) {
+        List<String> playerMessages = new ArrayList<>();
+        UUID playerUniqueId = UUID.randomUUID();
+        Player player = SharedBukkitServer.proxy(Player.class, (method, arguments) -> switch (method.getName()) {
+            case "getUniqueId" -> playerUniqueId;
+            case "getName" -> playerName;
+            case "hasPermission" -> AdminPermission.ADMIN_PERMISSION_NAME.equals(arguments[0]) && adminPermission;
+            case "sendMessage" -> {
+                playerMessages.add(TournamentMessages.toPlainBody((Component) arguments[0]));
+                yield null;
+            }
+            default -> throw new UnsupportedOperationException("Player." + method.getName());
+        });
+        onlinePlayers.add(player);
+        return new OnlinePlayer(player, playerMessages);
+    }
+
+    void letTheAdminLeave() {
+        onlinePlayers.remove(admin);
+    }
+
+    void openMainMenuFor(Player player) {
+        menuService.openMainMenu(player);
+    }
+
+    void clickAs(Player player, int slot) {
+        menuService.handleClick(player, windows.lastOpenedMenu(player).holder(), slot);
+    }
+
+    Optional<RecordingAdminMenuWindows.RecordedMenu> findLastMenuOf(Player player) {
+        return windows.findLastOpenedMenu(player);
+    }
+
+    boolean isMenuClosedFor(Player player) {
+        return windows.isMenuClosed(player);
+    }
+
+    KitChoiceService kitChoiceService() {
+        return kitChoiceService;
+    }
+
+    TickingScheduler kitChoiceScheduler() {
+        return kitChoiceScheduler;
+    }
+
+    List<String> adminNotifications() {
+        return adminNotifications;
+    }
+
+    record OnlinePlayer(Player player, List<String> messages) {
     }
 
     void registerTeams(String... teamNames) {
@@ -282,6 +361,10 @@ final class AdminMenuFixture {
 
     List<String> describeKit() {
         return kitService.getKitDefinition().describe();
+    }
+
+    KitDefinition activeKitDefinition() {
+        return kitService.getKitDefinition();
     }
 
     void placeInAdminInventory(int slotIndex, ItemStack itemStack) {

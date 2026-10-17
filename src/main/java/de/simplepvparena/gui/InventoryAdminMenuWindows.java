@@ -34,4 +34,10 @@ final class InventoryAdminMenuWindows implements AdminMenuWindows {
     public void close(Player player) {
         plugin.getServer().getScheduler().runTask(plugin, () -> player.closeInventory());
     }
+
+    @Override
+    public boolean isShowing(Player player, AdminMenuType menuType) {
+        return player.getOpenInventory().getTopInventory().getHolder() instanceof AdminMenuHolder holder
+                && holder.getMenuType() == menuType;
+    }
 }

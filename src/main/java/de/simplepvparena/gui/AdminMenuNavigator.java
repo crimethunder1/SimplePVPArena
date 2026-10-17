@@ -60,6 +60,11 @@ final class AdminMenuNavigator implements AdminMenuNavigation {
         windows.refresh(player, holder, canvas -> fill(player, holder, canvas));
     }
 
+    @Override
+    public boolean isShowing(Player player, AdminMenuType menuType) {
+        return windows.isShowing(player, menuType);
+    }
+
     private void fill(Player player, AdminMenuHolder holder, AdminMenuCanvas canvas) {
         canvas.clear();
         menuOf(holder.getMenuType()).fill(player, holder, canvas);

@@ -41,6 +41,15 @@ class AdminMenuHolderTest {
     }
 
     @Test
+    void carriesTheMatchAndThePageAKitChoiceWasOpenedFor() {
+        AdminMenuHolder holder = AdminMenuHolder.kitChoice("round1-match1", 1);
+
+        assertEquals(AdminMenuType.KIT_CHOICE, holder.getMenuType());
+        assertEquals("round1-match1", holder.getSubject().orElseThrow());
+        assertEquals(1, holder.getPageIndex());
+    }
+
+    @Test
     void carriesTheMatchAForceResultMenuWasOpenedFor() {
         assertEquals("round1-match1", AdminMenuHolder.forceResult("round1-match1").getSubject().orElseThrow());
     }

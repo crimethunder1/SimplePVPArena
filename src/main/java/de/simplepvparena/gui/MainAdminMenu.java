@@ -9,6 +9,8 @@ import de.simplepvparena.kit.KitLibrary;
 import de.simplepvparena.match.MatchService;
 import de.simplepvparena.message.TournamentMessages;
 import de.simplepvparena.team.TeamRegistry;
+import de.simplepvparena.tournament.KitChoiceService;
+import de.simplepvparena.tournament.PendingKitChoice;
 import de.simplepvparena.tournament.TournamentManager;
 import de.simplepvparena.tournament.TournamentOperationResult;
 import org.bukkit.Material;
@@ -32,6 +34,7 @@ final class MainAdminMenu implements AdminMenu {
     private static final int MAIN_DRY_RUN_SLOT = 18;
     private static final int MAIN_RELOAD_SLOT = 20;
     private static final int MAIN_CLOSE_SLOT = 22;
+    private static final int MAIN_KIT_CHOICE_SLOT = 23;
     private static final int MAIN_KIT_SLOT = 24;
 
     private final AdminMenuNavigation navigation;
@@ -44,12 +47,14 @@ final class MainAdminMenu implements AdminMenu {
     private final Supplier<ConfigurationReloadReport> configurationReloader;
     private final TournamentMenuStatus tournamentMenuStatus;
     private final KitLibrary kitLibrary;
+    private final KitChoiceService kitChoiceService;
 
     MainAdminMenu(AdminMenuNavigation navigation, TournamentManager tournamentManager,
                   TournamentDryRun tournamentDryRun, TeamRegistry teamRegistry, MatchService matchService,
                   ArenaSetupService arenaSetupService, BorderSelectorModeRegistry borderSelectorModes,
                   Supplier<ConfigurationReloadReport> configurationReloader,
-                  TournamentMenuStatus tournamentMenuStatus, KitLibrary kitLibrary) {
+                  TournamentMenuStatus tournamentMenuStatus, KitLibrary kitLibrary,
+                  KitChoiceService kitChoiceService) {
         this.navigation = Objects.requireNonNull(navigation, "navigation");
         this.tournamentManager = Objects.requireNonNull(tournamentManager, "tournamentManager");
         this.tournamentDryRun = Objects.requireNonNull(tournamentDryRun, "tournamentDryRun");
@@ -60,6 +65,7 @@ final class MainAdminMenu implements AdminMenu {
         this.configurationReloader = Objects.requireNonNull(configurationReloader, "configurationReloader");
         this.tournamentMenuStatus = Objects.requireNonNull(tournamentMenuStatus, "tournamentMenuStatus");
         this.kitLibrary = Objects.requireNonNull(kitLibrary, "kitLibrary");
+        this.kitChoiceService = Objects.requireNonNull(kitChoiceService, "kitChoiceService");
     }
 
     @Override
@@ -101,6 +107,8 @@ final class MainAdminMenu implements AdminMenu {
                 "Default kit: " + kitLibrary.getDefaultKitName().orElse("none"),
                 "The items every fighter is given when a round starts",
                 "Create, replace and delete kits"));
+        kitChoiceService.getPending().ifPresent(choice -> canvas.set(MAIN_KIT_CHOICE_SLOT,
+                buildKitChoiceItem(choice)));
         canvas.set(MAIN_CLOSE_SLOT, MenuItems.create(Material.BARRIER, "Close", "Closes the menu"));
     }
 
@@ -117,6 +125,8 @@ final class MainAdminMenu implements AdminMenu {
             case MAIN_DRY_RUN_SLOT -> runDryRun(player);
             case MAIN_RELOAD_SLOT -> reloadConfiguration(player);
             case MAIN_KIT_SLOT -> navigation.open(player, AdminMenuHolder.kit(0));
+            case MAIN_KIT_CHOICE_SLOT -> kitChoiceService.getPending().ifPresent(choice ->
+                    navigation.open(player, AdminMenuHolder.kitChoice(choice.matchId(), 0)));
             case MAIN_CLOSE_SLOT -> navigation.close(player);
             default -> { }
         }
@@ -146,6 +156,12 @@ final class MainAdminMenu implements AdminMenu {
             return;
         }
         TournamentMessages.sendErrorReport(player, report.describe());
+    }
+
+    private static MenuTile buildKitChoiceItem(PendingKitChoice choice) {
+        return MenuItems.create(Material.CHEST, "Choose the kit for the next match",
+                "Match " + choice.matchId() + ": " + choice.teamsDescription(),
+                "The popup closes when the time is over or a kit is chosen");
     }
 
     private MenuTile buildDryRunItem() {

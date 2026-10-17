@@ -9,4 +9,6 @@ interface AdminMenuNavigation {
     void close(Player player);
 
     void refresh(Player player, AdminMenuHolder holder);
+
+    boolean isShowing(Player player, AdminMenuType menuType);
 }

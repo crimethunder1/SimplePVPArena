@@ -13,10 +13,12 @@ import de.simplepvparena.match.MatchService;
 import de.simplepvparena.team.EventTeamImportService;
 import de.simplepvparena.team.TeamMemberLookup;
 import de.simplepvparena.team.TeamRegistry;
+import de.simplepvparena.tournament.KitChoiceService;
 import de.simplepvparena.tournament.TournamentManager;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.Plugin;
 
+import java.util.Collection;
 import java.util.Objects;
 import java.util.function.Supplier;
 
@@ -43,7 +45,7 @@ public final class AdminMenuService {
         this(plugin, tournamentManager, tournamentDryRun, teamRegistry, teamMemberLookup, eventTeamImportService,
                 matchService, arenaSetupService, heightMarkerService, gateItemService, borderSelectorModes,
                 kitLibrary, kitSaveService, chatInputService, teamConfigurationSaver, configurationReloader,
-                new InventoryAdminMenuWindows(plugin));
+                new InventoryAdminMenuWindows(plugin), () -> plugin.getServer().getOnlinePlayers());
     }
 
     AdminMenuService(Plugin plugin,
@@ -62,7 +64,8 @@ public final class AdminMenuService {
                      ChatInputService chatInputService,
                      Runnable teamConfigurationSaver,
                      Supplier<ConfigurationReloadReport> configurationReloader,
-                     AdminMenuWindows windows) {
+                     AdminMenuWindows windows,
+                     Supplier<Collection<? extends Player>> onlinePlayers) {
         Objects.requireNonNull(plugin, "plugin");
         this.navigator = new AdminMenuNavigator(windows);
         Objects.requireNonNull(tournamentManager, "tournamentManager");
@@ -79,6 +82,9 @@ public final class AdminMenuService {
         KitAdminMenu kitAdminMenu = new KitAdminMenu(navigator, kitLibrary, kitSaveService, chatInputService);
         KitActionsAdminMenu kitActionsAdminMenu = new KitActionsAdminMenu(navigator, kitLibrary, kitSaveService,
                 matchService::hasActiveMatch);
+        KitChoiceService kitChoiceService = tournamentManager.getKitChoiceService();
+        KitChoiceAdminMenu kitChoiceAdminMenu = new KitChoiceAdminMenu(navigator, kitLibrary, kitChoiceService);
+        kitChoiceService.setPresenter(new KitChoiceAdminMenuPresenter(navigator, onlinePlayers));
         Objects.requireNonNull(teamConfigurationSaver, "teamConfigurationSaver");
         Objects.requireNonNull(configurationReloader, "configurationReloader");
         TeamActionsAdminMenu teamActionsAdminMenu = new TeamActionsAdminMenu(navigator, teamRegistry,
@@ -98,7 +104,7 @@ public final class AdminMenuService {
                 gateItemService, chatInputService);
         MainAdminMenu mainAdminMenu = new MainAdminMenu(navigator, tournamentManager, tournamentDryRun, teamRegistry,
                 matchService, arenaSetupService, borderSelectorModes, configurationReloader, tournamentMenuStatus,
-                kitLibrary);
+                kitLibrary, kitChoiceService);
         ConfirmationAdminMenu confirmationAdminMenu = new ConfirmationAdminMenu(navigator);
         confirmationAdminMenu.register(ConfirmationRequest.CLEAN_ARENA, arenaAdminMenu.cleanConfirmation());
         confirmationAdminMenu.register(ConfirmationRequest.RESET_ARENA, arenaAdminMenu.resetConfirmation());
@@ -112,6 +118,7 @@ public final class AdminMenuService {
         navigator.register(AdminMenuType.ARENA, arenaAdminMenu);
         navigator.register(AdminMenuType.KIT, kitAdminMenu);
         navigator.register(AdminMenuType.KIT_ACTIONS, kitActionsAdminMenu);
+        navigator.register(AdminMenuType.KIT_CHOICE, kitChoiceAdminMenu);
         navigator.register(AdminMenuType.TEAMS, teamsAdminMenu);
         navigator.register(AdminMenuType.TEAM_ACTIONS, teamActionsAdminMenu);
         navigator.register(AdminMenuType.MATCH, matchAdminMenu);

@@ -8,12 +8,18 @@ import de.simplepvparena.arena.SpectatorItemFactory;
 import de.simplepvparena.arena.SpectatorService;
 import de.simplepvparena.border.BorderMarkIndex;
 import de.simplepvparena.gate.StartGates;
+import de.simplepvparena.kit.KitDefinition;
+import de.simplepvparena.kit.KitLibrary;
 import de.simplepvparena.kit.KitService;
 import de.simplepvparena.match.FighterColours;
 import de.simplepvparena.match.Match;
 import de.simplepvparena.match.MatchService;
 import de.simplepvparena.match.TeamColourSettings;
+import de.simplepvparena.support.FakeKitItemSerializer;
+import de.simplepvparena.support.FakeSerializedKits;
+import de.simplepvparena.support.InMemoryKitLibraryStorage;
 import de.simplepvparena.support.SharedBukkitServer;
+import de.simplepvparena.support.TickingScheduler;
 import de.simplepvparena.team.TeamMember;
 import de.simplepvparena.team.TeamRegistry;
 import org.bukkit.World;
@@ -45,23 +51,45 @@ final class TournamentManagerFixture {
     private final List<String> adminMessages = new ArrayList<>();
     private final TeamRegistry teamRegistry = new TeamRegistry();
     private final ArenaRegistry arenaRegistry = new ArenaRegistry();
+    private final KitService kitService = new KitService();
+    private final KitLibrary kitLibrary = new KitLibrary(new InMemoryKitLibraryStorage(), kitService,
+            new FakeKitItemSerializer(), problem -> { }, problem -> { });
+    private final TickingScheduler kitChoiceScheduler = new TickingScheduler();
+    private final RecordingKitChoicePresenter kitChoicePresenter = new RecordingKitChoicePresenter();
+    private final KitChoiceService kitChoiceService;
     private final Plugin plugin;
     private final MatchService matchService;
     private final TournamentManager tournamentManager;
 
     private TournamentManagerFixture(Optional<TournamentStateStorage> stateStorage, List<String> teamNames,
                                      boolean baselineStored) {
+        this(stateStorage, teamNames, baselineStored, false);
+    }
+
+    private TournamentManagerFixture(Optional<TournamentStateStorage> stateStorage, List<String> teamNames,
+                                     boolean baselineStored, boolean kitChoiceEnabled) {
         SharedBukkitServer.register(createWorld(), playerUniqueId -> null);
         this.plugin = createPlugin();
-        this.matchService = new MatchService(plugin, new KitService(),
+        this.matchService = new MatchService(plugin, kitService,
                 new SpectatorService(arenaRegistry, new SpectatorItemFactory(plugin)),
                 new SilentFighterColours(), StartGates.NONE);
         AdminNotifier adminNotifier = adminMessages::add;
-        this.tournamentManager = stateStorage
-                .map(storage -> new TournamentManager(plugin, teamRegistry, arenaRegistry, matchService,
-                        new SkippedArenaCleanup(baselineStored), adminNotifier, storage))
-                .orElseGet(() -> new TournamentManager(plugin, teamRegistry, arenaRegistry, matchService,
-                        new SkippedArenaCleanup(baselineStored), adminNotifier));
+        this.kitChoiceService = new KitChoiceService(kitChoiceScheduler.plugin(), kitLibrary, adminNotifier,
+                kitChoiceScheduler.clock());
+        kitChoiceService.setPresenter(kitChoicePresenter);
+        if (kitChoiceEnabled) {
+            kitLibrary.createKit("Archer", FakeSerializedKits.carrying("bow"));
+            kitLibrary.createKit("Knight", FakeSerializedKits.carrying("sword"));
+            this.tournamentManager = new TournamentManager(plugin, teamRegistry, arenaRegistry, matchService,
+                    new SkippedArenaCleanup(baselineStored), adminNotifier,
+                    stateStorage.orElse(TournamentStateStorage.NONE), kitChoiceService);
+        } else {
+            this.tournamentManager = stateStorage
+                    .map(storage -> new TournamentManager(plugin, teamRegistry, arenaRegistry, matchService,
+                            new SkippedArenaCleanup(baselineStored), adminNotifier, storage))
+                    .orElseGet(() -> new TournamentManager(plugin, teamRegistry, arenaRegistry, matchService,
+                            new SkippedArenaCleanup(baselineStored), adminNotifier));
+        }
         buildArena();
         for (String teamName : teamNames) {
             teamRegistry.registerTeam(teamName,
@@ -81,6 +109,39 @@ final class TournamentManagerFixture {
 
     static TournamentManagerFixture withoutStorage(List<String> teamNames) {
         return new TournamentManagerFixture(Optional.empty(), teamNames, true);
+    }
+
+    static TournamentManagerFixture withKitChoice(List<String> teamNames) {
+        return new TournamentManagerFixture(Optional.empty(), teamNames, true, true);
+    }
+
+    static TournamentManagerFixture withStorageAndKitChoice(TournamentStateStorage stateStorage,
+                                                            List<String> teamNames) {
+        return new TournamentManagerFixture(Optional.of(stateStorage), teamNames, true, true);
+    }
+
+    KitChoiceService kitChoiceService() {
+        return kitChoiceService;
+    }
+
+    RecordingKitChoicePresenter kitChoicePresenter() {
+        return kitChoicePresenter;
+    }
+
+    TickingScheduler kitChoiceScheduler() {
+        return kitChoiceScheduler;
+    }
+
+    KitLibrary kitLibrary() {
+        return kitLibrary;
+    }
+
+    KitDefinition activeKitDefinition() {
+        return kitService.getKitDefinition();
+    }
+
+    KitDefinition kitDefinitionOf(String kitName) {
+        return kitLibrary.findKit(kitName).orElseThrow().kitDefinition();
     }
 
     TournamentManager tournamentManager() {

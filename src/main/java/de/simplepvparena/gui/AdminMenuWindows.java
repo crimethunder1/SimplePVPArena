@@ -11,4 +11,6 @@ interface AdminMenuWindows {
     void refresh(Player player, AdminMenuHolder holder, Consumer<AdminMenuCanvas> filler);
 
     void close(Player player);
+
+    boolean isShowing(Player player, AdminMenuType menuType);
 }

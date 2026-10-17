@@ -41,6 +41,11 @@ public final class AdminMenuHolder implements InventoryHolder {
                 pageIndex);
     }
 
+    public static AdminMenuHolder kitChoice(String matchId, int pageIndex) {
+        return new AdminMenuHolder(AdminMenuType.KIT_CHOICE, Objects.requireNonNull(matchId, "matchId"), null,
+                pageIndex);
+    }
+
     public static AdminMenuHolder teams(int pageIndex) {
         return new AdminMenuHolder(AdminMenuType.TEAMS, null, null, pageIndex);
     }

@@ -43,6 +43,13 @@ final class RecordingAdminMenuWindows implements AdminMenuWindows {
         playersWithClosedMenu.add(player.getUniqueId());
     }
 
+    @Override
+    public boolean isShowing(Player player, AdminMenuType menuType) {
+        return !isMenuClosed(player) && findLastOpenedMenu(player)
+                .map(menu -> menu.holder().getMenuType() == menuType)
+                .orElse(false);
+    }
+
     Optional<RecordedMenu> findLastOpenedMenu(Player player) {
         return Optional.ofNullable(lastOpenedMenus.get(player.getUniqueId()));
     }

@@ -122,7 +122,7 @@ public final class KitLibrary {
         }
         write();
         if (becameDefault) {
-            handOutDefaultKit();
+            activateDefaultKit();
         }
         return kit;
     }
@@ -135,7 +135,7 @@ public final class KitLibrary {
         kitsByLowerCaseName.put(toLowerCase(kitName), kit);
         write();
         if (isDefaultKit(kitName)) {
-            handOutDefaultKit();
+            activateDefaultKit();
         }
         return kit;
     }
@@ -161,7 +161,17 @@ public final class KitLibrary {
         }
         defaultKitLowerCaseName = toLowerCase(kitName);
         write();
-        handOutDefaultKit();
+        activateDefaultKit();
+    }
+
+    public void activate(String kitName) {
+        LibraryKit kit = findKit(kitName)
+                .orElseThrow(() -> new IllegalArgumentException(describeUnknownKit(kitName)));
+        kitService.setKitDefinition(kit.kitDefinition());
+    }
+
+    public void activateDefaultKit() {
+        kitService.setKitDefinition(findDefaultKit().map(LibraryKit::kitDefinition).orElse(KitDefinition.empty()));
     }
 
     public static Optional<String> findInconsistency(SavedKitLibrary savedKitLibrary) {
@@ -198,7 +208,7 @@ public final class KitLibrary {
             kitsByLowerCaseName.put(toLowerCase(savedKit.name()), decode(savedKit.name(), savedKit.serializedKit()));
         }
         defaultKitLowerCaseName = savedKitLibrary.defaultKitName().map(KitLibrary::toLowerCase).orElse(null);
-        handOutDefaultKit();
+        activateDefaultKit();
     }
 
     SavedKitLibrary capture() {
@@ -221,10 +231,6 @@ public final class KitLibrary {
                     + " (" + failure.getMessage() + "), the change counts until the server stops and is "
                     + "written again with the next change of a kit");
         }
-    }
-
-    private void handOutDefaultKit() {
-        kitService.setKitDefinition(findDefaultKit().map(LibraryKit::kitDefinition).orElse(KitDefinition.empty()));
     }
 
     private static boolean isAllowedName(String kitName) {

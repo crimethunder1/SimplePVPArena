@@ -123,7 +123,8 @@ class AdminMenuSeamTest {
                 () -> {
                     throw new UnsupportedOperationException("the configuration is not reloaded in this test");
                 },
-                windows);
+                windows,
+                List::of);
         player = createPlayer();
     }
 

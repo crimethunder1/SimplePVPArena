@@ -85,6 +85,7 @@ import de.simplepvparena.team.TeamStorage;
 import de.simplepvparena.tournament.AdminNotifier;
 import de.simplepvparena.tournament.AutomaticArenaCleanup;
 import de.simplepvparena.tournament.FileTournamentStateStorage;
+import de.simplepvparena.tournament.KitChoiceService;
 import de.simplepvparena.tournament.OnlineAdminNotifier;
 import de.simplepvparena.tournament.TournamentManager;
 import org.bukkit.command.PluginCommand;
@@ -222,7 +223,8 @@ public final class SimplePVPArenaPlugin extends JavaPlugin {
         tournamentManager = new TournamentManager(this, teamRegistry, arenaRegistry, matchService,
                 new AutomaticArenaCleanup(arenaSetupService, arenaCleaningService),
                 adminNotifier, new FileTournamentStateStorage(
-                        new File(getDataFolder(), FileTournamentStateStorage.FILE_NAME).toPath()));
+                        new File(getDataFolder(), FileTournamentStateStorage.FILE_NAME).toPath()),
+                new KitChoiceService(this, kitLibrary, adminNotifier));
         tournamentManager.restoreSavedTournament();
 
         tournamentDryRun = new TournamentDryRun(tournamentManager::getState,
