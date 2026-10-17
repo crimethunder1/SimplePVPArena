@@ -7,6 +7,7 @@ import org.bukkit.inventory.ItemStack;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
@@ -16,12 +17,12 @@ public final class SpectatorService {
     private static final int SPECTATOR_TOGGLE_ITEM_SLOT = 8;
 
     private final ArenaRegistry arenaRegistry;
-    private final SpectatorItemFactory spectatorItemFactory;
+    private final SpectatorItems spectatorItems;
     private final Map<UUID, SpectatorMode> spectatorModesByPlayer = new LinkedHashMap<>();
 
-    public SpectatorService(ArenaRegistry arenaRegistry, SpectatorItemFactory spectatorItemFactory) {
-        this.arenaRegistry = arenaRegistry;
-        this.spectatorItemFactory = spectatorItemFactory;
+    public SpectatorService(ArenaRegistry arenaRegistry, SpectatorItems spectatorItems) {
+        this.arenaRegistry = Objects.requireNonNull(arenaRegistry, "arenaRegistry");
+        this.spectatorItems = Objects.requireNonNull(spectatorItems, "spectatorItems");
     }
 
     public boolean sendToTribune(Player player) {
@@ -32,8 +33,8 @@ public final class SpectatorService {
         }
         player.teleport(tribuneLocation.get());
         player.setGameMode(GameMode.ADVENTURE);
-        spectatorModesByPlayer.put(player.getUniqueId(), SpectatorMode.TRIBUNE);
         giveSpectatorToggleItem(player);
+        spectatorModesByPlayer.put(player.getUniqueId(), SpectatorMode.TRIBUNE);
         return true;
     }
 
@@ -61,12 +62,12 @@ public final class SpectatorService {
     }
 
     public void giveSpectatorToggleItem(Player player) {
-        ItemStack toggleItem = spectatorItemFactory.createSpectatorToggleItem();
+        ItemStack toggleItem = spectatorItems.createSpectatorToggleItem();
         player.getInventory().setItem(SPECTATOR_TOGGLE_ITEM_SLOT, toggleItem);
     }
 
     public boolean isSpectatorToggleItem(ItemStack itemStack) {
-        return spectatorItemFactory.isSpectatorToggleItem(itemStack);
+        return spectatorItems.isSpectatorToggleItem(itemStack);
     }
 
     public Optional<SpectatorMode> findSpectatorMode(UUID playerUniqueId) {

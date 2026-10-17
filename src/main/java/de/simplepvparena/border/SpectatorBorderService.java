@@ -5,7 +5,6 @@ import de.simplepvparena.arena.BorderColumnReader;
 import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.block.Block;
-import org.bukkit.plugin.Plugin;
 
 import java.util.Objects;
 
@@ -14,7 +13,7 @@ public final class SpectatorBorderService {
     private final BorderMarkIndex borderMarks;
     private final Runnable borderMarkChangeListener;
 
-    public SpectatorBorderService(Plugin plugin, BorderMarkIndex borderMarks, Runnable borderMarkChangeListener) {
+    public SpectatorBorderService(BorderMarkIndex borderMarks, Runnable borderMarkChangeListener) {
         this.borderMarks = Objects.requireNonNull(borderMarks, "borderMarks");
         this.borderMarkChangeListener = Objects.requireNonNull(borderMarkChangeListener, "borderMarkChangeListener");
     }

@@ -226,7 +226,7 @@ class ArenaCleaningTemporaryEntityTest {
             setupService = new ArenaSetupService(
                     new ActiveArenaState(arenaRegistry, new ArenaHeightMarkers()),
                     new MatchService(harness.getPlugin(), null, null, null, StartGates.NONE),
-                    new SpectatorBorderService(harness.getPlugin(), borderMarks, () -> { }),
+                    new SpectatorBorderService(borderMarks, () -> { }),
                     new BorderWallPreview(harness.getPlugin(), new SilentVisualEffect()),
                     new ArenaGapGuide(harness.getPlugin()), cleaningService, baselineService,
                     new ArenaBorderConfirmation(arenaRegistry.getArena()::hasShape),

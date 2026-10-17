@@ -140,7 +140,7 @@ final class AdminMenuFixture {
         ArenaCleaningService cleaningService = new ArenaCleaningService(plugin, (cleanedWorld, shape) -> 0);
         arenaSetupService = new ArenaSetupService(
                 new ActiveArenaState(arenaRegistry, heightMarkers), matchService,
-                new SpectatorBorderService(plugin, borderMarks, () -> { }),
+                new SpectatorBorderService(borderMarks, () -> { }),
                 new BorderWallPreview(plugin, SharedBukkitServer.proxy(BorderVisualEffect.class,
                         (method, arguments) -> null)),
                 new ArenaGapGuide(plugin), cleaningService,

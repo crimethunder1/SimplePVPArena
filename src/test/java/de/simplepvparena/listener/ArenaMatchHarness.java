@@ -7,7 +7,6 @@ import de.simplepvparena.arena.ArenaShapeFloodFill;
 import de.simplepvparena.arena.BlockPositionCodec;
 import de.simplepvparena.arena.HorizontalCellCodec;
 import de.simplepvparena.arena.PositionSnapshot;
-import de.simplepvparena.arena.SpectatorItemFactory;
 import de.simplepvparena.arena.SpectatorService;
 import de.simplepvparena.border.BorderMarkIndex;
 import de.simplepvparena.border.SpectatorBorderService;
@@ -20,6 +19,7 @@ import de.simplepvparena.match.Match;
 import de.simplepvparena.match.MatchService;
 import de.simplepvparena.permission.AdminPermission;
 import de.simplepvparena.support.FakeBlockData;
+import de.simplepvparena.support.FakeSpectatorItems;
 import de.simplepvparena.support.SharedBukkitServer;
 import de.simplepvparena.team.Team;
 import de.simplepvparena.team.TeamMember;
@@ -91,8 +91,8 @@ final class ArenaMatchHarness {
         });
         this.plugin = createPlugin(createServer());
         installBukkitServer();
-        this.borderService = new SpectatorBorderService(plugin, borderMarks, () -> { });
-        this.spectatorService = new SpectatorService(arenaRegistry, new SpectatorItemFactory(plugin));
+        this.borderService = new SpectatorBorderService(borderMarks, () -> { });
+        this.spectatorService = new SpectatorService(arenaRegistry, new FakeSpectatorItems());
         this.gateOpeningService = new StartGateOpeningService(plugin, gateMarks, new StartGateDuration(),
                 StartGateVisualEffect.NONE);
         this.kitService = kitServiceFactory.apply(plugin);

@@ -155,7 +155,7 @@ public final class SimplePVPArenaPlugin extends JavaPlugin {
         borderMarkStorage = new BorderMarkStorage(new File(getDataFolder(), BORDERS_FILE_NAME), getLogger());
         borderMarkStorage.load(borderMarkIndex);
         arenaBorderConfirmation = new ArenaBorderConfirmation(arenaRegistry.getArena()::hasShape);
-        spectatorBorderService = new SpectatorBorderService(this, borderMarkIndex, this::onBorderMarksChanged);
+        spectatorBorderService = new SpectatorBorderService(borderMarkIndex, this::onBorderMarksChanged);
         borderSelectorModes = new BorderSelectorModeRegistry();
 
         arenaBaselineService = new ArenaBaselineService(this, new ArenaBaselineRegistry());

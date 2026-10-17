@@ -95,7 +95,7 @@ class AdminMenuSeamTest {
         ArenaCleaningService cleaningService = new ArenaCleaningService(plugin, (world, shape) -> 0);
         ArenaSetupService arenaSetupService = new ArenaSetupService(
                 new ActiveArenaState(arenaRegistry, heightMarkers), matchService,
-                new SpectatorBorderService(plugin, new BorderMarkIndex(), () -> { }),
+                new SpectatorBorderService(new BorderMarkIndex(), () -> { }),
                 new BorderWallPreview(plugin, silentVisualEffect), new ArenaGapGuide(plugin), cleaningService,
                 new ArenaBaselineService(plugin, new ArenaBaselineRegistry()),
                 new ArenaBorderConfirmation(arenaRegistry.getArena()::hasShape), () -> { });
