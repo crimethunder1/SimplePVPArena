@@ -4,6 +4,7 @@ import de.simplepvparena.arena.ArenaBaselineService;
 import de.simplepvparena.arena.ArenaEnvironmentProtectionRule;
 import de.simplepvparena.arena.ArenaRegistry;
 import de.simplepvparena.arena.ArenaShape;
+import de.simplepvparena.arena.EffectArea;
 import de.simplepvparena.permission.AdminPermission;
 import org.bukkit.World;
 import org.bukkit.block.Block;
@@ -127,17 +128,19 @@ public final class ArenaEnvironmentProtectionListener implements Listener {
                 .map(shape -> ArenaEnvironmentProtectionRule.findCapturedFloorY(shape,
                         arenaBaselineService.findSnapshot(shape)))
                 .orElse(Integer.MIN_VALUE);
-        return new ProtectedArea(fightArea, capturedFloorY);
+        Optional<EffectArea> effectArea = arenaRegistry.findEffectArea();
+        return new ProtectedArea(fightArea, effectArea, capturedFloorY);
     }
 
-    private record ProtectedArea(Optional<ArenaShape> fightArea, int capturedFloorY) {
+    private record ProtectedArea(Optional<ArenaShape> fightArea, Optional<EffectArea> effectArea,
+                                 int capturedFloorY) {
 
         private boolean contains(Block block) {
             return contains(block, BlockFace.SELF);
         }
 
         private boolean contains(Block block, BlockFace offset) {
-            return ArenaEnvironmentProtectionRule.isProtected(fightArea, capturedFloorY,
+            return ArenaEnvironmentProtectionRule.isProtected(fightArea, effectArea, capturedFloorY,
                     block.getWorld().getName(), block.getX() + offset.getModX(), block.getY() + offset.getModY(),
                     block.getZ() + offset.getModZ());
         }

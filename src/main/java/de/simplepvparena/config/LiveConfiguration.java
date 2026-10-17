@@ -29,6 +29,10 @@ public interface LiveConfiguration {
 
     void setSafetyZoneRadius(int radius);
 
+    void setArenaEffectMargin(int margin);
+
+    void setTeleportOnJoin(boolean teleportOnJoin);
+
     void setBorderParticlePeriodTicks(long periodTicks);
 
     void setBorderParticleViewRadius(int viewRadius);

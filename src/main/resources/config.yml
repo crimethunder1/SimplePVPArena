@@ -45,6 +45,10 @@ arena:
   shape-maximum-cells: 50000
   # Blocks around the arena outline in which non-fighters take no environmental damage or hunger. 0 turns it off.
   safety-zone-radius: 64
+  # Blocks added around the fight area to form the circle in which building, explosions, fire, pistons and player against player are restricted, 0 to 512.
+  effect-margin: 96
+  # When true, a player who joins is sent to the tribune once the arena is fully configured.
+  teleport-on-join: true
   # Calculated fight area, written by the plugin.
   shape: {}
   # Spawns of both teams and the tribune, written by the plugin.

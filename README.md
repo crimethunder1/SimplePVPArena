@@ -34,9 +34,17 @@ Copy the jar into the `plugins` folder of the server and start it. The plugin cr
 `config.yml` has three sections, each value is described by a comment in the file:
 
 - `match`: delay between rounds, round time limit, sudden death damage, whether the final runs without sudden death, start gate duration and team colours
-- `arena`: cleaning speed and particles, flood fill limit, safety zone radius, plus the fight area and spawns the plugin writes itself
+- `arena`: cleaning speed and particles, flood fill limit, safety zone radius, the margin of the area of effect (`effect-margin`, 96 blocks), whether joining players are sent to the tribune (`teleport-on-join`, true), plus the fight area and spawns the plugin writes itself
 - `border`: particle display of border blocks and the marker of a confirmed wall
 
 Changes can be applied while the server runs with the "Reload config.yml" item in the main menu of `/tournament`.
 
 The kits live in `kits.yml` and are created from the inventory of an admin, replaced, deleted and chosen as the default kit in the kit menu of `/tournament`. Every fighter receives the default kit at the start of a round. A `kit` section that an older version saved in `config.yml` is taken over into `kits.yml` once as the kit `default`.
+
+## Area of effect
+
+The protection of the world and the pvp lock only apply around the arena. The area of effect is a circle around the centre of the frame of the fight area, in the world of the arena and at every height. Its radius is the distance from that centre to the farthest corner of the frame plus `arena.effect-margin` from `config.yml`. The info tile of the arena menu shows the centre and the radius. Without a calculated fight area there is no area of effect.
+
+Inside the area of effect, players who are no admins cannot build or break outside the fight area, explosions, fire, pistons and entities do not change blocks outside the fight area or under its floor, and a player standing in it is only hurt by another player when both fight the running round or when an admin hits an active fighter. Outside of it the plugin leaves building, explosions, fire, pistons and player against player alone. The rules of the fight area itself, the safety zone with its own radius and the item, mob and damage rules of fighters and spectators do not depend on it.
+
+The tribune spawn has to lie inside the area of effect once the fight area is calculated. A calculation that leaves the stored tribune outside of the new area stays valid and warns the admin. With `arena.teleport-on-join: false` joining players stay where they are; players of the running match are still sent to the tribune.

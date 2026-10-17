@@ -44,7 +44,7 @@ public final class PlayerConnectionListener implements Listener {
                     + matchOfPlayer.get().getMatchId() + ", you take part again from the next round on");
             return;
         }
-        if (arenaRegistry.isArenaFullyConfigured()) {
+        if (arenaRegistry.isTeleportOnJoin() && arenaRegistry.isArenaFullyConfigured()) {
             spectatorService.sendToTribune(player);
         }
     }

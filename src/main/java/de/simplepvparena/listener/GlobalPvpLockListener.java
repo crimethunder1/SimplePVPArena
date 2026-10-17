@@ -1,5 +1,6 @@
 package de.simplepvparena.listener;
 
+import de.simplepvparena.arena.ArenaRegistry;
 import de.simplepvparena.match.MatchService;
 import de.simplepvparena.permission.AdminPermission;
 import org.bukkit.Server;
@@ -20,10 +21,12 @@ import java.util.UUID;
 public final class GlobalPvpLockListener implements Listener {
 
     private final MatchService matchService;
+    private final ArenaRegistry arenaRegistry;
     private final Server server;
 
-    public GlobalPvpLockListener(MatchService matchService, Server server) {
+    public GlobalPvpLockListener(MatchService matchService, ArenaRegistry arenaRegistry, Server server) {
         this.matchService = matchService;
+        this.arenaRegistry = arenaRegistry;
         this.server = server;
     }
 
@@ -36,7 +39,7 @@ public final class GlobalPvpLockListener implements Listener {
         if (attackerUniqueId.isEmpty()) {
             return;
         }
-        if (isLocked(attackerUniqueId.get(), victim.getUniqueId())) {
+        if (isLocked(attackerUniqueId.get(), victim)) {
             event.setCancelled(true);
         }
     }
@@ -66,14 +69,24 @@ public final class GlobalPvpLockListener implements Listener {
 
     boolean isLockedTarget(UUID attackerUniqueId, LivingEntity affectedEntity) {
         return affectedEntity instanceof Player victim
-                && isLocked(attackerUniqueId, victim.getUniqueId());
+                && isLocked(attackerUniqueId, victim);
     }
 
-    private boolean isLocked(UUID attackerUniqueId, UUID victimUniqueId) {
+    private boolean isLocked(UUID attackerUniqueId, Player victim) {
+        if (!isInsideTheEffectArea(victim)) {
+            return false;
+        }
+        UUID victimUniqueId = victim.getUniqueId();
         if (matchService.isPvpAllowed(attackerUniqueId, victimUniqueId)) {
             return false;
         }
         return !isAdminAgainstActiveFighter(isAdmin(attackerUniqueId), matchService.isActiveFighter(victimUniqueId));
+    }
+
+    private boolean isInsideTheEffectArea(Player victim) {
+        return arenaRegistry.findEffectArea()
+                .filter(effectArea -> effectArea.contains(victim.getLocation()))
+                .isPresent();
     }
 
     static boolean isAdminAgainstActiveFighter(boolean attackerAdmin, boolean victimActiveFighter) {

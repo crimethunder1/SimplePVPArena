@@ -63,7 +63,8 @@ public final class ArenaBreakListener implements Listener {
         ArenaShape shape = arenaShape.get();
         boolean arenaAdmin = AdminPermission.isAdmin(player);
         boolean insideFightArea = shape.containsCell(block.getX(), block.getZ());
-        if (!ArenaWorldBuildRule.isChangeAllowed(arenaAdmin, insideFightArea)) {
+        if (!ArenaWorldBuildRule.isChangeAllowed(arenaAdmin, insideFightArea,
+                ArenaBuildListener.isInsideTheEffectArea(arenaRegistry, block))) {
             TournamentMessages.sendActionBarError(player, ArenaWorldBuildRule.REFUSAL);
             return true;
         }

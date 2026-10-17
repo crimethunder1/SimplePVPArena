@@ -39,7 +39,8 @@ class GlobalPvpLockListenerTest {
         admin.grantAdminPermission();
         bystander = harness.addPlayer("Bystander");
         harness.startMatch(fighter, mate, opponent, opponentMate);
-        pvpLockListener = new GlobalPvpLockListener(harness.getMatchService(), harness.getPlugin().getServer());
+        pvpLockListener = new GlobalPvpLockListener(harness.getMatchService(), harness.getArenaRegistry(),
+                harness.getPlugin().getServer());
     }
 
     @Test

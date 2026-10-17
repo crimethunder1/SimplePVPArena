@@ -4,8 +4,10 @@ import de.simplepvparena.arena.ArenaBaselineService;
 import de.simplepvparena.arena.ArenaCleaningParticleSettings;
 import de.simplepvparena.arena.ArenaCleaningService;
 import de.simplepvparena.arena.ArenaCleaningVisualEffect;
+import de.simplepvparena.arena.ArenaRegistry;
 import de.simplepvparena.arena.ArenaSafetyZone;
 import de.simplepvparena.arena.ArenaSetupService;
+import de.simplepvparena.arena.EffectArea;
 import de.simplepvparena.border.BorderParticleService;
 import de.simplepvparena.border.BorderVisualEffect;
 import de.simplepvparena.border.BorderWallPreview;
@@ -29,6 +31,7 @@ public final class PluginLiveConfiguration implements LiveConfiguration {
     private final ArenaBaselineService arenaBaselineService;
     private final ArenaSetupService arenaSetupService;
     private final ArenaSafetyZone arenaSafetyZone;
+    private final ArenaRegistry arenaRegistry;
     private final BorderParticleService borderParticleService;
     private final BorderWallPreview borderWallPreview;
     private final BorderVisualEffect borderVisualEffect;
@@ -42,6 +45,7 @@ public final class PluginLiveConfiguration implements LiveConfiguration {
                                    ArenaBaselineService arenaBaselineService,
                                    ArenaSetupService arenaSetupService,
                                    ArenaSafetyZone arenaSafetyZone,
+                                   ArenaRegistry arenaRegistry,
                                    BorderParticleService borderParticleService,
                                    BorderWallPreview borderWallPreview,
                                    BorderVisualEffect borderVisualEffect,
@@ -55,6 +59,7 @@ public final class PluginLiveConfiguration implements LiveConfiguration {
         this.arenaBaselineService = Objects.requireNonNull(arenaBaselineService, "arenaBaselineService");
         this.arenaSetupService = Objects.requireNonNull(arenaSetupService, "arenaSetupService");
         this.arenaSafetyZone = Objects.requireNonNull(arenaSafetyZone, "arenaSafetyZone");
+        this.arenaRegistry = Objects.requireNonNull(arenaRegistry, "arenaRegistry");
         this.borderParticleService = Objects.requireNonNull(borderParticleService, "borderParticleService");
         this.borderWallPreview = Objects.requireNonNull(borderWallPreview, "borderWallPreview");
         this.borderVisualEffect = Objects.requireNonNull(borderVisualEffect, "borderVisualEffect");
@@ -115,6 +120,19 @@ public final class PluginLiveConfiguration implements LiveConfiguration {
     @Override
     public void setSafetyZoneRadius(int radius) {
         arenaSafetyZone.setRadius(radius);
+    }
+
+    @Override
+    public void setArenaEffectMargin(int margin) {
+        arenaRegistry.setEffectMargin(margin);
+        arenaRegistry.findTribuneOutsideOfTheEffectArea().ifPresent(warning -> problemReporter.accept(warning
+                + ". Nothing was dropped, set the tribune spawn again closer to the fight area or raise "
+                + EffectArea.MARGIN_CONFIGURATION_PATH + " in config.yml"));
+    }
+
+    @Override
+    public void setTeleportOnJoin(boolean teleportOnJoin) {
+        arenaRegistry.setTeleportOnJoin(teleportOnJoin);
     }
 
     @Override

@@ -125,7 +125,15 @@ public final class ArenaSetupService {
         captureBaseline(admin);
         previewRecognizedWall(admin, world, shape, borderColumns);
         reportSpawnPlacementWarnings(admin, arena);
+        reportTribuneOutsideOfTheEffectArea(admin);
         reportMissingConfiguration(admin, arena);
+    }
+
+    private void reportTribuneOutsideOfTheEffectArea(Player admin) {
+        activeArena.findTribuneOutsideOfTheEffectArea().ifPresent(warning -> TournamentMessages.sendWarning(admin,
+                warning + TournamentMessages.LINE_BREAK + "The calculation stays valid. Set the tribune spawn "
+                        + "again closer to the fight area, the margin around it is set in config.yml under "
+                        + EffectArea.MARGIN_CONFIGURATION_PATH));
     }
 
     private void reportVolume(Player admin, ArenaVolumeUpdate update) {
@@ -242,7 +250,8 @@ public final class ArenaSetupService {
     public void setSpawn(Player admin, ArenaSpawnType spawnType) {
         Arena arena = activeArena.getArena();
         PositionSnapshot position = PositionSnapshot.fromLocation(admin.getLocation());
-        Optional<String> rejection = arena.setSpawn(spawnType, position);
+        Optional<String> rejection = findEffectAreaRejection(spawnType, position)
+                .or(() -> arena.setSpawn(spawnType, position));
         if (rejection.isPresent()) {
             TournamentMessages.sendError(admin, rejection.get());
             return;
@@ -254,7 +263,37 @@ public final class ArenaSetupService {
         reportMissingConfiguration(admin, arena);
     }
 
+    private Optional<String> findEffectAreaRejection(ArenaSpawnType spawnType, PositionSnapshot position) {
+        if (spawnType != ArenaSpawnType.TRIBUNE) {
+            return Optional.empty();
+        }
+        return activeArena.findEffectArea()
+                .filter(effectArea -> !effectArea.contains(position.worldName(), position.x(), position.z()))
+                .map(effectArea -> "The " + spawnType.getDisplayName() + " must lie inside the area of effect, "
+                        + position.describe() + " lies "
+                        + effectArea.describeDistanceOf(position.worldName(), position.x(), position.z())
+                        + TournamentMessages.LINE_BREAK + "Stand closer to the fight area, then set it again. "
+                        + "Nothing was stored"
+                        + TournamentMessages.LINE_BREAK + "The margin around the fight area is set in config.yml "
+                        + "under " + EffectArea.MARGIN_CONFIGURATION_PATH);
+    }
+
+    public Optional<String> findResetRejection() {
+        if (matchService.hasActiveMatch()) {
+            return Optional.of("A match is running, the arena can only be reset between matches");
+        }
+        if (arenaReservedForMatch.getAsBoolean()) {
+            return Optional.of(ARENA_RESERVED_FOR_MATCH_MESSAGE);
+        }
+        return Optional.empty();
+    }
+
     public void clearConfiguration(CommandSender sender) {
+        Optional<String> rejection = findResetRejection();
+        if (rejection.isPresent()) {
+            TournamentMessages.sendError(sender, rejection.get());
+            return;
+        }
         activeArena.clear();
         arenaBaselineService.discardSnapshot();
         arenaConfigurationSaver.run();
@@ -397,6 +436,8 @@ public final class ArenaSetupService {
                         + arena.getConfiguredSecondTeamSpawn().map(PositionSnapshot::describe).orElse("not configured"),
                 "  tribune spawn: "
                         + arena.getTribuneSpawn().map(PositionSnapshot::describe).orElse("not configured"),
+                "  Area of effect: " + activeArena.findEffectArea().map(EffectArea::describe)
+                        .orElse("none until the fight area is calculated"),
                 "  running match: " + matchService.getActiveMatch().map(Match::describe).orElse("none"));
     }
 

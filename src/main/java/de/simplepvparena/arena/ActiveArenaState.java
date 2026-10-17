@@ -29,6 +29,14 @@ public final class ActiveArenaState {
         return arenaRegistry.getArena().getShape();
     }
 
+    public Optional<EffectArea> findEffectArea() {
+        return arenaRegistry.findEffectArea();
+    }
+
+    public Optional<String> findTribuneOutsideOfTheEffectArea() {
+        return arenaRegistry.findTribuneOutsideOfTheEffectArea();
+    }
+
     public ArenaVolumeUpdate adoptCalculation(ArenaShape calculatedShape) {
         Objects.requireNonNull(calculatedShape, "calculatedShape");
         ArenaShape storedShape = getCleanedVolume().orElse(null);

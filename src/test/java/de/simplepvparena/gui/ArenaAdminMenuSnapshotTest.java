@@ -21,7 +21,8 @@ class ArenaAdminMenuSnapshotTest {
                 Arena | 27
                 4 | BOOK | Arena | Arena incomplete /   fight area: not calculated / \
                   first team spawn: not configured /   second team spawn: not configured / \
-                  tribune spawn: not configured /   running match: none
+                  tribune spawn: not configured /   Area of effect: none until the fight area is calculated / \
+                  running match: none
                 10 | SPYGLASS | Calculate the fight area | Runs the calculation for the position you stand on / \
                 Stand inside the closed border wall before you click / \
                 The menu closes so you can see the recognized wall
@@ -91,7 +92,8 @@ class ArenaAdminMenuSnapshotTest {
                 Arena | 27
                 4 | BOOK | Arena | Arena ready /   fight area: admin-menu with 25 cells between 1/1 and 5/5, from y 64 \
                 to y 67, calculated at y 64 /   first team spawn: not configured / \
-                  second team spawn: not configured /   tribune spawn: admin-menu 11.5/64.0/11.5 /   running match: none
+                  second team spawn: not configured /   tribune spawn: admin-menu 11.5/64.0/11.5 / \
+                  Area of effect: centre 3.5/3.5, radius 99.5 blocks /   running match: none
                 10 | SPYGLASS | Calculate the fight area | Runs the calculation for the position you stand on / \
                 Stand inside the closed border wall before you click / \
                 The menu closes so you can see the recognized wall
@@ -142,7 +144,7 @@ class ArenaAdminMenuSnapshotTest {
                 4 | BOOK | Arena | Arena ready /   fight area: admin-menu with 25 cells between 1/1 and 5/5, from y 64 \
                 to y 67, calculated at y 64 /   first team spawn: not configured / \
                   second team spawn: not configured /   tribune spawn: admin-menu 11.5/64.0/11.5 / \
-                  running match: M1 (Alpha 0 : 0 Bravo)
+                  Area of effect: centre 3.5/3.5, radius 99.5 blocks /   running match: M1 (Alpha 0 : 0 Bravo)
                 10 | SPYGLASS | Calculate the fight area | Runs the calculation for the position you stand on / \
                 Stand inside the closed border wall before you click / \
                 The menu closes so you can see the recognized wall

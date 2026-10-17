@@ -248,7 +248,8 @@ public final class SimplePVPArenaPlugin extends JavaPlugin {
         configurationReloadService = new ConfigurationReloadService(this::getConfig, this::reloadConfig,
                 new PluginLiveConfiguration(matchService, startGateDuration, fighterColours,
                         arenaCleaningService, arenaCleaningVisualEffect, arenaBaselineService, arenaSetupService,
-                        arenaSafetyZone, borderParticleService, borderWallPreview, borderVisualEffect,
+                        arenaSafetyZone, arenaRegistry, borderParticleService, borderWallPreview,
+                        borderVisualEffect,
                         getLogger()::warning),
                 getLogger()::warning);
         configurationReloadService.applyStoredConfiguration();
@@ -399,7 +400,8 @@ public final class SimplePVPArenaPlugin extends JavaPlugin {
         getServer().getPluginManager().registerEvents(new ArenaSafetyZoneListener(arenaSafetyZone), this);
         getServer().getPluginManager().registerEvents(new AdminMenuListener(adminMenuService), this);
         getServer().getPluginManager().registerEvents(new ChatInputListener(chatInputService), this);
-        getServer().getPluginManager().registerEvents(new GlobalPvpLockListener(matchService, getServer()), this);
+        getServer().getPluginManager().registerEvents(
+                new GlobalPvpLockListener(matchService, arenaRegistry, getServer()), this);
         getServer().getPluginManager().registerEvents(new FriendlyFireListener(matchService), this);
         getServer().getPluginManager().registerEvents(
                 new ArenaDamageListener(matchService, spectatorService, arenaRegistry, getServer()), this);

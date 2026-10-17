@@ -101,8 +101,7 @@ final class ArenaAdminMenu implements AdminMenu {
             case ARENA_SECOND_TEAM_SPAWN_SLOT -> setSpawn(player, holder, ArenaSpawnType.SECOND_TEAM);
             case ARENA_TRIBUNE_SPAWN_SLOT -> setSpawn(player, holder, ArenaSpawnType.TRIBUNE);
             case ARENA_CLEAN_SLOT -> askForCleaningConfirmation(player);
-            case ARENA_RESET_SLOT -> navigation.open(player,
-                    AdminMenuHolder.confirmation(ConfirmationRequest.RESET_ARENA, null, 0));
+            case ARENA_RESET_SLOT -> askForResetConfirmation(player);
             case AdminMenuLayout.BACK_SLOT -> navigation.open(player, AdminMenuHolder.main());
             default -> { }
         }
@@ -233,6 +232,15 @@ final class ArenaAdminMenu implements AdminMenu {
             return;
         }
         navigation.open(player, AdminMenuHolder.confirmation(ConfirmationRequest.CLEAN_ARENA, null, 0));
+    }
+
+    private void askForResetConfirmation(Player player) {
+        Optional<String> rejection = arenaSetupService.findResetRejection();
+        if (rejection.isPresent()) {
+            TournamentMessages.sendError(player, rejection.get());
+            return;
+        }
+        navigation.open(player, AdminMenuHolder.confirmation(ConfirmationRequest.RESET_ARENA, null, 0));
     }
 
     private List<String> buildHeightMarkerLore() {

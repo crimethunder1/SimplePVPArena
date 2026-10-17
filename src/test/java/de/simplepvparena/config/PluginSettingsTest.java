@@ -46,6 +46,8 @@ class PluginSettingsTest {
                 settings.arenaCleaningParticleSettings());
         assertEquals(12345, settings.maximumArenaCellCount());
         assertEquals(17, settings.safetyZoneRadius());
+        assertEquals(40, settings.arenaEffectMargin());
+        assertFalse(settings.teleportOnJoin());
         assertEquals(11L, settings.borderParticlePeriodTicks());
         assertEquals(7, settings.borderParticleViewRadius());
         assertEquals(9, settings.borderParticleMaximumBlocksPerPlayer());
@@ -72,6 +74,8 @@ class PluginSettingsTest {
         assertTrue(!shipped.arenaCleaningParticleSettings().equals(settings.arenaCleaningParticleSettings()));
         assertTrue(shipped.maximumArenaCellCount() != settings.maximumArenaCellCount());
         assertTrue(shipped.safetyZoneRadius() != settings.safetyZoneRadius());
+        assertTrue(shipped.arenaEffectMargin() != settings.arenaEffectMargin());
+        assertTrue(shipped.teleportOnJoin() != settings.teleportOnJoin());
         assertTrue(shipped.borderParticlePeriodTicks() != settings.borderParticlePeriodTicks());
         assertTrue(shipped.borderParticleViewRadius() != settings.borderParticleViewRadius());
         assertTrue(shipped.borderParticleMaximumBlocksPerPlayer() != settings.borderParticleMaximumBlocksPerPlayer());
@@ -383,6 +387,8 @@ class PluginSettingsTest {
         configuration.set(ArenaCleaningParticleSettings.COLUMNS_PER_TICK_CONFIGURATION_PATH, 3);
         configuration.set(PluginSettings.ARENA_MAXIMUM_CELLS_PATH, 12345);
         configuration.set(PluginSettings.ARENA_SAFETY_ZONE_RADIUS_PATH, 17);
+        configuration.set(PluginSettings.ARENA_EFFECT_MARGIN_PATH, 40);
+        configuration.set(PluginSettings.ARENA_TELEPORT_ON_JOIN_PATH, false);
         configuration.set(PluginSettings.BORDER_PARTICLE_PERIOD_PATH, 11);
         configuration.set(PluginSettings.BORDER_PARTICLE_VIEW_RADIUS_PATH, 7);
         configuration.set(PluginSettings.BORDER_PARTICLE_MAXIMUM_BLOCKS_PATH, 9);

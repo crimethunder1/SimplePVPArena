@@ -42,7 +42,8 @@ public final class ArenaBuildListener implements Listener {
         }
         boolean arenaAdmin = AdminPermission.isAdmin(player);
         boolean insideFightArea = arenaShape.get().containsCell(placedBlock.getX(), placedBlock.getZ());
-        if (!ArenaWorldBuildRule.isChangeAllowed(arenaAdmin, insideFightArea)) {
+        if (!ArenaWorldBuildRule.isChangeAllowed(arenaAdmin, insideFightArea,
+                isInsideTheEffectArea(arenaRegistry, placedBlock))) {
             TournamentMessages.sendError(player, ArenaWorldBuildRule.REFUSAL);
             return true;
         }
@@ -52,6 +53,12 @@ public final class ArenaBuildListener implements Listener {
         }
         TournamentMessages.sendError(player, "Only the fighters of the running round build inside the arena");
         return true;
+    }
+
+    static boolean isInsideTheEffectArea(ArenaRegistry arenaRegistry, Block block) {
+        return arenaRegistry.findEffectArea()
+                .filter(effectArea -> effectArea.containsBlock(block.getWorld().getName(), block.getX(), block.getZ()))
+                .isPresent();
     }
 
     static Optional<ArenaShape> findFightArea(ArenaRegistry arenaRegistry, Block block) {

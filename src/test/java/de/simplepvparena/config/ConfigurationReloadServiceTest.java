@@ -44,6 +44,8 @@ class ConfigurationReloadServiceTest {
                 liveConfiguration.arenaCleaningParticleSettings());
         assertEquals(12345, liveConfiguration.intValueOf(RecordingLiveConfiguration.MAXIMUM_CELL_COUNT));
         assertEquals(17, liveConfiguration.intValueOf(RecordingLiveConfiguration.SAFETY_ZONE_RADIUS));
+        assertEquals(40, liveConfiguration.intValueOf(RecordingLiveConfiguration.EFFECT_MARGIN));
+        assertFalse(liveConfiguration.booleanValueOf(RecordingLiveConfiguration.TELEPORT_ON_JOIN));
         assertEquals(11L, liveConfiguration.longValueOf(RecordingLiveConfiguration.PARTICLE_PERIOD));
         assertEquals(7, liveConfiguration.intValueOf(RecordingLiveConfiguration.PARTICLE_VIEW_RADIUS));
         assertEquals(9, liveConfiguration.intValueOf(RecordingLiveConfiguration.PARTICLE_MAXIMUM_BLOCKS));

@@ -13,6 +13,8 @@ public record ConfigurationReloadReport(List<String> problems) {
             "the depth below the floor the next baseline is taken to",
             "the cell limit of the arena calculation",
             "the radius of the safety zone",
+            "the margin of the area of effect around the fight area",
+            "whether joining players are sent to the tribune",
             "the border particles, their limits and the confirmed border marker");
 
     private static final String UNTOUCHED_PARTS =

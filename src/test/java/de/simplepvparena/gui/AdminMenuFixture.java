@@ -388,6 +388,10 @@ final class AdminMenuFixture {
         adminLocation = new Location(world, OUTSIDE_COORDINATE, GROUND_Y, OUTSIDE_COORDINATE);
     }
 
+    void standAt(double x, double z) {
+        adminLocation = new Location(world, x, GROUND_Y, z);
+    }
+
     void revokeAdminPermission() {
         adminPermissionGranted = false;
     }

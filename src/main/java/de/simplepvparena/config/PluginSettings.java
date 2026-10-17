@@ -3,8 +3,10 @@ package de.simplepvparena.config;
 import de.simplepvparena.arena.ArenaBaselineService;
 import de.simplepvparena.arena.ArenaCleaningParticleSettings;
 import de.simplepvparena.arena.ArenaCleaningService;
+import de.simplepvparena.arena.ArenaRegistry;
 import de.simplepvparena.arena.ArenaSafetyZone;
 import de.simplepvparena.arena.ArenaShapeFloodFill;
+import de.simplepvparena.arena.EffectArea;
 import de.simplepvparena.border.BorderParticleService;
 import de.simplepvparena.border.BorderWallPreview;
 import de.simplepvparena.border.ConfirmedBorderParticleSettings;
@@ -30,6 +32,8 @@ public record PluginSettings(long roundResetDelayTicks,
                              ArenaCleaningParticleSettings arenaCleaningParticleSettings,
                              int maximumArenaCellCount,
                              int safetyZoneRadius,
+                             int arenaEffectMargin,
+                             boolean teleportOnJoin,
                              long borderParticlePeriodTicks,
                              int borderParticleViewRadius,
                              int borderParticleMaximumBlocksPerPlayer,
@@ -53,6 +57,8 @@ public record PluginSettings(long roundResetDelayTicks,
     public static final String ARENA_BASELINE_DEPTH_BELOW_FLOOR_PATH = "arena.baseline-depth-below-floor";
     public static final String ARENA_MAXIMUM_CELLS_PATH = ArenaShapeFloodFill.MAXIMUM_CELL_COUNT_CONFIGURATION_PATH;
     public static final String ARENA_SAFETY_ZONE_RADIUS_PATH = ArenaSafetyZone.RADIUS_CONFIGURATION_PATH;
+    public static final String ARENA_EFFECT_MARGIN_PATH = EffectArea.MARGIN_CONFIGURATION_PATH;
+    public static final String ARENA_TELEPORT_ON_JOIN_PATH = "arena.teleport-on-join";
     public static final String BORDER_PARTICLE_PERIOD_PATH = "border.particle-period-ticks";
     public static final String BORDER_PARTICLE_VIEW_RADIUS_PATH = "border.particle-view-radius";
     public static final String BORDER_PARTICLE_MAXIMUM_BLOCKS_PATH = "border.particle-maximum-blocks-per-player";
@@ -83,6 +89,8 @@ public record PluginSettings(long roundResetDelayTicks,
             ArenaCleaningParticleSettings.COLUMNS_PER_TICK_CONFIGURATION_PATH,
             ARENA_MAXIMUM_CELLS_PATH,
             ARENA_SAFETY_ZONE_RADIUS_PATH,
+            ARENA_EFFECT_MARGIN_PATH,
+            ARENA_TELEPORT_ON_JOIN_PATH,
             BORDER_PARTICLE_PERIOD_PATH,
             BORDER_PARTICLE_VIEW_RADIUS_PATH,
             BORDER_PARTICLE_MAXIMUM_BLOCKS_PATH,
@@ -106,6 +114,8 @@ public record PluginSettings(long roundResetDelayTicks,
                 ArenaCleaningParticleSettings.defaults(),
                 ArenaShapeFloodFill.DEFAULT_MAXIMUM_CELL_COUNT,
                 ArenaSafetyZone.DEFAULT_RADIUS,
+                EffectArea.DEFAULT_MARGIN,
+                ArenaRegistry.DEFAULT_TELEPORT_ON_JOIN,
                 BorderParticleService.DEFAULT_PERIOD_TICKS,
                 BorderParticleService.DEFAULT_VIEW_RADIUS,
                 BorderParticleService.DEFAULT_MAXIMUM_BLOCKS_PER_PLAYER,
@@ -132,6 +142,8 @@ public record PluginSettings(long roundResetDelayTicks,
                 readArenaCleaningParticleSettings(configuration, problemReporter),
                 readMaximumArenaCellCount(configuration, problemReporter),
                 readSafetyZoneRadius(configuration, problemReporter),
+                readEffectMargin(configuration, problemReporter),
+                configuration.getBoolean(ARENA_TELEPORT_ON_JOIN_PATH, shipped.teleportOnJoin()),
                 configuration.getLong(BORDER_PARTICLE_PERIOD_PATH, shipped.borderParticlePeriodTicks()),
                 configuration.getInt(BORDER_PARTICLE_VIEW_RADIUS_PATH, shipped.borderParticleViewRadius()),
                 configuration.getInt(BORDER_PARTICLE_MAXIMUM_BLOCKS_PATH,
@@ -155,6 +167,8 @@ public record PluginSettings(long roundResetDelayTicks,
         liveConfiguration.setArenaCleaningParticleSettings(arenaCleaningParticleSettings);
         liveConfiguration.setMaximumArenaCellCount(maximumArenaCellCount);
         liveConfiguration.setSafetyZoneRadius(safetyZoneRadius);
+        liveConfiguration.setArenaEffectMargin(arenaEffectMargin);
+        liveConfiguration.setTeleportOnJoin(teleportOnJoin);
         liveConfiguration.setBorderParticlePeriodTicks(borderParticlePeriodTicks);
         liveConfiguration.setBorderParticleViewRadius(borderParticleViewRadius);
         liveConfiguration.setBorderParticleMaximumBlocksPerPlayer(borderParticleMaximumBlocksPerPlayer);
@@ -196,6 +210,22 @@ public record PluginSettings(long roundResetDelayTicks,
         problemReporter.accept(ARENA_SAFETY_ZONE_RADIUS_PATH + " cannot be negative, falling back to "
                 + ArenaSafetyZone.DEFAULT_RADIUS + " blocks. Use zero to switch the safety zone off");
         return ArenaSafetyZone.DEFAULT_RADIUS;
+    }
+
+    private static int readEffectMargin(ConfigurationSection configuration, Consumer<String> problemReporter) {
+        if (!configuration.isSet(ARENA_EFFECT_MARGIN_PATH)) {
+            return EffectArea.DEFAULT_MARGIN;
+        }
+        if (configuration.isInt(ARENA_EFFECT_MARGIN_PATH)) {
+            int margin = configuration.getInt(ARENA_EFFECT_MARGIN_PATH);
+            if (margin >= EffectArea.MINIMUM_MARGIN && margin <= EffectArea.MAXIMUM_MARGIN) {
+                return margin;
+            }
+        }
+        problemReporter.accept(ARENA_EFFECT_MARGIN_PATH + " must be a whole number between "
+                + EffectArea.MINIMUM_MARGIN + " and " + EffectArea.MAXIMUM_MARGIN + " blocks, falling back to "
+                + EffectArea.DEFAULT_MARGIN + " blocks");
+        return EffectArea.DEFAULT_MARGIN;
     }
 
     private static ArenaCleaningParticleSettings readArenaCleaningParticleSettings(

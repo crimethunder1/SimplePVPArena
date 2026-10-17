@@ -7,6 +7,14 @@ public final class ArenaEnvironmentProtectionRule {
     private ArenaEnvironmentProtectionRule() {
     }
 
+    public static boolean isProtected(Optional<ArenaShape> fightArea, Optional<EffectArea> effectArea,
+                                      int capturedFloorY, String worldName, int blockX, int blockY, int blockZ) {
+        if (effectArea.isEmpty() || !effectArea.get().containsBlock(worldName, blockX, blockZ)) {
+            return false;
+        }
+        return isProtected(fightArea, capturedFloorY, worldName, blockX, blockY, blockZ);
+    }
+
     public static boolean isProtected(Optional<ArenaShape> fightArea, int capturedFloorY, String worldName,
                                       int blockX, int blockY, int blockZ) {
         if (fightArea.isEmpty() || !fightArea.get().getWorldName().equals(worldName)) {

@@ -12,6 +12,7 @@ public final class ArenaRegistry {
     public static final String LEGACY_ARENAS_SECTION = "arenas";
     public static final String LEGACY_FINAL_ARENA_KEY = "final-arena";
     public static final String LEGACY_REGIONS_SECTION = "regions";
+    public static final boolean DEFAULT_TELEPORT_ON_JOIN = true;
 
     private static final String SHAPE_SECTION = "shape";
     private static final String SHAPE_WORLD_KEY = "world";
@@ -28,6 +29,11 @@ public final class ArenaRegistry {
     private final Arena arena = new Arena();
 
     private String shapeLoadFailure;
+    private int effectMargin = EffectArea.DEFAULT_MARGIN;
+    private boolean teleportOnJoin = DEFAULT_TELEPORT_ON_JOIN;
+    private ArenaShape effectAreaShape;
+    private int effectAreaMargin;
+    private EffectArea effectArea;
 
     public Arena getArena() {
         return arena;
@@ -47,6 +53,50 @@ public final class ArenaRegistry {
 
     public void clearArenaConfiguration() {
         arena.clearConfiguration();
+    }
+
+    public void setEffectMargin(int effectMargin) {
+        this.effectMargin = effectMargin;
+    }
+
+    public int getEffectMargin() {
+        return effectMargin;
+    }
+
+    public void setTeleportOnJoin(boolean teleportOnJoin) {
+        this.teleportOnJoin = teleportOnJoin;
+    }
+
+    public boolean isTeleportOnJoin() {
+        return teleportOnJoin;
+    }
+
+    public Optional<EffectArea> findEffectArea() {
+        Optional<ArenaShape> shape = arena.getShape();
+        if (shape.isEmpty()) {
+            return Optional.empty();
+        }
+        if (effectArea == null || effectAreaShape != shape.get() || effectAreaMargin != effectMargin) {
+            effectAreaShape = shape.get();
+            effectAreaMargin = effectMargin;
+            effectArea = EffectArea.around(effectAreaShape, effectMargin);
+        }
+        return Optional.of(effectArea);
+    }
+
+    public Optional<String> findTribuneOutsideOfTheEffectArea() {
+        Optional<EffectArea> currentEffectArea = findEffectArea();
+        Optional<PositionSnapshot> tribune = arena.getConfiguredTribuneSpawn();
+        if (currentEffectArea.isEmpty() || tribune.isEmpty()) {
+            return Optional.empty();
+        }
+        PositionSnapshot position = tribune.get();
+        EffectArea area = currentEffectArea.get();
+        if (area.contains(position.worldName(), position.x(), position.z())) {
+            return Optional.empty();
+        }
+        return Optional.of("The tribune spawn " + position.describe() + " lies outside of the area of effect, "
+                + area.describeDistanceOf(position.worldName(), position.x(), position.z()));
     }
 
     public Optional<String> getShapeLoadFailure() {
