@@ -7,6 +7,7 @@ import de.simplepvparena.config.ConfigurationReloadReport;
 import de.simplepvparena.diagnostics.TournamentDryRun;
 import de.simplepvparena.gate.StartGateItemService;
 import de.simplepvparena.input.ChatInputService;
+import de.simplepvparena.kit.KitLibrary;
 import de.simplepvparena.kit.KitSaveService;
 import de.simplepvparena.match.MatchService;
 import de.simplepvparena.team.EventTeamImportService;
@@ -34,13 +35,14 @@ public final class AdminMenuService {
                             ArenaHeightMarkerService heightMarkerService,
                             StartGateItemService gateItemService,
                             BorderSelectorModeRegistry borderSelectorModes,
+                            KitLibrary kitLibrary,
                             KitSaveService kitSaveService,
                             ChatInputService chatInputService,
                             Runnable teamConfigurationSaver,
                             Supplier<ConfigurationReloadReport> configurationReloader) {
         this(plugin, tournamentManager, tournamentDryRun, teamRegistry, teamMemberLookup, eventTeamImportService,
                 matchService, arenaSetupService, heightMarkerService, gateItemService, borderSelectorModes,
-                kitSaveService, chatInputService, teamConfigurationSaver, configurationReloader,
+                kitLibrary, kitSaveService, chatInputService, teamConfigurationSaver, configurationReloader,
                 new InventoryAdminMenuWindows(plugin));
     }
 
@@ -55,6 +57,7 @@ public final class AdminMenuService {
                      ArenaHeightMarkerService heightMarkerService,
                      StartGateItemService gateItemService,
                      BorderSelectorModeRegistry borderSelectorModes,
+                     KitLibrary kitLibrary,
                      KitSaveService kitSaveService,
                      ChatInputService chatInputService,
                      Runnable teamConfigurationSaver,
@@ -72,8 +75,10 @@ public final class AdminMenuService {
         Objects.requireNonNull(heightMarkerService, "heightMarkerService");
         Objects.requireNonNull(gateItemService, "gateItemService");
         Objects.requireNonNull(borderSelectorModes, "borderSelectorModes");
-        KitAdminMenu kitAdminMenu = new KitAdminMenu(navigator, kitSaveService, matchService::hasActiveMatch);
         Objects.requireNonNull(chatInputService, "chatInputService");
+        KitAdminMenu kitAdminMenu = new KitAdminMenu(navigator, kitLibrary, kitSaveService, chatInputService);
+        KitActionsAdminMenu kitActionsAdminMenu = new KitActionsAdminMenu(navigator, kitLibrary, kitSaveService,
+                matchService::hasActiveMatch);
         Objects.requireNonNull(teamConfigurationSaver, "teamConfigurationSaver");
         Objects.requireNonNull(configurationReloader, "configurationReloader");
         TeamActionsAdminMenu teamActionsAdminMenu = new TeamActionsAdminMenu(navigator, teamRegistry,
@@ -92,11 +97,13 @@ public final class AdminMenuService {
         ArenaAdminMenu arenaAdminMenu = new ArenaAdminMenu(navigator, arenaSetupService, heightMarkerService,
                 gateItemService, chatInputService);
         MainAdminMenu mainAdminMenu = new MainAdminMenu(navigator, tournamentManager, tournamentDryRun, teamRegistry,
-                matchService, arenaSetupService, borderSelectorModes, configurationReloader, tournamentMenuStatus);
+                matchService, arenaSetupService, borderSelectorModes, configurationReloader, tournamentMenuStatus,
+                kitLibrary);
         ConfirmationAdminMenu confirmationAdminMenu = new ConfirmationAdminMenu(navigator);
         confirmationAdminMenu.register(ConfirmationRequest.CLEAN_ARENA, arenaAdminMenu.cleanConfirmation());
         confirmationAdminMenu.register(ConfirmationRequest.RESET_ARENA, arenaAdminMenu.resetConfirmation());
-        confirmationAdminMenu.register(ConfirmationRequest.SAVE_KIT, kitAdminMenu.saveConfirmation());
+        confirmationAdminMenu.register(ConfirmationRequest.REPLACE_KIT, kitActionsAdminMenu.replaceConfirmation());
+        confirmationAdminMenu.register(ConfirmationRequest.DELETE_KIT, kitActionsAdminMenu.deleteConfirmation());
         confirmationAdminMenu.register(ConfirmationRequest.REMOVE_TEAM, teamActionsAdminMenu.removeConfirmation());
         confirmationAdminMenu.register(ConfirmationRequest.IMPORT_TEAMS, teamsAdminMenu.importConfirmation());
         confirmationAdminMenu.register(ConfirmationRequest.CANCEL_TOURNAMENT, matchAdminMenu.cancelConfirmation());
@@ -104,6 +111,7 @@ public final class AdminMenuService {
         navigator.register(AdminMenuType.MAIN, mainAdminMenu);
         navigator.register(AdminMenuType.ARENA, arenaAdminMenu);
         navigator.register(AdminMenuType.KIT, kitAdminMenu);
+        navigator.register(AdminMenuType.KIT_ACTIONS, kitActionsAdminMenu);
         navigator.register(AdminMenuType.TEAMS, teamsAdminMenu);
         navigator.register(AdminMenuType.TEAM_ACTIONS, teamActionsAdminMenu);
         navigator.register(AdminMenuType.MATCH, matchAdminMenu);

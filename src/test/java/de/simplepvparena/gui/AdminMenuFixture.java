@@ -29,18 +29,18 @@ import de.simplepvparena.gate.StartGateMarks;
 import de.simplepvparena.gate.StartGates;
 import de.simplepvparena.input.ChatInputRegistry;
 import de.simplepvparena.input.ChatInputService;
-import de.simplepvparena.kit.KitDefinition;
 import de.simplepvparena.kit.KitEquipmentSlot;
+import de.simplepvparena.kit.KitLibrary;
 import de.simplepvparena.kit.KitSaveService;
 import de.simplepvparena.kit.KitService;
-import de.simplepvparena.kit.SerializedKit;
 import de.simplepvparena.match.FighterColours;
 import de.simplepvparena.match.Match;
 import de.simplepvparena.match.MatchService;
 import de.simplepvparena.message.TournamentMessages;
 import de.simplepvparena.permission.AdminPermission;
-import de.simplepvparena.support.FakeItemStack;
 import de.simplepvparena.support.FakeKitItemSerializer;
+import de.simplepvparena.support.FakeSerializedKits;
+import de.simplepvparena.support.InMemoryKitLibraryStorage;
 import de.simplepvparena.support.SharedBukkitServer;
 import de.simplepvparena.team.EventTeamImportFile;
 import de.simplepvparena.team.EventTeamImportService;
@@ -104,13 +104,16 @@ final class AdminMenuFixture {
     private final StartGateDuration gateDuration = new StartGateDuration();
     private final BorderSelectorModeRegistry borderSelectorModes = new BorderSelectorModeRegistry();
     private final KitService kitService = new KitService();
+    private final InMemoryKitLibraryStorage kitStorage = new InMemoryKitLibraryStorage();
+    private final List<String> kitWriteFailures = new ArrayList<>();
+    private final KitLibrary kitLibrary = new KitLibrary(kitStorage, kitService, new FakeKitItemSerializer(),
+            problem -> { }, kitWriteFailures::add);
     private final List<List<String>> reloadedConfigurations = new ArrayList<>();
     private final ChatInputRegistry chatInputRegistry = new ChatInputRegistry();
     private final List<Runnable> scheduledTasks = new ArrayList<>();
     private final Map<String, TeamMember> knownPlayersByLowerCaseName = new LinkedHashMap<>();
     private final List<ItemStack> handedOutItems = new ArrayList<>();
     private final Map<Integer, ItemStack> adminInventoryItems = new HashMap<>();
-    private final List<SerializedKit> savedKits = new ArrayList<>();
     private final File importFile = new File("target/admin-menu-fixture/" + adminUniqueId + "/"
             + EventTeamImportFile.FILE_NAME);
     private final World world;
@@ -166,7 +169,8 @@ final class AdminMenuFixture {
                 matchService, arenaSetupService, new ArenaHeightMarkerService(plugin, heightMarkers),
                 new StartGateItemService(plugin, gateMarks, gateDuration, () -> { }),
                 borderSelectorModes,
-                new KitSaveService(kitService, savedKits::add, problem -> { }, new FakeKitItemSerializer()),
+                kitLibrary,
+                new KitSaveService(kitLibrary, new FakeKitItemSerializer()),
                 chatInputService, this::saveTeamConfiguration,
                 this::reloadConfiguration,
                 windows);
@@ -260,12 +264,20 @@ final class AdminMenuFixture {
         return runningMatch().getSecondTeam().getTeamName();
     }
 
-    void fillKit() {
-        kitService.setKitDefinition(new KitDefinition(
-                Map.of(KitEquipmentSlot.HEAD, new FakeItemStack("helmet"),
-                        KitEquipmentSlot.CHEST, new FakeItemStack("chestplate")),
-                Map.of(0, new FakeItemStack("sword"), 1, new FakeItemStack("bow"), 2,
-                        new FakeItemStack("arrows"))));
+    void createKit(String kitName) {
+        kitLibrary.createKit(kitName, FakeSerializedKits.wearingAndCarrying(
+                Map.of(KitEquipmentSlot.HEAD, "helmet", KitEquipmentSlot.CHEST, "chestplate"),
+                "sword", "bow", "arrows"));
+    }
+
+    void createNumberedKits(int kitCount) {
+        for (int kitNumber = 1; kitNumber <= kitCount; kitNumber++) {
+            kitLibrary.createKit(numberedKitName(kitNumber), FakeSerializedKits.carrying("item" + kitNumber));
+        }
+    }
+
+    static String numberedKitName(int kitNumber) {
+        return String.format(Locale.ROOT, "Kit%02d", kitNumber);
     }
 
     List<String> describeKit() {
@@ -274,6 +286,10 @@ final class AdminMenuFixture {
 
     void placeInAdminInventory(int slotIndex, ItemStack itemStack) {
         adminInventoryItems.put(slotIndex, itemStack);
+    }
+
+    void clearAdminInventory() {
+        adminInventoryItems.clear();
     }
 
     void switchBorderSelectorModeOn() {
@@ -375,8 +391,16 @@ final class AdminMenuFixture {
         return arenaConfigurationSaveCount;
     }
 
-    List<SerializedKit> savedKits() {
-        return savedKits;
+    KitLibrary kitLibrary() {
+        return kitLibrary;
+    }
+
+    InMemoryKitLibraryStorage kitStorage() {
+        return kitStorage;
+    }
+
+    List<String> kitWriteFailures() {
+        return kitWriteFailures;
     }
 
     List<ItemStack> handedOutItems() {

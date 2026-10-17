@@ -2,6 +2,8 @@ package de.simplepvparena.gui;
 
 import org.junit.jupiter.api.Test;
 
+import java.util.List;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class MainAdminMenuSnapshotTest {
@@ -38,11 +40,11 @@ class MainAdminMenuSnapshotTest {
                 and the teleport really arriving / Refused while a tournament or a match runs / \
                 The menu closes so you can read the answer
                 20 | COMPARATOR | Reload config.yml | Reads config.yml again and applies it live / \
-                Kit, round timeout, cleaning batch sizes, / cell limit, safety zone and border particles / \
+                Round timeout, cleaning batch sizes, cell limit, / safety zone and border particles / \
                 The arena, the teams and a running match stay untouched / The menu closes so you can read the answer
                 22 | BARRIER | Close | Closes the menu
-                24 | DIAMOND_CHESTPLATE | Kit | The items every fighter is given when a round starts / \
-                Saves your own inventory as that kit
+                24 | DIAMOND_CHESTPLATE | Kits | Kits: 0 / Default kit: none / \
+                The items every fighter is given when a round starts / Create, replace and delete kits
                 """, fixture.describeLastMenu());
     }
 
@@ -79,11 +81,11 @@ class MainAdminMenuSnapshotTest {
                 and the teleport really arriving / Refused while a tournament or a match runs / \
                 The menu closes so you can read the answer
                 20 | COMPARATOR | Reload config.yml | Reads config.yml again and applies it live / \
-                Kit, round timeout, cleaning batch sizes, / cell limit, safety zone and border particles / \
+                Round timeout, cleaning batch sizes, cell limit, / safety zone and border particles / \
                 The arena, the teams and a running match stay untouched / The menu closes so you can read the answer
                 22 | BARRIER | Close | Closes the menu
-                24 | DIAMOND_CHESTPLATE | Kit | The items every fighter is given when a round starts / \
-                Saves your own inventory as that kit
+                24 | DIAMOND_CHESTPLATE | Kits | Kits: 0 / Default kit: none / \
+                The items every fighter is given when a round starts / Create, replace and delete kits
                 """, fixture.describeLastMenu());
     }
 
@@ -117,13 +119,13 @@ class MainAdminMenuSnapshotTest {
                 before an event / It registers two test teams and would put them into the registry of a running \
                 bracket / Wait until the event is over or cancel it in the match menu of /tournament
                 20 | COMPARATOR | Reload config.yml | Reads config.yml again and applies it live / \
-                Kit, round timeout, cleaning batch sizes, / cell limit, safety zone and border particles / \
+                Round timeout, cleaning batch sizes, cell limit, / safety zone and border particles / \
                 The arena, the teams and a running match stay untouched / \
-                A match is running: the new round timeout and / the new kit arrive with the next round / \
+                A match is running: the new round timeout / arrives with the next round / \
                 The menu closes so you can read the answer
                 22 | BARRIER | Close | Closes the menu
-                24 | DIAMOND_CHESTPLATE | Kit | The items every fighter is given when a round starts / \
-                Saves your own inventory as that kit
+                24 | DIAMOND_CHESTPLATE | Kits | Kits: 0 / Default kit: none / \
+                The items every fighter is given when a round starts / Create, replace and delete kits
                 """.formatted(fixture.runningFirstTeamName(), fixture.runningSecondTeamName()),
                 fixture.describeLastMenu());
     }
@@ -159,13 +161,13 @@ class MainAdminMenuSnapshotTest {
                 before an event / It registers two test teams and would put them into the registry of a running \
                 bracket / Wait until the event is over or cancel it in the match menu of /tournament
                 20 | COMPARATOR | Reload config.yml | Reads config.yml again and applies it live / \
-                Kit, round timeout, cleaning batch sizes, / cell limit, safety zone and border particles / \
+                Round timeout, cleaning batch sizes, cell limit, / safety zone and border particles / \
                 The arena, the teams and a running match stay untouched / \
-                A match is running: the new round timeout and / the new kit arrive with the next round / \
+                A match is running: the new round timeout / arrives with the next round / \
                 The menu closes so you can read the answer
                 22 | BARRIER | Close | Closes the menu
-                24 | DIAMOND_CHESTPLATE | Kit | The items every fighter is given when a round starts / \
-                Saves your own inventory as that kit
+                24 | DIAMOND_CHESTPLATE | Kits | Kits: 0 / Default kit: none / \
+                The items every fighter is given when a round starts / Create, replace and delete kits
                 """.formatted(fixture.runningFirstTeamName(), fixture.runningSecondTeamName()),
                 fixture.describeLastMenu());
     }
@@ -200,11 +202,11 @@ class MainAdminMenuSnapshotTest {
                 before an event / It registers two test teams and would put them into the registry of a running \
                 bracket / Wait until the event is over or cancel it in the match menu of /tournament
                 20 | COMPARATOR | Reload config.yml | Reads config.yml again and applies it live / \
-                Kit, round timeout, cleaning batch sizes, / cell limit, safety zone and border particles / \
+                Round timeout, cleaning batch sizes, cell limit, / safety zone and border particles / \
                 The arena, the teams and a running match stay untouched / The menu closes so you can read the answer
                 22 | BARRIER | Close | Closes the menu
-                24 | DIAMOND_CHESTPLATE | Kit | The items every fighter is given when a round starts / \
-                Saves your own inventory as that kit
+                24 | DIAMOND_CHESTPLATE | Kits | Kits: 0 / Default kit: none / \
+                The items every fighter is given when a round starts / Create, replace and delete kits
                 """, fixture.describeLastMenu());
     }
 
@@ -239,13 +241,13 @@ class MainAdminMenuSnapshotTest {
                 before an event / It registers two test teams and would put them into the registry of a running \
                 bracket / Wait until the event is over or cancel it in the match menu of /tournament
                 20 | COMPARATOR | Reload config.yml | Reads config.yml again and applies it live / \
-                Kit, round timeout, cleaning batch sizes, / cell limit, safety zone and border particles / \
+                Round timeout, cleaning batch sizes, cell limit, / safety zone and border particles / \
                 The arena, the teams and a running match stay untouched / \
-                A match is running: the new round timeout and / the new kit arrive with the next round / \
+                A match is running: the new round timeout / arrives with the next round / \
                 The menu closes so you can read the answer
                 22 | BARRIER | Close | Closes the menu
-                24 | DIAMOND_CHESTPLATE | Kit | The items every fighter is given when a round starts / \
-                Saves your own inventory as that kit
+                24 | DIAMOND_CHESTPLATE | Kits | Kits: 0 / Default kit: none / \
+                The items every fighter is given when a round starts / Create, replace and delete kits
                 """.formatted(fixture.runningFirstTeamName(), fixture.runningSecondTeamName()),
                 fixture.describeLastMenu());
     }
@@ -286,11 +288,11 @@ class MainAdminMenuSnapshotTest {
                 and the teleport really arriving / Refused while a tournament or a match runs / \
                 The menu closes so you can read the answer
                 20 | COMPARATOR | Reload config.yml | Reads config.yml again and applies it live / \
-                Kit, round timeout, cleaning batch sizes, / cell limit, safety zone and border particles / \
+                Round timeout, cleaning batch sizes, cell limit, / safety zone and border particles / \
                 The arena, the teams and a running match stay untouched / The menu closes so you can read the answer
                 22 | BARRIER | Close | Closes the menu
-                24 | DIAMOND_CHESTPLATE | Kit | The items every fighter is given when a round starts / \
-                Saves your own inventory as that kit
+                24 | DIAMOND_CHESTPLATE | Kits | Kits: 0 / Default kit: none / \
+                The items every fighter is given when a round starts / Create, replace and delete kits
                 """, fixture.describeLastMenu());
     }
 
@@ -328,11 +330,24 @@ class MainAdminMenuSnapshotTest {
                 and the teleport really arriving / Refused while a tournament or a match runs / \
                 The menu closes so you can read the answer
                 20 | COMPARATOR | Reload config.yml | Reads config.yml again and applies it live / \
-                Kit, round timeout, cleaning batch sizes, / cell limit, safety zone and border particles / \
+                Round timeout, cleaning batch sizes, cell limit, / safety zone and border particles / \
                 The arena, the teams and a running match stay untouched / The menu closes so you can read the answer
                 22 | BARRIER | Close | Closes the menu
-                24 | DIAMOND_CHESTPLATE | Kit | The items every fighter is given when a round starts / \
-                Saves your own inventory as that kit
+                24 | DIAMOND_CHESTPLATE | Kits | Kits: 0 / Default kit: none / \
+                The items every fighter is given when a round starts / Create, replace and delete kits
                 """, fixture.describeLastMenu());
+    }
+
+    @Test
+    void namesTheNumberOfKitsAndTheDefaultKitOnTheKitTile() {
+        fixture.createKit("Archer");
+        fixture.createKit("Knight");
+
+        fixture.openMainMenu();
+
+        MenuTile kitTile = fixture.lastMenu().findTile(24).orElseThrow();
+        assertEquals("Kits", kitTile.displayName());
+        assertEquals(List.of("Kits: 2", "Default kit: Archer", "The items every fighter is given when a round starts",
+                "Create, replace and delete kits"), kitTile.loreLines());
     }
 }

@@ -22,6 +22,8 @@ import de.simplepvparena.gate.StartGateItemService;
 import de.simplepvparena.gate.StartGateMarks;
 import de.simplepvparena.gate.StartGates;
 import de.simplepvparena.input.ChatInputService;
+import de.simplepvparena.kit.KitLibrary;
+import de.simplepvparena.kit.KitLibraryStorage;
 import de.simplepvparena.kit.KitSaveService;
 import de.simplepvparena.kit.KitService;
 import de.simplepvparena.match.MatchService;
@@ -90,6 +92,8 @@ class AdminMenuSeamTest {
         ArenaRegistry arenaRegistry = new ArenaRegistry();
         ArenaHeightMarkers heightMarkers = new ArenaHeightMarkers();
         KitService kitService = new KitService();
+        KitLibrary kitLibrary = new KitLibrary(KitLibraryStorage.NONE, kitService, new FakeKitItemSerializer(),
+                problem -> { }, problem -> { });
         StartGateMarks gateMarks = new StartGateMarks();
         StartGateDuration gateDuration = new StartGateDuration();
         MatchService matchService = new MatchService(plugin, kitService, null, null, StartGates.NONE);
@@ -113,7 +117,8 @@ class AdminMenuSeamTest {
                 matchService, arenaSetupService, new ArenaHeightMarkerService(plugin, heightMarkers),
                 new StartGateItemService(plugin, gateMarks, gateDuration, () -> { }),
                 new BorderSelectorModeRegistry(),
-                new KitSaveService(kitService, serializedKit -> { }, problem -> { }, new FakeKitItemSerializer()),
+                kitLibrary,
+                new KitSaveService(kitLibrary, new FakeKitItemSerializer()),
                 new ChatInputService(plugin), () -> { },
                 () -> {
                     throw new UnsupportedOperationException("the configuration is not reloaded in this test");

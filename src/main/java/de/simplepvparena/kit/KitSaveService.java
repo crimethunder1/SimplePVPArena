@@ -4,46 +4,45 @@ import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
 
-import java.util.List;
 import java.util.Objects;
-import java.util.function.Consumer;
+import java.util.Optional;
 
 public final class KitSaveService {
 
-    private static final String EMPTY_INVENTORY_MESSAGE = "Your inventory is empty, the kit was not changed";
+    public static final String EMPTY_INVENTORY_CREATION_MESSAGE = "Your inventory is empty, no kit was created";
+    public static final String EMPTY_INVENTORY_REPLACEMENT_MESSAGE = "Your inventory is empty, the kit was not changed";
 
-    private final KitService kitService;
-    private final Consumer<SerializedKit> kitConfigurationSaver;
-    private final Consumer<String> problemReporter;
+    private final KitLibrary kitLibrary;
     private final KitSerialization kitSerialization;
 
-    public KitSaveService(KitService kitService, Consumer<SerializedKit> kitConfigurationSaver,
-                          Consumer<String> problemReporter, KitItemSerializer kitItemSerializer) {
-        this.kitService = Objects.requireNonNull(kitService, "kitService");
-        this.kitConfigurationSaver = Objects.requireNonNull(kitConfigurationSaver, "kitConfigurationSaver");
-        this.problemReporter = Objects.requireNonNull(problemReporter, "problemReporter");
+    public KitSaveService(KitLibrary kitLibrary, KitItemSerializer kitItemSerializer) {
+        this.kitLibrary = Objects.requireNonNull(kitLibrary, "kitLibrary");
         this.kitSerialization = new KitSerialization(kitItemSerializer);
     }
 
-    public KitSaveResult saveFromInventory(Player player) {
-        PlayerInventory inventory = player.getInventory();
-        if (holdsNoItem(inventory)) {
-            return KitSaveResult.rejected(EMPTY_INVENTORY_MESSAGE);
+    public KitSaveResult createFromInventory(Player player, String kitName) {
+        Optional<String> rejection = kitLibrary.findCreationRejection(kitName);
+        if (rejection.isPresent()) {
+            return KitSaveResult.rejected(rejection.get());
         }
-        SerializedKit serializedKit = KitInventoryCapture.capture(
-                equipmentSlot -> kitSerialization.encode(inventory.getItem(equipmentSlot.getEquipmentSlot())),
-                slotIndex -> kitSerialization.encode(inventory.getItem(slotIndex)));
-        kitConfigurationSaver.accept(serializedKit);
-        KitDefinition kitDefinition = kitSerialization.toDefinition(serializedKit, problemReporter);
-        kitService.setKitDefinition(kitDefinition);
-        return KitSaveResult.of(serializedKit, kitDefinition);
+        if (holdsNoItem(player)) {
+            return KitSaveResult.rejected(EMPTY_INVENTORY_CREATION_MESSAGE);
+        }
+        return describe(kitLibrary.createKit(kitName, capture(player.getInventory())));
     }
 
-    public List<String> describeKit() {
-        return kitService.getKitDefinition().describe();
+    public KitSaveResult replaceFromInventory(Player player, String kitName) {
+        if (kitLibrary.findKit(kitName).isEmpty()) {
+            return KitSaveResult.rejected("Unknown kit " + kitName);
+        }
+        if (holdsNoItem(player)) {
+            return KitSaveResult.rejected(EMPTY_INVENTORY_REPLACEMENT_MESSAGE);
+        }
+        return describe(kitLibrary.replaceKit(kitName, capture(player.getInventory())));
     }
 
-    private static boolean holdsNoItem(PlayerInventory inventory) {
+    public boolean holdsNoItem(Player player) {
+        PlayerInventory inventory = player.getInventory();
         for (KitEquipmentSlot equipmentSlot : KitEquipmentSlot.values()) {
             if (isItem(inventory.getItem(equipmentSlot.getEquipmentSlot()))) {
                 return false;
@@ -55,6 +54,17 @@ public final class KitSaveService {
             }
         }
         return true;
+    }
+
+    private SerializedKit capture(PlayerInventory inventory) {
+        return KitInventoryCapture.capture(
+                equipmentSlot -> kitSerialization.encode(inventory.getItem(equipmentSlot.getEquipmentSlot())),
+                slotIndex -> kitSerialization.encode(inventory.getItem(slotIndex)));
+    }
+
+    private KitSaveResult describe(LibraryKit kit) {
+        return KitSaveResult.of(kit.name(), kitLibrary.isDefaultKit(kit.name()), kit.serializedKit(),
+                kit.kitDefinition());
     }
 
     private static boolean isItem(ItemStack itemStack) {

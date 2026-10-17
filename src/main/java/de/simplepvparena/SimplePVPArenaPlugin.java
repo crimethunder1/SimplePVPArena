@@ -44,12 +44,14 @@ import de.simplepvparena.gui.AdminMenuService;
 import de.simplepvparena.input.ChatInputService;
 import de.simplepvparena.kit.BukkitItemStackCodec;
 import de.simplepvparena.kit.BukkitKitItemSerializer;
+import de.simplepvparena.kit.FileKitLibraryStorage;
 import de.simplepvparena.kit.FilePlayerStateSnapshotStorage;
-import de.simplepvparena.kit.KitConfigurationLoader;
 import de.simplepvparena.kit.KitItemSerializer;
+import de.simplepvparena.kit.KitLibrary;
+import de.simplepvparena.kit.KitLibraryLoader;
+import de.simplepvparena.kit.KitLibraryStorage;
 import de.simplepvparena.kit.KitSaveService;
 import de.simplepvparena.kit.KitService;
-import de.simplepvparena.kit.SerializedKit;
 import de.simplepvparena.listener.AdminMenuListener;
 import de.simplepvparena.listener.ArenaBreakListener;
 import de.simplepvparena.listener.ArenaBuildListener;
@@ -99,6 +101,7 @@ public final class SimplePVPArenaPlugin extends JavaPlugin {
     private TeamStorage teamStorage;
     private EventTeamImportService eventTeamImportService;
     private KitService kitService;
+    private KitLibrary kitLibrary;
     private KitSaveService kitSaveService;
     private SpectatorService spectatorService;
     private BorderMarkIndex borderMarkIndex;
@@ -151,8 +154,13 @@ public final class SimplePVPArenaPlugin extends JavaPlugin {
                 new File(getDataFolder(), FilePlayerStateSnapshotStorage.DIRECTORY_NAME).toPath(),
                 new BukkitItemStackCodec()), adminNotifier::notifyAdmins);
         KitItemSerializer kitItemSerializer = new BukkitKitItemSerializer();
-        kitSaveService = new KitSaveService(kitService, this::saveKitConfiguration, getLogger()::warning,
-                kitItemSerializer);
+        KitLibraryStorage kitLibraryStorage = new FileKitLibraryStorage(
+                new File(getDataFolder(), FileKitLibraryStorage.FILE_NAME).toPath(), getLogger()::warning);
+        kitLibrary = new KitLibrary(kitLibraryStorage, kitService, kitItemSerializer, getLogger()::warning,
+                adminNotifier::notifyAdmins);
+        new KitLibraryLoader(kitLibraryStorage, kitLibrary, adminNotifier::notifyAdmins, getLogger()::warning)
+                .load(getConfig().getConfigurationSection(PluginSettings.KIT_SECTION_PATH));
+        kitSaveService = new KitSaveService(kitLibrary, kitItemSerializer);
 
         spectatorService = new SpectatorService(arenaRegistry, new SpectatorItemFactory(this));
 
@@ -226,16 +234,14 @@ public final class SimplePVPArenaPlugin extends JavaPlugin {
         adminMenuService = new AdminMenuService(this, tournamentManager, tournamentDryRun, teamRegistry,
                 teamMemberLookup, eventTeamImportService, matchService, arenaSetupService,
                 arenaHeightMarkerService, startGateItemService,
-                borderSelectorModes, kitSaveService, chatInputService, this::saveTeamConfiguration,
+                borderSelectorModes, kitLibrary, kitSaveService, chatInputService, this::saveTeamConfiguration,
                 this::reloadConfiguration);
 
         configurationReloadService = new ConfigurationReloadService(this::getConfig, this::reloadConfig,
-                new PluginLiveConfiguration(kitService, new KitConfigurationLoader(getLogger(), kitItemSerializer),
-                        matchService,
-                        startGateDuration, fighterColours, arenaCleaningService, arenaCleaningVisualEffect,
-                        arenaBaselineService, arenaSetupService, arenaSafetyZone, borderParticleService,
-                        borderWallPreview,
-                        borderVisualEffect, getLogger()::warning),
+                new PluginLiveConfiguration(matchService, startGateDuration, fighterColours,
+                        arenaCleaningService, arenaCleaningVisualEffect, arenaBaselineService, arenaSetupService,
+                        arenaSafetyZone, borderParticleService, borderWallPreview, borderVisualEffect,
+                        getLogger()::warning),
                 getLogger()::warning);
         configurationReloadService.applyStoredConfiguration();
 
@@ -290,11 +296,6 @@ public final class SimplePVPArenaPlugin extends JavaPlugin {
 
     public void saveTeamConfiguration() {
         teamStorage.save(teamRegistry);
-    }
-
-    public void saveKitConfiguration(SerializedKit serializedKit) {
-        serializedKit.writeInto(getConfig(), PluginSettings.KIT_SECTION_PATH);
-        saveConfig();
     }
 
     public ConfigurationReloadReport reloadConfiguration() {

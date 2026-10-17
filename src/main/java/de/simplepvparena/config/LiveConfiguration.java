@@ -4,7 +4,6 @@ import de.simplepvparena.arena.ArenaCleaningParticleSettings;
 import de.simplepvparena.border.ConfirmedBorderParticleSettings;
 import de.simplepvparena.match.RoundTimeoutSettings;
 import de.simplepvparena.match.TeamColourSettings;
-import org.bukkit.configuration.ConfigurationSection;
 
 public interface LiveConfiguration {
 
@@ -41,6 +40,4 @@ public interface LiveConfiguration {
     void setBorderWallPreviewDurationTicks(long durationTicks);
 
     void setConfirmedBorderParticleSettings(ConfirmedBorderParticleSettings settings);
-
-    void reloadKit(ConfigurationSection kitSection);
 }

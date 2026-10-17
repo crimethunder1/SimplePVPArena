@@ -1,7 +1,12 @@
 package de.simplepvparena.gui;
 
+import de.simplepvparena.input.ChatInputService;
+import de.simplepvparena.kit.KitEquipmentSlot;
+import de.simplepvparena.kit.KitLibrary;
 import de.simplepvparena.kit.KitSaveResult;
 import de.simplepvparena.kit.KitSaveService;
+import de.simplepvparena.kit.LibraryKit;
+import de.simplepvparena.kit.SerializedKit;
 import de.simplepvparena.message.TournamentMessages;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
@@ -9,75 +14,92 @@ import org.bukkit.entity.Player;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
-import java.util.function.BooleanSupplier;
+import java.util.OptionalInt;
 
 final class KitAdminMenu implements AdminMenu {
 
-    private static final int KIT_SAVE_SLOT = 13;
+    private static final int KIT_MENU_SIZE = 54;
+
+    private static final int KITS_PREVIOUS_PAGE_SLOT = 45;
+    private static final int KITS_INFO_SLOT = 47;
+    private static final int KITS_BACK_SLOT = 49;
+    private static final int KITS_CREATE_SLOT = 51;
+    private static final int KITS_NEXT_PAGE_SLOT = 53;
 
     private final AdminMenuNavigation navigation;
+    private final KitLibrary kitLibrary;
     private final KitSaveService kitSaveService;
-    private final BooleanSupplier matchRunning;
+    private final ChatInputService chatInputService;
 
-    KitAdminMenu(AdminMenuNavigation navigation, KitSaveService kitSaveService, BooleanSupplier matchRunning) {
+    KitAdminMenu(AdminMenuNavigation navigation, KitLibrary kitLibrary, KitSaveService kitSaveService,
+                 ChatInputService chatInputService) {
         this.navigation = Objects.requireNonNull(navigation, "navigation");
+        this.kitLibrary = Objects.requireNonNull(kitLibrary, "kitLibrary");
         this.kitSaveService = Objects.requireNonNull(kitSaveService, "kitSaveService");
-        this.matchRunning = Objects.requireNonNull(matchRunning, "matchRunning");
+        this.chatInputService = Objects.requireNonNull(chatInputService, "chatInputService");
     }
 
     @Override
     public String title(AdminMenuHolder holder) {
-        return "Kit";
+        return "Kits (page "
+                + MenuPagination.of(kitLibrary.getKitCount(), holder.getPageIndex()).getPageNumber() + ")";
     }
 
     @Override
     public int size() {
-        return AdminMenuLayout.SMALL_MENU_SIZE;
+        return KIT_MENU_SIZE;
     }
 
     @Override
     public void fill(Player player, AdminMenuHolder holder, AdminMenuCanvas canvas) {
-        canvas.set(AdminMenuLayout.INFO_SLOT, MenuItems.info("Kit", buildKitInfoLore()));
-        canvas.set(KIT_SAVE_SLOT, MenuItems.create(Material.CHEST, "Save your inventory as the kit",
-                buildKitSaveLore("Asks for a confirmation first")));
-        canvas.set(AdminMenuLayout.BACK_SLOT, MenuItems.back("the main menu"));
+        List<String> kitNames = kitLibrary.getKitNames();
+        MenuPagination pagination = MenuPagination.of(kitNames.size(), holder.getPageIndex());
+        for (int slot = 0; slot < pagination.getItemCountOnPage(); slot++) {
+            int kitSlot = slot;
+            kitLibrary.findKit(kitNames.get(pagination.getFirstItemIndex() + slot))
+                    .ifPresent(kit -> canvas.set(kitSlot, buildKitItem(kit)));
+        }
+        canvas.set(KITS_INFO_SLOT, MenuItems.info("Kits", List.of(
+                "Kits: " + kitNames.size(),
+                "Default kit: " + kitLibrary.getDefaultKitName().orElse("none"),
+                "Page " + pagination.getPageNumber() + " of " + pagination.getPageCount(),
+                "A click on a kit opens its options")));
+        canvas.set(KITS_CREATE_SLOT, MenuItems.create(MenuItems.CONFIRM_MATERIAL, "Create a kit from your inventory",
+                buildCreationLore()));
+        if (pagination.hasPreviousPage()) {
+            canvas.set(KITS_PREVIOUS_PAGE_SLOT, MenuItems.create(MenuItems.PAGE_MATERIAL, "Previous page",
+                    "Page " + (pagination.getPreviousPageIndex() + 1) + " of " + pagination.getPageCount()));
+        }
+        if (pagination.hasNextPage()) {
+            canvas.set(KITS_NEXT_PAGE_SLOT, MenuItems.create(MenuItems.PAGE_MATERIAL, "Next page",
+                    "Page " + (pagination.getNextPageIndex() + 1) + " of " + pagination.getPageCount()));
+        }
+        canvas.set(KITS_BACK_SLOT, MenuItems.back("the main menu"));
     }
 
     @Override
     public void handleClick(Player player, AdminMenuHolder holder, int slot) {
+        List<String> kitNames = kitLibrary.getKitNames();
+        MenuPagination pagination = MenuPagination.of(kitNames.size(), holder.getPageIndex());
         switch (slot) {
-            case KIT_SAVE_SLOT -> navigation.open(player,
-                    AdminMenuHolder.confirmation(ConfirmationRequest.SAVE_KIT, null, 0));
-            case AdminMenuLayout.BACK_SLOT -> navigation.open(player, AdminMenuHolder.main());
-            default -> { }
+            case KITS_PREVIOUS_PAGE_SLOT -> {
+                if (pagination.hasPreviousPage()) {
+                    navigation.open(player, AdminMenuHolder.kit(pagination.getPreviousPageIndex()));
+                }
+            }
+            case KITS_NEXT_PAGE_SLOT -> {
+                if (pagination.hasNextPage()) {
+                    navigation.open(player, AdminMenuHolder.kit(pagination.getNextPageIndex()));
+                }
+            }
+            case KITS_CREATE_SLOT -> askForKitName(player, pagination.pageIndex());
+            case KITS_INFO_SLOT -> { }
+            case KITS_BACK_SLOT -> navigation.open(player, AdminMenuHolder.main());
+            default -> openKitActions(player, kitNames, pagination, slot);
         }
     }
 
-    AdminMenuConfirmation saveConfirmation() {
-        return new AdminMenuConfirmation() {
-            @Override
-            public List<String> describe(AdminMenuHolder holder) {
-                return describeSaveConfirmation();
-            }
-
-            @Override
-            public void carryOut(Player player, AdminMenuHolder holder) {
-                saveKit(player);
-            }
-
-            @Override
-            public AdminMenuHolder returnMenu(AdminMenuHolder holder) {
-                return AdminMenuHolder.kit();
-            }
-        };
-    }
-
-    private List<String> describeSaveConfirmation() {
-        return buildKitSaveLore("The kit that stands in config.yml now is gone afterwards");
-    }
-
-    private void saveKit(Player player) {
-        KitSaveResult result = kitSaveService.saveFromInventory(player);
+    static void reportSave(Player player, KitSaveResult result) {
         if (result.isSaved()) {
             TournamentMessages.sendSuccessReport(player, result.describe());
             return;
@@ -85,25 +107,62 @@ final class KitAdminMenu implements AdminMenu {
         TournamentMessages.sendErrorReport(player, result.describe());
     }
 
-    private List<String> buildKitInfoLore() {
-        List<String> lore = new ArrayList<>(kitSaveService.describeKit());
-        lore.add("Every fighter is given it when a round starts");
+    static List<String> describeItemCounts(LibraryKit kit) {
+        return List.of(
+                "Worn items: " + kit.wornItemCount() + " of " + KitEquipmentSlot.values().length,
+                "Inventory items: " + kit.inventoryItemCount() + " of " + SerializedKit.INVENTORY_SLOT_COUNT);
+    }
+
+    static List<String> describeInventoryCapture() {
+        return List.of(
+                "Takes your helmet, chestplate, leggings, boots,",
+                "your offhand and the 36 slots of your inventory",
+                "Enchantments, names, lore and damage are kept exactly",
+                "An empty slot stays empty in the kit",
+                "The item on your cursor is not taken, it lies in no slot");
+    }
+
+    private MenuTile buildKitItem(LibraryKit kit) {
+        List<String> lore = new ArrayList<>(describeItemCounts(kit));
+        if (kitLibrary.isDefaultKit(kit.name())) {
+            lore.add("Default kit");
+        }
+        lore.add("Click for the options of this kit");
+        return MenuItems.create(Material.CHEST, kit.name(), lore);
+    }
+
+    private List<String> buildCreationLore() {
+        List<String> lore = new ArrayList<>();
+        lore.add("Asks for the name of the new kit in the chat");
+        lore.addAll(describeInventoryCapture());
+        lore.add("The first kit becomes the default kit");
+        lore.add("The menu closes so you can type");
         return lore;
     }
 
-    private List<String> buildKitSaveLore(String... closingLines) {
-        List<String> lore = new ArrayList<>();
-        lore.add("Takes your helmet, chestplate, leggings, boots,");
-        lore.add("your offhand and the 36 slots of your inventory");
-        lore.add("Enchantments, names, lore and damage are kept exactly");
-        lore.add("An empty slot stays empty in the kit");
-        lore.add("The item on your cursor is not taken, it lies in no slot");
-        lore.add("It replaces the kit section of config.yml");
-        if (matchRunning.getAsBoolean()) {
-            lore.add("A match is running: its fighters keep their items,");
-            lore.add("the new kit is handed out from the next round on");
+    private void openKitActions(Player player, List<String> kitNames, MenuPagination pagination, int slot) {
+        OptionalInt kitIndex = pagination.findItemIndex(slot);
+        if (kitIndex.isEmpty()) {
+            return;
         }
-        lore.addAll(List.of(closingLines));
-        return lore;
+        navigation.open(player, AdminMenuHolder.kitActions(kitNames.get(kitIndex.getAsInt()),
+                pagination.pageIndex()));
+    }
+
+    private void askForKitName(Player player, int pageIndex) {
+        navigation.close(player);
+        chatInputService.await(player, "the name of the new kit", List.of(
+                        "Type the name of the new kit in chat",
+                        "A kit name has " + KitLibrary.NAME_RULE,
+                        "Your inventory as it is then becomes the kit"),
+                line -> handleKitName(player, pageIndex, line));
+    }
+
+    private void handleKitName(Player player, int pageIndex, String line) {
+        if (!AdminMenuReplies.isStillAdmin(player)) {
+            return;
+        }
+        reportSave(player, kitSaveService.createFromInventory(player, line.trim()));
+        navigation.open(player, AdminMenuHolder.kit(pageIndex));
     }
 }

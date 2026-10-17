@@ -3,10 +3,12 @@ package de.simplepvparena.gui;
 import org.bukkit.entity.Player;
 import org.junit.jupiter.api.Test;
 
+import java.util.Arrays;
 import java.util.EnumSet;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -28,7 +30,7 @@ class ConfirmationAdminMenuRegistrationTest {
 
         assertTrue(failure.getMessage().contains("REMOVE_TEAM"), failure.getMessage());
         assertTrue(failure.getMessage().contains("CANCEL_TOURNAMENT"), failure.getMessage());
-        assertFalse(failure.getMessage().contains("SAVE_KIT"), failure.getMessage());
+        assertFalse(failure.getMessage().contains("REPLACE_KIT"), failure.getMessage());
     }
 
     @Test
@@ -42,12 +44,35 @@ class ConfirmationAdminMenuRegistrationTest {
 
     @Test
     void refusesASecondConfirmationForTheSameRequest() {
-        confirmationAdminMenu.register(ConfirmationRequest.SAVE_KIT, new SilentConfirmation());
+        confirmationAdminMenu.register(ConfirmationRequest.REPLACE_KIT, new SilentConfirmation());
 
         IllegalStateException failure = assertThrows(IllegalStateException.class,
-                () -> confirmationAdminMenu.register(ConfirmationRequest.SAVE_KIT, new SilentConfirmation()));
+                () -> confirmationAdminMenu.register(ConfirmationRequest.REPLACE_KIT, new SilentConfirmation()));
 
-        assertTrue(failure.getMessage().contains("SAVE_KIT"), failure.getMessage());
+        assertTrue(failure.getMessage().contains("REPLACE_KIT"), failure.getMessage());
+    }
+
+    @Test
+    void namesTheKitConfirmationsWhenTheyAreNotRegistered() {
+        for (ConfirmationRequest request : EnumSet.complementOf(EnumSet.of(ConfirmationRequest.REPLACE_KIT,
+                ConfirmationRequest.DELETE_KIT))) {
+            confirmationAdminMenu.register(request, new SilentConfirmation());
+        }
+
+        IllegalStateException failure = assertThrows(IllegalStateException.class,
+                confirmationAdminMenu::requireEveryConfirmationRegistered);
+
+        assertTrue(failure.getMessage().contains("REPLACE_KIT"), failure.getMessage());
+        assertTrue(failure.getMessage().contains("DELETE_KIT"), failure.getMessage());
+        assertFalse(failure.getMessage().contains("REMOVE_TEAM"), failure.getMessage());
+    }
+
+    @Test
+    void knowsTheKitConfirmationsAndNoLongerTheSavingOfASingleKit() {
+        assertEquals("Replace the kit with your inventory?", ConfirmationRequest.REPLACE_KIT.getTitle());
+        assertEquals("Delete the kit?", ConfirmationRequest.DELETE_KIT.getTitle());
+        assertFalse(Arrays.stream(ConfirmationRequest.values())
+                .anyMatch(request -> request.name().equals("SAVE_KIT")));
     }
 
     private static final class SilentConfirmation implements AdminMenuConfirmation {

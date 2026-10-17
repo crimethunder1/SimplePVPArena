@@ -79,7 +79,7 @@ class MainAdminMenuClickTest {
 
         fixture.click(KIT_SLOT);
 
-        assertOpened(AdminMenuType.KIT, "Kit");
+        assertOpened(AdminMenuType.KIT, "Kits (page 1)");
     }
 
     @Test

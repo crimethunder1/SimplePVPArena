@@ -231,8 +231,8 @@ public final class TournamentDryRun {
         if (kit.isEmpty()) {
             return DryRunStep.failed(KIT_STEP,
                     "The kit is empty, every fighter would start the round with bare hands",
-                    "Put the kit into your own inventory and save it with \"Save your inventory as "
-                            + "the kit\" in the kit menu of /tournament");
+                    "Put the kit into your own inventory, create it with \"Create a kit from your "
+                            + "inventory\" in the kit menu of /tournament and use it as the default kit");
         }
         List<String> details = new ArrayList<>(kit.describe());
         details.add("Every fighter is given these " + kit.itemCount()

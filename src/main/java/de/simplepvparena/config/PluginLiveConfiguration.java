@@ -11,21 +11,16 @@ import de.simplepvparena.border.BorderVisualEffect;
 import de.simplepvparena.border.BorderWallPreview;
 import de.simplepvparena.border.ConfirmedBorderParticleSettings;
 import de.simplepvparena.gate.StartGateDuration;
-import de.simplepvparena.kit.KitConfigurationLoader;
-import de.simplepvparena.kit.KitService;
 import de.simplepvparena.match.FighterColours;
 import de.simplepvparena.match.MatchService;
 import de.simplepvparena.match.RoundTimeoutSettings;
 import de.simplepvparena.match.TeamColourSettings;
-import org.bukkit.configuration.ConfigurationSection;
 
 import java.util.Objects;
 import java.util.function.Consumer;
 
 public final class PluginLiveConfiguration implements LiveConfiguration {
 
-    private final KitService kitService;
-    private final KitConfigurationLoader kitConfigurationLoader;
     private final MatchService matchService;
     private final StartGateDuration startGateDuration;
     private final FighterColours fighterColours;
@@ -39,9 +34,7 @@ public final class PluginLiveConfiguration implements LiveConfiguration {
     private final BorderVisualEffect borderVisualEffect;
     private final Consumer<String> problemReporter;
 
-    public PluginLiveConfiguration(KitService kitService,
-                                   KitConfigurationLoader kitConfigurationLoader,
-                                   MatchService matchService,
+    public PluginLiveConfiguration(MatchService matchService,
                                    StartGateDuration startGateDuration,
                                    FighterColours fighterColours,
                                    ArenaCleaningService arenaCleaningService,
@@ -53,8 +46,6 @@ public final class PluginLiveConfiguration implements LiveConfiguration {
                                    BorderWallPreview borderWallPreview,
                                    BorderVisualEffect borderVisualEffect,
                                    Consumer<String> problemReporter) {
-        this.kitService = Objects.requireNonNull(kitService, "kitService");
-        this.kitConfigurationLoader = Objects.requireNonNull(kitConfigurationLoader, "kitConfigurationLoader");
         this.matchService = Objects.requireNonNull(matchService, "matchService");
         this.startGateDuration = Objects.requireNonNull(startGateDuration, "startGateDuration");
         this.fighterColours = Objects.requireNonNull(fighterColours, "fighterColours");
@@ -154,10 +145,5 @@ public final class PluginLiveConfiguration implements LiveConfiguration {
     @Override
     public void setConfirmedBorderParticleSettings(ConfirmedBorderParticleSettings settings) {
         borderVisualEffect.applyConfirmedParticleSettings(settings, problemReporter);
-    }
-
-    @Override
-    public void reloadKit(ConfigurationSection kitSection) {
-        kitService.setKitDefinition(kitConfigurationLoader.load(kitSection));
     }
 }

@@ -19,36 +19,8 @@ match:
     first-team: red
     second-team: aqua
 
-# Equipment each fighter receives at the start of every round. Saving the kit from the menu rewrites it.
-kit:
-  # Armour per slot (head, chest, legs, feet) with a material and enchantment levels.
-  armor:
-    head:
-      material: DIAMOND_HELMET
-      enchantments:
-        protection: 4
-    chest:
-      material: DIAMOND_CHESTPLATE
-      enchantments:
-        protection: 4
-    legs:
-      material: DIAMOND_LEGGINGS
-      enchantments:
-        protection: 4
-    feet:
-      material: DIAMOND_BOOTS
-      enchantments:
-        protection: 4
-  # Inventory items in slot order, each with a material, an amount (default 1) and optional enchantments.
-  items:
-    - material: DIAMOND_SWORD
-      enchantments:
-        sharpness: 5
-    - material: BOW
-    - material: GOLDEN_APPLE
-      amount: 6
-    - material: ARROW
-      amount: 64
+# Kits live in kits.yml since this version and are created, replaced and deleted in the kit menu of /tournament.
+# A kit section that an older version saved here is taken over into kits.yml once and is not read afterwards.
 
 # Cleaning and protection of the fight area.
 arena:

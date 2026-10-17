@@ -65,7 +65,6 @@ public record PluginSettings(long roundResetDelayTicks,
     public static final long TICKS_PER_SECOND = 20L;
 
     public static final List<String> CONFIGURATION_PATHS = List.of(
-            KIT_SECTION_PATH,
             ROUND_RESET_DELAY_PATH,
             ROUND_TIMEOUT_SECONDS_PATH,
             SUDDEN_DEATH_WARNING_SECONDS_PATH,

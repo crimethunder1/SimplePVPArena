@@ -5,6 +5,7 @@ import de.simplepvparena.border.BorderSelectorModeRegistry;
 import de.simplepvparena.config.ConfigurationReloadReport;
 import de.simplepvparena.diagnostics.DryRunReport;
 import de.simplepvparena.diagnostics.TournamentDryRun;
+import de.simplepvparena.kit.KitLibrary;
 import de.simplepvparena.match.MatchService;
 import de.simplepvparena.message.TournamentMessages;
 import de.simplepvparena.team.TeamRegistry;
@@ -42,12 +43,13 @@ final class MainAdminMenu implements AdminMenu {
     private final BorderSelectorModeRegistry borderSelectorModes;
     private final Supplier<ConfigurationReloadReport> configurationReloader;
     private final TournamentMenuStatus tournamentMenuStatus;
+    private final KitLibrary kitLibrary;
 
     MainAdminMenu(AdminMenuNavigation navigation, TournamentManager tournamentManager,
                   TournamentDryRun tournamentDryRun, TeamRegistry teamRegistry, MatchService matchService,
                   ArenaSetupService arenaSetupService, BorderSelectorModeRegistry borderSelectorModes,
                   Supplier<ConfigurationReloadReport> configurationReloader,
-                  TournamentMenuStatus tournamentMenuStatus) {
+                  TournamentMenuStatus tournamentMenuStatus, KitLibrary kitLibrary) {
         this.navigation = Objects.requireNonNull(navigation, "navigation");
         this.tournamentManager = Objects.requireNonNull(tournamentManager, "tournamentManager");
         this.tournamentDryRun = Objects.requireNonNull(tournamentDryRun, "tournamentDryRun");
@@ -57,6 +59,7 @@ final class MainAdminMenu implements AdminMenu {
         this.borderSelectorModes = Objects.requireNonNull(borderSelectorModes, "borderSelectorModes");
         this.configurationReloader = Objects.requireNonNull(configurationReloader, "configurationReloader");
         this.tournamentMenuStatus = Objects.requireNonNull(tournamentMenuStatus, "tournamentMenuStatus");
+        this.kitLibrary = Objects.requireNonNull(kitLibrary, "kitLibrary");
     }
 
     @Override
@@ -93,9 +96,11 @@ final class MainAdminMenu implements AdminMenu {
         canvas.set(MAIN_DRY_RUN_SLOT, buildDryRunItem());
         canvas.set(MAIN_RELOAD_SLOT, MenuItems.create(Material.COMPARATOR, "Reload config.yml",
                 buildReloadLore()));
-        canvas.set(MAIN_KIT_SLOT, MenuItems.create(Material.DIAMOND_CHESTPLATE, "Kit",
+        canvas.set(MAIN_KIT_SLOT, MenuItems.create(Material.DIAMOND_CHESTPLATE, "Kits",
+                "Kits: " + kitLibrary.getKitCount(),
+                "Default kit: " + kitLibrary.getDefaultKitName().orElse("none"),
                 "The items every fighter is given when a round starts",
-                "Saves your own inventory as that kit"));
+                "Create, replace and delete kits"));
         canvas.set(MAIN_CLOSE_SLOT, MenuItems.create(Material.BARRIER, "Close", "Closes the menu"));
     }
 
@@ -111,7 +116,7 @@ final class MainAdminMenu implements AdminMenu {
             case MAIN_BRACKET_SLOT -> showBracket(player);
             case MAIN_DRY_RUN_SLOT -> runDryRun(player);
             case MAIN_RELOAD_SLOT -> reloadConfiguration(player);
-            case MAIN_KIT_SLOT -> navigation.open(player, AdminMenuHolder.kit());
+            case MAIN_KIT_SLOT -> navigation.open(player, AdminMenuHolder.kit(0));
             case MAIN_CLOSE_SLOT -> navigation.close(player);
             default -> { }
         }
@@ -178,12 +183,12 @@ final class MainAdminMenu implements AdminMenu {
     private List<String> buildReloadLore() {
         List<String> lore = new ArrayList<>();
         lore.add("Reads config.yml again and applies it live");
-        lore.add("Kit, round timeout, cleaning batch sizes,");
-        lore.add("cell limit, safety zone and border particles");
+        lore.add("Round timeout, cleaning batch sizes, cell limit,");
+        lore.add("safety zone and border particles");
         lore.add("The arena, the teams and a running match stay untouched");
         if (matchService.hasActiveMatch()) {
-            lore.add("A match is running: the new round timeout and");
-            lore.add("the new kit arrive with the next round");
+            lore.add("A match is running: the new round timeout");
+            lore.add("arrives with the next round");
         }
         lore.add("The menu closes so you can read the answer");
         return lore;

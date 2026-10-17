@@ -12,7 +12,8 @@ class AdminMenuHolderTest {
     void namesTheMenuEveryHolderStandsFor() {
         assertEquals(AdminMenuType.MAIN, AdminMenuHolder.main().getMenuType());
         assertEquals(AdminMenuType.ARENA, AdminMenuHolder.arena().getMenuType());
-        assertEquals(AdminMenuType.KIT, AdminMenuHolder.kit().getMenuType());
+        assertEquals(AdminMenuType.KIT, AdminMenuHolder.kit(0).getMenuType());
+        assertEquals(AdminMenuType.KIT_ACTIONS, AdminMenuHolder.kitActions("Archer", 0).getMenuType());
         assertEquals(AdminMenuType.TEAMS, AdminMenuHolder.teams(0).getMenuType());
         assertEquals(AdminMenuType.TEAM_ACTIONS, AdminMenuHolder.teamActions("Alpha", 0).getMenuType());
         assertEquals(AdminMenuType.MATCH, AdminMenuHolder.match().getMenuType());
@@ -27,6 +28,16 @@ class AdminMenuHolderTest {
 
         assertEquals("Alpha", holder.getSubject().orElseThrow());
         assertEquals(2, holder.getPageIndex());
+    }
+
+    @Test
+    void carriesTheKitAMenuWasOpenedForAndThePageOfTheKitList() {
+        AdminMenuHolder holder = AdminMenuHolder.kitActions("Archer", 1);
+
+        assertEquals("Archer", holder.getSubject().orElseThrow());
+        assertEquals(1, holder.getPageIndex());
+        assertEquals(1, AdminMenuHolder.kit(1).getPageIndex());
+        assertTrue(AdminMenuHolder.kit(1).getSubject().isEmpty());
     }
 
     @Test

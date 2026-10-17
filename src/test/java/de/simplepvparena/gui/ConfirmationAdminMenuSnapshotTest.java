@@ -1,6 +1,10 @@
 package de.simplepvparena.gui;
 
+import de.simplepvparena.support.EncodableItemStack;
 import org.junit.jupiter.api.Test;
+
+import java.util.List;
+import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -13,7 +17,10 @@ class ConfirmationAdminMenuSnapshotTest {
 
     private static final int ARENA_CLEAN_SLOT = 15;
     private static final int ARENA_RESET_SLOT = 16;
-    private static final int KIT_SAVE_SLOT = 13;
+    private static final int KITS_FIRST_KIT_SLOT = 0;
+    private static final int KITS_SECOND_KIT_SLOT = 1;
+    private static final int KIT_REPLACE_SLOT = 13;
+    private static final int KIT_DELETE_SLOT = 15;
     private static final int TEAMS_FIRST_TEAM_SLOT = 0;
     private static final int TEAMS_IMPORT_SLOT = 50;
     private static final int TEAMS_NEXT_PAGE_SLOT = 53;
@@ -60,21 +67,68 @@ class ConfirmationAdminMenuSnapshotTest {
     }
 
     @Test
-    void showsTheConfirmationOfTheKit() {
+    void showsTheConfirmationOfTheReplacementOfAKit() {
+        fixture.createKit("Archer");
+        fixture.placeInAdminInventory(0, new EncodableItemStack("sword"));
         fixture.openMenuFromTheMainMenu(MAIN_KIT_SLOT);
+        fixture.click(KITS_FIRST_KIT_SLOT);
 
-        fixture.click(KIT_SAVE_SLOT);
+        fixture.click(KIT_REPLACE_SLOT);
 
         assertEquals("""
-                Save your inventory as the kit? | 27
-                4 | BOOK | Save your inventory as the kit? | Takes your helmet, chestplate, leggings, boots, / \
-                your offhand and the 36 slots of your inventory / \
+                Replace the kit with your inventory? | 27
+                4 | BOOK | Replace the kit with your inventory? | Your inventory becomes the kit Archer / \
+                Takes your helmet, chestplate, leggings, boots, / your offhand and the 36 slots of your inventory / \
                 Enchantments, names, lore and damage are kept exactly / An empty slot stays empty in the kit / \
-                The item on your cursor is not taken, it lies in no slot / It replaces the kit section of config.yml / \
-                The kit that stands in config.yml now is gone afterwards
+                The item on your cursor is not taken, it lies in no slot / \
+                The items the kit holds now are gone afterwards
                 11 | LIME_WOOL | Yes | Carries the action out
                 15 | RED_WOOL | No | Changes nothing and returns
                 """, fixture.describeLastMenu());
+        assertEquals(Optional.of("Archer"), fixture.lastMenu().holder().getSubject());
+        assertEquals(0, fixture.lastMenu().holder().getPageIndex());
+    }
+
+    @Test
+    void showsTheConfirmationOfTheReplacementOfTheDefaultKitWhileAMatchRuns() {
+        fixture.configureArena();
+        fixture.registerTeams("Alpha", "Bravo");
+        fixture.startMatchWithoutATournament("Alpha", "Bravo");
+        fixture.createKit("Archer");
+        fixture.placeInAdminInventory(0, new EncodableItemStack("sword"));
+        fixture.openMenuFromTheMainMenu(MAIN_KIT_SLOT);
+        fixture.click(KITS_FIRST_KIT_SLOT);
+
+        fixture.click(KIT_REPLACE_SLOT);
+
+        assertEquals(List.of("Your inventory becomes the kit Archer",
+                "Takes your helmet, chestplate, leggings, boots,",
+                "your offhand and the 36 slots of your inventory",
+                "Enchantments, names, lore and damage are kept exactly",
+                "An empty slot stays empty in the kit",
+                "The item on your cursor is not taken, it lies in no slot",
+                "A match is running: its fighters keep their items,",
+                "the new kit is handed out from the next round on",
+                "The items the kit holds now are gone afterwards"),
+                fixture.lastMenu().findTile(4).orElseThrow().loreLines());
+    }
+
+    @Test
+    void showsTheConfirmationOfTheDeletionOfAKit() {
+        fixture.createKit("Archer");
+        fixture.createKit("Knight");
+        fixture.openMenuFromTheMainMenu(MAIN_KIT_SLOT);
+        fixture.click(KITS_SECOND_KIT_SLOT);
+
+        fixture.click(KIT_DELETE_SLOT);
+
+        assertEquals("""
+                Delete the kit? | 27
+                4 | BOOK | Delete the kit? | Kit Knight is deleted / Its items are gone afterwards
+                11 | LIME_WOOL | Yes | Carries the action out
+                15 | RED_WOOL | No | Changes nothing and returns
+                """, fixture.describeLastMenu());
+        assertEquals(Optional.of("Knight"), fixture.lastMenu().holder().getSubject());
         assertEquals(0, fixture.lastMenu().holder().getPageIndex());
     }
 

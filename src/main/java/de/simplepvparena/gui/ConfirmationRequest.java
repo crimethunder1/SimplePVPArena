@@ -4,7 +4,8 @@ public enum ConfirmationRequest {
 
     CLEAN_ARENA("Clean the arena?"),
     RESET_ARENA("Reset the arena?"),
-    SAVE_KIT("Save your inventory as the kit?"),
+    REPLACE_KIT("Replace the kit with your inventory?"),
+    DELETE_KIT("Delete the kit?"),
     REMOVE_TEAM("Remove the team?"),
     IMPORT_TEAMS("Replace every team with event.json?"),
     CANCEL_TOURNAMENT("Cancel the tournament?");

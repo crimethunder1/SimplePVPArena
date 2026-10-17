@@ -21,7 +21,11 @@ class ConfirmationAdminMenuClickTest {
 
     private static final int ARENA_CLEAN_SLOT = 15;
     private static final int ARENA_RESET_SLOT = 16;
-    private static final int KIT_SAVE_SLOT = 13;
+    private static final int KITS_FIRST_KIT_SLOT = 0;
+    private static final int KITS_SECOND_KIT_SLOT = 1;
+    private static final int KITS_NEXT_PAGE_SLOT = 53;
+    private static final int KIT_REPLACE_SLOT = 13;
+    private static final int KIT_DELETE_SLOT = 15;
     private static final int TEAMS_FIRST_TEAM_SLOT = 0;
     private static final int TEAMS_IMPORT_SLOT = 50;
     private static final int TEAMS_NEXT_PAGE_SLOT = 53;
@@ -119,51 +123,139 @@ class ConfirmationAdminMenuClickTest {
     }
 
     @Test
-    void keepsTheKitWhenTheInventoryIsEmptyAfterYesAndReturnsToTheKitMenu() {
-        fixture.fillKit();
-        openTheKitConfirmation();
+    void keepsTheKitWhenTheInventoryWasEmptiedBeforeYesAndReturnsToTheKitOptions() {
+        fixture.createKit("Archer");
+        fixture.placeInAdminInventory(0, new EncodableItemStack("sword"));
+        openTheReplacementConfirmationOfTheFirstKit();
+        fixture.clearAdminInventory();
 
         fixture.click(YES_SLOT);
 
         assertEquals(List.of("Your inventory is empty, the kit was not changed"), fixture.messages());
-        assertTrue(fixture.savedKits().isEmpty());
+        assertEquals(1, fixture.kitStorage().savedLibraries().size());
         assertEquals(List.of("Worn items: 2 of 5", "Inventory items: 3 of 36 slots"), fixture.describeKit());
-        assertReturnedTo(AdminMenuType.KIT, "Kit", 0);
-        assertEquals(List.of("Worn items: 2 of 5", "Inventory items: 3 of 36 slots",
-                "Every fighter is given it when a round starts"), infoLore());
+        assertReturnedToTheKitOptions("Archer", 0);
     }
 
     @Test
-    void savesAFilledInventoryAsTheKitAfterYesAndReturnsToTheKitMenu() {
-        fixture.fillKit();
+    void replacesTheDefaultKitWithAFilledInventoryAfterYesAndReturnsToTheKitOptions() {
+        fixture.createKit("Archer");
         fixture.placeInAdminInventory(0, new EncodableItemStack("sword"));
-        openTheKitConfirmation();
+        openTheReplacementConfirmationOfTheFirstKit();
 
         fixture.click(YES_SLOT);
 
-        assertEquals(List.of("Kit saved: 1 item, 0 worn and 1 in the inventory",
-                "It is written into config.yml and is handed out from the next round on, "
-                        + "a running round keeps the kit its fighters were given"),
+        assertEquals(List.of("Kit Archer saved: 1 item, 0 worn and 1 in the inventory",
+                        "It is written into kits.yml and is handed out from the next round on, "
+                                + "a running round keeps the kit its fighters were given"),
                 fixture.messages());
-        assertEquals(1, fixture.savedKits().size());
-        assertEquals(1, fixture.savedKits().get(0).itemCount());
+        assertEquals(2, fixture.kitStorage().savedLibraries().size());
+        assertEquals(1, fixture.kitStorage().lastSavedLibrary().kits().get(0).serializedKit().itemCount());
         assertEquals(List.of("Worn items: 0 of 5", "Inventory items: 1 of 36 slots"), fixture.describeKit());
-        assertReturnedTo(AdminMenuType.KIT, "Kit", 0);
-        assertEquals(List.of("Worn items: 0 of 5", "Inventory items: 1 of 36 slots",
-                "Every fighter is given it when a round starts"), infoLore());
+        assertReturnedToTheKitOptions("Archer", 0);
+        assertEquals(List.of("Worn items: 0 of 5", "Inventory items: 1 of 36",
+                "Default kit: every fighter is given it when a round starts"), infoLore());
     }
 
     @Test
-    void keepsTheKitAfterNoAndReturnsToTheKitMenu() {
-        fixture.fillKit();
-        openTheKitConfirmation();
+    void replacesAKitThatIsNotTheDefaultKitWithoutHandingItOut() {
+        fixture.createKit("Archer");
+        fixture.createKit("Knight");
+        fixture.placeInAdminInventory(0, new EncodableItemStack("axe"));
+        fixture.openMenuFromTheMainMenu(MAIN_KIT_SLOT);
+        fixture.click(KITS_SECOND_KIT_SLOT);
+        fixture.click(KIT_REPLACE_SLOT);
+
+        fixture.click(YES_SLOT);
+
+        assertEquals(List.of("Kit Knight saved: 1 item, 0 worn and 1 in the inventory",
+                "It is written into kits.yml and is handed out once it is used as the default kit"),
+                fixture.messages());
+        assertEquals(1, fixture.kitLibrary().findKit("Knight").orElseThrow().itemCount());
+        assertEquals(List.of("Worn items: 2 of 5", "Inventory items: 3 of 36 slots"), fixture.describeKit(),
+                "the default kit Archer is still handed out");
+        assertReturnedToTheKitOptions("Knight", 0);
+    }
+
+    @Test
+    void keepsTheKitAfterNoOnTheReplacementAndReturnsToTheKitOptions() {
+        fixture.createKit("Archer");
+        fixture.placeInAdminInventory(0, new EncodableItemStack("sword"));
+        openTheReplacementConfirmationOfTheFirstKit();
 
         fixture.click(NO_SLOT);
 
         assertTrue(fixture.messages().isEmpty(), fixture.messages().toString());
-        assertTrue(fixture.savedKits().isEmpty());
+        assertEquals(1, fixture.kitStorage().savedLibraries().size());
         assertEquals(List.of("Worn items: 2 of 5", "Inventory items: 3 of 36 slots"), fixture.describeKit());
-        assertReturnedTo(AdminMenuType.KIT, "Kit", 0);
+        assertReturnedToTheKitOptions("Archer", 0);
+    }
+
+    @Test
+    void deletesTheKitAfterYesAndReturnsToTheKitList() {
+        fixture.createKit("Archer");
+        fixture.createKit("Knight");
+        fixture.openMenuFromTheMainMenu(MAIN_KIT_SLOT);
+        fixture.click(KITS_SECOND_KIT_SLOT);
+        fixture.click(KIT_DELETE_SLOT);
+        assertEquals(Optional.of(ConfirmationRequest.DELETE_KIT), fixture.lastMenu().holder().getConfirmationRequest());
+
+        fixture.click(YES_SLOT);
+
+        assertEquals(List.of("Kit Knight deleted"), fixture.messages());
+        assertEquals(List.of("Archer"), fixture.kitLibrary().getKitNames());
+        assertEquals(List.of("Archer"), fixture.kitStorage().lastSavedLibrary().kits().stream()
+                .map(savedKit -> savedKit.name()).toList());
+        assertReturnedTo(AdminMenuType.KIT, "Kits (page 1)", 0);
+        assertEquals("Archer", fixture.lastMenu().findTile(KITS_FIRST_KIT_SLOT).orElseThrow().displayName());
+        assertTrue(fixture.lastMenu().findTile(KITS_SECOND_KIT_SLOT).isEmpty());
+    }
+
+    @Test
+    void deletesTheKitAfterYesAndReturnsWithTheSecondPageToAKitListThatHasOnlyOnePageLeft() {
+        fixture.createNumberedKits(46);
+        fixture.openMenuFromTheMainMenu(MAIN_KIT_SLOT);
+        fixture.click(KITS_NEXT_PAGE_SLOT);
+        fixture.click(KITS_FIRST_KIT_SLOT);
+        fixture.click(KIT_DELETE_SLOT);
+
+        fixture.click(YES_SLOT);
+
+        assertEquals(List.of("Kit Kit46 deleted"), fixture.messages());
+        assertEquals(45, fixture.kitLibrary().getKitCount());
+        assertReturnedTo(AdminMenuType.KIT, "Kits (page 1)", 1);
+        assertEquals("Kit01", fixture.lastMenu().findTile(KITS_FIRST_KIT_SLOT).orElseThrow().displayName());
+    }
+
+    @Test
+    void keepsTheKitAfterNoOnTheDeletionAndReturnsToTheKitList() {
+        fixture.createKit("Archer");
+        fixture.createKit("Knight");
+        fixture.openMenuFromTheMainMenu(MAIN_KIT_SLOT);
+        fixture.click(KITS_SECOND_KIT_SLOT);
+        fixture.click(KIT_DELETE_SLOT);
+
+        fixture.click(NO_SLOT);
+
+        assertTrue(fixture.messages().isEmpty(), fixture.messages().toString());
+        assertEquals(List.of("Archer", "Knight"), fixture.kitLibrary().getKitNames());
+        assertReturnedTo(AdminMenuType.KIT, "Kits (page 1)", 0);
+    }
+
+    @Test
+    void refusesTheDeletionAfterYesWhenTheKitBecameTheDefaultKitMeanwhile() {
+        fixture.createKit("Archer");
+        fixture.createKit("Knight");
+        fixture.openMenuFromTheMainMenu(MAIN_KIT_SLOT);
+        fixture.click(KITS_SECOND_KIT_SLOT);
+        fixture.click(KIT_DELETE_SLOT);
+        fixture.kitLibrary().setDefaultKit("Knight");
+
+        fixture.click(YES_SLOT);
+
+        assertEquals(List.of("Kit Knight is the default kit and cannot be deleted"), fixture.messages());
+        assertEquals(List.of("Archer", "Knight"), fixture.kitLibrary().getKitNames());
+        assertReturnedTo(AdminMenuType.KIT, "Kits (page 1)", 0);
     }
 
     @Test
@@ -368,10 +460,12 @@ class ConfirmationAdminMenuClickTest {
         assertEquals(Optional.of(ConfirmationRequest.RESET_ARENA), fixture.lastMenu().holder().getConfirmationRequest());
     }
 
-    private void openTheKitConfirmation() {
+    private void openTheReplacementConfirmationOfTheFirstKit() {
         fixture.openMenuFromTheMainMenu(MAIN_KIT_SLOT);
-        fixture.click(KIT_SAVE_SLOT);
-        assertEquals(Optional.of(ConfirmationRequest.SAVE_KIT), fixture.lastMenu().holder().getConfirmationRequest());
+        fixture.click(KITS_FIRST_KIT_SLOT);
+        fixture.click(KIT_REPLACE_SLOT);
+        assertEquals(Optional.of(ConfirmationRequest.REPLACE_KIT), fixture.lastMenu().holder().getConfirmationRequest());
+        fixture.messages().clear();
     }
 
     private void openTheRemovalConfirmationOfTheFirstTeam() {
@@ -393,6 +487,16 @@ class ConfirmationAdminMenuClickTest {
 
     private List<String> infoLore() {
         return fixture.lastMenu().findTile(INFO_SLOT).orElseThrow().loreLines();
+    }
+
+    private void assertReturnedToTheKitOptions(String kitName, int pageIndex) {
+        RecordingAdminMenuWindows.RecordedMenu menu = fixture.lastMenu();
+        assertEquals(AdminMenuType.KIT_ACTIONS, menu.holder().getMenuType());
+        assertEquals("Kit " + kitName, menu.title());
+        assertEquals(Optional.of(kitName), menu.holder().getSubject());
+        assertEquals(pageIndex, menu.holder().getPageIndex());
+        assertTrue(menu.holder().getConfirmationRequest().isEmpty());
+        assertFalse(fixture.isMenuClosed());
     }
 
     private void assertReturnedTo(AdminMenuType menuType, String title, int pageIndex) {

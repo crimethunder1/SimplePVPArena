@@ -11,8 +11,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class ShippedConfigurationTest {
 
@@ -47,12 +47,10 @@ class ShippedConfigurationTest {
     }
 
     @Test
-    void shipsAKitEveryFighterCanBeGiven() {
+    void shipsNoKitBecauseTheKitsLiveInKitsYml() {
         YamlConfiguration configuration = shippedConfiguration();
 
-        assertNotNull(configuration.getConfigurationSection(PluginSettings.KIT_SECTION_PATH));
-        assertTrue(configuration.contains(PluginSettings.KIT_SECTION_PATH + ".armor"));
-        assertTrue(configuration.contains(PluginSettings.KIT_SECTION_PATH + ".items"));
+        assertFalse(configuration.contains(PluginSettings.KIT_SECTION_PATH));
     }
 
     private static YamlConfiguration shippedConfiguration() {

@@ -30,17 +30,12 @@ public final class ConfigurationReloadService {
         List<String> problems = new ArrayList<>();
         ConfigurationSection configuration = configurationSource.get();
         PluginSettings.read(configuration, problem -> collect(problems, problem)).applyTo(liveConfiguration);
-        liveConfiguration.reloadKit(kitSectionOf(configuration));
         return ConfigurationReloadReport.of(problems);
     }
 
     public ConfigurationReloadReport reloadFromFile() {
         configurationFileReloader.run();
         return applyStoredConfiguration();
-    }
-
-    private static ConfigurationSection kitSectionOf(ConfigurationSection configuration) {
-        return configuration == null ? null : configuration.getConfigurationSection(PluginSettings.KIT_SECTION_PATH);
     }
 
     private void collect(List<String> problems, String problem) {

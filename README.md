@@ -31,11 +31,12 @@ Copy the jar into the `plugins` folder of the server and start it. The plugin cr
 
 ## Configuration
 
-`config.yml` has four sections, each value is described by a comment in the file:
+`config.yml` has three sections, each value is described by a comment in the file:
 
 - `match`: delay between rounds, round time limit, sudden death damage, whether the final runs without sudden death, start gate duration and team colours
-- `kit`: armour and items every fighter receives at the start of a round
 - `arena`: cleaning speed and particles, flood fill limit, safety zone radius, plus the fight area and spawns the plugin writes itself
 - `border`: particle display of border blocks and the marker of a confirmed wall
 
 Changes can be applied while the server runs with the "Reload config.yml" item in the main menu of `/tournament`.
+
+The kits live in `kits.yml` and are created from the inventory of an admin, replaced, deleted and chosen as the default kit in the kit menu of `/tournament`. Every fighter receives the default kit at the start of a round. A `kit` section that an older version saved in `config.yml` is taken over into `kits.yml` once as the kit `default`.

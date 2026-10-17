@@ -32,8 +32,13 @@ public final class AdminMenuHolder implements InventoryHolder {
         return new AdminMenuHolder(AdminMenuType.ARENA, null, null, 0);
     }
 
-    public static AdminMenuHolder kit() {
-        return new AdminMenuHolder(AdminMenuType.KIT, null, null, 0);
+    public static AdminMenuHolder kit(int pageIndex) {
+        return new AdminMenuHolder(AdminMenuType.KIT, null, null, pageIndex);
+    }
+
+    public static AdminMenuHolder kitActions(String kitName, int pageIndex) {
+        return new AdminMenuHolder(AdminMenuType.KIT_ACTIONS, Objects.requireNonNull(kitName, "kitName"), null,
+                pageIndex);
     }
 
     public static AdminMenuHolder teams(int pageIndex) {

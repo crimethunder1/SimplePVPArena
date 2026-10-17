@@ -105,23 +105,16 @@ class ConfigurationReloadServiceTest {
     }
 
     @Test
-    void reloadsTheKitOutOfTheSameFile() {
+    void aKitSectionInTheFileIsNeitherReadNorReportedAsAProblem() {
         MemoryConfiguration configuration = new MemoryConfiguration();
         configuration.set(PluginSettings.KIT_SECTION_PATH + ".armor.head.material", "DIAMOND_HELMET");
         configuration.set(PluginSettings.KIT_SECTION_PATH + ".items", List.of());
 
-        reloadServiceFor(configuration).reloadFromFile();
+        ConfigurationReloadReport report = reloadServiceFor(configuration).reloadFromFile();
 
-        assertEquals(PluginSettings.KIT_SECTION_PATH,
-                liveConfiguration.valueOf(RecordingLiveConfiguration.KIT));
-        assertEquals(List.of("armor", "items"), liveConfiguration.kitSectionKeys());
-    }
-
-    @Test
-    void aFileWithoutAKitSectionReloadsTheKitAsAnEmptyOne() {
-        reloadServiceFor(new MemoryConfiguration()).reloadFromFile();
-
-        assertEquals("no kit section", liveConfiguration.valueOf(RecordingLiveConfiguration.KIT));
+        assertTrue(report.isClean(), report.problems().toString());
+        assertEquals(RecordingLiveConfiguration.EVERY_APPLIED_VALUE, liveConfiguration.appliedValueNames());
+        assertFalse(report.describe().stream().anyMatch(line -> line.contains("kit")), report.describe().toString());
     }
 
     @Test
