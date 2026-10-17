@@ -58,7 +58,28 @@ final class TeamActionsAdminMenu implements AdminMenu {
         }
     }
 
-    void removeTeam(Player player, String teamName) {
+    AdminMenuConfirmation removeConfirmation() {
+        return new AdminMenuConfirmation() {
+            @Override
+            public List<String> describe(AdminMenuHolder holder) {
+                return List.of(
+                        "Team " + holder.getSubject().orElseThrow() + " is removed from the registry",
+                        "A running match of that team is not stopped by it");
+            }
+
+            @Override
+            public void carryOut(Player player, AdminMenuHolder holder) {
+                removeTeam(player, holder.getSubject().orElseThrow());
+            }
+
+            @Override
+            public AdminMenuHolder returnMenu(AdminMenuHolder holder) {
+                return AdminMenuHolder.teams(holder.getPageIndex());
+            }
+        };
+    }
+
+    private void removeTeam(Player player, String teamName) {
         if (!teamRegistry.removeTeam(teamName)) {
             TournamentMessages.sendError(player, "Unknown team " + teamName);
             return;

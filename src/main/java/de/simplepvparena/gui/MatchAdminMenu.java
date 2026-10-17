@@ -87,13 +87,32 @@ final class MatchAdminMenu implements AdminMenu {
         }
     }
 
-    List<String> describeCancelConfirmation() {
+    AdminMenuConfirmation cancelConfirmation() {
+        return new AdminMenuConfirmation() {
+            @Override
+            public List<String> describe(AdminMenuHolder holder) {
+                return describeCancelConfirmation();
+            }
+
+            @Override
+            public void carryOut(Player player, AdminMenuHolder holder) {
+                cancelTournament(player);
+            }
+
+            @Override
+            public AdminMenuHolder returnMenu(AdminMenuHolder holder) {
+                return AdminMenuHolder.match();
+            }
+        };
+    }
+
+    private List<String> describeCancelConfirmation() {
         return List.of(
                 "The running tournament is cancelled",
                 "The running match is stopped and its bracket is dropped");
     }
 
-    void cancelTournament(Player player) {
+    private void cancelTournament(Player player) {
         AdminMenuReplies.reportOperation(player, tournamentManager.cancelTournament());
     }
 

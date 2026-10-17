@@ -52,11 +52,30 @@ final class KitAdminMenu implements AdminMenu {
         }
     }
 
-    List<String> describeSaveConfirmation() {
+    AdminMenuConfirmation saveConfirmation() {
+        return new AdminMenuConfirmation() {
+            @Override
+            public List<String> describe(AdminMenuHolder holder) {
+                return describeSaveConfirmation();
+            }
+
+            @Override
+            public void carryOut(Player player, AdminMenuHolder holder) {
+                saveKit(player);
+            }
+
+            @Override
+            public AdminMenuHolder returnMenu(AdminMenuHolder holder) {
+                return AdminMenuHolder.kit();
+            }
+        };
+    }
+
+    private List<String> describeSaveConfirmation() {
         return buildKitSaveLore("The kit that stands in config.yml now is gone afterwards");
     }
 
-    void saveKit(Player player) {
+    private void saveKit(Player player) {
         TournamentMessages.sendSuccessReport(player, kitSaveService.saveFromInventory(player).describe());
     }
 

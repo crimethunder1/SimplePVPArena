@@ -116,13 +116,32 @@ final class TeamsAdminMenu implements AdminMenu {
         }
     }
 
-    List<String> describeImportConfirmation() {
+    AdminMenuConfirmation importConfirmation() {
+        return new AdminMenuConfirmation() {
+            @Override
+            public List<String> describe(AdminMenuHolder holder) {
+                return describeImportConfirmation();
+            }
+
+            @Override
+            public void carryOut(Player player, AdminMenuHolder holder) {
+                importTeams(player);
+            }
+
+            @Override
+            public AdminMenuHolder returnMenu(AdminMenuHolder holder) {
+                return AdminMenuHolder.teams(holder.getPageIndex());
+            }
+        };
+    }
+
+    private List<String> describeImportConfirmation() {
         return buildTeamImportLore(teamRegistry.getTeamCount(),
                 "The teams that are registered now are gone afterwards",
                 "Nothing is removed if not a single entry can be imported");
     }
 
-    void importTeams(Player player) {
+    private void importTeams(Player player) {
         EventTeamImportResult result = eventTeamImportService.importTeams();
         if (result.isImported()) {
             TournamentMessages.sendSuccessReport(player, result.describe());
