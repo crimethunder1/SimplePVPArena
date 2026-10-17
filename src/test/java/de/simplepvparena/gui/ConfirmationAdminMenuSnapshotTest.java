@@ -142,7 +142,7 @@ class ConfirmationAdminMenuSnapshotTest {
         assertEquals("""
                 Remove the team? | 27
                 4 | BOOK | Remove the team? | Team Alpha is removed from the registry / \
-                A running match of that team is not stopped by it
+                A team that plays a match cannot be removed
                 11 | LIME_WOOL | Yes | Carries the action out
                 15 | RED_WOOL | No | Changes nothing and returns
                 """, fixture.describeLastMenu());
@@ -161,7 +161,7 @@ class ConfirmationAdminMenuSnapshotTest {
         assertEquals("""
                 Remove the team? | 27
                 4 | BOOK | Remove the team? | Team Team46 is removed from the registry / \
-                A running match of that team is not stopped by it
+                A team that plays a match cannot be removed
                 11 | LIME_WOOL | Yes | Carries the action out
                 15 | RED_WOOL | No | Changes nothing and returns
                 """, fixture.describeLastMenu());

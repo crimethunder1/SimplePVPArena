@@ -107,7 +107,7 @@ final class TeamActionsAdminMenu implements AdminMenu {
             public List<String> describe(AdminMenuHolder holder) {
                 return List.of(
                         "Team " + holder.getSubject().orElseThrow() + " is removed from the registry",
-                        "A running match of that team is not stopped by it");
+                        "A team that plays a match cannot be removed");
             }
 
             @Override

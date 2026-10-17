@@ -1,5 +1,6 @@
 package de.simplepvparena.match;
 
+import de.simplepvparena.arena.ArenaAudience;
 import de.simplepvparena.arena.ArenaTemporaryEntityRemover;
 import de.simplepvparena.arena.PositionSnapshot;
 import de.simplepvparena.arena.SpectatorService;
@@ -10,6 +11,7 @@ import de.simplepvparena.message.TournamentMessages;
 import de.simplepvparena.team.Team;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.title.Title;
+import net.kyori.adventure.util.Ticks;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.Plugin;
@@ -43,6 +45,16 @@ public final class MatchService {
     private static final Title.Times START_GATE_RELEASE_TITLE_TIMES = Title.Times.times(
             Duration.ZERO, Duration.ofMillis(1200L), Duration.ofMillis(400L));
 
+    private static final long SCORE_TITLE_FADE_IN_TICKS = 10L;
+    private static final long SCORE_TITLE_STAY_TICKS = 50L;
+    private static final long SCORE_TITLE_FADE_OUT_TICKS = 10L;
+
+    private static final Title.Times SCORE_TITLE_TIMES = Title.Times.times(
+            Ticks.duration(SCORE_TITLE_FADE_IN_TICKS), Ticks.duration(SCORE_TITLE_STAY_TICKS),
+            Ticks.duration(SCORE_TITLE_FADE_OUT_TICKS));
+
+    private static final String DECIDED_BY_AN_ADMIN = "decided by an admin";
+
     private final Plugin plugin;
     private final KitService kitService;
     private final SpectatorService spectatorService;
@@ -52,6 +64,7 @@ public final class MatchService {
     private final SuddenDeathTick suddenDeathTick = new SuddenDeathTick(new Random());
 
     private MatchCompletionHandler matchCompletionHandler = (match, winnerTeamName) -> { };
+    private ArenaAudience arenaAudience;
     private Match activeMatch;
     private ScheduledRoundTimer activeRoundTimer;
     private boolean insideSuddenDeathTick;
@@ -80,6 +93,10 @@ public final class MatchService {
         this.matchCompletionHandler = matchCompletionHandler;
     }
 
+    public void setArenaAudience(ArenaAudience arenaAudience) {
+        this.arenaAudience = Objects.requireNonNull(arenaAudience, "arenaAudience");
+    }
+
     public void setRoundResetDelayTicks(long roundResetDelayTicks) {
         this.roundResetDelayTicks = Math.max(0L, roundResetDelayTicks);
     }
@@ -105,8 +122,6 @@ public final class MatchService {
             throw new IllegalStateException("match " + activeMatch.getMatchId() + " is still running in the arena");
         }
         activeMatch = match;
-        announceToMatch(match, "Match " + match.getMatchId() + " starts: " + match.getFirstTeam().getTeamName()
-                + " against " + match.getSecondTeam().getTeamName());
         beginRound(match);
     }
 
@@ -207,7 +222,7 @@ public final class MatchService {
         if (winningTeam.isEmpty()) {
             return false;
         }
-        finishMatch(match.get(), winningTeam.get().getTeamName());
+        finishMatch(match.get(), winningTeam.get().getTeamName(), true);
         return true;
     }
 
@@ -291,6 +306,7 @@ public final class MatchService {
                 announceToMatch(match, drawMessage);
             }
             if (hasAnyOnlineParticipant(match)) {
+                announceRoundTitle(match, "Round " + match.getRoundNumber() + " is a draw");
                 scheduleNextRound(match);
                 return;
             }
@@ -305,10 +321,11 @@ public final class MatchService {
         announceSuccessToMatch(match, winnerTeamName + " scores a point (" + match.getScore().describe() + ")");
         Optional<String> matchWinner = match.getScore().getWinnerTeamName();
         if (matchWinner.isPresent()) {
-            finishMatch(match, matchWinner.get());
+            finishMatch(match, matchWinner.get(), false);
             return;
         }
         match.setState(MatchState.BETWEEN_ROUNDS);
+        announceRoundTitle(match, winnerTeamName + " wins round " + match.getRoundNumber());
         scheduleNextRound(match);
     }
 
@@ -330,7 +347,7 @@ public final class MatchService {
         }, roundResetDelayTicks);
     }
 
-    private void finishMatch(Match match, String winnerTeamName) {
+    private void finishMatch(Match match, String winnerTeamName, boolean decidedByAnAdmin) {
         stopRoundTimer();
         startGates.stopAndRestore();
         match.setState(MatchState.FINISHED);
@@ -338,6 +355,7 @@ public final class MatchService {
         announceSuccessToMatch(match, "Match " + match.getMatchId() + " is over, " + winnerTeamName + " wins ("
                 + match.getScore().describe() + ")");
         releaseParticipants(match);
+        announceMatchTitle(match, winnerTeamName, decidedByAnAdmin);
         matchCompletionHandler.onMatchCompleted(match, winnerTeamName);
     }
 
@@ -512,6 +530,32 @@ public final class MatchService {
         Title title = Title.title(Component.text(titleText, TournamentMessages.ERROR_COLOUR),
                 Component.text(subtitleText, TournamentMessages.DETAIL_COLOUR), SUDDEN_DEATH_TITLE_TIMES);
         forEachMatchAudience(match, player -> player.showTitle(title));
+    }
+
+    private void announceRoundTitle(Match match, String roundResult) {
+        showScoreTitle(match, Component.text(match.getScore().describe(), TournamentMessages.INFO_COLOUR),
+                roundResult);
+    }
+
+    private void announceMatchTitle(Match match, String winnerTeamName, boolean decidedByAnAdmin) {
+        String headline = winnerTeamName + (match.isFinalMatch() ? " wins the final" : " wins");
+        String result = decidedByAnAdmin ? DECIDED_BY_AN_ADMIN : match.getScore().describe();
+        showScoreTitle(match, Component.text(headline, TournamentMessages.SUCCESS_COLOUR),
+                match.getMatchId() + ", " + result);
+    }
+
+    private void showScoreTitle(Match match, Component headline, String detail) {
+        Title title = Title.title(headline, Component.text(detail, TournamentMessages.DETAIL_COLOUR),
+                SCORE_TITLE_TIMES);
+        forEachAreaAudience(match, player -> player.showTitle(title));
+    }
+
+    private void forEachAreaAudience(Match match, Consumer<Player> action) {
+        if (arenaAudience == null) {
+            forEachMatchAudience(match, action);
+            return;
+        }
+        arenaAudience.findMatchAudience(match.getTeams()).forEach(action);
     }
 
     private void forEachMatchAudience(Match match, Consumer<Player> action) {

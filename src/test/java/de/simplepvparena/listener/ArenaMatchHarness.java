@@ -1,5 +1,6 @@
 package de.simplepvparena.listener;
 
+import de.simplepvparena.arena.ArenaAudience;
 import de.simplepvparena.arena.ArenaRegistry;
 import de.simplepvparena.arena.ArenaShape;
 import de.simplepvparena.arena.ArenaShapeCalculation;
@@ -17,12 +18,15 @@ import de.simplepvparena.gate.StartGateVisualEffect;
 import de.simplepvparena.kit.KitService;
 import de.simplepvparena.match.Match;
 import de.simplepvparena.match.MatchService;
+import de.simplepvparena.message.TournamentMessages;
 import de.simplepvparena.permission.AdminPermission;
 import de.simplepvparena.support.FakeBlockData;
 import de.simplepvparena.support.FakeSpectatorItems;
 import de.simplepvparena.support.SharedBukkitServer;
 import de.simplepvparena.team.Team;
 import de.simplepvparena.team.TeamMember;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.title.Title;
 import org.bukkit.GameMode;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -65,6 +69,8 @@ final class ArenaMatchHarness {
     private final Map<Long, Material> blockMaterials = new LinkedHashMap<>();
     private final BorderMarkIndex borderMarks = new BorderMarkIndex();
     private final ArenaRegistry arenaRegistry = new ArenaRegistry();
+    private final ArenaAudience arenaAudience = new ArenaAudience(this::findOnlinePlayers, arenaRegistry);
+    private final List<String> broadcasts = new ArrayList<>();
     private final SpectatorBorderService borderService;
     private final SpectatorService spectatorService;
     private final RecordingFighterColours fighterColours = new RecordingFighterColours();
@@ -122,6 +128,18 @@ final class ArenaMatchHarness {
 
     MatchService getMatchService() {
         return matchService;
+    }
+
+    ArenaAudience getArenaAudience() {
+        return arenaAudience;
+    }
+
+    void useArenaAudience() {
+        matchService.setArenaAudience(arenaAudience);
+    }
+
+    List<String> getBroadcasts() {
+        return broadcasts;
     }
 
     KitService getKitService() {
@@ -274,9 +292,24 @@ final class ArenaMatchHarness {
             case "getScheduler" -> scheduler;
             case "getWorld" -> WORLD_NAME.equals(arguments[0]) ? world : null;
             case "getPlayer" -> findPlayer(arguments[0]);
+            case "getOnlinePlayers" -> findOnlinePlayers();
+            case "broadcast" -> {
+                broadcasts.add(TournamentMessages.toPlainBody((Component) arguments[0]));
+                yield findOnlinePlayers().size();
+            }
             case "getLogger" -> LOGGER;
             default -> throw new UnsupportedOperationException("Server." + method.getName());
         });
+    }
+
+    private List<Player> findOnlinePlayers() {
+        List<Player> onlinePlayers = new ArrayList<>();
+        for (FakePlayer player : playersByUniqueId.values()) {
+            if (player.online) {
+                onlinePlayers.add(player.player);
+            }
+        }
+        return onlinePlayers;
     }
 
     private Object findPlayer(Object playerUniqueId) {
@@ -383,6 +416,9 @@ final class ArenaMatchHarness {
         private final UUID uniqueId = UUID.randomUUID();
         private final String playerName;
         private final Map<Object, Object> persistentData = new LinkedHashMap<>();
+        private final List<String> messages = new ArrayList<>();
+        private final List<String> actionBars = new ArrayList<>();
+        private final List<Title> titles = new ArrayList<>();
         private final Player player;
 
         private Location location;
@@ -450,7 +486,19 @@ final class ArenaMatchHarness {
                     damageReaction.run();
                     yield null;
                 }
-                case "sendMessage", "sendActionBar", "showTitle", "setFallDistance", "setFireTicks",
+                case "sendMessage" -> {
+                    recordMessage(arguments[0]);
+                    yield null;
+                }
+                case "sendActionBar" -> {
+                    actionBars.add(TournamentMessages.toPlainText((Component) arguments[0]));
+                    yield null;
+                }
+                case "showTitle" -> {
+                    titles.add((Title) arguments[0]);
+                    yield null;
+                }
+                case "setFallDistance", "setFireTicks",
                      "removePotionEffect", "setAbsorptionAmount", "setArrowsInBody", "setFreezeTicks",
                      "setRemainingAir", "setVelocity", "setCooldown" -> null;
                 case "getMaximumAir" -> 300;
@@ -470,6 +518,43 @@ final class ArenaMatchHarness {
 
         Player player() {
             return player;
+        }
+
+        String name() {
+            return playerName;
+        }
+
+        List<String> messages() {
+            return messages;
+        }
+
+        List<String> actionBars() {
+            return actionBars;
+        }
+
+        List<Title> titles() {
+            return titles;
+        }
+
+        List<String> titleTexts() {
+            return titles.stream()
+                    .map(title -> TournamentMessages.toPlainText(title.title()) + " / "
+                            + TournamentMessages.toPlainText(title.subtitle()))
+                    .toList();
+        }
+
+        void forgetReceivedTexts() {
+            messages.clear();
+            actionBars.clear();
+            titles.clear();
+        }
+
+        private void recordMessage(Object message) {
+            if (message instanceof Component component) {
+                messages.add(TournamentMessages.toPlainBody(component));
+            } else {
+                messages.add(String.valueOf(message));
+            }
         }
 
         UUID uniqueId() {

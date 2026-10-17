@@ -1,6 +1,7 @@
 package de.simplepvparena.tournament;
 
 import de.simplepvparena.arena.Arena;
+import de.simplepvparena.arena.ArenaAudience;
 import de.simplepvparena.arena.ArenaRegistry;
 import de.simplepvparena.match.Match;
 import de.simplepvparena.match.MatchCompletionHandler;
@@ -10,6 +11,7 @@ import de.simplepvparena.team.Team;
 import de.simplepvparena.team.TeamRegistry;
 import de.simplepvparena.team.TeamSizeSetting;
 import net.kyori.adventure.text.Component;
+import org.bukkit.entity.Player;
 import org.bukkit.plugin.Plugin;
 
 import java.io.IOException;
@@ -77,6 +79,7 @@ public final class TournamentManager implements MatchCompletionHandler {
     private String forcedRunningMatchId;
 
     private boolean waitingForArenaCleaning;
+    private ArenaAudience arenaAudience;
 
     public TournamentManager(Plugin plugin, TeamRegistry teamRegistry, ArenaRegistry arenaRegistry,
                              MatchService matchService, ArenaCleanup arenaCleanup,
@@ -115,6 +118,10 @@ public final class TournamentManager implements MatchCompletionHandler {
         this.teamSizeSetting = Objects.requireNonNull(teamSizeSetting, "teamSizeSetting");
         this.finalMatchGate = new FinalMatchGate(adminNotifier);
         this.matchService.setMatchCompletionHandler(this);
+    }
+
+    public void setArenaAudience(ArenaAudience arenaAudience) {
+        this.arenaAudience = Objects.requireNonNull(arenaAudience, "arenaAudience");
     }
 
     public TournamentState getState() {
@@ -422,7 +429,7 @@ public final class TournamentManager implements MatchCompletionHandler {
                 : MatchDecisionKind.PLAYED;
         kitChoiceService.activateDefaultKit();
         cleanArenaBeforeTheNextMatch(match);
-        recordBracketWinner(match.getMatchId(), winnerTeamName, decisionKind);
+        recordBracketWinner(match.getMatchId(), winnerTeamName, decisionKind, true);
     }
 
     private void cleanArenaBeforeTheNextMatch(Match match) {
@@ -525,6 +532,11 @@ public final class TournamentManager implements MatchCompletionHandler {
     }
 
     private void recordBracketWinner(String matchId, String winnerTeamName, MatchDecisionKind decisionKind) {
+        recordBracketWinner(matchId, winnerTeamName, decisionKind, false);
+    }
+
+    private void recordBracketWinner(String matchId, String winnerTeamName, MatchDecisionKind decisionKind,
+                                     boolean decidedInTheArena) {
         if (bracket == null) {
             return;
         }
@@ -540,7 +552,37 @@ public final class TournamentManager implements MatchCompletionHandler {
             return;
         }
         saveState();
+        if (decidedInTheArena) {
+            announceNextMatch();
+        }
         startNextMatch();
+    }
+
+    private void announceNextMatch() {
+        if (state != TournamentState.RUNNING) {
+            return;
+        }
+        Optional<BracketMatch> nextMatch = MatchSequence.findNextMatch(bracket);
+        if (nextMatch.isPresent()) {
+            findRegisteredTeams(nextMatch.get()).ifPresent(teams -> announceToMatchAudience(teams,
+                    "Next: " + teams.get(0).getTeamName() + " against " + teams.get(1).getTeamName()
+                            + " (" + nextMatch.get().getMatchId() + ")", true));
+            return;
+        }
+        if (finalMatchGate.getStage() == FinalMatchStage.READY) {
+            findRegisteredTeams(bracket.getFinalMatch()).ifPresent(teams -> announceToMatchAudience(teams,
+                    "The final will be played by " + teams.get(0).getTeamName() + " and "
+                            + teams.get(1).getTeamName() + ", an admin starts it", true));
+        }
+    }
+
+    private Optional<List<Team>> findRegisteredTeams(BracketMatch bracketMatch) {
+        Optional<Team> firstTeam = teamRegistry.findTeam(bracketMatch.getFirstTeamName().orElse(null));
+        Optional<Team> secondTeam = teamRegistry.findTeam(bracketMatch.getSecondTeamName().orElse(null));
+        if (firstTeam.isEmpty() || secondTeam.isEmpty()) {
+            return Optional.empty();
+        }
+        return Optional.of(List.of(firstTeam.get(), secondTeam.get()));
     }
 
     private void saveState() {
@@ -611,8 +653,8 @@ public final class TournamentManager implements MatchCompletionHandler {
             return false;
         }
         Team advancingTeam = firstTeam.orElseGet(secondTeam::orElseThrow);
-        broadcast(advancingTeam.getTeamName() + " advances in match " + bracketMatch.getMatchId()
-                + " because the opposing team is no longer registered");
+        announceToMatchAudience(List.of(advancingTeam), advancingTeam.getTeamName() + " advances in match "
+                + bracketMatch.getMatchId() + " because the opposing team is no longer registered");
         recordBracketWinner(bracketMatch.getMatchId(), advancingTeam.getTeamName(), MatchDecisionKind.WALKOVER);
         return false;
     }
@@ -638,8 +680,8 @@ public final class TournamentManager implements MatchCompletionHandler {
         if (finalMatch) {
             finalMatchGate.markRunning();
         }
-        broadcast("Match " + match.getMatchId() + ": " + match.getFirstTeam().getTeamName() + " against "
-                + match.getSecondTeam().getTeamName());
+        announceToMatchAudience(match.getTeams(), "Match " + match.getMatchId() + ": "
+                + match.getFirstTeam().getTeamName() + " against " + match.getSecondTeam().getTeamName());
         matchService.startMatch(match);
     }
 
@@ -651,6 +693,26 @@ public final class TournamentManager implements MatchCompletionHandler {
     private Optional<String> resolveBracketTeamName(BracketMatch bracketMatch, String teamName) {
         return bracketMatch.getFirstTeamName().filter(name -> name.equalsIgnoreCase(teamName))
                 .or(() -> bracketMatch.getSecondTeamName().filter(name -> name.equalsIgnoreCase(teamName)));
+    }
+
+    private void announceToMatchAudience(List<Team> teams, String message) {
+        announceToMatchAudience(teams, message, false);
+    }
+
+    private void announceToMatchAudience(List<Team> teams, String message, boolean shownInTheActionBar) {
+        Component announcement = TournamentMessages.info(message);
+        if (arenaAudience == null) {
+            broadcast(announcement);
+            return;
+        }
+        Component actionBarText = Component.text(message, TournamentMessages.INFO_COLOUR);
+        for (Player player : arenaAudience.findMatchAudience(teams)) {
+            player.sendMessage(announcement);
+            if (shownInTheActionBar) {
+                player.sendActionBar(actionBarText);
+            }
+        }
+        plugin.getLogger().info(message);
     }
 
     private void broadcast(String message) {

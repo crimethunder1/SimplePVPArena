@@ -2,6 +2,7 @@ package de.simplepvparena;
 
 import de.simplepvparena.arena.ActiveArenaState;
 import de.simplepvparena.arena.Arena;
+import de.simplepvparena.arena.ArenaAudience;
 import de.simplepvparena.arena.ArenaBaselineRegistry;
 import de.simplepvparena.arena.ArenaBaselineService;
 import de.simplepvparena.arena.ArenaBorderConfirmation;
@@ -205,6 +206,8 @@ public final class SimplePVPArenaPlugin extends JavaPlugin {
 
         matchService = new MatchService(this, kitService, spectatorService, fighterColours,
                 startGateOpeningService, temporaryEntityRemover);
+        ArenaAudience arenaAudience = new ArenaAudience(getServer(), arenaRegistry);
+        matchService.setArenaAudience(arenaAudience);
 
         BorderVisualEffect borderVisualEffect = BorderVisualEffects.create(getServer().getPluginManager(),
                 getLogger());
@@ -233,6 +236,7 @@ public final class SimplePVPArenaPlugin extends JavaPlugin {
                 adminNotifier, new FileTournamentStateStorage(
                         new File(getDataFolder(), FileTournamentStateStorage.FILE_NAME).toPath()),
                 kitChoiceService, teamSizeSetting);
+        tournamentManager.setArenaAudience(arenaAudience);
         tournamentManager.restoreSavedTournament();
 
         tournamentDryRun = new TournamentDryRun(tournamentManager::getState,
