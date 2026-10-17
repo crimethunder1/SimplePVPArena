@@ -77,8 +77,6 @@ import de.simplepvparena.listener.StartGateListener;
 import de.simplepvparena.match.FighterColours;
 import de.simplepvparena.match.MatchService;
 import de.simplepvparena.match.ScoreboardFighterColours;
-import de.simplepvparena.team.EventTeamImportFile;
-import de.simplepvparena.team.EventTeamImportService;
 import de.simplepvparena.team.TeamMemberLookup;
 import de.simplepvparena.team.TeamRegistry;
 import de.simplepvparena.team.TeamStorage;
@@ -106,7 +104,6 @@ public final class SimplePVPArenaPlugin extends JavaPlugin {
     private ArenaRegistry arenaRegistry;
     private TeamRegistry teamRegistry;
     private TeamStorage teamStorage;
-    private EventTeamImportService eventTeamImportService;
     private KitService kitService;
     private KitLibrary kitLibrary;
     private KitSaveService kitSaveService;
@@ -241,11 +238,8 @@ public final class SimplePVPArenaPlugin extends JavaPlugin {
 
         chatInputService = new ChatInputService(this);
         TeamMemberLookup teamMemberLookup = new TeamMemberLookup(getServer());
-        eventTeamImportService = new EventTeamImportService(
-                new File(getDataFolder(), EventTeamImportFile.FILE_NAME), teamRegistry,
-                teamMemberLookup::find, this::saveTeamConfiguration);
         adminMenuService = new AdminMenuService(this, tournamentManager, tournamentDryRun, teamRegistry,
-                teamMemberLookup, eventTeamImportService, matchService, arenaSetupService,
+                teamMemberLookup, matchService, arenaSetupService,
                 arenaHeightMarkerService, startGateItemService,
                 borderSelectorModes, kitLibrary, kitSaveService, chatInputService, this::saveTeamConfiguration,
                 this::reloadConfiguration);

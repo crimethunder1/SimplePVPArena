@@ -30,8 +30,6 @@ import de.simplepvparena.match.MatchService;
 import de.simplepvparena.message.TournamentMessages;
 import de.simplepvparena.permission.AdminPermission;
 import de.simplepvparena.support.FakeKitItemSerializer;
-import de.simplepvparena.team.EventTeamImportFile;
-import de.simplepvparena.team.EventTeamImportService;
 import de.simplepvparena.team.TeamMemberLookup;
 import de.simplepvparena.team.TeamRegistry;
 import de.simplepvparena.tournament.AutomaticArenaCleanup;
@@ -42,15 +40,12 @@ import org.bukkit.entity.Player;
 import org.bukkit.plugin.Plugin;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.io.TempDir;
 
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
-import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 import java.util.UUID;
 import java.util.logging.Logger;
 
@@ -76,7 +71,7 @@ class AdminMenuSeamTest {
     private boolean adminPermissionGranted = true;
 
     @BeforeEach
-    void buildTheMenuService(@TempDir Path pluginFolder) {
+    void buildTheMenuService() {
         Server server = proxy(Server.class, (method, arguments) -> {
             throw new UnsupportedOperationException("Server." + method.getName());
         });
@@ -112,8 +107,6 @@ class AdminMenuSeamTest {
                 gateDuration);
         menuService = new AdminMenuService(plugin, tournamentManager, tournamentDryRun, teamRegistry,
                 new TeamMemberLookup(server),
-                new EventTeamImportService(pluginFolder.resolve(EventTeamImportFile.FILE_NAME).toFile(),
-                        teamRegistry, playerName -> Optional.empty(), () -> { }),
                 matchService, arenaSetupService, new ArenaHeightMarkerService(plugin, heightMarkers),
                 new StartGateItemService(plugin, gateMarks, gateDuration, () -> { }),
                 new BorderSelectorModeRegistry(),

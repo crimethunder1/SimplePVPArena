@@ -45,8 +45,6 @@ import de.simplepvparena.support.FakeSerializedKits;
 import de.simplepvparena.support.InMemoryKitLibraryStorage;
 import de.simplepvparena.support.SharedBukkitServer;
 import de.simplepvparena.support.TickingScheduler;
-import de.simplepvparena.team.EventTeamImportFile;
-import de.simplepvparena.team.EventTeamImportService;
 import de.simplepvparena.team.TeamMember;
 import de.simplepvparena.team.TeamMemberLookup;
 import de.simplepvparena.team.TeamRegistry;
@@ -71,11 +69,6 @@ import org.bukkit.plugin.Plugin;
 import org.bukkit.scheduler.BukkitScheduler;
 import org.bukkit.scheduler.BukkitTask;
 
-import java.io.File;
-import java.io.IOException;
-import java.io.UncheckedIOException;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -124,8 +117,6 @@ final class AdminMenuFixture {
     private final Map<String, TeamMember> knownPlayersByLowerCaseName = new LinkedHashMap<>();
     private final List<ItemStack> handedOutItems = new ArrayList<>();
     private final Map<Integer, ItemStack> adminInventoryItems = new HashMap<>();
-    private final File importFile = new File("target/admin-menu-fixture/" + adminUniqueId + "/"
-            + EventTeamImportFile.FILE_NAME);
     private final List<Player> onlinePlayers = new ArrayList<>();
     private final List<String> adminNotifications = new ArrayList<>();
     private final TickingScheduler kitChoiceScheduler = new TickingScheduler();
@@ -195,8 +186,6 @@ final class AdminMenuFixture {
         Server server = plugin.getServer();
         menuService = new AdminMenuService(plugin, tournamentManager, tournamentDryRun, teamRegistry,
                 new TeamMemberLookup(server),
-                new EventTeamImportService(importFile, teamRegistry, this::findKnownPlayer,
-                        this::saveTeamConfiguration),
                 matchService, arenaSetupService, new ArenaHeightMarkerService(plugin, heightMarkers),
                 new StartGateItemService(plugin, gateMarks, gateDuration, () -> { }),
                 borderSelectorModes,
@@ -266,10 +255,18 @@ final class AdminMenuFixture {
 
     void registerTeams(String... teamNames) {
         for (String teamName : teamNames) {
-            teamRegistry.registerTeam(teamName,
+            teamRegistry.registerTeam(teamName, List.of(
                     new TeamMember(UUID.randomUUID(), teamName + "-first"),
-                    new TeamMember(UUID.randomUUID(), teamName + "-second"));
+                    new TeamMember(UUID.randomUUID(), teamName + "-second")));
         }
+    }
+
+    void registerTeamOf(String teamName, String... playerNames) {
+        List<TeamMember> members = new ArrayList<>();
+        for (String playerName : playerNames) {
+            members.add(new TeamMember(UUID.randomUUID(), playerName));
+        }
+        teamRegistry.registerTeam(teamName, members);
     }
 
     void registerNumberedTeams(int teamCount) {
@@ -286,15 +283,6 @@ final class AdminMenuFixture {
         for (String playerName : playerNames) {
             knownPlayersByLowerCaseName.put(playerName.toLowerCase(Locale.ROOT),
                     new TeamMember(UUID.randomUUID(), playerName));
-        }
-    }
-
-    void placeImportFile(String json) {
-        try {
-            Files.createDirectories(importFile.toPath().getParent());
-            Files.writeString(importFile.toPath(), json, StandardCharsets.UTF_8);
-        } catch (IOException failure) {
-            throw new UncheckedIOException(failure);
         }
     }
 

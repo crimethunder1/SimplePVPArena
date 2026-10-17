@@ -90,6 +90,32 @@ class TournamentDryRunTest {
     }
 
     @Test
+    void describesTheRegisteredTestTeamsAndTheirPlaceholderPlayers() {
+        DryRunReport report = dryRun().run();
+
+        assertEquals(List.of("Dry-Run-Alpha with Dry-Run-Alpha-1, Dry-Run-Alpha-2",
+                "Dry-Run-Bravo with Dry-Run-Bravo-1, Dry-Run-Bravo-2",
+                "Both are found by name and both placeholder players are found by their unique id",
+                "The members are placeholders and no account of this server, and nothing was written to teams.yml"),
+                findStep(report, TournamentDryRun.TEAM_STEP).details());
+    }
+
+    @Test
+    void leavesTeamsOfOneAndThreePlayersOfTheEventAsTheyAre() {
+        Team soloTeam = teamRegistry.registerTeam("Solo", List.of(new TeamMember(UUID.randomUUID(), "Steve")));
+        Team trioTeam = teamRegistry.registerTeam("Trio", List.of(new TeamMember(UUID.randomUUID(), "Alex"),
+                new TeamMember(UUID.randomUUID(), "Notch"), new TeamMember(UUID.randomUUID(), "Jeb_")));
+
+        DryRunReport report = dryRun().run();
+
+        assertTrue(findStep(report, TournamentDryRun.TEAM_STEP).isPassed());
+        assertTrue(findStep(report, TournamentDryRun.CLEANUP_STEP).isPassed());
+        assertEquals(List.of("Solo", "Trio"), teamRegistry.getTeamNames());
+        assertEquals(soloTeam.getMembers(), teamRegistry.findTeam("Solo").orElseThrow().getMembers());
+        assertEquals(trioTeam.getMembers(), teamRegistry.findTeam("Trio").orElseThrow().getMembers());
+    }
+
+    @Test
     void refusesToTouchATeamThatIsAlreadyCalledLikeATestTeam() {
         Team ownTeam = registerRealTeam(DryRunTeam.FIRST_TEAM_NAME);
 
@@ -324,9 +350,9 @@ class TournamentDryRunTest {
     }
 
     private Team registerRealTeam(String teamName) {
-        return teamRegistry.registerTeam(teamName,
+        return teamRegistry.registerTeam(teamName, List.of(
                 new TeamMember(UUID.randomUUID(), teamName + "-first"),
-                new TeamMember(UUID.randomUUID(), teamName + "-second"));
+                new TeamMember(UUID.randomUUID(), teamName + "-second")));
     }
 
     private static DryRunStep findStep(DryRunReport report, String stepName) {

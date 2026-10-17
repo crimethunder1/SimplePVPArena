@@ -127,8 +127,7 @@ public final class TournamentDryRun {
         List<String> details = new ArrayList<>();
         for (DryRunTeam testTeam : testTeams) {
             try {
-                Team team = teamRegistry.registerTeam(testTeam.teamName(), testTeam.firstMember(),
-                        testTeam.secondMember());
+                Team team = teamRegistry.registerTeam(testTeam.teamName(), testTeam.members());
                 registeredTeams.add(testTeam);
                 details.add(team.getTeamName() + " with " + team.getMemberNamesJoined());
             } catch (IllegalArgumentException | IllegalStateException refusal) {
@@ -140,10 +139,16 @@ public final class TournamentDryRun {
         if (lookupFailure.isPresent()) {
             return DryRunStep.failed(TEAM_STEP, lookupFailure.get());
         }
-        details.add("Both are found by name and both placeholder players are found by their unique id");
+        details.add("Both are found by name and " + describePlaceholderPlayers(testTeams)
+                + " found by their unique id");
         details.add("The members are placeholders and no account of this server, and nothing was "
                 + "written to teams.yml");
         return DryRunStep.passed(TEAM_STEP, details);
+    }
+
+    private static String describePlaceholderPlayers(List<DryRunTeam> testTeams) {
+        boolean everyTeamHasTwoPlayers = testTeams.stream().allMatch(testTeam -> testTeam.members().size() == 2);
+        return everyTeamHasTwoPlayers ? "both placeholder players are" : "every placeholder player is";
     }
 
     private Optional<String> findTeamLookupFailure(List<DryRunTeam> testTeams) {

@@ -1,5 +1,6 @@
 package de.simplepvparena.team;
 
+import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Objects;
@@ -9,7 +10,8 @@ import java.util.stream.Collectors;
 
 public final class Team {
 
-    public static final int REQUIRED_MEMBER_COUNT = 2;
+    public static final int MINIMUM_MEMBER_COUNT = 1;
+    public static final int MAXIMUM_MEMBER_COUNT = 8;
 
     private final String teamName;
     private final List<TeamMember> members;
@@ -20,14 +22,19 @@ public final class Team {
         if (teamName.isBlank()) {
             throw new IllegalArgumentException("teamName must not be blank");
         }
-        if (members.size() != REQUIRED_MEMBER_COUNT) {
-            throw new IllegalArgumentException("a team consists of exactly " + REQUIRED_MEMBER_COUNT + " players");
+        List<TeamMember> copiedMembers = List.copyOf(members);
+        if (copiedMembers.size() < MINIMUM_MEMBER_COUNT || copiedMembers.size() > MAXIMUM_MEMBER_COUNT) {
+            throw new IllegalArgumentException("a team has " + MINIMUM_MEMBER_COUNT + " to " + MAXIMUM_MEMBER_COUNT
+                    + " players");
         }
-        if (members.get(0).uniqueId().equals(members.get(1).uniqueId())) {
-            throw new IllegalArgumentException("a team must consist of two different players");
+        Set<UUID> memberUniqueIds = new HashSet<>();
+        for (TeamMember member : copiedMembers) {
+            if (!memberUniqueIds.add(member.uniqueId())) {
+                throw new IllegalArgumentException("a team cannot hold the same player twice");
+            }
         }
         this.teamName = teamName;
-        this.members = List.copyOf(members);
+        this.members = copiedMembers;
     }
 
     public String getTeamName() {

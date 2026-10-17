@@ -22,7 +22,6 @@ class ConfirmationAdminMenuSnapshotTest {
     private static final int KIT_REPLACE_SLOT = 13;
     private static final int KIT_DELETE_SLOT = 15;
     private static final int TEAMS_FIRST_TEAM_SLOT = 0;
-    private static final int TEAMS_IMPORT_SLOT = 50;
     private static final int TEAMS_NEXT_PAGE_SLOT = 53;
     private static final int TEAM_REMOVE_SLOT = 13;
     private static final int MATCH_CANCEL_SLOT = 13;
@@ -163,49 +162,6 @@ class ConfirmationAdminMenuSnapshotTest {
                 Remove the team? | 27
                 4 | BOOK | Remove the team? | Team Team46 is removed from the registry / \
                 A running match of that team is not stopped by it
-                11 | LIME_WOOL | Yes | Carries the action out
-                15 | RED_WOOL | No | Changes nothing and returns
-                """, fixture.describeLastMenu());
-        assertEquals(1, fixture.lastMenu().holder().getPageIndex());
-    }
-
-    @Test
-    void showsTheConfirmationOfTheImportOnTheFirstPage() {
-        fixture.registerTeams("Alpha", "Bravo");
-        fixture.placeImportFile("{ \"teams\": [] }");
-        fixture.openMenuFromTheMainMenu(MAIN_TEAMS_SLOT);
-
-        fixture.click(TEAMS_IMPORT_SLOT);
-
-        assertEquals("""
-                Replace every team with event.json? | 27
-                4 | BOOK | Replace every team with event.json? | Reads event.json of the plugin folder / \
-                Every one of the 2 registered teams is replaced by it / \
-                An entry that cannot be used is skipped and named, / the teams around it are still imported / \
-                event.json lies in the plugin folder / The teams that are registered now are gone afterwards / \
-                Nothing is removed if not a single entry can be imported
-                11 | LIME_WOOL | Yes | Carries the action out
-                15 | RED_WOOL | No | Changes nothing and returns
-                """, fixture.describeLastMenu());
-        assertEquals(0, fixture.lastMenu().holder().getPageIndex());
-    }
-
-    @Test
-    void showsTheConfirmationOfTheImportOnTheSecondPage() {
-        fixture.registerNumberedTeams(46);
-        fixture.placeImportFile("{ \"teams\": [] }");
-        fixture.openMenuFromTheMainMenu(MAIN_TEAMS_SLOT);
-        fixture.click(TEAMS_NEXT_PAGE_SLOT);
-
-        fixture.click(TEAMS_IMPORT_SLOT);
-
-        assertEquals("""
-                Replace every team with event.json? | 27
-                4 | BOOK | Replace every team with event.json? | Reads event.json of the plugin folder / \
-                Every one of the 46 registered teams is replaced by it / \
-                An entry that cannot be used is skipped and named, / the teams around it are still imported / \
-                event.json lies in the plugin folder / The teams that are registered now are gone afterwards / \
-                Nothing is removed if not a single entry can be imported
                 11 | LIME_WOOL | Yes | Carries the action out
                 15 | RED_WOOL | No | Changes nothing and returns
                 """, fixture.describeLastMenu());

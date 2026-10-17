@@ -522,9 +522,9 @@ class ArenaCleaningBetweenMatchesTest {
 
         private void registerTeams(String... teamNames) {
             for (String teamName : teamNames) {
-                teamRegistry.registerTeam(teamName,
+                teamRegistry.registerTeam(teamName, List.of(
                         new TeamMember(UUID.randomUUID(), teamName + "-first"),
-                        new TeamMember(UUID.randomUUID(), teamName + "-second"));
+                        new TeamMember(UUID.randomUUID(), teamName + "-second")));
             }
         }
 

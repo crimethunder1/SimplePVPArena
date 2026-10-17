@@ -6,7 +6,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
 
-public record DryRunTeam(String teamName, TeamMember firstMember, TeamMember secondMember) {
+public record DryRunTeam(String teamName, List<TeamMember> members) {
 
     public static final String FIRST_TEAM_NAME = "Dry-Run-Alpha";
 
@@ -14,8 +14,8 @@ public record DryRunTeam(String teamName, TeamMember firstMember, TeamMember sec
 
     public DryRunTeam {
         Objects.requireNonNull(teamName, "teamName");
-        Objects.requireNonNull(firstMember, "firstMember");
-        Objects.requireNonNull(secondMember, "secondMember");
+        Objects.requireNonNull(members, "members");
+        members = List.copyOf(members);
     }
 
     public static List<DryRunTeam> createTestTeams() {
@@ -23,12 +23,8 @@ public record DryRunTeam(String teamName, TeamMember firstMember, TeamMember sec
     }
 
     private static DryRunTeam create(String teamName) {
-        return new DryRunTeam(teamName,
+        return new DryRunTeam(teamName, List.of(
                 new TeamMember(UUID.randomUUID(), teamName + "-1"),
-                new TeamMember(UUID.randomUUID(), teamName + "-2"));
-    }
-
-    public List<TeamMember> members() {
-        return List.of(firstMember, secondMember);
+                new TeamMember(UUID.randomUUID(), teamName + "-2")));
     }
 }

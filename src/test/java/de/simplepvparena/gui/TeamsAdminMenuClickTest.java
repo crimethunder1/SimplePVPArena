@@ -21,7 +21,7 @@ class TeamsAdminMenuClickTest {
     private static final int INFO_SLOT = 47;
     private static final int UNUSED_SLOT_BESIDE_THE_INFO = 48;
     private static final int BACK_SLOT = 49;
-    private static final int IMPORT_SLOT = 50;
+    private static final int UNUSED_SLOT_BESIDE_THE_BACK_TILE = 50;
     private static final int ADD_SLOT = 51;
     private static final int UNUSED_SLOT_BESIDE_THE_ADD_TILE = 52;
     private static final int NEXT_PAGE_SLOT = 53;
@@ -68,7 +68,7 @@ class TeamsAdminMenuClickTest {
         fixture.registerTeams("Alpha", "Bravo", "Charlie");
 
         for (int slot : List.of(3, LAST_TEAM_SLOT_OF_A_PAGE, UNUSED_SLOT_BESIDE_THE_PREVIOUS_PAGE,
-                UNUSED_SLOT_BESIDE_THE_INFO, UNUSED_SLOT_BESIDE_THE_ADD_TILE)) {
+                UNUSED_SLOT_BESIDE_THE_INFO, UNUSED_SLOT_BESIDE_THE_BACK_TILE, UNUSED_SLOT_BESIDE_THE_ADD_TILE)) {
             fixture.openMenuFromTheMainMenu(MAIN_TEAMS_SLOT);
 
             assertNothingHappensOnAClickOn(slot);
@@ -139,48 +139,6 @@ class TeamsAdminMenuClickTest {
     }
 
     @Test
-    void refusesTheImportWithoutAnImportFileAndKeepsTheMenuOpen() {
-        fixture.registerTeams("Alpha", "Bravo");
-        fixture.openMenuFromTheMainMenu(MAIN_TEAMS_SLOT);
-        AdminMenuHolder teamsHolder = fixture.lastMenu().holder();
-
-        fixture.click(IMPORT_SLOT);
-
-        assertEquals(List.of("There is no event.json in the plugin folder\n"
-                + "Put the file next to config.yml and click the tile again"), fixture.messages());
-        assertSame(teamsHolder, fixture.lastMenu().holder());
-        assertFalse(fixture.isMenuClosed());
-        assertEquals(0, fixture.lastMenu().refreshCount());
-        assertEquals(List.of("Alpha", "Bravo"), fixture.teamRegistry().getTeamNames());
-    }
-
-    @Test
-    void asksForTheConfirmationOfTheImportOnTheFirstPage() {
-        fixture.registerTeams("Alpha", "Bravo");
-        fixture.placeImportFile("{ \"teams\": [] }");
-        fixture.openMenuFromTheMainMenu(MAIN_TEAMS_SLOT);
-
-        fixture.click(IMPORT_SLOT);
-
-        assertImportConfirmationOpened(0);
-        assertEquals(List.of("Alpha", "Bravo"), fixture.teamRegistry().getTeamNames(),
-                "nothing is imported before the confirmation");
-    }
-
-    @Test
-    void asksForTheConfirmationOfTheImportWithTheSecondPage() {
-        fixture.registerNumberedTeams(46);
-        fixture.placeImportFile("{ \"teams\": [] }");
-        fixture.openMenuFromTheMainMenu(MAIN_TEAMS_SLOT);
-        fixture.click(NEXT_PAGE_SLOT);
-
-        fixture.click(IMPORT_SLOT);
-
-        assertImportConfirmationOpened(1);
-        assertEquals(46, fixture.teamRegistry().getTeamCount());
-    }
-
-    @Test
     void closesTheMenuAndRegistersAChatRequestForTheTeamToAdd() {
         fixture.registerTeams("Alpha");
         fixture.openMenuFromTheMainMenu(MAIN_TEAMS_SLOT);
@@ -246,17 +204,6 @@ class TeamsAdminMenuClickTest {
         assertEquals(pageIndex, menu.holder().getPageIndex());
         assertEquals(title, menu.title());
         assertFalse(fixture.isMenuClosed());
-    }
-
-    private void assertImportConfirmationOpened(int pageIndex) {
-        RecordingAdminMenuWindows.RecordedMenu menu = fixture.lastMenu();
-        assertEquals(AdminMenuType.CONFIRMATION, menu.holder().getMenuType());
-        assertEquals(Optional.of(ConfirmationRequest.IMPORT_TEAMS), menu.holder().getConfirmationRequest());
-        assertTrue(menu.holder().getSubject().isEmpty());
-        assertEquals(pageIndex, menu.holder().getPageIndex());
-        assertEquals("Replace every team with event.json?", menu.title());
-        assertFalse(fixture.isMenuClosed());
-        assertTrue(fixture.messages().isEmpty(), fixture.messages().toString());
     }
 
     private void assertNothingHappensOnAClickOn(int slot) {

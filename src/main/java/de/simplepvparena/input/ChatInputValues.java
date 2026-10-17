@@ -29,12 +29,19 @@ public record ChatInputValues(List<String> values) {
     }
 
     public Optional<String> findCountRejection(int expectedValueCount, String usage) {
-        if (values.size() == expectedValueCount) {
+        return findCountRejection(expectedValueCount, expectedValueCount, usage);
+    }
+
+    public Optional<String> findCountRejection(int minimumValueCount, int maximumValueCount, String usage) {
+        if (values.size() >= minimumValueCount && values.size() <= maximumValueCount) {
             return Optional.empty();
         }
         if (values.isEmpty()) {
             return Optional.of("Nothing was typed, expected " + usage);
         }
+        String expectedValueCount = minimumValueCount == maximumValueCount
+                ? String.valueOf(minimumValueCount)
+                : minimumValueCount + " to " + maximumValueCount;
         return Optional.of("Expected " + expectedValueCount + " values separated by spaces (" + usage
                 + "), but got " + values.size() + ": " + String.join(" ", values));
     }

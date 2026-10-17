@@ -7,7 +7,6 @@ public enum ConfirmationRequest {
     REPLACE_KIT("Replace the kit with your inventory?"),
     DELETE_KIT("Delete the kit?"),
     REMOVE_TEAM("Remove the team?"),
-    IMPORT_TEAMS("Replace every team with event.json?"),
     CANCEL_TOURNAMENT("Cancel the tournament?");
 
     private final String title;

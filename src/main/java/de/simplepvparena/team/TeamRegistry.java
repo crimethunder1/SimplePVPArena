@@ -14,26 +14,38 @@ import java.util.UUID;
 
 public final class TeamRegistry {
 
+    public static final int MAXIMUM_NAME_LENGTH = 16;
+    public static final String NAME_RULE = "1 to " + MAXIMUM_NAME_LENGTH
+            + " letters, digits, hyphens or underscores";
+
     private static final String TEAMS_KEY = "teams";
     private static final String TEAM_NAME_KEY = "name";
     private static final String MEMBERS_KEY = "members";
     private static final String MEMBER_UNIQUE_ID_KEY = "unique-id";
     private static final String MEMBER_NAME_KEY = "name";
-    private static final String UNNAMED_TEAM_PLACEHOLDER = "<team without a name>";
 
     private final Map<String, Team> teamsByLowerCaseName = new LinkedHashMap<>();
 
-    public Team registerTeam(String teamName, TeamMember firstMember, TeamMember secondMember) {
+    public Team registerTeam(String teamName, List<TeamMember> members) {
         Objects.requireNonNull(teamName, "teamName");
-        Objects.requireNonNull(firstMember, "firstMember");
-        Objects.requireNonNull(secondMember, "secondMember");
+        Optional<String> nameRejection = findNameRejection(teamName);
+        if (nameRejection.isPresent()) {
+            throw new IllegalArgumentException(nameRejection.get());
+        }
+        return register(teamName, members);
+    }
+
+    private Team register(String teamName, List<TeamMember> members) {
+        Objects.requireNonNull(teamName, "teamName");
+        Objects.requireNonNull(members, "members");
         String key = toKey(teamName);
         if (teamsByLowerCaseName.containsKey(key)) {
             throw new IllegalStateException("a team named " + teamName + " already exists");
         }
-        rejectAlreadyRegisteredPlayer(firstMember);
-        rejectAlreadyRegisteredPlayer(secondMember);
-        Team team = new Team(teamName, List.of(firstMember, secondMember));
+        for (TeamMember member : members) {
+            rejectAlreadyRegisteredPlayer(member);
+        }
+        Team team = new Team(teamName, members);
         teamsByLowerCaseName.put(key, team);
         return team;
     }
@@ -78,21 +90,20 @@ public final class TeamRegistry {
 
     public List<String> loadFromConfiguration(ConfigurationSection rootSection) {
         teamsByLowerCaseName.clear();
-        List<String> skippedTeamNames = new ArrayList<>();
-        for (Map<?, ?> storedTeam : rootSection.getMapList(TEAMS_KEY)) {
-            String teamName = readText(storedTeam.get(TEAM_NAME_KEY));
-            List<TeamMember> members = readMembers(storedTeam.get(MEMBERS_KEY));
-            if (teamName == null || members.size() != Team.REQUIRED_MEMBER_COUNT) {
-                skippedTeamNames.add(teamName == null ? UNNAMED_TEAM_PLACEHOLDER : teamName);
-                continue;
-            }
-            try {
-                registerTeam(teamName, members.get(0), members.get(1));
-            } catch (IllegalArgumentException | IllegalStateException failure) {
-                skippedTeamNames.add(teamName);
-            }
+        Object storedTeams = rootSection.get(TEAMS_KEY);
+        if (storedTeams == null) {
+            return List.of();
         }
-        return List.copyOf(skippedTeamNames);
+        if (!(storedTeams instanceof List<?> teamEntries)) {
+            return List.of("The " + TEAMS_KEY + " entry is no list, not a single team could be read");
+        }
+        List<String> skippedEntries = new ArrayList<>();
+        int entryNumber = 0;
+        for (Object teamEntry : teamEntries) {
+            entryNumber++;
+            loadTeam(teamEntry, entryNumber).ifPresent(skippedEntries::add);
+        }
+        return List.copyOf(skippedEntries);
     }
 
     public void saveToConfiguration(ConfigurationSection rootSection) {
@@ -117,26 +128,55 @@ public final class TeamRegistry {
         return storedMembers;
     }
 
-    private List<TeamMember> readMembers(Object storedMembers) {
-        List<TeamMember> members = new ArrayList<>();
-        if (!(storedMembers instanceof List<?> memberEntries)) {
-            return members;
+    private Optional<String> loadTeam(Object teamEntry, int entryNumber) {
+        String entryDescription = "Entry " + entryNumber + " of the " + TEAMS_KEY + " list";
+        if (!(teamEntry instanceof Map<?, ?> storedTeam)) {
+            return Optional.of(entryDescription + ": it is no team");
         }
+        String teamName = readText(storedTeam.get(TEAM_NAME_KEY));
+        if (teamName == null) {
+            return Optional.of(entryDescription + ": the team has no readable " + TEAM_NAME_KEY);
+        }
+        try {
+            register(teamName, readMembers(storedTeam.get(MEMBERS_KEY)));
+            return Optional.empty();
+        } catch (IllegalArgumentException | IllegalStateException refusal) {
+            return Optional.of("Team " + teamName + ": " + refusal.getMessage());
+        }
+    }
+
+    private List<TeamMember> readMembers(Object storedMembers) {
+        if (!(storedMembers instanceof List<?> memberEntries)) {
+            throw new IllegalArgumentException("the team has no readable " + MEMBERS_KEY + " list");
+        }
+        List<TeamMember> members = new ArrayList<>();
+        int memberNumber = 0;
         for (Object memberEntry : memberEntries) {
-            if (!(memberEntry instanceof Map<?, ?> storedMember)) {
-                continue;
-            }
-            String uniqueIdText = readText(storedMember.get(MEMBER_UNIQUE_ID_KEY));
-            String playerName = readText(storedMember.get(MEMBER_NAME_KEY));
-            if (uniqueIdText == null || playerName == null) {
-                continue;
-            }
-            try {
-                members.add(new TeamMember(UUID.fromString(uniqueIdText), playerName));
-            } catch (IllegalArgumentException invalidUniqueId) {
-            }
+            memberNumber++;
+            members.add(readMember(memberEntry, memberNumber));
         }
         return members;
+    }
+
+    private TeamMember readMember(Object memberEntry, int memberNumber) {
+        String memberDescription = "member " + memberNumber;
+        if (!(memberEntry instanceof Map<?, ?> storedMember)) {
+            throw new IllegalArgumentException(memberDescription + " is no player");
+        }
+        String uniqueIdText = readText(storedMember.get(MEMBER_UNIQUE_ID_KEY));
+        if (uniqueIdText == null) {
+            throw new IllegalArgumentException(memberDescription + " has no readable " + MEMBER_UNIQUE_ID_KEY);
+        }
+        String playerName = readText(storedMember.get(MEMBER_NAME_KEY));
+        if (playerName == null) {
+            throw new IllegalArgumentException(memberDescription + " has no readable " + MEMBER_NAME_KEY);
+        }
+        try {
+            return new TeamMember(UUID.fromString(uniqueIdText), playerName);
+        } catch (IllegalArgumentException invalidUniqueId) {
+            throw new IllegalArgumentException(memberDescription + " has the invalid " + MEMBER_UNIQUE_ID_KEY + " "
+                    + uniqueIdText);
+        }
     }
 
     private String readText(Object storedValue) {
@@ -144,6 +184,26 @@ public final class TeamRegistry {
             return text;
         }
         return null;
+    }
+
+    private static Optional<String> findNameRejection(String teamName) {
+        if (teamName.isBlank()) {
+            return Optional.of("A team needs a name, a team name has " + NAME_RULE);
+        }
+        if (!isAllowedName(teamName)) {
+            return Optional.of("The team name " + teamName + " is not allowed, a team name has " + NAME_RULE);
+        }
+        return Optional.empty();
+    }
+
+    private static boolean isAllowedName(String teamName) {
+        int nameLength = teamName.codePointCount(0, teamName.length());
+        return nameLength >= 1 && nameLength <= MAXIMUM_NAME_LENGTH
+                && teamName.codePoints().allMatch(TeamRegistry::isAllowedNameCharacter);
+    }
+
+    private static boolean isAllowedNameCharacter(int codePoint) {
+        return Character.isLetterOrDigit(codePoint) || codePoint == '-' || codePoint == '_';
     }
 
     private void rejectAlreadyRegisteredPlayer(TeamMember member) {

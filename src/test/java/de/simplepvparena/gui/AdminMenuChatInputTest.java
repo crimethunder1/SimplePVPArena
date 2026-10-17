@@ -2,6 +2,7 @@ package de.simplepvparena.gui;
 
 import org.junit.jupiter.api.Test;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -33,9 +34,11 @@ class AdminMenuChatInputTest {
         assertTrue(fixture.isMenuClosed());
         assertEquals(1, fixture.pendingChatInputCount());
         assertEquals(List.of(
-                "Type: <teamName> <firstPlayer> <secondPlayer> in chat",
+                "Type: <teamName> <player> [<player> ...] in chat",
+                "A team has 1 to 8 players, a team name has 1 to 16 letters, digits, hyphens or underscores",
                 "Example: Alpha Steve Alex",
-                "Both players have to be online or known to the server",
+                "Example: Bravo Notch Jeb_ Dinnerbone",
+                "Every player has to be online or known to the server",
                 "Type cancel to abort, the request expires in 60 seconds"), fixture.messages());
         assertEquals(0, fixture.scheduledTaskCount());
     }
@@ -80,11 +83,11 @@ class AdminMenuChatInputTest {
     void rejectsATeamLineWithTooFewValuesAndReopensTheTeamList() {
         askForTheTeamToAdd();
 
-        fixture.typeInChat("Bravo Steve");
+        fixture.typeInChat("Bravo");
         fixture.runNextTick();
 
-        assertEquals(List.of("Expected 3 values separated by spaces (<teamName> <firstPlayer> <secondPlayer>), "
-                + "but got 2: Bravo Steve"), fixture.messages());
+        assertEquals(List.of("Expected 2 to 9 values separated by spaces (<teamName> <player> [<player> ...]), "
+                + "but got 1: Bravo"), fixture.messages());
         assertNoTeamAdded();
         assertTeamsReopened(0, "Teams (page 1)");
     }
@@ -96,7 +99,7 @@ class AdminMenuChatInputTest {
         fixture.typeInChat("Bravo Steve steve");
         fixture.runNextTick();
 
-        assertEquals(List.of("A team needs two different players, Steve was named twice"), fixture.messages());
+        assertEquals(List.of("A team needs 1 to 8 different players, Steve was named twice"), fixture.messages());
         assertNoTeamAdded();
         assertTeamsReopened(0, "Teams (page 1)");
     }
@@ -159,6 +162,125 @@ class AdminMenuChatInputTest {
                 fixture.messages());
         assertNoTeamAdded();
         assertTeamsReopened(0, "Teams (page 1)");
+    }
+
+    @Test
+    void registersTypedTeamsOfOneToEightPlayers() {
+        askForTheTeamToAdd();
+        List<String> expectedTeamNames = new ArrayList<>(List.of("Alpha"));
+
+        for (int playerCount = 1; playerCount <= 8; playerCount++) {
+            List<String> playerNames = new ArrayList<>();
+            for (int playerNumber = 1; playerNumber <= playerCount; playerNumber++) {
+                playerNames.add("T" + playerCount + "Player" + playerNumber);
+            }
+            fixture.makePlayersKnown(playerNames.toArray(String[]::new));
+            fixture.messages().clear();
+
+            fixture.typeInChat("Team" + playerCount + " " + String.join(" ", playerNames));
+            fixture.runNextTick();
+
+            assertEquals(List.of("Team Team" + playerCount + " registered with " + String.join(", ", playerNames)),
+                    fixture.messages());
+            assertEquals(String.join(", ", playerNames),
+                    fixture.teamRegistry().findTeam("Team" + playerCount).orElseThrow().getMemberNamesJoined());
+            assertTeamsReopened(0, "Teams (page 1)");
+            expectedTeamNames.add("Team" + playerCount);
+            fixture.click(TEAMS_ADD_SLOT);
+        }
+        assertEquals(expectedTeamNames, fixture.teamRegistry().getTeamNames());
+        assertEquals(8, fixture.teamConfigurationSaveCount());
+    }
+
+    @Test
+    void rejectsATeamLineWithNinePlayersAndReopensTheTeamList() {
+        askForTheTeamToAdd();
+
+        fixture.typeInChat("Bravo P1 P2 P3 P4 P5 P6 P7 P8 P9");
+        fixture.runNextTick();
+
+        assertEquals(List.of("Expected 2 to 9 values separated by spaces (<teamName> <player> [<player> ...]), "
+                + "but got 10: Bravo P1 P2 P3 P4 P5 P6 P7 P8 P9"), fixture.messages());
+        assertNoTeamAdded();
+        assertTeamsReopened(0, "Teams (page 1)");
+    }
+
+    @Test
+    void rejectsATeamLineThatNamesAPlayerTwiceApartAndReopensTheTeamList() {
+        askForTheTeamToAdd();
+        fixture.makePlayersKnown("Notch", "Jeb_");
+
+        fixture.typeInChat("Bravo Alex Notch Steve Jeb_ ALEX");
+        fixture.runNextTick();
+
+        assertEquals(List.of("A team needs 1 to 8 different players, Alex was named twice"), fixture.messages());
+        assertNoTeamAdded();
+        assertTeamsReopened(0, "Teams (page 1)");
+    }
+
+    @Test
+    void rejectsAPlayerThatTheLookupDoesNotFindAtAnyPositionAndReopensTheTeamList() {
+        List<String> knownPlayerNames = List.of("Steve", "Alex", "Notch", "Jeb_");
+        askForTheTeamToAdd();
+        fixture.makePlayersKnown("Notch", "Jeb_");
+
+        for (int unknownPosition = 0; unknownPosition <= knownPlayerNames.size(); unknownPosition++) {
+            List<String> playerNames = new ArrayList<>(knownPlayerNames);
+            playerNames.add(unknownPosition, "Herobrine");
+            fixture.click(TEAMS_ADD_SLOT);
+            fixture.messages().clear();
+
+            fixture.typeInChat("Bravo " + String.join(" ", playerNames));
+            fixture.runNextTick();
+
+            assertEquals(List.of("Unknown player Herobrine\nThe player has to be online or known to the server"),
+                    fixture.messages(), "position " + unknownPosition);
+            assertNoTeamAdded();
+            assertTeamsReopened(0, "Teams (page 1)");
+        }
+    }
+
+    @Test
+    void rejectsATeamNameOutsideTheNameRuleAndReopensTheTeamList() {
+        askForTheTeamToAdd();
+
+        fixture.typeInChat("Team.One Steve Alex");
+        fixture.runNextTick();
+
+        assertEquals(List.of("Team Team.One could not be registered\nThe team name Team.One is not allowed, "
+                + "a team name has 1 to 16 letters, digits, hyphens or underscores"), fixture.messages());
+        assertNoTeamAdded();
+        assertTeamsReopened(0, "Teams (page 1)");
+    }
+
+    @Test
+    void rejectsATeamNameOfSeventeenCharactersAndReopensTheTeamList() {
+        askForTheTeamToAdd();
+
+        fixture.typeInChat("ABCDEFGHIJKLMNOPQ Steve");
+        fixture.runNextTick();
+
+        assertEquals(List.of("Team ABCDEFGHIJKLMNOPQ could not be registered\nThe team name ABCDEFGHIJKLMNOPQ is "
+                + "not allowed, a team name has 1 to 16 letters, digits, hyphens or underscores"), fixture.messages());
+        assertNoTeamAdded();
+    }
+
+    @Test
+    void registersATeamNameWithAnUmlautAndRejectsItInOtherCase() {
+        askForTheTeamToAdd();
+
+        fixture.typeInChat("Büffel Steve");
+        fixture.runNextTick();
+        fixture.click(TEAMS_ADD_SLOT);
+        fixture.messages().clear();
+        fixture.typeInChat("BÜFFEL Alex");
+        fixture.runNextTick();
+
+        assertEquals(List.of("Team BÜFFEL could not be registered\nA team named BÜFFEL already exists"),
+                fixture.messages());
+        assertEquals(List.of("Alpha", "Büffel"), fixture.teamRegistry().getTeamNames());
+        assertEquals("Steve", fixture.teamRegistry().findTeam("büffel").orElseThrow().getMemberNamesJoined());
+        assertEquals(1, fixture.teamConfigurationSaveCount());
     }
 
     @Test

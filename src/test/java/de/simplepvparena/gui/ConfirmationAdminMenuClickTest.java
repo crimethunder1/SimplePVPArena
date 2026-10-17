@@ -27,7 +27,6 @@ class ConfirmationAdminMenuClickTest {
     private static final int KIT_REPLACE_SLOT = 13;
     private static final int KIT_DELETE_SLOT = 15;
     private static final int TEAMS_FIRST_TEAM_SLOT = 0;
-    private static final int TEAMS_IMPORT_SLOT = 50;
     private static final int TEAMS_NEXT_PAGE_SLOT = 53;
     private static final int TEAM_REMOVE_SLOT = 13;
     private static final int MATCH_CANCEL_SLOT = 13;
@@ -37,13 +36,6 @@ class ConfirmationAdminMenuClickTest {
     private static final int YES_SLOT = 11;
     private static final int NO_SLOT = 15;
     private static final int BACK_SLOT_OF_THE_OTHER_MENUS = 22;
-
-    private static final String IMPORT_FILE = """
-            { "teams": [
-              { "team_name": "Echo", "players": ["Steve", "Alex"] },
-              { "team_name": "Foxtrot", "players": ["Notch", "Jeb_"] }
-            ] }
-            """;
 
     private final AdminMenuFixture fixture = new AdminMenuFixture();
 
@@ -318,78 +310,6 @@ class ConfirmationAdminMenuClickTest {
         assertEquals(46, fixture.teamRegistry().getTeamCount());
         assertEquals(0, fixture.teamConfigurationSaveCount());
         assertReturnedTo(AdminMenuType.TEAMS, "Teams (page 2)", 1);
-    }
-
-    @Test
-    void importsTheTeamsAfterYesAndReturnsToTheFirstPageThatShowsTheImportedTeams() {
-        fixture.registerTeams("Alpha", "Bravo");
-        fixture.makePlayersKnown("Steve", "Alex", "Notch", "Jeb_");
-        fixture.placeImportFile(IMPORT_FILE);
-        fixture.openMenuFromTheMainMenu(MAIN_TEAMS_SLOT);
-        fixture.click(TEAMS_IMPORT_SLOT);
-
-        fixture.click(YES_SLOT);
-
-        assertEquals(List.of("2 teams imported from event.json, the 2 teams that were registered before are gone",
-                "Registered now: Echo, Foxtrot",
-                "teams.yml was written, the imported teams survive a restart"), fixture.messages());
-        assertEquals(List.of("Echo", "Foxtrot"), fixture.teamRegistry().getTeamNames());
-        assertEquals(1, fixture.teamConfigurationSaveCount());
-        assertReturnedTo(AdminMenuType.TEAMS, "Teams (page 1)", 0);
-        assertEquals("Echo", fixture.lastMenu().findTile(TEAMS_FIRST_TEAM_SLOT).orElseThrow().displayName());
-    }
-
-    @Test
-    void importsTheTeamsAfterYesAndReturnsWithTheSecondPageToATeamListThatHasOnlyOnePageLeft() {
-        fixture.registerNumberedTeams(46);
-        fixture.makePlayersKnown("Steve", "Alex", "Notch", "Jeb_");
-        fixture.placeImportFile(IMPORT_FILE);
-        fixture.openMenuFromTheMainMenu(MAIN_TEAMS_SLOT);
-        fixture.click(TEAMS_NEXT_PAGE_SLOT);
-        fixture.click(TEAMS_IMPORT_SLOT);
-
-        fixture.click(YES_SLOT);
-
-        assertEquals(List.of("Echo", "Foxtrot"), fixture.teamRegistry().getTeamNames());
-        assertEquals(1, fixture.teamConfigurationSaveCount());
-        assertReturnedTo(AdminMenuType.TEAMS, "Teams (page 1)", 1);
-        assertEquals("Echo", fixture.lastMenu().findTile(TEAMS_FIRST_TEAM_SLOT).orElseThrow().displayName());
-    }
-
-    @Test
-    void reportsAFailedImportAfterYesAndKeepsTheTeams() {
-        fixture.registerTeams("Alpha", "Bravo");
-        fixture.placeImportFile(IMPORT_FILE);
-        fixture.openMenuFromTheMainMenu(MAIN_TEAMS_SLOT);
-        fixture.click(TEAMS_IMPORT_SLOT);
-
-        fixture.click(YES_SLOT);
-
-        assertEquals(List.of("Not a single team of event.json could be imported",
-                "The registered teams stay exactly as they are",
-                "2 entries of the file could not be used:",
-                "  Team Echo: unknown player Steve, the player has to be online or known to the server",
-                "  Team Foxtrot: unknown player Notch, the player has to be online or known to the server"),
-                fixture.messages());
-        assertEquals(List.of("Alpha", "Bravo"), fixture.teamRegistry().getTeamNames());
-        assertEquals(0, fixture.teamConfigurationSaveCount());
-        assertReturnedTo(AdminMenuType.TEAMS, "Teams (page 1)", 0);
-    }
-
-    @Test
-    void keepsTheTeamsAfterNoInsteadOfTheImport() {
-        fixture.registerTeams("Alpha", "Bravo");
-        fixture.makePlayersKnown("Steve", "Alex", "Notch", "Jeb_");
-        fixture.placeImportFile(IMPORT_FILE);
-        fixture.openMenuFromTheMainMenu(MAIN_TEAMS_SLOT);
-        fixture.click(TEAMS_IMPORT_SLOT);
-
-        fixture.click(NO_SLOT);
-
-        assertTrue(fixture.messages().isEmpty(), fixture.messages().toString());
-        assertEquals(List.of("Alpha", "Bravo"), fixture.teamRegistry().getTeamNames());
-        assertEquals(0, fixture.teamConfigurationSaveCount());
-        assertReturnedTo(AdminMenuType.TEAMS, "Teams (page 1)", 0);
     }
 
     @Test

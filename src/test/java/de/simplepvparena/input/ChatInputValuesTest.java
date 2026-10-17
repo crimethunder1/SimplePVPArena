@@ -56,4 +56,24 @@ class ChatInputValuesTest {
                 ChatInputValues.of("Alpha Steve Alex Notch")
                         .findCountRejection(3, "<teamName> <firstPlayer> <secondPlayer>").orElseThrow());
     }
+
+    @Test
+    void acceptsEveryNumberOfValuesInsideTheExpectedRange() {
+        assertTrue(ChatInputValues.of("Alpha Steve").findCountRejection(2, 4, "<team> <player> ...").isEmpty());
+        assertTrue(ChatInputValues.of("Alpha Steve Alex").findCountRejection(2, 4, "<team> <player> ...").isEmpty());
+        assertTrue(ChatInputValues.of("Alpha Steve Alex Notch").findCountRejection(2, 4, "<team> <player> ...")
+                .isEmpty());
+    }
+
+    @Test
+    void reportsTheExpectedRangeWhenTooFewOrTooManyValuesWereTyped() {
+        assertEquals("Expected 2 to 4 values separated by spaces (<team> <player> ...), but got 1: Alpha",
+                ChatInputValues.of("Alpha").findCountRejection(2, 4, "<team> <player> ...").orElseThrow());
+        assertEquals("Expected 2 to 4 values separated by spaces (<team> <player> ...), "
+                        + "but got 5: Alpha Steve Alex Notch Jeb_",
+                ChatInputValues.of("Alpha Steve Alex Notch Jeb_").findCountRejection(2, 4, "<team> <player> ...")
+                        .orElseThrow());
+        assertEquals("Nothing was typed, expected <team> <player> ...",
+                ChatInputValues.of(" ").findCountRejection(2, 4, "<team> <player> ...").orElseThrow());
+    }
 }
