@@ -34,6 +34,7 @@ import de.simplepvparena.kit.KitEquipmentSlot;
 import de.simplepvparena.kit.KitLibrary;
 import de.simplepvparena.kit.KitSaveService;
 import de.simplepvparena.kit.KitService;
+import de.simplepvparena.listener.ChatInputListener;
 import de.simplepvparena.match.FighterColours;
 import de.simplepvparena.match.Match;
 import de.simplepvparena.match.MatchService;
@@ -54,6 +55,10 @@ import de.simplepvparena.tournament.KitChoiceService;
 import de.simplepvparena.tournament.TournamentManager;
 import de.simplepvparena.tournament.TournamentOperationResult;
 import de.simplepvparena.tournament.TournamentStateStorage;
+import io.papermc.paper.chat.ChatRenderer;
+import io.papermc.paper.event.player.AsyncChatEvent;
+import net.kyori.adventure.audience.Audience;
+import net.kyori.adventure.chat.SignedMessage;
 import net.kyori.adventure.text.Component;
 import org.bukkit.Location;
 import org.bukkit.OfflinePlayer;
@@ -78,6 +83,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 import java.util.logging.Logger;
 
@@ -130,6 +136,7 @@ final class AdminMenuFixture {
     private final ArenaSetupService arenaSetupService;
     private final TournamentManager tournamentManager;
     private final ChatInputService chatInputService;
+    private final ChatInputListener chatInputListener;
     private final AdminMenuService menuService;
     private final PlayerInventory adminInventory;
     private final Player admin;
@@ -181,6 +188,7 @@ final class AdminMenuFixture {
                 new PluginDryRunArena(arenaRegistry.getArena(), arenaSetupService), kitService, gateMarks,
                 gateDuration);
         chatInputService = new ChatInputService(plugin, chatInputRegistry);
+        chatInputListener = new ChatInputListener(chatInputService);
         adminInventory = createAdminInventory();
         admin = createAdmin();
         onlinePlayers.add(admin);
@@ -420,6 +428,14 @@ final class AdminMenuFixture {
 
     boolean typeInChat(String line) {
         return chatInputService.handleLine(admin, line);
+    }
+
+    AsyncChatEvent sendChatEvent(Player sender, String line, Set<Audience> viewers) {
+        Component message = Component.text(line);
+        AsyncChatEvent event = new AsyncChatEvent(true, sender, viewers, ChatRenderer.defaultRenderer(), message,
+                message, SignedMessage.system(line, message));
+        chatInputListener.onAsyncChat(event);
+        return event;
     }
 
     void runNextTick() {

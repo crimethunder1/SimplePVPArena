@@ -25,6 +25,7 @@ public final class ChatInputListener implements Listener {
             return;
         }
         event.setCancelled(true);
+        event.viewers().clear();
     }
 
     @EventHandler
