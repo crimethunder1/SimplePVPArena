@@ -1,6 +1,7 @@
 package de.simplepvparena.listener;
 
 import com.google.common.base.Functions;
+import de.simplepvparena.support.TestDamageEvents;
 import org.bukkit.damage.DamageSource;
 import org.bukkit.entity.Arrow;
 import org.bukkit.entity.Entity;
@@ -144,7 +145,7 @@ class ArenaDamageListenerTest {
 
     @Test
     void neverLiftsACancellationOfAnotherListener() {
-        EntityDamageEvent event = new EntityDamageEvent(fighter.player(), DamageCause.CUSTOM,
+        EntityDamageEvent event = TestDamageEvents.damage(fighter.player(), DamageCause.CUSTOM,
                 createDamageSource(), 1.0D);
         event.setCancelled(true);
 
@@ -160,7 +161,7 @@ class ArenaDamageListenerTest {
     }
 
     private boolean isCancelled(ArenaMatchHarness.FakePlayer victim, DamageCause cause) {
-        EntityDamageEvent event = new EntityDamageEvent(victim.player(), cause, createDamageSource(), 1.0D);
+        EntityDamageEvent event = TestDamageEvents.damage(victim.player(), cause, createDamageSource(), 1.0D);
         damageListener.onEntityDamage(event);
         return event.isCancelled();
     }

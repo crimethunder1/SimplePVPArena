@@ -43,8 +43,10 @@ import de.simplepvparena.gate.VanillaStartGateVisualEffect;
 import de.simplepvparena.gui.AdminMenuService;
 import de.simplepvparena.input.ChatInputService;
 import de.simplepvparena.kit.BukkitItemStackCodec;
+import de.simplepvparena.kit.BukkitKitItemSerializer;
 import de.simplepvparena.kit.FilePlayerStateSnapshotStorage;
 import de.simplepvparena.kit.KitConfigurationLoader;
+import de.simplepvparena.kit.KitItemSerializer;
 import de.simplepvparena.kit.KitSaveService;
 import de.simplepvparena.kit.KitService;
 import de.simplepvparena.kit.SerializedKit;
@@ -147,7 +149,9 @@ public final class SimplePVPArenaPlugin extends JavaPlugin {
         kitService = new KitService(this, new FilePlayerStateSnapshotStorage(
                 new File(getDataFolder(), FilePlayerStateSnapshotStorage.DIRECTORY_NAME).toPath(),
                 new BukkitItemStackCodec()), adminNotifier::notifyAdmins);
-        kitSaveService = new KitSaveService(kitService, this::saveKitConfiguration, getLogger()::warning);
+        KitItemSerializer kitItemSerializer = new BukkitKitItemSerializer();
+        kitSaveService = new KitSaveService(kitService, this::saveKitConfiguration, getLogger()::warning,
+                kitItemSerializer);
 
         spectatorService = new SpectatorService(arenaRegistry, new SpectatorItemFactory(this));
 
@@ -223,7 +227,8 @@ public final class SimplePVPArenaPlugin extends JavaPlugin {
                 this::reloadConfiguration);
 
         configurationReloadService = new ConfigurationReloadService(this::getConfig, this::reloadConfig,
-                new PluginLiveConfiguration(kitService, new KitConfigurationLoader(getLogger()), matchService,
+                new PluginLiveConfiguration(kitService, new KitConfigurationLoader(getLogger(), kitItemSerializer),
+                        matchService,
                         startGateDuration, fighterColours, arenaCleaningService, arenaCleaningVisualEffect,
                         arenaBaselineService, arenaSetupService, arenaSafetyZone, borderParticleService,
                         borderWallPreview,

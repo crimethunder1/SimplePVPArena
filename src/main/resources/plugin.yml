@@ -1,7 +1,7 @@
 name: SimplePVPArena
 version: '${project.version}'
 main: de.simplepvparena.SimplePVPArenaPlugin
-api-version: '1.21'
+api-version: '26.2'
 description: Tournament plugin running a two versus two single elimination bracket
 authors:
   - crimethunder

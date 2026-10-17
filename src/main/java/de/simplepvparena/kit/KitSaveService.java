@@ -15,12 +15,14 @@ public final class KitSaveService {
     private final KitService kitService;
     private final Consumer<SerializedKit> kitConfigurationSaver;
     private final Consumer<String> problemReporter;
+    private final KitSerialization kitSerialization;
 
     public KitSaveService(KitService kitService, Consumer<SerializedKit> kitConfigurationSaver,
-                          Consumer<String> problemReporter) {
+                          Consumer<String> problemReporter, KitItemSerializer kitItemSerializer) {
         this.kitService = Objects.requireNonNull(kitService, "kitService");
         this.kitConfigurationSaver = Objects.requireNonNull(kitConfigurationSaver, "kitConfigurationSaver");
         this.problemReporter = Objects.requireNonNull(problemReporter, "problemReporter");
+        this.kitSerialization = new KitSerialization(kitItemSerializer);
     }
 
     public KitSaveResult saveFromInventory(Player player) {
@@ -29,10 +31,10 @@ public final class KitSaveService {
             return KitSaveResult.rejected(EMPTY_INVENTORY_MESSAGE);
         }
         SerializedKit serializedKit = KitInventoryCapture.capture(
-                equipmentSlot -> KitSerialization.encode(inventory.getItem(equipmentSlot.getEquipmentSlot())),
-                slotIndex -> KitSerialization.encode(inventory.getItem(slotIndex)));
+                equipmentSlot -> kitSerialization.encode(inventory.getItem(equipmentSlot.getEquipmentSlot())),
+                slotIndex -> kitSerialization.encode(inventory.getItem(slotIndex)));
         kitConfigurationSaver.accept(serializedKit);
-        KitDefinition kitDefinition = KitSerialization.toDefinition(serializedKit, problemReporter);
+        KitDefinition kitDefinition = kitSerialization.toDefinition(serializedKit, problemReporter);
         kitService.setKitDefinition(kitDefinition);
         return KitSaveResult.of(serializedKit, kitDefinition);
     }

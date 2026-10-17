@@ -27,6 +27,7 @@ import de.simplepvparena.kit.KitService;
 import de.simplepvparena.match.MatchService;
 import de.simplepvparena.message.TournamentMessages;
 import de.simplepvparena.permission.AdminPermission;
+import de.simplepvparena.support.FakeKitItemSerializer;
 import de.simplepvparena.team.EventTeamImportFile;
 import de.simplepvparena.team.EventTeamImportService;
 import de.simplepvparena.team.TeamMemberLookup;
@@ -112,7 +113,7 @@ class AdminMenuSeamTest {
                 matchService, arenaSetupService, new ArenaHeightMarkerService(plugin, heightMarkers),
                 new StartGateItemService(plugin, gateMarks, gateDuration, () -> { }),
                 new BorderSelectorModeRegistry(),
-                new KitSaveService(kitService, serializedKit -> { }, problem -> { }),
+                new KitSaveService(kitService, serializedKit -> { }, problem -> { }, new FakeKitItemSerializer()),
                 new ChatInputService(plugin), () -> { },
                 () -> {
                     throw new UnsupportedOperationException("the configuration is not reloaded in this test");

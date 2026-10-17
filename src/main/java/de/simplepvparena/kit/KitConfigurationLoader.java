@@ -1,8 +1,9 @@
 package de.simplepvparena.kit;
 
+import io.papermc.paper.registry.RegistryAccess;
+import io.papermc.paper.registry.RegistryKey;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
-import org.bukkit.Registry;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.inventory.ItemStack;
@@ -22,9 +23,11 @@ public final class KitConfigurationLoader {
     private static final String ENCHANTMENTS_SECTION = "enchantments";
 
     private final Logger logger;
+    private final KitSerialization kitSerialization;
 
-    public KitConfigurationLoader(Logger logger) {
+    public KitConfigurationLoader(Logger logger, KitItemSerializer kitItemSerializer) {
         this.logger = logger;
+        this.kitSerialization = new KitSerialization(kitItemSerializer);
     }
 
     public KitDefinition load(ConfigurationSection kitSection) {
@@ -32,7 +35,7 @@ public final class KitConfigurationLoader {
             return KitDefinition.empty();
         }
         if (SerializedKit.isWrittenIn(kitSection)) {
-            return KitSerialization.toDefinition(SerializedKit.read(kitSection, logger::warning), logger::warning);
+            return kitSerialization.toDefinition(SerializedKit.read(kitSection, logger::warning), logger::warning);
         }
         return loadTypedKit(kitSection);
     }
@@ -130,6 +133,6 @@ public final class KitConfigurationLoader {
         if (namespacedKey == null) {
             return null;
         }
-        return Registry.ENCHANTMENT.get(namespacedKey);
+        return RegistryAccess.registryAccess().getRegistry(RegistryKey.ENCHANTMENT).get(namespacedKey);
     }
 }

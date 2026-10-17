@@ -2,7 +2,6 @@ package de.simplepvparena.support;
 
 import org.bukkit.inventory.ItemStack;
 
-import java.nio.charset.StandardCharsets;
 import java.util.Objects;
 
 public final class EncodableItemStack extends ItemStack {
@@ -13,14 +12,18 @@ public final class EncodableItemStack extends ItemStack {
         this.label = Objects.requireNonNull(label, "label");
     }
 
+    public String getLabel() {
+        return label;
+    }
+
     @Override
     public boolean isEmpty() {
         return false;
     }
 
     @Override
-    public byte[] serializeAsBytes() {
-        return label.getBytes(StandardCharsets.UTF_8);
+    public ItemStack clone() {
+        return new EncodableItemStack(label);
     }
 
     @Override

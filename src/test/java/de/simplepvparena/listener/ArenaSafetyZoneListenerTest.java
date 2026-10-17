@@ -1,6 +1,7 @@
 package de.simplepvparena.listener;
 
 import de.simplepvparena.arena.ArenaSafetyZone;
+import de.simplepvparena.support.TestDamageEvents;
 import org.bukkit.damage.DamageSource;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.EntityDamageEvent.DamageCause;
@@ -49,7 +50,7 @@ class ArenaSafetyZoneListenerTest {
     }
 
     private boolean isCancelled(ArenaMatchHarness.FakePlayer victim, DamageCause cause) {
-        EntityDamageEvent event = new EntityDamageEvent(victim.player(), cause, createDamageSource(), 1.0D);
+        EntityDamageEvent event = TestDamageEvents.damage(victim.player(), cause, createDamageSource(), 1.0D);
         safetyZoneListener.onEntityDamage(event);
         return event.isCancelled();
     }

@@ -4,8 +4,8 @@ A Paper plugin that runs a two versus two single elimination tournament in one a
 
 ## Requirements
 
-- Java 21
-- A Paper server for Minecraft 1.21, built against `paper-api` 1.21.11-R0.1-SNAPSHOT
+- Java 25
+- A Paper server for Minecraft 26.2, built against `paper-api` 26.2.build.134-stable
 - Maven to build
 
 ViaVersion and ViaBackwards are optional soft dependencies.

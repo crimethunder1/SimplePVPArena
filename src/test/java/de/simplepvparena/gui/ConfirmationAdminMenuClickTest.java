@@ -141,15 +141,16 @@ class ConfirmationAdminMenuClickTest {
 
         fixture.click(YES_SLOT);
 
-        assertEquals(List.of("Kit saved: 0 items, 0 worn and 0 in the inventory",
+        assertEquals(List.of("Kit saved: 1 item, 0 worn and 1 in the inventory",
                 "It is written into config.yml and is handed out from the next round on, "
-                        + "a running round keeps the kit its fighters were given",
-                "1 item could not be read back and are no part of the kit, the log names them"),
+                        + "a running round keeps the kit its fighters were given"),
                 fixture.messages());
         assertEquals(1, fixture.savedKits().size());
         assertEquals(1, fixture.savedKits().get(0).itemCount());
-        assertEquals(List.of("The kit is empty, no fighter is given anything"), fixture.describeKit());
+        assertEquals(List.of("Worn items: 0 of 5", "Inventory items: 1 of 36 slots"), fixture.describeKit());
         assertReturnedTo(AdminMenuType.KIT, "Kit", 0);
+        assertEquals(List.of("Worn items: 0 of 5", "Inventory items: 1 of 36 slots",
+                "Every fighter is given it when a round starts"), infoLore());
     }
 
     @Test

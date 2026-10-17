@@ -40,6 +40,7 @@ import de.simplepvparena.match.MatchService;
 import de.simplepvparena.message.TournamentMessages;
 import de.simplepvparena.permission.AdminPermission;
 import de.simplepvparena.support.FakeItemStack;
+import de.simplepvparena.support.FakeKitItemSerializer;
 import de.simplepvparena.support.SharedBukkitServer;
 import de.simplepvparena.team.EventTeamImportFile;
 import de.simplepvparena.team.EventTeamImportService;
@@ -165,7 +166,7 @@ final class AdminMenuFixture {
                 matchService, arenaSetupService, new ArenaHeightMarkerService(plugin, heightMarkers),
                 new StartGateItemService(plugin, gateMarks, gateDuration, () -> { }),
                 borderSelectorModes,
-                new KitSaveService(kitService, savedKits::add, problem -> { }),
+                new KitSaveService(kitService, savedKits::add, problem -> { }, new FakeKitItemSerializer()),
                 chatInputService, this::saveTeamConfiguration,
                 this::reloadConfiguration,
                 windows);
