@@ -53,6 +53,15 @@ public final class AdminMenuHolder implements InventoryHolder {
         return new AdminMenuHolder(AdminMenuType.FORCE_RESULT, Objects.requireNonNull(matchId, "matchId"), null, 0);
     }
 
+    public static AdminMenuHolder waitingMatches(int pageIndex) {
+        return new AdminMenuHolder(AdminMenuType.WAITING_MATCHES, null, null, pageIndex);
+    }
+
+    public static AdminMenuHolder waitingMatchResult(String matchId, int pageIndex) {
+        return new AdminMenuHolder(AdminMenuType.WAITING_MATCH_RESULT, Objects.requireNonNull(matchId, "matchId"),
+                null, pageIndex);
+    }
+
     public static AdminMenuHolder confirmation(ConfirmationRequest confirmationRequest, String subject,
                                                int pageIndex) {
         return new AdminMenuHolder(AdminMenuType.CONFIRMATION, subject,

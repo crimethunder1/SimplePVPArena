@@ -31,6 +31,21 @@ class AdminMenuNavigatorTest {
     }
 
     @Test
+    void namesTheWaitingMatchMenusWhenTheyAreNotRegistered() {
+        for (AdminMenuType menuType : EnumSet.complementOf(EnumSet.of(AdminMenuType.WAITING_MATCHES,
+                AdminMenuType.WAITING_MATCH_RESULT))) {
+            navigator.register(menuType, new SilentMenu());
+        }
+
+        IllegalStateException failure = assertThrows(IllegalStateException.class,
+                navigator::requireEveryMenuRegistered);
+
+        assertTrue(failure.getMessage().contains("WAITING_MATCHES"), failure.getMessage());
+        assertTrue(failure.getMessage().contains("WAITING_MATCH_RESULT"), failure.getMessage());
+        assertFalse(failure.getMessage().contains("FORCE_RESULT"), failure.getMessage());
+    }
+
+    @Test
     void acceptsAMenuForEveryMenuType() {
         for (AdminMenuType menuType : AdminMenuType.values()) {
             navigator.register(menuType, new SilentMenu());

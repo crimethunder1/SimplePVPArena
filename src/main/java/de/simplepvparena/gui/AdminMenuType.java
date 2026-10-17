@@ -9,5 +9,7 @@ public enum AdminMenuType {
     TEAM_ACTIONS,
     MATCH,
     FORCE_RESULT,
+    WAITING_MATCHES,
+    WAITING_MATCH_RESULT,
     CONFIRMATION
 }

@@ -80,9 +80,13 @@ public final class AdminMenuService {
                 teamConfigurationSaver);
         ForceResultAdminMenu forceResultAdminMenu = new ForceResultAdminMenu(navigator, tournamentManager,
                 matchService);
+        WaitingMatchesAdminMenu waitingMatchesAdminMenu = new WaitingMatchesAdminMenu(navigator, tournamentManager,
+                teamRegistry);
+        WaitingMatchResultAdminMenu waitingMatchResultAdminMenu = new WaitingMatchResultAdminMenu(navigator,
+                tournamentManager, teamRegistry);
         TournamentMenuStatus tournamentMenuStatus = new TournamentMenuStatus(tournamentManager, matchService);
         MatchAdminMenu matchAdminMenu = new MatchAdminMenu(navigator, tournamentManager, matchService,
-                tournamentMenuStatus, forceResultAdminMenu);
+                tournamentMenuStatus, forceResultAdminMenu, waitingMatchesAdminMenu);
         TeamsAdminMenu teamsAdminMenu = new TeamsAdminMenu(navigator, teamRegistry, teamMemberLookup,
                 eventTeamImportService, matchService::hasActiveMatch, chatInputService, teamConfigurationSaver);
         ArenaAdminMenu arenaAdminMenu = new ArenaAdminMenu(navigator, arenaSetupService, heightMarkerService,
@@ -104,6 +108,8 @@ public final class AdminMenuService {
         navigator.register(AdminMenuType.TEAM_ACTIONS, teamActionsAdminMenu);
         navigator.register(AdminMenuType.MATCH, matchAdminMenu);
         navigator.register(AdminMenuType.FORCE_RESULT, forceResultAdminMenu);
+        navigator.register(AdminMenuType.WAITING_MATCHES, waitingMatchesAdminMenu);
+        navigator.register(AdminMenuType.WAITING_MATCH_RESULT, waitingMatchResultAdminMenu);
         navigator.register(AdminMenuType.CONFIRMATION, confirmationAdminMenu);
         navigator.requireEveryMenuRegistered();
     }

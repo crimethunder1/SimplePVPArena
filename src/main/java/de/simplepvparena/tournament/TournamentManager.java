@@ -15,12 +15,15 @@ import java.io.IOException;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Random;
+import java.util.Set;
 
 public final class TournamentManager implements MatchCompletionHandler {
 
@@ -32,6 +35,10 @@ public final class TournamentManager implements MatchCompletionHandler {
 
     static final String NO_BASELINE_WARNING = "No baseline of the fight area is stored, so the arena is not "
             + "cleaned between the matches. A baseline is taken by " + Arena.CALCULATE_ACTION;
+
+    static final String RESTORED_WITHOUT_BASELINE_WARNING = "No baseline of the fight area is stored after the "
+            + "restart. If the server crashed, repair the arena first, then run " + Arena.CALCULATE_ACTION
+            + " again, that takes the arena as it is now as the new baseline, and only then continue the tournament";
 
     static final String SAVE_FAILURE_WARNING = "The tournament state could not be saved, the tournament carries on "
             + "and the next decision tries again: ";
@@ -49,6 +56,7 @@ public final class TournamentManager implements MatchCompletionHandler {
     private final FinalMatchGate finalMatchGate;
     private final Random seedingRandom = new Random();
     private final Map<String, MatchDecisionKind> decisionKindsByMatchId = new HashMap<>();
+    private final Set<String> matchIdsWarnedAboutMissingTeams = new HashSet<>();
 
     private TournamentState state = TournamentState.IDLE;
     private Bracket bracket;
@@ -112,6 +120,7 @@ public final class TournamentManager implements MatchCompletionHandler {
         Collections.shuffle(teamNames, seedingRandom);
         bracket = Bracket.createSingleElimination(teamNames);
         decisionKindsByMatchId.clear();
+        matchIdsWarnedAboutMissingTeams.clear();
         startedAt = Instant.now();
         finalMatchGate.reset();
         waitingForArenaCleaning = false;
@@ -164,6 +173,7 @@ public final class TournamentManager implements MatchCompletionHandler {
         matchService.resumeRoundTimer();
         bracket = null;
         decisionKindsByMatchId.clear();
+        matchIdsWarnedAboutMissingTeams.clear();
         finalMatchGate.reset();
         waitingForArenaCleaning = false;
         state = TournamentState.CANCELLED;
@@ -272,6 +282,7 @@ public final class TournamentManager implements MatchCompletionHandler {
         }
         bracket = restoredBracket;
         decisionKindsByMatchId.clear();
+        matchIdsWarnedAboutMissingTeams.clear();
         for (SavedMatchResult savedResult : savedTournament.results()) {
             savedResult.decidedBy().ifPresent(decisionKind ->
                     decisionKindsByMatchId.put(savedResult.matchId(), decisionKind));
@@ -285,6 +296,9 @@ public final class TournamentManager implements MatchCompletionHandler {
                 + savedTournament.results().size() + ", rounds: " + bracket.getRoundCount() + "). It is paused, "
                 + "a match that was running before the restart starts again. Continue it with \"Continue the "
                 + "tournament\" in the match menu of /tournament");
+        if (!arenaCleanup.hasBaseline()) {
+            adminNotifier.notifyAdmins(RESTORED_WITHOUT_BASELINE_WARNING);
+        }
         warnAboutUnregisteredTeams();
         synchronizeFinalMatchStage();
         return true;
@@ -372,6 +386,18 @@ public final class TournamentManager implements MatchCompletionHandler {
         return statusText.toString();
     }
 
+    public List<BracketMatch> findWaitingMatches() {
+        if (bracket == null) {
+            return List.of();
+        }
+        Optional<String> runningMatchId = matchService.getActiveMatch().map(Match::getMatchId);
+        return bracket.getPlayableMatches().stream()
+                .filter(bracketMatch -> !runningMatchId.map(bracketMatch.getMatchId()::equals).orElse(false))
+                .sorted(Comparator.comparingInt(BracketMatch::getRoundIndex)
+                        .thenComparingInt(BracketMatch::getPositionIndex))
+                .toList();
+    }
+
     public List<String> describeBracket() {
         if (bracket == null) {
             return List.of("No tournament is in progress");
@@ -396,6 +422,7 @@ public final class TournamentManager implements MatchCompletionHandler {
         }
         bracket.recordWinner(matchId, winnerTeamName);
         decisionKindsByMatchId.put(matchId, decisionKind);
+        matchIdsWarnedAboutMissingTeams.remove(matchId);
         synchronizeFinalMatchStage();
         if (bracket.isComplete()) {
             state = TournamentState.FINISHED;
@@ -468,6 +495,11 @@ public final class TournamentManager implements MatchCompletionHandler {
         if (firstTeam.isEmpty() && secondTeam.isEmpty()) {
             plugin.getLogger().warning("Both teams of match " + bracketMatch.getMatchId()
                     + " are no longer registered, the match needs an admin decision");
+            if (matchIdsWarnedAboutMissingTeams.add(bracketMatch.getMatchId())) {
+                adminNotifier.notifyAdmins("Both teams of match " + bracketMatch.getMatchId() + " are no longer "
+                        + "registered, the tournament waits for you. Decide the match in the match menu of "
+                        + "/tournament under \"Decide a waiting match\"");
+            }
             return false;
         }
         Team advancingTeam = firstTeam.orElseGet(secondTeam::orElseThrow);

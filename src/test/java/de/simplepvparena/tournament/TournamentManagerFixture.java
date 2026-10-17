@@ -49,7 +49,8 @@ final class TournamentManagerFixture {
     private final MatchService matchService;
     private final TournamentManager tournamentManager;
 
-    private TournamentManagerFixture(Optional<TournamentStateStorage> stateStorage, List<String> teamNames) {
+    private TournamentManagerFixture(Optional<TournamentStateStorage> stateStorage, List<String> teamNames,
+                                     boolean baselineStored) {
         SharedBukkitServer.register(createWorld(), playerUniqueId -> null);
         this.plugin = createPlugin();
         this.matchService = new MatchService(plugin, new KitService(),
@@ -58,9 +59,9 @@ final class TournamentManagerFixture {
         AdminNotifier adminNotifier = adminMessages::add;
         this.tournamentManager = stateStorage
                 .map(storage -> new TournamentManager(plugin, teamRegistry, arenaRegistry, matchService,
-                        new SkippedArenaCleanup(), adminNotifier, storage))
+                        new SkippedArenaCleanup(baselineStored), adminNotifier, storage))
                 .orElseGet(() -> new TournamentManager(plugin, teamRegistry, arenaRegistry, matchService,
-                        new SkippedArenaCleanup(), adminNotifier));
+                        new SkippedArenaCleanup(baselineStored), adminNotifier));
         buildArena();
         for (String teamName : teamNames) {
             teamRegistry.registerTeam(teamName,
@@ -70,11 +71,16 @@ final class TournamentManagerFixture {
     }
 
     static TournamentManagerFixture withStorage(TournamentStateStorage stateStorage, List<String> teamNames) {
-        return new TournamentManagerFixture(Optional.of(stateStorage), teamNames);
+        return new TournamentManagerFixture(Optional.of(stateStorage), teamNames, true);
+    }
+
+    static TournamentManagerFixture withStorageWithoutBaseline(TournamentStateStorage stateStorage,
+                                                               List<String> teamNames) {
+        return new TournamentManagerFixture(Optional.of(stateStorage), teamNames, false);
     }
 
     static TournamentManagerFixture withoutStorage(List<String> teamNames) {
-        return new TournamentManagerFixture(Optional.empty(), teamNames);
+        return new TournamentManagerFixture(Optional.empty(), teamNames, true);
     }
 
     TournamentManager tournamentManager() {
@@ -210,6 +216,12 @@ final class TournamentManagerFixture {
 
     private static final class SkippedArenaCleanup implements ArenaCleanup {
 
+        private final boolean baselineStored;
+
+        private SkippedArenaCleanup(boolean baselineStored) {
+            this.baselineStored = baselineStored;
+        }
+
         @Override
         public Optional<String> startCleaningAfterMatch(Consumer<String> completionHandler) {
             return Optional.of(SKIPPED_CLEANING_REASON);
@@ -222,7 +234,7 @@ final class TournamentManagerFixture {
 
         @Override
         public boolean hasBaseline() {
-            return true;
+            return baselineStored;
         }
     }
 

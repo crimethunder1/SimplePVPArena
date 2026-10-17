@@ -16,6 +16,7 @@ final class MatchAdminMenu implements AdminMenu {
     private static final int MATCH_FORCE_START_SLOT = 11;
     private static final int MATCH_PAUSE_SLOT = 12;
     private static final int MATCH_CANCEL_SLOT = 13;
+    private static final int MATCH_DECIDE_WAITING_MATCH_SLOT = 14;
     private static final int MATCH_FINAL_SLOT = 15;
     private static final int MATCH_FORCE_RESULT_SLOT = 16;
 
@@ -24,14 +25,17 @@ final class MatchAdminMenu implements AdminMenu {
     private final MatchService matchService;
     private final TournamentMenuStatus tournamentMenuStatus;
     private final ForceResultAdminMenu forceResultAdminMenu;
+    private final WaitingMatchesAdminMenu waitingMatchesAdminMenu;
 
     MatchAdminMenu(AdminMenuNavigation navigation, TournamentManager tournamentManager, MatchService matchService,
-                   TournamentMenuStatus tournamentMenuStatus, ForceResultAdminMenu forceResultAdminMenu) {
+                   TournamentMenuStatus tournamentMenuStatus, ForceResultAdminMenu forceResultAdminMenu,
+                   WaitingMatchesAdminMenu waitingMatchesAdminMenu) {
         this.navigation = Objects.requireNonNull(navigation, "navigation");
         this.tournamentManager = Objects.requireNonNull(tournamentManager, "tournamentManager");
         this.matchService = Objects.requireNonNull(matchService, "matchService");
         this.tournamentMenuStatus = Objects.requireNonNull(tournamentMenuStatus, "tournamentMenuStatus");
         this.forceResultAdminMenu = Objects.requireNonNull(forceResultAdminMenu, "forceResultAdminMenu");
+        this.waitingMatchesAdminMenu = Objects.requireNonNull(waitingMatchesAdminMenu, "waitingMatchesAdminMenu");
     }
 
     @Override
@@ -64,6 +68,10 @@ final class MatchAdminMenu implements AdminMenu {
                 ? MenuItems.create(MenuItems.REFUSE_MATERIAL, "Cancel the tournament",
                         "Stops the running match and the bracket", "Asks for a confirmation first")
                 : MenuItems.unavailable("Cancel the tournament", "No tournament is in progress"));
+        canvas.set(MATCH_DECIDE_WAITING_MATCH_SLOT, waitingMatchesAdminMenu.isTournamentInProgress()
+                ? MenuItems.create(Material.LECTERN, "Decide a waiting match",
+                        "Decides a match that is not running for one of its two teams")
+                : MenuItems.unavailable("Decide a waiting match", WaitingMatchesAdminMenu.NO_TOURNAMENT_IN_PROGRESS));
         canvas.set(MATCH_FINAL_SLOT, tournamentMenuStatus.buildFinalItem());
         canvas.set(MATCH_FORCE_RESULT_SLOT, options.forceResultOffered()
                 ? MenuItems.create(Material.ANVIL, "Force a result",
@@ -80,6 +88,7 @@ final class MatchAdminMenu implements AdminMenu {
             case MATCH_PAUSE_SLOT -> runOperation(player, holder, tournamentManager::togglePause);
             case MATCH_CANCEL_SLOT -> navigation.open(player,
                     AdminMenuHolder.confirmation(ConfirmationRequest.CANCEL_TOURNAMENT, null, 0));
+            case MATCH_DECIDE_WAITING_MATCH_SLOT -> waitingMatchesAdminMenu.openWaitingMatchesMenu(player);
             case MATCH_FINAL_SLOT -> runOperation(player, holder, tournamentManager::startFinalMatch);
             case MATCH_FORCE_RESULT_SLOT -> forceResultAdminMenu.openForceResultMenu(player);
             case AdminMenuLayout.BACK_SLOT -> navigation.open(player, AdminMenuHolder.main());

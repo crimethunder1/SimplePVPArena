@@ -35,6 +35,33 @@ class AdminMenuHolderTest {
     }
 
     @Test
+    void namesTheWaitingMatchMenus() {
+        assertEquals(AdminMenuType.WAITING_MATCHES, AdminMenuHolder.waitingMatches(0).getMenuType());
+        assertEquals(AdminMenuType.WAITING_MATCH_RESULT,
+                AdminMenuHolder.waitingMatchResult("round1-match2", 0).getMenuType());
+    }
+
+    @Test
+    void carriesThePageOfTheWaitingMatchesWithoutASubject() {
+        AdminMenuHolder holder = AdminMenuHolder.waitingMatches(2);
+
+        assertEquals(2, holder.getPageIndex());
+        assertTrue(holder.getSubject().isEmpty());
+        assertTrue(holder.getConfirmationRequest().isEmpty());
+        assertEquals(0, AdminMenuHolder.waitingMatches(-1).getPageIndex());
+    }
+
+    @Test
+    void carriesTheMatchAndThePageAWaitingMatchResultWasOpenedFrom() {
+        AdminMenuHolder holder = AdminMenuHolder.waitingMatchResult("round1-match2", 1);
+
+        assertEquals("round1-match2", holder.getSubject().orElseThrow());
+        assertEquals(1, holder.getPageIndex());
+        assertTrue(holder.getConfirmationRequest().isEmpty());
+        assertThrows(NullPointerException.class, () -> AdminMenuHolder.waitingMatchResult(null, 0));
+    }
+
+    @Test
     void carriesNoSubjectForAMenuThatStandsForItself() {
         assertTrue(AdminMenuHolder.main().getSubject().isEmpty());
         assertTrue(AdminMenuHolder.arena().getSubject().isEmpty());

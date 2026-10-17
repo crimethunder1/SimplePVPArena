@@ -21,6 +21,7 @@ class MatchAdminMenuSnapshotTest {
                 11 | YELLOW_WOOL | Force start | Starts the tournament with an uneven number of teams
                 12 | GRAY_DYE | Pause the tournament | No tournament is in progress
                 13 | GRAY_DYE | Cancel the tournament | No tournament is in progress
+                14 | GRAY_DYE | Decide a waiting match | No tournament is in progress
                 15 | GRAY_DYE | Start the final | The final is not ready, its stage is PENDING
                 16 | GRAY_DYE | Force a result | No match is running
                 22 | OAK_DOOR | Back | Returns to the main menu
@@ -41,6 +42,7 @@ class MatchAdminMenuSnapshotTest {
                 11 | YELLOW_WOOL | Force start | Starts the tournament with an uneven number of teams
                 12 | GRAY_DYE | Pause the tournament | No tournament is in progress
                 13 | GRAY_DYE | Cancel the tournament | No tournament is in progress
+                14 | GRAY_DYE | Decide a waiting match | No tournament is in progress
                 15 | GRAY_DYE | Start the final | The final is not ready, its stage is PENDING
                 16 | GRAY_DYE | Force a result | No match is running
                 22 | OAK_DOOR | Back | Returns to the main menu
@@ -65,6 +67,7 @@ class MatchAdminMenuSnapshotTest {
                 The round timer keeps its remaining time
                 13 | RED_WOOL | Cancel the tournament | Stops the running match and the bracket / \
                 Asks for a confirmation first
+                14 | LECTERN | Decide a waiting match | Decides a match that is not running for one of its two teams
                 15 | GRAY_DYE | Start the final | The final is not ready, its stage is PENDING
                 16 | ANVIL | Force a result | Decides the running match for one of its two teams
                 22 | OAK_DOOR | Back | Returns to the main menu
@@ -90,6 +93,7 @@ class MatchAdminMenuSnapshotTest {
                 12 | CLOCK | Continue the tournament | The round timer continues with its remaining time
                 13 | RED_WOOL | Cancel the tournament | Stops the running match and the bracket / \
                 Asks for a confirmation first
+                14 | LECTERN | Decide a waiting match | Decides a match that is not running for one of its two teams
                 15 | GRAY_DYE | Start the final | The final is not ready, its stage is PENDING
                 16 | ANVIL | Force a result | Decides the running match for one of its two teams
                 22 | OAK_DOOR | Back | Returns to the main menu
@@ -115,6 +119,7 @@ class MatchAdminMenuSnapshotTest {
                 The round timer keeps its remaining time
                 13 | RED_WOOL | Cancel the tournament | Stops the running match and the bracket / \
                 Asks for a confirmation first
+                14 | LECTERN | Decide a waiting match | Decides a match that is not running for one of its two teams
                 15 | NETHER_STAR | Start the final | Both finalists are known / Starts the final on the arena
                 16 | GRAY_DYE | Force a result | No match is running
                 22 | OAK_DOOR | Back | Returns to the main menu
@@ -139,6 +144,7 @@ class MatchAdminMenuSnapshotTest {
                 11 | YELLOW_WOOL | Force start | Starts the tournament with an uneven number of teams
                 12 | GRAY_DYE | Pause the tournament | No tournament is in progress
                 13 | GRAY_DYE | Cancel the tournament | No tournament is in progress
+                14 | GRAY_DYE | Decide a waiting match | No tournament is in progress
                 15 | GRAY_DYE | Start the final | The final is over
                 16 | GRAY_DYE | Force a result | No match is running
                 22 | OAK_DOOR | Back | Returns to the main menu
@@ -164,6 +170,7 @@ class MatchAdminMenuSnapshotTest {
                 The round timer keeps its remaining time
                 13 | RED_WOOL | Cancel the tournament | Stops the running match and the bracket / \
                 Asks for a confirmation first
+                14 | LECTERN | Decide a waiting match | Decides a match that is not running for one of its two teams
                 15 | GRAY_DYE | Start the final | The final is running
                 16 | ANVIL | Force a result | Decides the running match for one of its two teams
                 22 | OAK_DOOR | Back | Returns to the main menu
