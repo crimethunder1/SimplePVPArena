@@ -376,10 +376,127 @@ class KitLibraryTest {
     }
 
     @Test
+    void keepsTheChosenKitWhenAnotherKitIsSetAsTheDefaultKit() {
+        createArcherKnightAndMage();
+        kitLibrary.activate("Knight");
+
+        kitLibrary.setDefaultKit("Mage");
+
+        assertEquals(Optional.of("Mage"), kitLibrary.getDefaultKitName());
+        assertSame(kitDefinitionOf("Knight"), kitService.getKitDefinition());
+    }
+
+    @Test
+    void keepsTheChosenKitWhenTheDefaultKitIsReplaced() {
+        createArcherKnightAndMage();
+        kitLibrary.activate("Knight");
+
+        kitLibrary.replaceKit("Archer", FakeSerializedKits.carrying("crossbow"));
+
+        assertSame(kitDefinitionOf("Knight"), kitService.getKitDefinition());
+        assertEquals(List.of("crossbow"), inventoryLabelsOf(kitDefinitionOf("Archer")));
+    }
+
+    @Test
+    void keepsTheChosenKitWhenAFurtherKitIsCreated() {
+        createArcherKnightAndMage();
+        kitLibrary.activate("Knight");
+
+        kitLibrary.createKit("Rogue", FakeSerializedKits.carrying("dagger"));
+
+        assertSame(kitDefinitionOf("Knight"), kitService.getKitDefinition());
+    }
+
+    @Test
+    void handsOutTheNewItemsOfTheChosenKitWhenItIsReplaced() {
+        createArcherKnightAndMage();
+        kitLibrary.activate("knight");
+
+        kitLibrary.replaceKit("KNIGHT", FakeSerializedKits.carrying("axe", "shield"));
+
+        assertEquals(List.of("axe", "shield"), inventoryLabelsOf(kitService.getKitDefinition()));
+        assertSame(kitDefinitionOf("Knight"), kitService.getKitDefinition());
+        assertEquals(Optional.of("Archer"), kitLibrary.getDefaultKitName());
+    }
+
+    @Test
+    void endsTheChosenKitAndHandsOutTheDefaultKitWhenTheChosenKitIsDeleted() {
+        createArcherKnightAndMage();
+        kitLibrary.activate("Knight");
+
+        kitLibrary.deleteKit("Knight");
+
+        assertSame(kitDefinitionOf("Archer"), kitService.getKitDefinition());
+        kitLibrary.setDefaultKit("Mage");
+        assertSame(kitDefinitionOf("Mage"), kitService.getKitDefinition());
+    }
+
+    @Test
+    void keepsTheChosenKitWhenAnotherKitIsDeleted() {
+        createArcherKnightAndMage();
+        kitLibrary.activate("Knight");
+
+        kitLibrary.deleteKit("Mage");
+
+        assertSame(kitDefinitionOf("Knight"), kitService.getKitDefinition());
+    }
+
+    @Test
+    void endsTheChosenKitWhenTheDefaultKitIsActivated() {
+        createArcherKnightAndMage();
+        kitLibrary.activate("Knight");
+
+        kitLibrary.activateDefaultKit();
+
+        assertSame(kitDefinitionOf("Archer"), kitService.getKitDefinition());
+        kitLibrary.setDefaultKit("Mage");
+        assertSame(kitDefinitionOf("Mage"), kitService.getKitDefinition());
+    }
+
+    @Test
+    void endsTheChosenKitWhenTheLibraryIsRestored() {
+        createArcherKnightAndMage();
+        kitLibrary.activate("Knight");
+
+        kitLibrary.restore(new SavedKitLibrary(List.of(
+                new SavedKit("Archer", FakeSerializedKits.carrying("bow")),
+                new SavedKit("Knight", FakeSerializedKits.carrying("sword"))), Optional.of("Archer")));
+
+        assertSame(kitDefinitionOf("Archer"), kitService.getKitDefinition());
+        kitLibrary.replaceKit("Knight", FakeSerializedKits.carrying("axe"));
+        assertSame(kitDefinitionOf("Archer"), kitService.getKitDefinition());
+    }
+
+    @Test
+    void handsOutTheEmptyKitAndThenTheFirstCreatedKitWhenTheChosenKitIsGoneWithAllKits() {
+        createArcherKnightAndMage();
+        kitLibrary.activate("Knight");
+
+        kitLibrary.restore(SavedKitLibrary.empty());
+
+        assertTrue(kitService.getKitDefinition().isEmpty());
+        kitLibrary.createKit("Knight", FakeSerializedKits.carrying("lance"));
+        assertEquals(List.of("lance"), inventoryLabelsOf(kitService.getKitDefinition()));
+        kitLibrary.createKit("Rogue", FakeSerializedKits.carrying("dagger"));
+        kitLibrary.setDefaultKit("Rogue");
+        assertSame(kitDefinitionOf("Rogue"), kitService.getKitDefinition());
+    }
+
+    @Test
     void handsOutTheSameDefinitionThatTheLibraryHolds() {
         LibraryKit kit = kitLibrary.createKit("Archer", FakeSerializedKits.carrying("bow"));
 
         assertSame(kit.kitDefinition(), kitService.getKitDefinition());
+    }
+
+    private void createArcherKnightAndMage() {
+        kitLibrary.createKit("Archer", FakeSerializedKits.carrying("bow"));
+        kitLibrary.createKit("Knight", FakeSerializedKits.carrying("sword"));
+        kitLibrary.createKit("Mage", FakeSerializedKits.carrying("staff"));
+    }
+
+    private KitDefinition kitDefinitionOf(String kitName) {
+        return kitLibrary.findKit(kitName).orElseThrow().kitDefinition();
     }
 
     private static List<String> inventoryLabelsOf(KitDefinition kitDefinition) {

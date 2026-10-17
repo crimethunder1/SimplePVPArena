@@ -175,6 +175,7 @@ final class AdminMenuFixture {
                     new AutomaticArenaCleanup(arenaSetupService, cleaningService), message -> { });
             kitChoiceService = tournamentManager.getKitChoiceService();
         }
+        arenaSetupService.setArenaReservedForMatch(kitChoiceService::isPending);
         TournamentDryRun tournamentDryRun = new TournamentDryRun(tournamentManager::getState,
                 matchService::hasActiveMatch, teamRegistry,
                 new PluginDryRunArena(arenaRegistry.getArena(), arenaSetupService), kitService, gateMarks,

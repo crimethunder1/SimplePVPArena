@@ -13,10 +13,15 @@ import org.bukkit.entity.Player;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
+import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
 
 public final class ArenaSetupService {
+
+    public static final String ARENA_RESERVED_FOR_MATCH_MESSAGE = "The kit for the next match is being chosen, "
+            + "the arena is reserved for that match until it starts";
 
     private final ActiveArenaState activeArena;
     private final MatchService matchService;
@@ -29,6 +34,7 @@ public final class ArenaSetupService {
     private final Runnable arenaConfigurationSaver;
 
     private int maximumArenaCellCount = ArenaShapeFloodFill.DEFAULT_MAXIMUM_CELL_COUNT;
+    private BooleanSupplier arenaReservedForMatch = () -> false;
 
     public ArenaSetupService(ActiveArenaState activeArena,
                              MatchService matchService,
@@ -52,6 +58,10 @@ public final class ArenaSetupService {
 
     public void setMaximumArenaCellCount(int maximumArenaCellCount) {
         this.maximumArenaCellCount = Math.max(1, maximumArenaCellCount);
+    }
+
+    public void setArenaReservedForMatch(BooleanSupplier arenaReservedForMatch) {
+        this.arenaReservedForMatch = Objects.requireNonNull(arenaReservedForMatch, "arenaReservedForMatch");
     }
 
     public int getMaximumArenaCellCount() {
@@ -78,6 +88,10 @@ public final class ArenaSetupService {
         if (matchService.hasActiveMatch()) {
             TournamentMessages.sendError(admin,
                     "A match is running, the fight area can only be calculated between matches");
+            return;
+        }
+        if (arenaReservedForMatch.getAsBoolean()) {
+            TournamentMessages.sendError(admin, ARENA_RESERVED_FOR_MATCH_MESSAGE);
             return;
         }
         if (isDiagnosisRun) {
@@ -257,6 +271,9 @@ public final class ArenaSetupService {
         }
         if (matchService.hasActiveMatch()) {
             return Optional.of("A match is running, the arena can only be cleaned between matches");
+        }
+        if (arenaReservedForMatch.getAsBoolean()) {
+            return Optional.of(ARENA_RESERVED_FOR_MATCH_MESSAGE);
         }
         if (arenaCleaningService.isCleaning()) {
             return Optional.of("The arena is already being cleaned");

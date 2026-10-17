@@ -114,6 +114,123 @@ class TournamentManagerKitChoiceTest {
     }
 
     @Test
+    void reportsThatTheKitOfTheFinalIsBeingChosenInsteadOfAStartedFinal() {
+        TournamentManagerFixture fixture = TournamentManagerFixture.withKitChoice(TWO_TEAMS);
+        fixture.startTournament();
+
+        TournamentOperationResult finalStart = fixture.tournamentManager().startFinalMatch();
+
+        assertTrue(finalStart.successful());
+        assertEquals("The kit for the final is being chosen", finalStart.message());
+        assertEquals(Optional.empty(), fixture.runningMatchId());
+    }
+
+    @Test
+    void reportsThatTheFinalHasStartedWhenItStartsWithoutAChoice() {
+        TournamentManagerFixture fixture = TournamentManagerFixture.withKitChoice(TWO_TEAMS);
+        fixture.kitChoicePresenter().letEveryAdminLeave();
+        fixture.startTournament();
+
+        TournamentOperationResult finalStart = fixture.tournamentManager().startFinalMatch();
+
+        assertTrue(finalStart.successful());
+        assertEquals("The final has started", finalStart.message());
+        assertEquals(Optional.of("round1-match1"), fixture.runningMatchId());
+    }
+
+    @Test
+    void declaresAWalkoverWhenATeamIsRemovedDuringTheChoiceAndChoosesTheKitOfTheNextMatch() {
+        TournamentManagerFixture fixture = TournamentManagerFixture.withKitChoice(FOUR_TEAMS);
+        fixture.startTournament();
+        BracketMatch firstMatch = fixture.bracketMatch("round1-match1");
+        String removedTeamName = firstMatch.getFirstTeamName().orElseThrow();
+        String remainingTeamName = firstMatch.getSecondTeamName().orElseThrow();
+
+        assertTrue(fixture.teamRegistry().removeTeam(removedTeamName));
+        fixture.kitChoiceScheduler().advanceSeconds(30);
+
+        assertEquals(Optional.of(remainingTeamName), fixture.bracketMatch("round1-match1").getWinnerTeamName());
+        assertEquals(Optional.empty(), fixture.runningMatchId());
+        assertEquals("round1-match2", fixture.kitChoiceService().getPending().orElseThrow().matchId());
+        assertEquals(2, fixture.kitChoicePresenter().shownChoices().size());
+        assertSame(fixture.kitDefinitionOf("Archer"), fixture.activeKitDefinition());
+
+        fixture.kitChoiceScheduler().advanceSeconds(30);
+
+        assertEquals(Optional.of("round1-match2"), fixture.runningMatchId());
+    }
+
+    @Test
+    void dropsTheChosenKitWhenATeamWasRemovedBeforeTheChoice() {
+        TournamentManagerFixture fixture = TournamentManagerFixture.withKitChoice(FOUR_TEAMS);
+        fixture.startTournament();
+        String removedTeamName = fixture.bracketMatch("round1-match1").getSecondTeamName().orElseThrow();
+        String remainingTeamName = fixture.bracketMatch("round1-match1").getFirstTeamName().orElseThrow();
+        assertTrue(fixture.teamRegistry().removeTeam(removedTeamName));
+
+        assertTrue(fixture.kitChoiceService().choose("Knight", "KT"));
+
+        assertEquals(Optional.of(remainingTeamName), fixture.bracketMatch("round1-match1").getWinnerTeamName());
+        assertEquals(Optional.empty(), fixture.runningMatchId());
+        assertSame(fixture.kitDefinitionOf("Archer"), fixture.activeKitDefinition());
+        assertEquals("round1-match2", fixture.kitChoiceService().getPending().orElseThrow().matchId());
+    }
+
+    @Test
+    void tellsTheAdminsAndStartsNoMatchWhenBothTeamsAreRemovedDuringTheChoice() {
+        TournamentManagerFixture fixture = TournamentManagerFixture.withKitChoice(FOUR_TEAMS);
+        fixture.startTournament();
+        BracketMatch firstMatch = fixture.bracketMatch("round1-match1");
+        assertTrue(fixture.teamRegistry().removeTeam(firstMatch.getFirstTeamName().orElseThrow()));
+        assertTrue(fixture.teamRegistry().removeTeam(firstMatch.getSecondTeamName().orElseThrow()));
+
+        fixture.kitChoiceScheduler().advanceSeconds(30);
+
+        assertEquals(Optional.empty(), fixture.runningMatchId());
+        assertFalse(fixture.bracketMatch("round1-match1").isDecided());
+        assertFalse(fixture.tournamentManager().isKitChoicePending());
+        assertEquals(List.of("Both teams of match round1-match1 are no longer registered, the tournament waits for "
+                + "you. Decide the match in the match menu of /tournament under \"Decide a waiting match\""),
+                fixture.adminMessagesContaining("Both teams"));
+        assertEquals(TournamentState.RUNNING, fixture.tournamentManager().getState());
+    }
+
+    @Test
+    void endsTheFinalByWalkoverWhenAFinalistIsRemovedDuringItsChoice() {
+        TournamentManagerFixture fixture = TournamentManagerFixture.withKitChoice(TWO_TEAMS);
+        fixture.startTournament();
+        assertTrue(fixture.tournamentManager().startFinalMatch().successful());
+        BracketMatch finalMatch = fixture.bracketMatch("round1-match1");
+        String removedTeamName = finalMatch.getFirstTeamName().orElseThrow();
+        String remainingTeamName = finalMatch.getSecondTeamName().orElseThrow();
+
+        assertTrue(fixture.teamRegistry().removeTeam(removedTeamName));
+        fixture.kitChoiceScheduler().advanceSeconds(30);
+
+        assertEquals(Optional.empty(), fixture.runningMatchId());
+        assertEquals(TournamentState.FINISHED, fixture.tournamentManager().getState());
+        assertEquals(Optional.of(remainingTeamName), fixture.bracket().getChampionTeamName());
+        assertEquals(FinalMatchStage.FINISHED, fixture.tournamentManager().getFinalMatchStage());
+        assertFalse(fixture.tournamentManager().isKitChoicePending());
+    }
+
+    @Test
+    void leavesTheFinalReadyWhenBothFinalistsAreRemovedDuringItsChoice() {
+        TournamentManagerFixture fixture = TournamentManagerFixture.withKitChoice(TWO_TEAMS);
+        fixture.startTournament();
+        assertTrue(fixture.tournamentManager().startFinalMatch().successful());
+        assertTrue(fixture.teamRegistry().removeTeam("Alpha"));
+        assertTrue(fixture.teamRegistry().removeTeam("Bravo"));
+
+        assertTrue(fixture.kitChoiceService().choose("Knight", "KT"));
+
+        assertEquals(Optional.empty(), fixture.runningMatchId());
+        assertEquals(FinalMatchStage.READY, fixture.tournamentManager().getFinalMatchStage());
+        assertEquals(1, fixture.adminMessagesContaining("Both teams of match round1-match1").size());
+        assertSame(fixture.kitDefinitionOf("Archer"), fixture.activeKitDefinition());
+    }
+
+    @Test
     void cancelsTheChoiceWhenTheTournamentIsPausedAndBeginsANewOneWhenItContinues() {
         TournamentManagerFixture fixture = TournamentManagerFixture.withKitChoice(FOUR_TEAMS);
         fixture.startTournament();
@@ -191,6 +308,23 @@ class TournamentManagerKitChoiceTest {
         assertSame(fixture.kitDefinitionOf("Archer"), fixture.activeKitDefinition());
         assertEquals(Optional.empty(), fixture.runningMatchId());
         assertEquals("round1-match2", fixture.kitChoiceService().getPending().orElseThrow().matchId());
+    }
+
+    @Test
+    void keepsTheChosenKitForTheWholeMatchWhenAnotherKitIsSetAsTheDefaultKitDuringIt() {
+        TournamentManagerFixture fixture = TournamentManagerFixture.withKitChoice(FOUR_TEAMS);
+        fixture.startTournament();
+        assertTrue(fixture.kitChoiceService().choose("Archer", "KT"));
+
+        fixture.kitLibrary().setDefaultKit("Knight");
+
+        assertEquals(Optional.of("round1-match1"), fixture.runningMatchId());
+        assertEquals(Optional.of("Knight"), fixture.kitLibrary().getDefaultKitName());
+        assertSame(fixture.kitDefinitionOf("Archer"), fixture.activeKitDefinition());
+
+        fixture.endRunningMatchAsPlayedByTheFirstTeam();
+
+        assertSame(fixture.kitDefinitionOf("Knight"), fixture.activeKitDefinition());
     }
 
     @Test

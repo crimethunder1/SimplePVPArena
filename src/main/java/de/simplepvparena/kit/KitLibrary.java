@@ -24,6 +24,7 @@ public final class KitLibrary {
     private final Map<String, LibraryKit> kitsByLowerCaseName = new LinkedHashMap<>();
 
     private String defaultKitLowerCaseName;
+    private String chosenKitLowerCaseName;
 
     public KitLibrary(KitLibraryStorage storage, KitService kitService, KitItemSerializer kitItemSerializer,
                       Consumer<String> itemProblemReporter, Consumer<String> writeFailureReporter) {
@@ -122,7 +123,7 @@ public final class KitLibrary {
         }
         write();
         if (becameDefault) {
-            activateDefaultKit();
+            handOutActiveKit();
         }
         return kit;
     }
@@ -134,8 +135,8 @@ public final class KitLibrary {
         LibraryKit kit = decode(existingKit.name(), serializedKit);
         kitsByLowerCaseName.put(toLowerCase(kitName), kit);
         write();
-        if (isDefaultKit(kitName)) {
-            activateDefaultKit();
+        if (isDefaultKit(kitName) || isChosenKit(kitName)) {
+            handOutActiveKit();
         }
         return kit;
     }
@@ -150,6 +151,10 @@ public final class KitLibrary {
         }
         kitsByLowerCaseName.remove(toLowerCase(kitName));
         write();
+        if (isChosenKit(kitName)) {
+            chosenKitLowerCaseName = null;
+            handOutActiveKit();
+        }
     }
 
     public void setDefaultKit(String kitName) {
@@ -161,17 +166,19 @@ public final class KitLibrary {
         }
         defaultKitLowerCaseName = toLowerCase(kitName);
         write();
-        activateDefaultKit();
+        handOutActiveKit();
     }
 
     public void activate(String kitName) {
         LibraryKit kit = findKit(kitName)
                 .orElseThrow(() -> new IllegalArgumentException(describeUnknownKit(kitName)));
+        chosenKitLowerCaseName = toLowerCase(kit.name());
         kitService.setKitDefinition(kit.kitDefinition());
     }
 
     public void activateDefaultKit() {
-        kitService.setKitDefinition(findDefaultKit().map(LibraryKit::kitDefinition).orElse(KitDefinition.empty()));
+        chosenKitLowerCaseName = null;
+        handOutActiveKit();
     }
 
     public static Optional<String> findInconsistency(SavedKitLibrary savedKitLibrary) {
@@ -221,6 +228,21 @@ public final class KitLibrary {
         return new LibraryKit(kitName, serializedKit,
                 kitSerialization.toDefinition(serializedKit, problem -> itemProblemReporter.accept(
                         "Kit " + kitName + ": " + problem)));
+    }
+
+    private void handOutActiveKit() {
+        kitService.setKitDefinition(findChosenKit().or(this::findDefaultKit).map(LibraryKit::kitDefinition)
+                .orElse(KitDefinition.empty()));
+    }
+
+    private Optional<LibraryKit> findChosenKit() {
+        return chosenKitLowerCaseName == null
+                ? Optional.empty()
+                : Optional.ofNullable(kitsByLowerCaseName.get(chosenKitLowerCaseName));
+    }
+
+    private boolean isChosenKit(String kitName) {
+        return kitName != null && toLowerCase(kitName).equals(chosenKitLowerCaseName);
     }
 
     private void write() {

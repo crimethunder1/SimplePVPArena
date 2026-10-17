@@ -280,6 +280,9 @@ public final class TournamentManager implements MatchCompletionHandler {
                     + "no longer registered");
         }
         startMatchInArena(finalMatch);
+        if (isKitChoicePending()) {
+            return TournamentOperationResult.success("The kit for the final is being chosen");
+        }
         return TournamentOperationResult.success("The final has started");
     }
 
@@ -557,16 +560,26 @@ public final class TournamentManager implements MatchCompletionHandler {
                 ? Match.finalMatch(bracketMatch.getMatchId(), firstTeam, secondTeam, arena)
                 : Match.regularMatch(bracketMatch.getMatchId(), firstTeam, secondTeam, arena);
         kitChoiceService.begin(match.getMatchId(), firstTeam.getTeamName() + " against " + secondTeam.getTeamName(),
-                () -> startChosenMatch(match, finalMatch));
+                () -> startChosenMatch(bracketMatch, match, finalMatch));
     }
 
-    private void startChosenMatch(Match match, boolean finalMatch) {
+    private void startChosenMatch(BracketMatch bracketMatch, Match match, boolean finalMatch) {
+        if (!areBothTeamsRegistered(bracketMatch)) {
+            kitChoiceService.activateDefaultKit();
+            resolveTeamsOrDeclareWalkover(bracketMatch);
+            return;
+        }
         if (finalMatch) {
             finalMatchGate.markRunning();
         }
         broadcast("Match " + match.getMatchId() + ": " + match.getFirstTeam().getTeamName() + " against "
                 + match.getSecondTeam().getTeamName());
         matchService.startMatch(match);
+    }
+
+    private boolean areBothTeamsRegistered(BracketMatch bracketMatch) {
+        return teamRegistry.findTeam(bracketMatch.getFirstTeamName().orElse(null)).isPresent()
+                && teamRegistry.findTeam(bracketMatch.getSecondTeamName().orElse(null)).isPresent();
     }
 
     private Optional<String> resolveBracketTeamName(BracketMatch bracketMatch, String teamName) {
