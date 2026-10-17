@@ -429,7 +429,7 @@ public final class TournamentManager implements MatchCompletionHandler {
                 : MatchDecisionKind.PLAYED;
         kitChoiceService.activateDefaultKit();
         cleanArenaBeforeTheNextMatch(match);
-        recordBracketWinner(match.getMatchId(), winnerTeamName, decisionKind, true);
+        recordBracketWinner(match.getMatchId(), winnerTeamName, decisionKind);
     }
 
     private void cleanArenaBeforeTheNextMatch(Match match) {
@@ -532,11 +532,6 @@ public final class TournamentManager implements MatchCompletionHandler {
     }
 
     private void recordBracketWinner(String matchId, String winnerTeamName, MatchDecisionKind decisionKind) {
-        recordBracketWinner(matchId, winnerTeamName, decisionKind, false);
-    }
-
-    private void recordBracketWinner(String matchId, String winnerTeamName, MatchDecisionKind decisionKind,
-                                     boolean decidedInTheArena) {
         if (bracket == null) {
             return;
         }
@@ -552,14 +547,12 @@ public final class TournamentManager implements MatchCompletionHandler {
             return;
         }
         saveState();
-        if (decidedInTheArena) {
-            announceNextMatch();
-        }
+        announceNextMatch();
         startNextMatch();
     }
 
     private void announceNextMatch() {
-        if (state != TournamentState.RUNNING) {
+        if (state != TournamentState.RUNNING || matchService.hasActiveMatch()) {
             return;
         }
         Optional<BracketMatch> nextMatch = MatchSequence.findNextMatch(bracket);

@@ -506,13 +506,13 @@ public final class MatchService {
     }
 
     private void announceToMatch(Match match, Component message, String logMessage) {
-        forEachMatchAudience(match, player -> player.sendMessage(message));
+        forEachAreaAudience(match, player -> player.sendMessage(message));
         plugin.getLogger().info(logMessage);
     }
 
     private void announceActionBarToMatch(Match match, String message) {
         Component actionBarText = Component.text(message, TournamentMessages.WARNING_COLOUR);
-        forEachMatchAudience(match, player -> player.sendActionBar(actionBarText));
+        forEachAreaAudience(match, player -> player.sendActionBar(actionBarText));
     }
 
     private void announceStartGateSecond(Match match, int remainingSeconds) {
@@ -523,13 +523,13 @@ public final class MatchService {
                 Component.text(StartGateCountdown.describeSubtitle(remainingSeconds),
                         TournamentMessages.DETAIL_COLOUR),
                 release ? START_GATE_RELEASE_TITLE_TIMES : START_GATE_SECOND_TITLE_TIMES);
-        forEachMatchAudience(match, player -> player.showTitle(title));
+        forEachAreaAudience(match, player -> player.showTitle(title));
     }
 
     private void announceTitleToMatch(Match match, String titleText, String subtitleText) {
         Title title = Title.title(Component.text(titleText, TournamentMessages.ERROR_COLOUR),
                 Component.text(subtitleText, TournamentMessages.DETAIL_COLOUR), SUDDEN_DEATH_TITLE_TIMES);
-        forEachMatchAudience(match, player -> player.showTitle(title));
+        forEachAreaAudience(match, player -> player.showTitle(title));
     }
 
     private void announceRoundTitle(Match match, String roundResult) {

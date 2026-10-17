@@ -62,6 +62,7 @@ class ScoreTitleAudienceTest {
         tournament.winRound(first);
 
         assertEquals(List.of(
+                "Sudden death / Both teams take damage until one of them falls",
                 first + " 0 : 0 " + second + " / Round 1 is a draw",
                 first + " 1 : 0 " + second + " / " + first + " wins round 2"), bystander.titleTexts());
     }
