@@ -2,9 +2,11 @@ package de.simplepvparena.tournament;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
@@ -18,6 +20,7 @@ public final class Bracket {
     private final Map<String, BracketMatch> matchesById;
     private final List<String> participatingTeamNames;
     private final Set<String> teamNamesWithFirstRoundBye;
+    private final List<BracketMatch> matchesInDecisionOrder = new ArrayList<>();
 
     private Bracket(List<List<BracketMatch>> rounds,
                     List<String> participatingTeamNames,
@@ -43,18 +46,7 @@ public final class Bracket {
         }
 
         int bracketSize = smallestPowerOfTwoAtLeast(teamNames.size());
-        List<List<BracketMatch>> rounds = new ArrayList<>();
-        int matchesInRound = bracketSize / 2;
-        int roundIndex = 0;
-        while (matchesInRound >= 1) {
-            List<BracketMatch> round = new ArrayList<>(matchesInRound);
-            for (int positionIndex = 0; positionIndex < matchesInRound; positionIndex++) {
-                round.add(new BracketMatch(buildMatchId(roundIndex, positionIndex), roundIndex, positionIndex));
-            }
-            rounds.add(round);
-            matchesInRound /= 2;
-            roundIndex++;
-        }
+        List<List<BracketMatch>> rounds = buildRounds(bracketSize);
 
         List<BracketMatch> firstRound = rounds.get(0);
         List<Integer> seedingOrder = buildSeedingOrder(bracketSize);
@@ -69,6 +61,61 @@ public final class Bracket {
         Bracket bracket = new Bracket(rounds, teamNames, collectFirstRoundByeTeams(firstRound));
         bracket.resolveFirstRoundByes();
         return bracket;
+    }
+
+    public static Bracket restore(List<SavedFirstRoundMatch> savedFirstRound, List<SavedMatchResult> savedResults) {
+        Objects.requireNonNull(savedFirstRound, "savedFirstRound");
+        Objects.requireNonNull(savedResults, "savedResults");
+        int firstRoundMatchCount = savedFirstRound.size();
+        if (Integer.bitCount(firstRoundMatchCount) != 1) {
+            throw new IllegalArgumentException("the first round holds " + firstRoundMatchCount
+                    + " matches, a bracket needs a power of two");
+        }
+
+        List<List<BracketMatch>> rounds = buildRounds(firstRoundMatchCount * 2);
+        List<BracketMatch> firstRound = rounds.get(0);
+        Map<String, BracketMatch> firstRoundMatchesById = new LinkedHashMap<>();
+        for (BracketMatch match : firstRound) {
+            firstRoundMatchesById.put(match.getMatchId(), match);
+        }
+        Set<String> placedMatchIds = new HashSet<>();
+        Set<String> placedTeamKeys = new HashSet<>();
+        List<String> teamNames = new ArrayList<>();
+        for (SavedFirstRoundMatch savedMatch : savedFirstRound) {
+            BracketMatch match = firstRoundMatchesById.get(savedMatch.matchId());
+            if (match == null) {
+                throw new IllegalArgumentException("the first round names unknown match " + savedMatch.matchId());
+            }
+            if (!placedMatchIds.add(match.getMatchId())) {
+                throw new IllegalArgumentException("the first round lists match " + match.getMatchId() + " twice");
+            }
+            if (savedMatch.firstTeamName().isEmpty() && savedMatch.secondTeamName().isEmpty()) {
+                throw new IllegalArgumentException("match " + match.getMatchId() + " of the first round has no team");
+            }
+            placeFirstRoundTeam(match, BracketMatch.FIRST_SLOT_INDEX, savedMatch.firstTeamName(), placedTeamKeys,
+                    teamNames);
+            placeFirstRoundTeam(match, BracketMatch.SECOND_SLOT_INDEX, savedMatch.secondTeamName(), placedTeamKeys,
+                    teamNames);
+        }
+        if (teamNames.size() < MINIMUM_TEAM_COUNT) {
+            throw new IllegalArgumentException("at least " + MINIMUM_TEAM_COUNT + " teams are required");
+        }
+
+        Bracket bracket = new Bracket(rounds, teamNames, collectFirstRoundByeTeams(firstRound));
+        bracket.resolveFirstRoundByes();
+        bracket.replayResults(savedResults);
+        return bracket;
+    }
+
+    public List<SavedFirstRoundMatch> describeFirstRound() {
+        return rounds.get(0).stream()
+                .map(match -> new SavedFirstRoundMatch(match.getMatchId(), match.getFirstTeamName(),
+                        match.getSecondTeamName()))
+                .toList();
+    }
+
+    public List<BracketMatch> getMatchesInDecisionOrder() {
+        return List.copyOf(matchesInDecisionOrder);
     }
 
     public List<List<BracketMatch>> getRounds() {
@@ -113,6 +160,7 @@ public final class Bracket {
             throw new IllegalArgumentException(winnerTeamName + " does not take part in match " + matchId);
         }
         match.setWinnerTeamName(winnerTeamName);
+        matchesInDecisionOrder.add(match);
         advanceWinner(match);
     }
 
@@ -140,6 +188,44 @@ public final class Bracket {
                 advanceWinner(match);
             }
         }
+    }
+
+    private void replayResults(List<SavedMatchResult> savedResults) {
+        for (SavedMatchResult savedResult : savedResults) {
+            BracketMatch match = matchesById.get(savedResult.matchId());
+            if (match == null) {
+                throw new IllegalArgumentException("a result names unknown match " + savedResult.matchId());
+            }
+            if (match.isDecided()) {
+                throw new IllegalArgumentException(matchesInDecisionOrder.contains(match)
+                        ? "match " + match.getMatchId() + " is decided twice"
+                        : "match " + match.getMatchId() + " is decided by a bye and takes no result");
+            }
+            if (!match.hasBothParticipants()) {
+                throw new IllegalArgumentException("match " + match.getMatchId()
+                        + " is decided before both of its teams are known");
+            }
+            if (!match.containsTeam(savedResult.winnerTeamName())) {
+                throw new IllegalArgumentException(savedResult.winnerTeamName() + " does not take part in match "
+                        + match.getMatchId());
+            }
+            recordWinner(match.getMatchId(), savedResult.winnerTeamName());
+        }
+    }
+
+    private static void placeFirstRoundTeam(BracketMatch match, int slotIndex, Optional<String> teamName,
+                                            Set<String> placedTeamKeys, List<String> teamNames) {
+        if (teamName.isEmpty()) {
+            return;
+        }
+        if (teamName.get().isBlank()) {
+            throw new IllegalArgumentException("match " + match.getMatchId() + " holds a team without a name");
+        }
+        if (!placedTeamKeys.add(teamName.get().toLowerCase(Locale.ROOT))) {
+            throw new IllegalArgumentException("team " + teamName.get() + " stands in the first round twice");
+        }
+        match.assignParticipant(slotIndex, teamName.get());
+        teamNames.add(teamName.get());
     }
 
     private void advanceWinner(BracketMatch match) {
@@ -173,6 +259,22 @@ public final class Bracket {
             seedingOrder = doubledSeedingOrder;
         }
         return seedingOrder;
+    }
+
+    private static List<List<BracketMatch>> buildRounds(int bracketSize) {
+        List<List<BracketMatch>> rounds = new ArrayList<>();
+        int matchesInRound = bracketSize / 2;
+        int roundIndex = 0;
+        while (matchesInRound >= 1) {
+            List<BracketMatch> round = new ArrayList<>(matchesInRound);
+            for (int positionIndex = 0; positionIndex < matchesInRound; positionIndex++) {
+                round.add(new BracketMatch(buildMatchId(roundIndex, positionIndex), roundIndex, positionIndex));
+            }
+            rounds.add(round);
+            matchesInRound /= 2;
+            roundIndex++;
+        }
+        return rounds;
     }
 
     private static String buildMatchId(int roundIndex, int positionIndex) {
