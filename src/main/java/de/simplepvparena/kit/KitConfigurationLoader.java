@@ -14,7 +14,8 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.TreeMap;
-import java.util.logging.Logger;
+import java.util.function.Consumer;
+import java.util.function.Function;
 
 public final class KitConfigurationLoader {
 
@@ -22,12 +23,15 @@ public final class KitConfigurationLoader {
     private static final String ITEMS_SECTION = "items";
     private static final String ENCHANTMENTS_SECTION = "enchantments";
 
-    private final Logger logger;
+    private final Consumer<String> problemReporter;
     private final KitSerialization kitSerialization;
+    private final Function<KitItem, ItemStack> itemStackFactory;
 
-    public KitConfigurationLoader(Logger logger, KitItemSerializer kitItemSerializer) {
-        this.logger = logger;
+    public KitConfigurationLoader(Consumer<String> problemReporter, KitItemSerializer kitItemSerializer,
+                                  Function<KitItem, ItemStack> itemStackFactory) {
+        this.problemReporter = problemReporter;
         this.kitSerialization = new KitSerialization(kitItemSerializer);
+        this.itemStackFactory = itemStackFactory;
     }
 
     public KitDefinition load(ConfigurationSection kitSection) {
@@ -35,9 +39,13 @@ public final class KitConfigurationLoader {
             return KitDefinition.empty();
         }
         if (SerializedKit.isWrittenIn(kitSection)) {
-            return kitSerialization.toDefinition(SerializedKit.read(kitSection, logger::warning), logger::warning);
+            return kitSerialization.toDefinition(SerializedKit.read(kitSection, problemReporter), problemReporter);
         }
         return loadTypedKit(kitSection);
+    }
+
+    public SerializedKit loadSerializedKit(ConfigurationSection kitSection) {
+        return kitSerialization.toSerializedKit(load(kitSection), problemReporter);
     }
 
     private KitDefinition loadTypedKit(ConfigurationSection kitSection) {
@@ -53,7 +61,7 @@ public final class KitConfigurationLoader {
         for (String slotKey : armorSection.getKeys(false)) {
             Optional<KitEquipmentSlot> equipmentSlot = KitEquipmentSlot.findByKey(slotKey);
             if (equipmentSlot.isEmpty()) {
-                logger.warning("Unknown armor slot in kit configuration: " + slotKey);
+                problemReporter.accept("Unknown armor slot in kit configuration: " + slotKey);
                 continue;
             }
             ConfigurationSection itemSection = armorSection.getConfigurationSection(slotKey);
@@ -61,7 +69,7 @@ public final class KitConfigurationLoader {
                 continue;
             }
             readKitItem(itemSection.getValues(false), itemSection)
-                    .ifPresent(item -> armorItems.put(equipmentSlot.get(), item.toItemStack()));
+                    .ifPresent(item -> armorItems.put(equipmentSlot.get(), itemStackFactory.apply(item)));
         }
         return armorItems;
     }
@@ -77,11 +85,12 @@ public final class KitConfigurationLoader {
             }
             int slotIndex = inventoryItems.size();
             if (slotIndex >= SerializedKit.INVENTORY_SLOT_COUNT) {
-                logger.warning("The kit configuration holds more than " + SerializedKit.INVENTORY_SLOT_COUNT
+                problemReporter.accept("The kit configuration holds more than " + SerializedKit.INVENTORY_SLOT_COUNT
                         + " items, the ones beyond that do not fit into an inventory and are skipped");
                 break;
             }
-            readKitItem(itemValues, null).ifPresent(item -> inventoryItems.put(slotIndex, item.toItemStack()));
+            readKitItem(itemValues, null)
+                    .ifPresent(item -> inventoryItems.put(slotIndex, itemStackFactory.apply(item)));
         }
         return inventoryItems;
     }
@@ -89,12 +98,12 @@ public final class KitConfigurationLoader {
     private Optional<KitItem> readKitItem(Map<?, ?> itemValues, ConfigurationSection itemSection) {
         Object rawMaterial = itemValues.get("material");
         if (rawMaterial == null) {
-            logger.warning("Kit item without material found, skipping it");
+            problemReporter.accept("Kit item without material found, skipping it");
             return Optional.empty();
         }
         Material material = Material.matchMaterial(rawMaterial.toString());
         if (material == null) {
-            logger.warning("Unknown material in kit configuration: " + rawMaterial);
+            problemReporter.accept("Unknown material in kit configuration: " + rawMaterial);
             return Optional.empty();
         }
         int amount = itemValues.get("amount") instanceof Number number ? number.intValue() : 1;
@@ -119,7 +128,7 @@ public final class KitConfigurationLoader {
         enchantmentValues.forEach((rawKey, rawLevel) -> {
             Enchantment enchantment = resolveEnchantment(rawKey.toString());
             if (enchantment == null) {
-                logger.warning("Unknown enchantment in kit configuration: " + rawKey);
+                problemReporter.accept("Unknown enchantment in kit configuration: " + rawKey);
                 return;
             }
             int level = rawLevel instanceof Number number ? number.intValue() : 1;

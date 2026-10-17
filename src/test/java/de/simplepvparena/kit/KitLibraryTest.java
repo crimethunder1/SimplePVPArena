@@ -22,7 +22,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 class KitLibraryTest {
 
     private static final String UNDECODABLE_LABEL = "broken";
-    private static final String NAME_RULE_HINT = "use 1 to 32 letters, digits, - and _";
+    private static final String NAME_RULE_HINT = "a kit name has 1 to 32 letters, digits, hyphens or underscores";
 
     private final InMemoryKitLibraryStorage storage = new InMemoryKitLibraryStorage();
     private final KitService kitService = new KitService();
@@ -94,19 +94,51 @@ class KitLibraryTest {
     }
 
     @Test
+    void acceptsLettersAndDigitsOfEveryScript() {
+        for (String kitName : List.of("Bogenschütze", "Ärger", "ß-Kit", "日本語", "Лучник", "a-b", "a_b", "٣",
+                "ü".repeat(32), "\uD835\uDD04".repeat(32))) {
+            assertEquals(Optional.empty(), KitLibrary.findNameRejection(kitName), kitName);
+        }
+    }
+
+    @Test
+    void createsAKitWithUmlautsAndKeepsTheNameAsItWasTyped() {
+        kitLibrary.createKit("Bogenschütze", FakeSerializedKits.carrying("bow"));
+
+        assertEquals(List.of("Bogenschütze"), kitLibrary.getKitNames());
+        assertEquals(Optional.of("Bogenschütze"), kitLibrary.getDefaultKitName());
+        assertEquals("Bogenschütze", kitLibrary.findKit("BOGENSCHÜTZE").orElseThrow().name());
+        assertEquals(Optional.of("Bogenschütze"), storage.lastSavedLibrary().defaultKitName());
+    }
+
+    @Test
+    void refusesANameWithUmlautsThatDiffersFromAnExistingOneOnlyInItsCase() {
+        kitLibrary.createKit("ärger", FakeSerializedKits.carrying("bow"));
+
+        IllegalArgumentException failure = assertThrows(IllegalArgumentException.class,
+                () -> kitLibrary.createKit("ÄRGER", FakeSerializedKits.carrying("sword")));
+
+        assertEquals("A kit named ärger exists already", failure.getMessage());
+        assertEquals(Optional.of("A kit named ärger exists already"), kitLibrary.findCreationRejection("Ärger"));
+        assertTrue(kitLibrary.isDefaultKit("ÄRGER"));
+        assertEquals(List.of("ärger"), kitLibrary.getKitNames());
+        assertEquals(1, storage.savedLibraries().size());
+    }
+
+    @Test
     void refusesAnEmptyNameAndNamesTheRule() {
         for (String kitName : List.of("", "   ")) {
-            assertEquals(Optional.of("A kit needs a name of 1 to 32 letters, digits, - and _"),
-                    KitLibrary.findNameRejection(kitName));
+            assertEquals(Optional.of("A kit needs a name, a kit name has 1 to 32 letters, digits, hyphens or "
+                    + "underscores"), KitLibrary.findNameRejection(kitName));
         }
-        assertEquals(Optional.of("A kit needs a name of 1 to 32 letters, digits, - and _"),
-                KitLibrary.findNameRejection(null));
+        assertEquals(Optional.of("A kit needs a name, a kit name has 1 to 32 letters, digits, hyphens or "
+                + "underscores"), KitLibrary.findNameRejection(null));
     }
 
     @Test
     void refusesANameThatIsTooLongOrHoldsOtherCharactersAndNamesTheRule() {
-        for (String kitName : List.of("a".repeat(33), "two words", "dot.ted", "colon:", "slash/", "Bogenschütze",
-                "tab\tname")) {
+        for (String kitName : List.of("a".repeat(33), "ü".repeat(33), "\uD835\uDD04".repeat(33), "two words",
+                "dot.ted", "colon:", "slash/", "bow\uD83C\uDFF9", "\uD83D\uDE00", "tab\tname", " Archer")) {
             IllegalArgumentException failure = assertThrows(IllegalArgumentException.class,
                     () -> kitLibrary.createKit(kitName, FakeSerializedKits.carrying("bow")), kitName);
 

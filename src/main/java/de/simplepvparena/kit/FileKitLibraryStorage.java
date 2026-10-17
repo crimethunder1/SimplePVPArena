@@ -54,7 +54,10 @@ public final class FileKitLibraryStorage implements KitLibraryStorage {
     public KitLibraryLookup find() {
         String fileName = libraryFile.getFileName().toString();
         if (!Files.isRegularFile(libraryFile)) {
-            return KitLibraryLookup.missing(fileName);
+            Path brokenFile = brokenFileOf(libraryFile);
+            return Files.exists(brokenFile)
+                    ? KitLibraryLookup.setAside(brokenFile.getFileName().toString())
+                    : KitLibraryLookup.missing(fileName);
         }
         try {
             return KitLibraryLookup.found(read(libraryFile), fileName);
@@ -148,8 +151,12 @@ public final class FileKitLibraryStorage implements KitLibraryStorage {
         }
     }
 
+    private static Path brokenFileOf(Path file) {
+        return file.resolveSibling(file.getFileName() + BROKEN_FILE_EXTENSION);
+    }
+
     private static String moveAside(Path file) {
-        Path brokenFile = file.resolveSibling(file.getFileName() + BROKEN_FILE_EXTENSION);
+        Path brokenFile = brokenFileOf(file);
         try {
             Files.move(file, brokenFile, StandardCopyOption.REPLACE_EXISTING);
             return brokenFile.getFileName().toString();

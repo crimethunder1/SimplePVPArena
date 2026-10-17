@@ -114,6 +114,53 @@ class FileKitLibraryStorageTest {
     }
 
     @Test
+    void reportsAFileSetAsideAtAnEarlierStartWhenTheFileIsMissing(@TempDir Path pluginFolder) throws IOException {
+        Files.writeString(pluginFolder.resolve(BROKEN_FILE_NAME), "the broken file", StandardCharsets.UTF_8);
+
+        KitLibraryLookup lookup = storageIn(pluginFolder).find();
+
+        assertEquals(KitLibraryLookup.Outcome.SET_ASIDE, lookup.outcome());
+        assertEquals(BROKEN_FILE_NAME, lookup.fileName());
+        assertTrue(lookup.savedKitLibrary().isEmpty());
+        assertEquals(Optional.empty(), lookup.failureReason());
+        assertEquals("the broken file", Files.readString(pluginFolder.resolve(BROKEN_FILE_NAME)));
+        assertEquals(List.of(BROKEN_FILE_NAME), fileNamesIn(pluginFolder));
+    }
+
+    @Test
+    void readsTheFileAndLeavesAFileSetAsideAtAnEarlierStartAlone(@TempDir Path pluginFolder) throws IOException {
+        FileKitLibraryStorage storage = storageIn(pluginFolder);
+        storage.save(threeKitLibrary());
+        Files.writeString(pluginFolder.resolve(BROKEN_FILE_NAME), "the broken file", StandardCharsets.UTF_8);
+
+        KitLibraryLookup lookup = storage.find();
+
+        assertEquals(KitLibraryLookup.Outcome.FOUND, lookup.outcome());
+        assertEquals(Optional.of(threeKitLibrary()), lookup.savedKitLibrary());
+        assertEquals(List.of(FileKitLibraryStorage.FILE_NAME, BROKEN_FILE_NAME), fileNamesIn(pluginFolder));
+    }
+
+    @Test
+    void readsAFileSetAsideOnceItIsRenamedBack(@TempDir Path pluginFolder) throws IOException {
+        FileKitLibraryStorage storage = storageIn(pluginFolder);
+        storage.save(threeKitLibrary());
+        Path libraryFile = pluginFolder.resolve(FileKitLibraryStorage.FILE_NAME);
+        Files.writeString(libraryFile, "format-version: 1\nkits: [\n" + Files.readString(libraryFile),
+                StandardCharsets.UTF_8);
+        assertEquals(KitLibraryLookup.Outcome.BROKEN, storage.find().outcome());
+        Path brokenFile = pluginFolder.resolve(BROKEN_FILE_NAME);
+        Files.writeString(brokenFile, Files.readString(brokenFile).replace("format-version: 1\nkits: [\n", ""),
+                StandardCharsets.UTF_8);
+        assertEquals(KitLibraryLookup.Outcome.SET_ASIDE, storage.find().outcome());
+
+        Files.move(brokenFile, libraryFile);
+        KitLibraryLookup lookup = storage.find();
+
+        assertEquals(KitLibraryLookup.Outcome.FOUND, lookup.outcome());
+        assertEquals(Optional.of(threeKitLibrary()), lookup.savedKitLibrary());
+    }
+
+    @Test
     void movesAFileItCannotParseAside(@TempDir Path pluginFolder) throws IOException {
         writeLibraryFile(pluginFolder, "format-version: 1\nkits: [\n");
 

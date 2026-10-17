@@ -46,6 +46,8 @@ import de.simplepvparena.kit.BukkitItemStackCodec;
 import de.simplepvparena.kit.BukkitKitItemSerializer;
 import de.simplepvparena.kit.FileKitLibraryStorage;
 import de.simplepvparena.kit.FilePlayerStateSnapshotStorage;
+import de.simplepvparena.kit.KitConfigurationLoader;
+import de.simplepvparena.kit.KitItem;
 import de.simplepvparena.kit.KitItemSerializer;
 import de.simplepvparena.kit.KitLibrary;
 import de.simplepvparena.kit.KitLibraryLoader;
@@ -158,7 +160,9 @@ public final class SimplePVPArenaPlugin extends JavaPlugin {
                 new File(getDataFolder(), FileKitLibraryStorage.FILE_NAME).toPath(), getLogger()::warning);
         kitLibrary = new KitLibrary(kitLibraryStorage, kitService, kitItemSerializer, getLogger()::warning,
                 adminNotifier::notifyAdmins);
-        new KitLibraryLoader(kitLibraryStorage, kitLibrary, adminNotifier::notifyAdmins, getLogger()::warning)
+        new KitLibraryLoader(kitLibraryStorage, kitLibrary,
+                new KitConfigurationLoader(getLogger()::warning, kitItemSerializer, KitItem::toItemStack),
+                adminNotifier::notifyAdmins, getLogger()::warning)
                 .load(getConfig().getConfigurationSection(PluginSettings.KIT_SECTION_PATH));
         kitSaveService = new KitSaveService(kitLibrary, kitItemSerializer);
 

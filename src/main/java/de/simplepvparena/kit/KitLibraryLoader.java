@@ -11,13 +11,16 @@ public final class KitLibraryLoader {
 
     private final KitLibraryStorage storage;
     private final KitLibrary kitLibrary;
+    private final KitConfigurationLoader kitConfigurationLoader;
     private final Consumer<String> adminNotifier;
     private final Consumer<String> problemReporter;
 
-    public KitLibraryLoader(KitLibraryStorage storage, KitLibrary kitLibrary, Consumer<String> adminNotifier,
+    public KitLibraryLoader(KitLibraryStorage storage, KitLibrary kitLibrary,
+                            KitConfigurationLoader kitConfigurationLoader, Consumer<String> adminNotifier,
                             Consumer<String> problemReporter) {
         this.storage = Objects.requireNonNull(storage, "storage");
         this.kitLibrary = Objects.requireNonNull(kitLibrary, "kitLibrary");
+        this.kitConfigurationLoader = Objects.requireNonNull(kitConfigurationLoader, "kitConfigurationLoader");
         this.adminNotifier = Objects.requireNonNull(adminNotifier, "adminNotifier");
         this.problemReporter = Objects.requireNonNull(problemReporter, "problemReporter");
     }
@@ -34,15 +37,34 @@ public final class KitLibraryLoader {
                         + lookup.fileName() + ", there is no kit and every fighter starts a round with an empty "
                         + "kit until a kit is created in the kit menu of /tournament");
             }
+            case SET_ASIDE -> adminNotifier.accept("There is no " + FileKitLibraryStorage.FILE_NAME
+                    + ", the kits lie in " + lookup.fileName() + " because it could not be read at an earlier "
+                    + "start. Repair " + lookup.fileName() + " and rename it to " + FileKitLibraryStorage.FILE_NAME
+                    + ", or delete it if its kits are to be discarded, then the next start takes the kit section of "
+                    + "config.yml over");
         }
     }
 
     private void migrate(ConfigurationSection legacyKitSection) {
-        if (!SerializedKit.isWrittenIn(legacyKitSection)) {
+        if (SerializedKit.isWrittenIn(legacyKitSection)) {
+            takeOver(SerializedKit.read(legacyKitSection,
+                    problem -> problemReporter.accept("Kit section of config.yml: " + problem)));
             return;
         }
-        SerializedKit legacyKit = SerializedKit.read(legacyKitSection,
-                problem -> problemReporter.accept("Kit section of config.yml: " + problem));
+        if (legacyKitSection == null || legacyKitSection.getKeys(false).isEmpty()) {
+            return;
+        }
+        SerializedKit typedKit = kitConfigurationLoader.loadSerializedKit(legacyKitSection);
+        if (typedKit.isEmpty()) {
+            adminNotifier.accept("The kit section of config.yml holds no item that could be read, so no kit was "
+                    + "taken over into " + FileKitLibraryStorage.FILE_NAME + ". There is no kit and every fighter "
+                    + "starts a round with an empty kit until a kit is created in the kit menu of /tournament");
+            return;
+        }
+        takeOver(typedKit);
+    }
+
+    private void takeOver(SerializedKit legacyKit) {
         if (legacyKit.isEmpty()) {
             return;
         }

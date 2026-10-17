@@ -107,7 +107,7 @@ class KitAdminMenuClickTest {
         assertEquals(1, fixture.pendingChatInputCount());
         assertEquals(List.of(
                 "Type the name of the new kit in chat",
-                "A kit name has 1 to 32 letters, digits, - and _",
+                "A kit name has 1 to 32 letters, digits, hyphens or underscores",
                 "Your inventory as it is then becomes the kit",
                 "Type cancel to abort, the request expires in 60 seconds"), fixture.messages());
         assertEquals(0, fixture.kitLibrary().getKitCount());

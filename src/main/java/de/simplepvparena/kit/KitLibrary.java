@@ -9,14 +9,12 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Consumer;
-import java.util.regex.Pattern;
 
 public final class KitLibrary {
 
     public static final int MAXIMUM_NAME_LENGTH = 32;
-    public static final String NAME_RULE = "1 to " + MAXIMUM_NAME_LENGTH + " letters, digits, - and _";
-
-    private static final Pattern NAME_PATTERN = Pattern.compile("[A-Za-z0-9_-]{1," + MAXIMUM_NAME_LENGTH + "}");
+    public static final String NAME_RULE = "1 to " + MAXIMUM_NAME_LENGTH
+            + " letters, digits, hyphens or underscores";
 
     private final KitLibraryStorage storage;
     private final KitService kitService;
@@ -38,10 +36,10 @@ public final class KitLibrary {
 
     public static Optional<String> findNameRejection(String kitName) {
         if (kitName == null || kitName.isBlank()) {
-            return Optional.of("A kit needs a name of " + NAME_RULE);
+            return Optional.of("A kit needs a name, a kit name has " + NAME_RULE);
         }
-        if (!NAME_PATTERN.matcher(kitName).matches()) {
-            return Optional.of("The kit name " + kitName + " is not allowed, use " + NAME_RULE);
+        if (!isAllowedName(kitName)) {
+            return Optional.of("The kit name " + kitName + " is not allowed, a kit name has " + NAME_RULE);
         }
         return Optional.empty();
     }
@@ -227,6 +225,16 @@ public final class KitLibrary {
 
     private void handOutDefaultKit() {
         kitService.setKitDefinition(findDefaultKit().map(LibraryKit::kitDefinition).orElse(KitDefinition.empty()));
+    }
+
+    private static boolean isAllowedName(String kitName) {
+        int nameLength = kitName.codePointCount(0, kitName.length());
+        return nameLength >= 1 && nameLength <= MAXIMUM_NAME_LENGTH
+                && kitName.codePoints().allMatch(KitLibrary::isAllowedNameCharacter);
+    }
+
+    private static boolean isAllowedNameCharacter(int codePoint) {
+        return Character.isLetterOrDigit(codePoint) || codePoint == '-' || codePoint == '_';
     }
 
     private static String describeUnknownKit(String kitName) {

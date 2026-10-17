@@ -20,7 +20,7 @@ match:
     second-team: aqua
 
 # Kits live in kits.yml since this version and are created, replaced and deleted in the kit menu of /tournament.
-# A kit section that an older version saved here is taken over into kits.yml once and is not read afterwards.
+# A kit section of an older version, saved from the menu or written by hand, is taken over into kits.yml once and is not read afterwards.
 
 # Cleaning and protection of the fight area.
 arena:

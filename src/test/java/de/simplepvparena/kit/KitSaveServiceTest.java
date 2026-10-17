@@ -122,8 +122,8 @@ class KitSaveServiceTest {
 
         assertEquals(List.of("A kit named Archer exists already"),
                 kitSaveService.createFromInventory(createPlayer(), "archer").describe());
-        assertEquals(List.of("The kit name my kit is not allowed, use 1 to 32 letters, digits, - and _"),
-                kitSaveService.createFromInventory(createPlayer(), "my kit").describe());
+        assertEquals(List.of("The kit name my kit is not allowed, a kit name has 1 to 32 letters, digits, "
+                + "hyphens or underscores"), kitSaveService.createFromInventory(createPlayer(), "my kit").describe());
         assertEquals(List.of("Archer"), kitLibrary.getKitNames());
     }
 

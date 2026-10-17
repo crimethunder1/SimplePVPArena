@@ -62,6 +62,21 @@ class KitAdminMenuChatInputTest {
     }
 
     @Test
+    void createsAKitWhoseNameHoldsUmlauts() {
+        fixture.placeInAdminInventory(0, new EncodableItemStack("bow"));
+        askForTheNameOfTheNewKit();
+
+        fixture.typeInChat("Bogenschütze");
+        fixture.runNextTick();
+
+        assertEquals(List.of("Bogenschütze"), fixture.kitLibrary().getKitNames());
+        assertEquals(Optional.of("Bogenschütze"), fixture.kitLibrary().getDefaultKitName());
+        assertEquals("Kit Bogenschütze saved: 1 item, 0 worn and 1 in the inventory", fixture.messages().get(0));
+        assertKitListReopened(0, "Kits (page 1)");
+        assertEquals("Bogenschütze", fixture.lastMenu().findTile(0).orElseThrow().displayName());
+    }
+
+    @Test
     void reopensTheKitListOnThePageTheNameWasAskedFrom() {
         fixture.createNumberedKits(46);
         fixture.placeInAdminInventory(0, new EncodableItemStack("axe"));
@@ -86,8 +101,8 @@ class KitAdminMenuChatInputTest {
         fixture.typeInChat("my kit");
         fixture.runNextTick();
 
-        assertEquals(List.of("The kit name my kit is not allowed, use 1 to 32 letters, digits, - and _"),
-                fixture.messages());
+        assertEquals(List.of("The kit name my kit is not allowed, a kit name has 1 to 32 letters, digits, "
+                + "hyphens or underscores"), fixture.messages());
         assertEquals(0, fixture.kitLibrary().getKitCount());
         assertEquals(List.of(), fixture.kitStorage().savedLibraries());
         assertKitListReopened(0, "Kits (page 1)");
@@ -102,7 +117,8 @@ class KitAdminMenuChatInputTest {
         fixture.runNextTick();
 
         assertEquals(List.of("The kit name " + "a".repeat(33)
-                + " is not allowed, use 1 to 32 letters, digits, - and _"), fixture.messages());
+                + " is not allowed, a kit name has 1 to 32 letters, digits, hyphens or underscores"),
+                fixture.messages());
         assertEquals(0, fixture.kitLibrary().getKitCount());
         assertKitListReopened(0, "Kits (page 1)");
     }

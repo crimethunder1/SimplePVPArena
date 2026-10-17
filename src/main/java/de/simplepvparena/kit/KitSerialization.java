@@ -64,4 +64,28 @@ public final class KitSerialization {
         });
         return new KitDefinition(equipmentItems, inventoryItems);
     }
+
+    public SerializedKit toSerializedKit(KitDefinition kitDefinition, Consumer<String> problemReporter) {
+        Map<KitEquipmentSlot, String> equipmentItems = new EnumMap<>(KitEquipmentSlot.class);
+        kitDefinition.equipmentItems().forEach((equipmentSlot, itemStack) -> {
+            Optional<String> storedItem = encode(itemStack);
+            if (storedItem.isEmpty()) {
+                problemReporter.accept("The kit item of the slot " + equipmentSlot.getConfigurationKey()
+                        + " could not be stored and is left out of the kit");
+                return;
+            }
+            equipmentItems.put(equipmentSlot, storedItem.get());
+        });
+        Map<Integer, String> inventoryItems = new TreeMap<>();
+        kitDefinition.inventoryItems().forEach((slotIndex, itemStack) -> {
+            Optional<String> storedItem = encode(itemStack);
+            if (storedItem.isEmpty()) {
+                problemReporter.accept("The kit item of the inventory slot " + slotIndex
+                        + " could not be stored and is left out of the kit");
+                return;
+            }
+            inventoryItems.put(slotIndex, storedItem.get());
+        });
+        return new SerializedKit(equipmentItems, inventoryItems);
+    }
 }

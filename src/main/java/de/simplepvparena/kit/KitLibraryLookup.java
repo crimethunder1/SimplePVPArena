@@ -9,7 +9,8 @@ public record KitLibraryLookup(Outcome outcome, Optional<SavedKitLibrary> savedK
     public enum Outcome {
         FOUND,
         MISSING,
-        BROKEN
+        BROKEN,
+        SET_ASIDE
     }
 
     public KitLibraryLookup {
@@ -29,5 +30,9 @@ public record KitLibraryLookup(Outcome outcome, Optional<SavedKitLibrary> savedK
 
     public static KitLibraryLookup broken(String fileName, String failureReason) {
         return new KitLibraryLookup(Outcome.BROKEN, Optional.empty(), fileName, Optional.of(failureReason));
+    }
+
+    public static KitLibraryLookup setAside(String fileName) {
+        return new KitLibraryLookup(Outcome.SET_ASIDE, Optional.empty(), fileName, Optional.empty());
     }
 }
