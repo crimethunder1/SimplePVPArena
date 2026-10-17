@@ -55,6 +55,11 @@ public final class AdminMenuHolder implements InventoryHolder {
                 null, pageIndex);
     }
 
+    public static AdminMenuHolder teamMembers(String teamName, int pageIndex) {
+        return new AdminMenuHolder(AdminMenuType.TEAM_MEMBERS, Objects.requireNonNull(teamName, "teamName"),
+                null, pageIndex);
+    }
+
     public static AdminMenuHolder match() {
         return new AdminMenuHolder(AdminMenuType.MATCH, null, null, 0);
     }

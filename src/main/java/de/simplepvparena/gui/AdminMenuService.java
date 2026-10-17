@@ -88,7 +88,9 @@ public final class AdminMenuService {
         Objects.requireNonNull(configurationReloader, "configurationReloader");
         Objects.requireNonNull(teamSizeWriter, "teamSizeWriter");
         TeamActionsAdminMenu teamActionsAdminMenu = new TeamActionsAdminMenu(navigator, teamRegistry,
-                teamConfigurationSaver);
+                teamMemberLookup, chatInputService, teamConfigurationSaver, tournamentManager);
+        TeamMembersAdminMenu teamMembersAdminMenu = new TeamMembersAdminMenu(navigator, teamRegistry,
+                teamConfigurationSaver, tournamentManager);
         ForceResultAdminMenu forceResultAdminMenu = new ForceResultAdminMenu(navigator, tournamentManager,
                 matchService);
         WaitingMatchesAdminMenu waitingMatchesAdminMenu = new WaitingMatchesAdminMenu(navigator, tournamentManager,
@@ -121,6 +123,7 @@ public final class AdminMenuService {
         navigator.register(AdminMenuType.KIT_CHOICE, kitChoiceAdminMenu);
         navigator.register(AdminMenuType.TEAMS, teamsAdminMenu);
         navigator.register(AdminMenuType.TEAM_ACTIONS, teamActionsAdminMenu);
+        navigator.register(AdminMenuType.TEAM_MEMBERS, teamMembersAdminMenu);
         navigator.register(AdminMenuType.MATCH, matchAdminMenu);
         navigator.register(AdminMenuType.FORCE_RESULT, forceResultAdminMenu);
         navigator.register(AdminMenuType.WAITING_MATCHES, waitingMatchesAdminMenu);

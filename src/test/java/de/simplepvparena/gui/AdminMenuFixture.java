@@ -306,6 +306,10 @@ final class AdminMenuFixture {
         }
     }
 
+    TeamMember knownPlayer(String playerName) {
+        return findKnownPlayer(playerName).orElseThrow();
+    }
+
     void configureArena() {
         storeTheFightArea();
         arenaRegistry.getArena().setTribuneSpawn(new PositionSnapshot(WORLD_NAME,

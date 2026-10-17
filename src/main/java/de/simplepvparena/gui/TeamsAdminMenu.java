@@ -15,7 +15,6 @@ import org.bukkit.entity.Player;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Locale;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.OptionalInt;
@@ -161,8 +160,8 @@ final class TeamsAdminMenu implements AdminMenu {
     }
 
     private void changeTeamSize(Player player, AdminMenuHolder holder, int newTeamSize) {
-        Optional<String> rejection = TeamSizeSetting.findChangeRejection(newTeamSize,
-                tournamentInProgress.getAsBoolean(), teamRegistry);
+        Optional<String> rejection = TeamSizeSetting.findChangeRejection(teamSizeSetting.getTeamSize(),
+                newTeamSize, tournamentInProgress.getAsBoolean(), teamRegistry);
         if (rejection.isPresent()) {
             TournamentMessages.sendError(player, rejection.get());
             return;
@@ -227,7 +226,7 @@ final class TeamsAdminMenu implements AdminMenu {
         for (String playerName : request.getPlayerNames()) {
             Optional<TeamMember> member = teamMemberLookup.find(playerName);
             if (member.isEmpty()) {
-                TournamentMessages.sendError(player, describeUnknownPlayer(playerName));
+                TournamentMessages.sendError(player, AdminMenuReplies.describeUnknownPlayer(playerName));
                 return;
             }
             members.add(member.get());
@@ -242,21 +241,9 @@ final class TeamsAdminMenu implements AdminMenu {
         }
     }
 
-    private String describeUnknownPlayer(String playerName) {
-        return "Unknown player " + playerName
-                + TournamentMessages.LINE_BREAK + "The player has to be online or known to the server";
-    }
-
     private String describeRegistrationFailure(String teamName, RuntimeException failure) {
         return "Team " + teamName + " could not be registered"
-                + TournamentMessages.LINE_BREAK + startWithCapitalLetter(failure.getMessage());
-    }
-
-    private String startWithCapitalLetter(String text) {
-        if (text.isEmpty()) {
-            return text;
-        }
-        return text.substring(0, 1).toUpperCase(Locale.ROOT) + text.substring(1);
+                + TournamentMessages.LINE_BREAK + AdminMenuReplies.startWithCapitalLetter(failure.getMessage());
     }
 
     private List<Team> collectTeams() {

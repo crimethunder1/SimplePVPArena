@@ -9,6 +9,7 @@ public enum AdminMenuType {
     KIT_CHOICE,
     TEAMS,
     TEAM_ACTIONS,
+    TEAM_MEMBERS,
     MATCH,
     FORCE_RESULT,
     WAITING_MATCHES,

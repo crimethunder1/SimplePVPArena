@@ -19,6 +19,8 @@ public interface LiveConfiguration {
 
     void setTeamSize(int teamSize);
 
+    void setTeamSizeAtStart(int teamSize);
+
     void setArenaCleaningBlocksPerTick(int blocksPerTick);
 
     void setArenaBaselineBlocksPerTick(int blocksPerTick);

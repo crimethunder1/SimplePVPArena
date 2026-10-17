@@ -27,15 +27,19 @@ public final class ConfigurationReloadService {
     }
 
     public ConfigurationReloadReport applyStoredConfiguration() {
-        List<String> problems = new ArrayList<>();
-        ConfigurationSection configuration = configurationSource.get();
-        PluginSettings.read(configuration, problem -> collect(problems, problem)).applyTo(liveConfiguration);
-        return ConfigurationReloadReport.of(problems);
+        return apply(settings -> settings.applyAtStartTo(liveConfiguration));
     }
 
     public ConfigurationReloadReport reloadFromFile() {
         configurationFileReloader.run();
-        return applyStoredConfiguration();
+        return apply(settings -> settings.applyTo(liveConfiguration));
+    }
+
+    private ConfigurationReloadReport apply(Consumer<PluginSettings> application) {
+        List<String> problems = new ArrayList<>();
+        ConfigurationSection configuration = configurationSource.get();
+        application.accept(PluginSettings.read(configuration, problem -> collect(problems, problem)));
+        return ConfigurationReloadReport.of(problems);
     }
 
     private void collect(List<String> problems, String problem) {

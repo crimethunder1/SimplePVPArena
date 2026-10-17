@@ -102,7 +102,7 @@ class TeamSizeSettingsTest {
                 new RecordingLiveConfiguration(), problems::add).reloadFromFile().describe();
 
         assertTrue(lines.contains("  the team size, unless a tournament is in progress or a team has more players "
-                + "than the new size"), lines.toString());
+                + "than a smaller new size"), lines.toString());
     }
 
     @Test
@@ -189,7 +189,8 @@ class TeamSizeSettingsTest {
     }
 
     @Test
-    void theStartKeepsTwoWhenTheTeamsOfTeamsYmlAreLargerThanTheConfiguredTeamSize(@TempDir Path dataFolder)
+    void theStartTakesTheConfiguredTeamSizeWhenTheTeamsOfTeamsYmlAreLargerAndWarnsWithoutDroppingATeam(
+            @TempDir Path dataFolder)
             throws IOException {
         Path teamsFile = dataFolder.resolve("teams.yml");
         Files.writeString(teamsFile, """
@@ -211,10 +212,75 @@ class TeamSizeSettingsTest {
 
         assertTrue(report.isClean(), report.problems().toString());
         assertEquals(List.of("Bravo"), teamRegistry.getTeamNames(), "the start never drops a team");
-        assertEquals(2, teamSizeSetting.getTeamSize());
-        assertEquals(List.of("1 team has more than 1 player: Bravo (Steve, Alex, Notch). Remove it first. "
-                + "The team size 1 of match.team-size in config.yml was not taken over, the team size stays "
-                + "2 (2 versus 2)"), logLines);
+        assertEquals(1, teamSizeSetting.getTeamSize());
+        String warning = "1 team has more than 1 player: Bravo (3). The team size 1 of match.team-size in config.yml "
+                + "applies anyway since the start, these teams keep their players and every online player of them "
+                + "fights";
+        assertEquals(List.of(warning), logLines);
+        assertEquals(List.of(warning), adminNotices);
+    }
+
+    @Test
+    void theStartDuringARestoredPausedTournamentTakesTheConfiguredTeamSizeOfFour() {
+        tournamentInProgress = true;
+        registerTeam("Alpha", 4);
+        registerTeam("Bravo", 2);
+
+        ConfigurationReloadReport report = new ConfigurationReloadService(() -> configurationWithTeamSize(4),
+                () -> { }, createLiveConfiguration(), problems::add).applyStoredConfiguration();
+
+        assertTrue(report.isClean(), report.problems().toString());
+        assertEquals(4, teamSizeSetting.getTeamSize());
+        assertNoWarning();
+        assertEquals(List.of("Alpha", "Bravo"), teamRegistry.getTeamNames());
+        assertEquals("Alpha1, Alpha2, Alpha3, Alpha4",
+                teamRegistry.findTeam("Alpha").orElseThrow().getMemberNamesJoined());
+    }
+
+    @Test
+    void theStartDuringARestoredPausedTournamentWarnsAboutALargerTeamWithoutDroppingIt() {
+        tournamentInProgress = true;
+        registerTeam("Alpha", 4);
+        registerTeam("Bravo", 2);
+
+        new ConfigurationReloadService(() -> configurationWithTeamSize(3), () -> { }, createLiveConfiguration(),
+                problems::add).applyStoredConfiguration();
+
+        assertEquals(3, teamSizeSetting.getTeamSize());
+        String warning = "1 team has more than 3 players: Alpha (4). The team size 3 of match.team-size in config.yml "
+                + "applies anyway since the start, these teams keep their players and every online player of them "
+                + "fights";
+        assertEquals(List.of(warning), logLines);
+        assertEquals(List.of(warning), adminNotices);
+        assertEquals(List.of("Alpha", "Bravo"), teamRegistry.getTeamNames());
+        assertEquals(4, teamRegistry.findTeam("Alpha").orElseThrow().getMembers().size());
+    }
+
+    @Test
+    void aReloadAfterTheStartStillKeepsTheTeamSizeWhileATournamentIsInProgress() {
+        tournamentInProgress = true;
+        registerTeam("Alpha", 4);
+        MemoryConfiguration configuration = configurationWithTeamSize(4);
+        ConfigurationReloadService reloadService = new ConfigurationReloadService(() -> configuration, () -> { },
+                createLiveConfiguration(), problems::add);
+        reloadService.applyStoredConfiguration();
+        configuration.set(PluginSettings.TEAM_SIZE_PATH, 5);
+
+        reloadService.reloadFromFile();
+
+        assertEquals(4, teamSizeSetting.getTeamSize());
+        assertEquals(List.of("The team size cannot be changed while a tournament is in progress. The team size 5 of "
+                + "match.team-size in config.yml was not taken over, the team size stays 4 (4 versus 4)"), logLines);
+    }
+
+    @Test
+    void aReloadTakesALargerTeamSizeEvenWhenATeamHasMorePlayersThanTheNewSize() {
+        registerTeam("Alpha", 4);
+
+        reloadServiceFor(configurationWithTeamSize(3)).reloadFromFile();
+
+        assertEquals(3, teamSizeSetting.getTeamSize());
+        assertNoWarning();
     }
 
     @Test

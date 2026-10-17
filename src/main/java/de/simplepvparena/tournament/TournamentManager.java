@@ -52,6 +52,11 @@ public final class TournamentManager implements MatchCompletionHandler {
     static final String DELETE_FAILURE_WARNING = "The saved tournament state could not be removed, the next server "
             + "start would restore it: ";
 
+    public static final String RENAME_IN_TOURNAMENT_REJECTION = "A team cannot be renamed while a tournament is in "
+            + "progress, the bracket keeps its name";
+
+    private static final String CHANGE_BEFORE_MATCH_END_REJECTION = ", it cannot be changed before the match is over";
+
     private final Plugin plugin;
     private final TeamRegistry teamRegistry;
     private final ArenaRegistry arenaRegistry;
@@ -138,6 +143,34 @@ public final class TournamentManager implements MatchCompletionHandler {
 
     public boolean isKitChoicePending() {
         return kitChoiceService.isPending();
+    }
+
+    public Optional<String> findTeamRenameRejection(String teamName) {
+        if (isTournamentInProgress()) {
+            return Optional.of(RENAME_IN_TOURNAMENT_REJECTION);
+        }
+        return findTeamChangeRejection(teamName);
+    }
+
+    public Optional<String> findTeamChangeRejection(String teamName) {
+        Optional<String> runningMatchRejection = matchService.getActiveMatch()
+                .flatMap(match -> match.findTeamByName(teamName)
+                        .map(team -> "Team " + team.getTeamName() + " is in match " + match.getMatchId()
+                                + CHANGE_BEFORE_MATCH_END_REJECTION));
+        if (runningMatchRejection.isPresent()) {
+            return runningMatchRejection;
+        }
+        return kitChoiceService.getPending()
+                .flatMap(pending -> findBracketTeamName(pending.matchId(), teamName)
+                        .map(bracketTeamName -> "Team " + bracketTeamName + " is waiting for the kit choice of match "
+                                + pending.matchId() + CHANGE_BEFORE_MATCH_END_REJECTION));
+    }
+
+    private Optional<String> findBracketTeamName(String matchId, String teamName) {
+        if (bracket == null || teamName == null) {
+            return Optional.empty();
+        }
+        return bracket.findMatch(matchId).flatMap(bracketMatch -> resolveBracketTeamName(bracketMatch, teamName));
     }
 
     public TournamentOperationResult startTournament(boolean allowUnevenTeamCount) {
@@ -364,20 +397,10 @@ public final class TournamentManager implements MatchCompletionHandler {
 
     private void notifyAboutTeamsOfAnotherSize() {
         int teamSize = teamSizeSetting.getTeamSize();
-        List<Team> smallerTeams = TeamSizeSetting.findTeamsSmallerThan(teamSize, teamRegistry);
-        if (!smallerTeams.isEmpty()) {
-            adminNotifier.notifyAdmins(TeamSizeSetting.describeTeams(smallerTeams, "fewer than", teamSize,
-                    TournamentManager::describeMemberCount) + ". " + SMALLER_TEAMS_NOTICE);
-        }
-        List<Team> largerTeams = TeamSizeSetting.findTeamsLargerThan(teamSize, teamRegistry);
-        if (!largerTeams.isEmpty()) {
-            adminNotifier.notifyAdmins(TeamSizeSetting.describeTeams(largerTeams, "more than", teamSize,
-                    TournamentManager::describeMemberCount) + ". " + LARGER_TEAMS_NOTICE);
-        }
-    }
-
-    private static String describeMemberCount(Team team) {
-        return String.valueOf(team.getMembers().size());
+        TeamSizeSetting.describeTeamsSmallerThan(teamSize, teamRegistry).ifPresent(smallerTeams ->
+                adminNotifier.notifyAdmins(smallerTeams + ". " + SMALLER_TEAMS_NOTICE));
+        TeamSizeSetting.describeTeamsLargerThan(teamSize, teamRegistry).ifPresent(largerTeams ->
+                adminNotifier.notifyAdmins(largerTeams + ". " + LARGER_TEAMS_NOTICE));
     }
 
     private void warnAboutUnregisteredTeams() {

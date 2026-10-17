@@ -22,6 +22,7 @@ import org.bukkit.configuration.ConfigurationSection;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.Consumer;
+import java.util.function.IntConsumer;
 
 public record PluginSettings(long roundResetDelayTicks,
                              RoundTimeoutSettings roundTimeoutSettings,
@@ -163,12 +164,20 @@ public record PluginSettings(long roundResetDelayTicks,
     }
 
     public void applyTo(LiveConfiguration liveConfiguration) {
+        applyTo(liveConfiguration, liveConfiguration::setTeamSize);
+    }
+
+    public void applyAtStartTo(LiveConfiguration liveConfiguration) {
+        applyTo(liveConfiguration, liveConfiguration::setTeamSizeAtStart);
+    }
+
+    private void applyTo(LiveConfiguration liveConfiguration, IntConsumer teamSizeTarget) {
         liveConfiguration.setRoundResetDelayTicks(roundResetDelayTicks);
         liveConfiguration.setRoundTimeoutSettings(roundTimeoutSettings);
         liveConfiguration.setSuddenDeathDisabledInFinal(suddenDeathDisabledInFinal);
         liveConfiguration.setStartGateDurationSeconds(startGateDurationSeconds);
         liveConfiguration.setTeamColourSettings(teamColourSettings);
-        liveConfiguration.setTeamSize(teamSize);
+        teamSizeTarget.accept(teamSize);
         liveConfiguration.setArenaCleaningBlocksPerTick(arenaCleaningBlocksPerTick);
         liveConfiguration.setArenaBaselineBlocksPerTick(arenaBaselineBlocksPerTick);
         liveConfiguration.setArenaBaselineDepthBelowFloor(arenaBaselineDepthBelowFloor);

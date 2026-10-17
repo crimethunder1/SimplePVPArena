@@ -75,6 +75,11 @@ final class RecordingLiveConfiguration implements LiveConfiguration {
     }
 
     @Override
+    public void setTeamSizeAtStart(int teamSize) {
+        appliedValues.put(TEAM_SIZE, teamSize);
+    }
+
+    @Override
     public void setArenaCleaningBlocksPerTick(int blocksPerTick) {
         appliedValues.put(CLEANING_BLOCKS_PER_TICK, blocksPerTick);
     }

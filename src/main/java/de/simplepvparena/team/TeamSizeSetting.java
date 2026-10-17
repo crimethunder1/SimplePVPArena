@@ -45,13 +45,16 @@ public final class TeamSizeSetting {
         return Team.MINIMUM_MEMBER_COUNT + " to " + teamSize + " players";
     }
 
-    public static Optional<String> findChangeRejection(int newTeamSize, boolean tournamentInProgress,
-                                                       TeamRegistry teamRegistry) {
+    public static Optional<String> findChangeRejection(int currentTeamSize, int newTeamSize,
+                                                       boolean tournamentInProgress, TeamRegistry teamRegistry) {
         if (!isAllowed(newTeamSize)) {
             return Optional.of(ALLOWED_RANGE_REJECTION);
         }
         if (tournamentInProgress) {
             return Optional.of(TOURNAMENT_IN_PROGRESS_REJECTION);
+        }
+        if (newTeamSize >= currentTeamSize) {
+            return Optional.empty();
         }
         List<Team> largerTeams = findTeamsLargerThan(newTeamSize, teamRegistry);
         if (largerTeams.isEmpty()) {
@@ -59,6 +62,22 @@ public final class TeamSizeSetting {
         }
         return Optional.of(describeTeams(largerTeams, "more than", newTeamSize, Team::getMemberNamesJoined)
                 + ". Remove " + (largerTeams.size() == 1 ? "it" : "them") + " first");
+    }
+
+    public static Optional<String> describeTeamsLargerThan(int teamSize, TeamRegistry teamRegistry) {
+        return describeMemberCounts(findTeamsLargerThan(teamSize, teamRegistry), "more than", teamSize);
+    }
+
+    public static Optional<String> describeTeamsSmallerThan(int teamSize, TeamRegistry teamRegistry) {
+        return describeMemberCounts(findTeamsSmallerThan(teamSize, teamRegistry), "fewer than", teamSize);
+    }
+
+    private static Optional<String> describeMemberCounts(List<Team> teams, String sizeComparison, int teamSize) {
+        if (teams.isEmpty()) {
+            return Optional.empty();
+        }
+        return Optional.of(describeTeams(teams, sizeComparison, teamSize,
+                team -> String.valueOf(team.getMembers().size())));
     }
 
     public static List<Team> findTeamsLargerThan(int teamSize, TeamRegistry teamRegistry) {

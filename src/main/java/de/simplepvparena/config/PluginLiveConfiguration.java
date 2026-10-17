@@ -113,8 +113,8 @@ public final class PluginLiveConfiguration implements LiveConfiguration {
         if (teamSize == currentTeamSize) {
             return;
         }
-        Optional<String> rejection = TeamSizeSetting.findChangeRejection(teamSize, tournamentInProgress.getAsBoolean(),
-                teamRegistry);
+        Optional<String> rejection = TeamSizeSetting.findChangeRejection(currentTeamSize, teamSize,
+                tournamentInProgress.getAsBoolean(), teamRegistry);
         if (rejection.isPresent()) {
             String warning = rejection.get() + ". The team size " + teamSize + " of " + PluginSettings.TEAM_SIZE_PATH
                     + " in config.yml was not taken over, the team size stays "
@@ -124,6 +124,21 @@ public final class PluginLiveConfiguration implements LiveConfiguration {
             return;
         }
         teamSizeSetting.setTeamSize(teamSize);
+    }
+
+    @Override
+    public void setTeamSizeAtStart(int teamSize) {
+        if (TeamSizeSetting.isAllowed(teamSize)) {
+            teamSizeSetting.setTeamSize(teamSize);
+        }
+        int appliedTeamSize = teamSizeSetting.getTeamSize();
+        TeamSizeSetting.describeTeamsLargerThan(appliedTeamSize, teamRegistry).ifPresent(largerTeams -> {
+            String warning = largerTeams + ". The team size " + appliedTeamSize + " of "
+                    + PluginSettings.TEAM_SIZE_PATH + " in config.yml applies anyway since the start, these teams "
+                    + "keep their players and every online player of them fights";
+            problemReporter.accept(warning);
+            adminNotifier.accept(warning);
+        });
     }
 
     @Override

@@ -9,7 +9,7 @@ public record ConfigurationReloadReport(List<String> problems) {
             "the round reset delay, the round timeout, the sudden death damage and whether the "
                     + "final is fought without a time limit",
             "the seconds the start gate takes at the beginning of a round",
-            "the team size, unless a tournament is in progress or a team has more players than the new size",
+            "the team size, unless a tournament is in progress or a team has more players than a smaller new size",
             "the cleaning and baseline batch sizes and the particles of a running cleaning",
             "the depth below the floor the next baseline is taken to",
             "the cell limit of the arena calculation",

@@ -62,8 +62,8 @@ class TeamSizeSettingTest {
     @Test
     void allowsEveryTeamSizeFromOneToEightWithoutTeamsAndWithoutATournament() {
         for (int teamSize = 1; teamSize <= 8; teamSize++) {
-            assertEquals(Optional.empty(), TeamSizeSetting.findChangeRejection(teamSize, false, teamRegistry),
-                    "a team size of " + teamSize);
+            assertEquals(Optional.empty(), TeamSizeSetting.findChangeRejection(TeamSizeSetting.DEFAULT_TEAM_SIZE, teamSize,
+                    false, teamRegistry), "a team size of " + teamSize);
         }
     }
 
@@ -71,7 +71,8 @@ class TeamSizeSettingTest {
     void refusesATeamSizeOutsideOfOneToEight() {
         for (int teamSize : new int[] {0, 9}) {
             assertEquals(Optional.of("The team size must lie between 1 and 8 players"),
-                    TeamSizeSetting.findChangeRejection(teamSize, false, teamRegistry), "a team size of " + teamSize);
+                    TeamSizeSetting.findChangeRejection(TeamSizeSetting.DEFAULT_TEAM_SIZE, teamSize, false,
+                            teamRegistry), "a team size of " + teamSize);
         }
     }
 
@@ -79,7 +80,8 @@ class TeamSizeSettingTest {
     void refusesEveryChangeWhileATournamentIsInProgress() {
         for (int teamSize = 1; teamSize <= 8; teamSize++) {
             assertEquals(Optional.of("The team size cannot be changed while a tournament is in progress"),
-                    TeamSizeSetting.findChangeRejection(teamSize, true, teamRegistry), "a team size of " + teamSize);
+                    TeamSizeSetting.findChangeRejection(TeamSizeSetting.DEFAULT_TEAM_SIZE, teamSize, true,
+                            teamRegistry), "a team size of " + teamSize);
         }
     }
 
@@ -89,7 +91,7 @@ class TeamSizeSettingTest {
         registerTeam("Bravo", 3);
 
         assertEquals(Optional.of("1 team has more than 2 players: Bravo (Bravo1, Bravo2, Bravo3). Remove it first"),
-                TeamSizeSetting.findChangeRejection(2, false, teamRegistry));
+                TeamSizeSetting.findChangeRejection(3, 2, false, teamRegistry));
     }
 
     @Test
@@ -100,7 +102,7 @@ class TeamSizeSettingTest {
 
         assertEquals(Optional.of("2 teams have more than 1 player: Alpha (Alpha1, Alpha2, Alpha3), "
                         + "Charlie (Charlie1, Charlie2). Remove them first"),
-                TeamSizeSetting.findChangeRejection(1, false, teamRegistry));
+                TeamSizeSetting.findChangeRejection(3, 1, false, teamRegistry));
     }
 
     @Test
@@ -112,7 +114,7 @@ class TeamSizeSettingTest {
         assertEquals(Optional.of("7 teams have more than 2 players: Alpha (Alpha1, Alpha2, Alpha3), "
                         + "Bravo (Bravo1, Bravo2, Bravo3), Charlie (Charlie1, Charlie2, Charlie3), "
                         + "Delta (Delta1, Delta2, Delta3), Echo (Echo1, Echo2, Echo3) and 2 more. Remove them first"),
-                TeamSizeSetting.findChangeRejection(2, false, teamRegistry));
+                TeamSizeSetting.findChangeRejection(3, 2, false, teamRegistry));
     }
 
     @Test
@@ -124,7 +126,7 @@ class TeamSizeSettingTest {
         assertEquals(Optional.of("5 teams have more than 1 player: Alpha (Alpha1, Alpha2), Bravo (Bravo1, Bravo2), "
                         + "Charlie (Charlie1, Charlie2), Delta (Delta1, Delta2), Echo (Echo1, Echo2). "
                         + "Remove them first"),
-                TeamSizeSetting.findChangeRejection(1, false, teamRegistry));
+                TeamSizeSetting.findChangeRejection(2, 1, false, teamRegistry));
     }
 
     @Test
@@ -133,8 +135,8 @@ class TeamSizeSettingTest {
         registerTeam("Duo", 2);
         registerTeam("Quartet", 4);
 
-        assertEquals(Optional.empty(), TeamSizeSetting.findChangeRejection(4, false, teamRegistry));
-        assertEquals(Optional.empty(), TeamSizeSetting.findChangeRejection(8, false, teamRegistry));
+        assertEquals(Optional.empty(), TeamSizeSetting.findChangeRejection(8, 4, false, teamRegistry));
+        assertEquals(Optional.empty(), TeamSizeSetting.findChangeRejection(8, 8, false, teamRegistry));
 
         assertEquals(List.of("Solo", "Duo", "Quartet"), teamRegistry.getTeamNames());
         assertEquals("Solo1", teamRegistry.findTeam("Solo").orElseThrow().getMemberNamesJoined());
@@ -146,9 +148,48 @@ class TeamSizeSettingTest {
         registerTeam("Bravo", 3);
 
         assertEquals(Optional.of("The team size must lie between 1 and 8 players"),
-                TeamSizeSetting.findChangeRejection(0, true, teamRegistry));
+                TeamSizeSetting.findChangeRejection(3, 0, true, teamRegistry));
         assertEquals(Optional.of("The team size cannot be changed while a tournament is in progress"),
-                TeamSizeSetting.findChangeRejection(2, true, teamRegistry));
+                TeamSizeSetting.findChangeRejection(3, 2, true, teamRegistry));
+    }
+
+    @Test
+    void allowsALargerTeamSizeEvenWhenATeamHasMorePlayersThanTheNewSize() {
+        registerTeam("Alpha", 2);
+        registerTeam("Quartet", 4);
+
+        assertEquals(Optional.empty(), TeamSizeSetting.findChangeRejection(2, 3, false, teamRegistry));
+    }
+
+    @Test
+    void allowsTheSameTeamSizeEvenWhenATeamHasMorePlayers() {
+        registerTeam("Quartet", 4);
+
+        assertEquals(Optional.empty(), TeamSizeSetting.findChangeRejection(3, 3, false, teamRegistry));
+    }
+
+    @Test
+    void refusesASmallerTeamSizeWhenATeamHasMorePlayersThanTheNewSize() {
+        registerTeam("Quartet", 4);
+
+        assertEquals(Optional.of("1 team has more than 3 players: Quartet (Quartet1, Quartet2, Quartet3, Quartet4). "
+                        + "Remove it first"),
+                TeamSizeSetting.findChangeRejection(4, 3, false, teamRegistry));
+    }
+
+    @Test
+    void describesTheTeamsLargerAndSmallerThanATeamSizeWithTheirPlayerCounts() {
+        registerTeam("Alpha", 3);
+        registerTeam("Bravo", 1);
+        registerTeam("Charlie", 2);
+        registerTeam("Delta", 4);
+
+        assertEquals(Optional.of("2 teams have more than 2 players: Alpha (3), Delta (4)"),
+                TeamSizeSetting.describeTeamsLargerThan(2, teamRegistry));
+        assertEquals(Optional.of("1 team has fewer than 2 players: Bravo (1)"),
+                TeamSizeSetting.describeTeamsSmallerThan(2, teamRegistry));
+        assertEquals(Optional.empty(), TeamSizeSetting.describeTeamsLargerThan(4, teamRegistry));
+        assertEquals(Optional.empty(), TeamSizeSetting.describeTeamsSmallerThan(1, teamRegistry));
     }
 
     @Test

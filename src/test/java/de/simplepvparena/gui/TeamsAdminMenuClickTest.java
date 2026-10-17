@@ -295,6 +295,20 @@ class TeamsAdminMenuClickTest {
     }
 
     @Test
+    void makesTeamsLargerEvenWhileATeamHasMorePlayersThanTheNewSize() {
+        fixture.registerTeams("Alpha");
+        fixture.registerTeamOf("Quartet", "Steve", "Alex", "Notch", "Jeb_");
+        fixture.openMenuFromTheMainMenu(MAIN_TEAMS_SLOT);
+
+        fixture.click(LARGER_TEAMS_SLOT);
+
+        assertEquals(3, fixture.teamSize());
+        assertEquals(List.of("Team size is now 3 (3 versus 3)"), fixture.messages());
+        assertEquals(List.of(3), fixture.writtenTeamSizes());
+        assertEquals(List.of("Alpha", "Quartet"), fixture.teamRegistry().getTeamNames());
+    }
+
+    @Test
     void keepsTheNewTeamSizeWhenConfigYmlCannotBeWrittenAndSaysSo() {
         fixture.registerTeams("Alpha");
         fixture.openMenuFromTheMainMenu(MAIN_TEAMS_SLOT);

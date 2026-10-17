@@ -17,6 +17,8 @@ public final class TeamRegistry {
     public static final int MAXIMUM_NAME_LENGTH = 16;
     public static final String NAME_RULE = "1 to " + MAXIMUM_NAME_LENGTH
             + " letters, digits, hyphens or underscores";
+    public static final String LAST_MEMBER_REJECTION = "a team keeps at least " + Team.MINIMUM_MEMBER_COUNT
+            + " player, remove the team instead";
 
     private static final String TEAMS_KEY = "teams";
     private static final String TEAM_NAME_KEY = "name";
@@ -52,6 +54,82 @@ public final class TeamRegistry {
 
     public boolean removeTeam(String teamName) {
         return teamsByLowerCaseName.remove(toKey(teamName)) != null;
+    }
+
+    public Team renameTeam(String teamName, String newName) {
+        Objects.requireNonNull(newName, "newName");
+        Team team = requireTeam(teamName);
+        Optional<String> nameRejection = findNameRejection(newName);
+        if (nameRejection.isPresent()) {
+            throw new IllegalArgumentException(nameRejection.get());
+        }
+        String key = toKey(team.getTeamName());
+        String newKey = toKey(newName);
+        if (!newKey.equals(key) && teamsByLowerCaseName.containsKey(newKey)) {
+            throw new IllegalStateException("a team named " + newName + " already exists");
+        }
+        Team renamedTeam = new Team(newName, team.getMembers());
+        replaceTeam(key, newKey, renamedTeam);
+        return renamedTeam;
+    }
+
+    public Team addMember(String teamName, TeamMember member) {
+        Objects.requireNonNull(member, "member");
+        Team team = requireTeam(teamName);
+        rejectAlreadyRegisteredPlayer(member);
+        if (team.getMembers().size() >= Team.MAXIMUM_MEMBER_COUNT) {
+            throw new IllegalStateException("team " + team.getTeamName() + " already has "
+                    + Team.MAXIMUM_MEMBER_COUNT + " players, a team has at most " + Team.MAXIMUM_MEMBER_COUNT
+                    + " players");
+        }
+        List<TeamMember> members = new ArrayList<>(team.getMembers());
+        members.add(member);
+        return replaceMembers(team, members);
+    }
+
+    public Team removeMember(String teamName, UUID memberUniqueId) {
+        Objects.requireNonNull(memberUniqueId, "memberUniqueId");
+        Team team = requireTeam(teamName);
+        if (!team.containsPlayer(memberUniqueId)) {
+            throw new IllegalArgumentException("the player " + memberUniqueId + " is not in team "
+                    + team.getTeamName());
+        }
+        if (team.getMembers().size() <= Team.MINIMUM_MEMBER_COUNT) {
+            throw new IllegalStateException(LAST_MEMBER_REJECTION);
+        }
+        List<TeamMember> members = team.getMembers().stream()
+                .filter(member -> !member.uniqueId().equals(memberUniqueId))
+                .toList();
+        return replaceMembers(team, members);
+    }
+
+    private Team requireTeam(String teamName) {
+        return findTeam(teamName).orElseThrow(() -> new IllegalArgumentException("no team named " + teamName
+                + " is registered"));
+    }
+
+    private Team replaceMembers(Team team, List<TeamMember> members) {
+        Team changedTeam = new Team(team.getTeamName(), members);
+        String key = toKey(team.getTeamName());
+        replaceTeam(key, key, changedTeam);
+        return changedTeam;
+    }
+
+    private void replaceTeam(String key, String newKey, Team changedTeam) {
+        if (key.equals(newKey)) {
+            teamsByLowerCaseName.put(key, changedTeam);
+            return;
+        }
+        Map<String, Team> reorderedTeams = new LinkedHashMap<>();
+        for (Map.Entry<String, Team> entry : teamsByLowerCaseName.entrySet()) {
+            if (entry.getKey().equals(key)) {
+                reorderedTeams.put(newKey, changedTeam);
+            } else {
+                reorderedTeams.put(entry.getKey(), entry.getValue());
+            }
+        }
+        teamsByLowerCaseName.clear();
+        teamsByLowerCaseName.putAll(reorderedTeams);
     }
 
     public Optional<Team> findTeam(String teamName) {

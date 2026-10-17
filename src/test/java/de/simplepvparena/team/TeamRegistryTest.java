@@ -9,6 +9,7 @@ import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -242,6 +243,238 @@ class TeamRegistryTest {
         assertEquals(2, teamSizeSetting.getTeamSize());
         assertEquals(List.of("Solo", "Quartet", "Squad"), reloadedRegistry.getTeamNames());
         assertEquals(8, reloadedRegistry.findTeam("Squad").orElseThrow().getMembers().size());
+    }
+
+    @Test
+    void renamesATeamAndKeepsItsPlaceAndItsPlayers() {
+        TeamRegistry registry = registryOfAlphaBravoAndCharlie();
+        Team formerTeam = registry.findTeam("Bravo").orElseThrow();
+
+        Team renamedTeam = registry.renameTeam("bravo", "Delta");
+
+        assertEquals("Delta", renamedTeam.getTeamName());
+        assertEquals(List.of("Alpha", "Delta", "Charlie"), registry.getTeamNames());
+        assertTrue(registry.findTeam("Bravo").isEmpty());
+        assertSame(renamedTeam, registry.findTeam("DELTA").orElseThrow());
+        assertEquals(formerTeam.getMembers(), renamedTeam.getMembers());
+        assertEquals("Delta", registry.findTeamByPlayer(thirdMember.uniqueId()).orElseThrow().getTeamName());
+        assertEquals("Bravo", formerTeam.getTeamName(), "the former team object stays as it was");
+    }
+
+    @Test
+    void renamesTheFirstAndTheLastTeamWithoutChangingTheOrder() {
+        TeamRegistry registry = registryOfAlphaBravoAndCharlie();
+
+        registry.renameTeam("Alpha", "Zulu");
+        registry.renameTeam("Charlie", "Able");
+
+        assertEquals(List.of("Zulu", "Bravo", "Able"), registry.getTeamNames());
+        assertEquals(3, registry.getTeamCount());
+    }
+
+    @Test
+    void renamesATeamToAnotherCaseOfItsOwnName() {
+        TeamRegistry registry = registryOfAlphaBravoAndCharlie();
+
+        Team renamedTeam = registry.renameTeam("Bravo", "BRAVO");
+
+        assertEquals("BRAVO", renamedTeam.getTeamName());
+        assertEquals(List.of("Alpha", "BRAVO", "Charlie"), registry.getTeamNames());
+        assertSame(renamedTeam, registry.findTeam("bravo").orElseThrow());
+    }
+
+    @Test
+    void rejectsTheNameOfAnotherTeamInAnyCaseAndKeepsTheTeam() {
+        TeamRegistry registry = registryOfAlphaBravoAndCharlie();
+        Team bravo = registry.findTeam("Bravo").orElseThrow();
+
+        IllegalStateException refusal = assertThrows(IllegalStateException.class,
+                () -> registry.renameTeam("Bravo", "ALPHA"));
+
+        assertEquals("a team named ALPHA already exists", refusal.getMessage());
+        assertEquals(List.of("Alpha", "Bravo", "Charlie"), registry.getTeamNames());
+        assertSame(bravo, registry.findTeam("Bravo").orElseThrow());
+    }
+
+    @Test
+    void rejectsANewNameOutsideTheNameRuleAndKeepsTheTeam() {
+        TeamRegistry registry = registryOfAlphaBravoAndCharlie();
+
+        IllegalArgumentException invalidName = assertThrows(IllegalArgumentException.class,
+                () -> registry.renameTeam("Bravo", "Bravo Team"));
+        IllegalArgumentException blankName = assertThrows(IllegalArgumentException.class,
+                () -> registry.renameTeam("Bravo", " "));
+        IllegalArgumentException longName = assertThrows(IllegalArgumentException.class,
+                () -> registry.renameTeam("Bravo", "A".repeat(17)));
+
+        assertEquals("The team name Bravo Team is not allowed, a team name has 1 to 16 letters, digits, hyphens "
+                + "or underscores", invalidName.getMessage());
+        assertEquals("A team needs a name, a team name has 1 to 16 letters, digits, hyphens or underscores",
+                blankName.getMessage());
+        assertEquals("The team name " + "A".repeat(17) + " is not allowed, a team name has 1 to 16 letters, "
+                + "digits, hyphens or underscores", longName.getMessage());
+        assertEquals(List.of("Alpha", "Bravo", "Charlie"), registry.getTeamNames());
+    }
+
+    @Test
+    void rejectsTheRenameOfAnUnknownTeam() {
+        TeamRegistry registry = registryOfAlphaBravoAndCharlie();
+
+        IllegalArgumentException refusal = assertThrows(IllegalArgumentException.class,
+                () -> registry.renameTeam("Delta", "Echo"));
+
+        assertEquals("no team named Delta is registered", refusal.getMessage());
+        assertEquals(List.of("Alpha", "Bravo", "Charlie"), registry.getTeamNames());
+    }
+
+    @Test
+    void addsAPlayerAtTheEndOfTheTeamAndKeepsThePlaceOfTheTeam() {
+        TeamRegistry registry = registryOfAlphaBravoAndCharlie();
+        TeamMember newMember = new TeamMember(UUID.randomUUID(), "Newcomer");
+        Team formerTeam = registry.findTeam("Bravo").orElseThrow();
+
+        Team changedTeam = registry.addMember("bravo", newMember);
+
+        assertEquals("PlayerThree, Newcomer", changedTeam.getMemberNamesJoined());
+        assertSame(changedTeam, registry.findTeam("Bravo").orElseThrow());
+        assertEquals(List.of("Alpha", "Bravo", "Charlie"), registry.getTeamNames());
+        assertEquals("Bravo", registry.findTeamByPlayer(newMember.uniqueId()).orElseThrow().getTeamName());
+        assertEquals("PlayerThree", formerTeam.getMemberNamesJoined(), "the former team object stays as it was");
+    }
+
+    @Test
+    void rejectsAPlayerOfAnotherTeamAndNamesThatTeam() {
+        TeamRegistry registry = registryOfAlphaBravoAndCharlie();
+
+        IllegalStateException refusal = assertThrows(IllegalStateException.class,
+                () -> registry.addMember("Bravo", firstMember));
+
+        assertEquals("PlayerOne is already registered in team Alpha", refusal.getMessage());
+        assertEquals("PlayerThree", registry.findTeam("Bravo").orElseThrow().getMemberNamesJoined());
+        assertEquals("PlayerOne, PlayerTwo", registry.findTeam("Alpha").orElseThrow().getMemberNamesJoined());
+    }
+
+    @Test
+    void rejectsAPlayerThatIsAlreadyInTheSameTeam() {
+        TeamRegistry registry = registryOfAlphaBravoAndCharlie();
+
+        IllegalStateException refusal = assertThrows(IllegalStateException.class,
+                () -> registry.addMember("Bravo", thirdMember));
+
+        assertEquals("PlayerThree is already registered in team Bravo", refusal.getMessage());
+        assertEquals("PlayerThree", registry.findTeam("Bravo").orElseThrow().getMemberNamesJoined());
+    }
+
+    @Test
+    void rejectsANinthPlayer() {
+        TeamRegistry registry = new TeamRegistry();
+        registry.registerTeam("Octet", createMembers(8));
+
+        IllegalStateException refusal = assertThrows(IllegalStateException.class,
+                () -> registry.addMember("Octet", new TeamMember(UUID.randomUUID(), "Ninth")));
+
+        assertEquals("team Octet already has 8 players, a team has at most 8 players", refusal.getMessage());
+        assertEquals(8, registry.findTeam("Octet").orElseThrow().getMembers().size());
+    }
+
+    @Test
+    void addsAnEighthPlayer() {
+        TeamRegistry registry = new TeamRegistry();
+        registry.registerTeam("Septet", createMembers(7));
+
+        Team changedTeam = registry.addMember("Septet", new TeamMember(UUID.randomUUID(), "Eighth"));
+
+        assertEquals(8, changedTeam.getMembers().size());
+    }
+
+    @Test
+    void rejectsAPlayerForAnUnknownTeam() {
+        TeamRegistry registry = registryOfAlphaBravoAndCharlie();
+
+        IllegalArgumentException refusal = assertThrows(IllegalArgumentException.class,
+                () -> registry.addMember("Delta", new TeamMember(UUID.randomUUID(), "Newcomer")));
+
+        assertEquals("no team named Delta is registered", refusal.getMessage());
+        assertEquals(3, registry.getTeamCount());
+    }
+
+    @Test
+    void removesAPlayerKeepsThePlaceOfTheTeamAndFreesThePlayerForAnotherTeam() {
+        TeamRegistry registry = registryOfAlphaBravoAndCharlie();
+        Team formerTeam = registry.findTeam("Alpha").orElseThrow();
+
+        Team changedTeam = registry.removeMember("ALPHA", firstMember.uniqueId());
+
+        assertEquals("PlayerTwo", changedTeam.getMemberNamesJoined());
+        assertSame(changedTeam, registry.findTeam("Alpha").orElseThrow());
+        assertEquals(List.of("Alpha", "Bravo", "Charlie"), registry.getTeamNames());
+        assertTrue(registry.findTeamByPlayer(firstMember.uniqueId()).isEmpty());
+        assertEquals("PlayerOne, PlayerTwo", formerTeam.getMemberNamesJoined(),
+                "the former team object stays as it was");
+
+        registry.addMember("Bravo", firstMember);
+
+        assertEquals("Bravo", registry.findTeamByPlayer(firstMember.uniqueId()).orElseThrow().getTeamName());
+    }
+
+    @Test
+    void rejectsTheRemovalOfTheLastPlayer() {
+        TeamRegistry registry = registryOfAlphaBravoAndCharlie();
+
+        IllegalStateException refusal = assertThrows(IllegalStateException.class,
+                () -> registry.removeMember("Bravo", thirdMember.uniqueId()));
+
+        assertEquals("a team keeps at least 1 player, remove the team instead", refusal.getMessage());
+        assertEquals("PlayerThree", registry.findTeam("Bravo").orElseThrow().getMemberNamesJoined());
+    }
+
+    @Test
+    void rejectsTheRemovalOfAPlayerOutsideOfTheTeam() {
+        TeamRegistry registry = registryOfAlphaBravoAndCharlie();
+
+        IllegalArgumentException refusal = assertThrows(IllegalArgumentException.class,
+                () -> registry.removeMember("Alpha", thirdMember.uniqueId()));
+
+        assertEquals("the player " + thirdMember.uniqueId() + " is not in team Alpha", refusal.getMessage());
+        assertEquals("PlayerOne, PlayerTwo", registry.findTeam("Alpha").orElseThrow().getMemberNamesJoined());
+        assertEquals("PlayerThree", registry.findTeam("Bravo").orElseThrow().getMemberNamesJoined());
+    }
+
+    @Test
+    void rejectsTheRemovalOfAPlayerFromAnUnknownTeam() {
+        TeamRegistry registry = registryOfAlphaBravoAndCharlie();
+
+        IllegalArgumentException refusal = assertThrows(IllegalArgumentException.class,
+                () -> registry.removeMember("Delta", firstMember.uniqueId()));
+
+        assertEquals("no team named Delta is registered", refusal.getMessage());
+    }
+
+    @Test
+    void savesTheChangedTeamsInTheOrderOfTheRegistry() {
+        TeamRegistry registry = registryOfAlphaBravoAndCharlie();
+        TeamMember newMember = new TeamMember(UUID.randomUUID(), "Newcomer");
+        registry.renameTeam("Bravo", "Delta");
+        registry.addMember("Delta", newMember);
+        registry.removeMember("Alpha", secondMember.uniqueId());
+        MemoryConfiguration configuration = new MemoryConfiguration();
+
+        registry.saveToConfiguration(configuration);
+        TeamRegistry loadedRegistry = new TeamRegistry();
+        List<String> skippedEntries = loadedRegistry.loadFromConfiguration(configuration);
+
+        assertEquals(List.of(), skippedEntries);
+        assertEquals(List.of("Alpha", "Delta", "Charlie"), loadedRegistry.getTeamNames());
+        assertEquals("PlayerOne", loadedRegistry.findTeam("Alpha").orElseThrow().getMemberNamesJoined());
+        assertEquals("PlayerThree, Newcomer", loadedRegistry.findTeam("Delta").orElseThrow().getMemberNamesJoined());
+    }
+
+    private TeamRegistry registryOfAlphaBravoAndCharlie() {
+        TeamRegistry registry = new TeamRegistry();
+        registry.registerTeam("Alpha", List.of(firstMember, secondMember));
+        registry.registerTeam("Bravo", List.of(thirdMember));
+        registry.registerTeam("Charlie", List.of(fourthMember));
+        return registry;
     }
 
     private static List<TeamMember> createMembers(int memberCount) {
