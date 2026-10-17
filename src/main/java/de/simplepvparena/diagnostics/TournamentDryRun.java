@@ -156,7 +156,7 @@ public final class TournamentDryRun {
                 if (teamOfPlayer.isEmpty()
                         || !teamOfPlayer.get().getTeamName().equals(testTeam.teamName())) {
                     return Optional.of(member.playerName() + " is not found in " + testTeam.teamName()
-                            + " by his unique id");
+                            + " by their unique id");
                 }
             }
         }
@@ -230,7 +230,7 @@ public final class TournamentDryRun {
         KitDefinition kit = kitService.getKitDefinition();
         if (kit.isEmpty()) {
             return DryRunStep.failed(KIT_STEP,
-                    "The kit is empty, every fighter would start his round with bare hands",
+                    "The kit is empty, every fighter would start the round with bare hands",
                     "Put the kit into your own inventory and save it with \"Save your inventory as "
                             + "the kit\" in the kit menu of /tournament");
         }

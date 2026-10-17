@@ -3,41 +3,20 @@ package de.simplepvparena.border;
 import de.simplepvparena.arena.ArenaShape;
 import de.simplepvparena.arena.BorderColumnReader;
 import org.bukkit.Location;
-import org.bukkit.NamespacedKey;
 import org.bukkit.World;
 import org.bukkit.block.Block;
-import org.bukkit.inventory.ItemStack;
-import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.plugin.Plugin;
 
 import java.util.Objects;
 
 public final class SpectatorBorderService {
 
-    public static final String BORDER_KEY_NAME = "spectator_border";
-
-    private static final String ITEM_MARKER_VALUE = "spectator-border";
-
-    private final NamespacedKey borderKey;
     private final BorderMarkIndex borderMarks;
     private final Runnable borderMarkChangeListener;
 
     public SpectatorBorderService(Plugin plugin, BorderMarkIndex borderMarks, Runnable borderMarkChangeListener) {
-        this.borderKey = new NamespacedKey(plugin, BORDER_KEY_NAME);
         this.borderMarks = Objects.requireNonNull(borderMarks, "borderMarks");
         this.borderMarkChangeListener = Objects.requireNonNull(borderMarkChangeListener, "borderMarkChangeListener");
-    }
-
-    public NamespacedKey getBorderKey() {
-        return borderKey;
-    }
-
-    public boolean isBorderItem(ItemStack itemStack) {
-        if (itemStack == null || !itemStack.hasItemMeta()) {
-            return false;
-        }
-        return ITEM_MARKER_VALUE.equals(itemStack.getItemMeta().getPersistentDataContainer()
-                .get(borderKey, PersistentDataType.STRING));
     }
 
     public void markBlock(Block block) {

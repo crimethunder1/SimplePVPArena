@@ -59,7 +59,7 @@ class ArenaBreakProtectionTest {
         assertTrue(harness.getShape().containsBlock(OPEN_X, ArenaMatchHarness.WALL_TOP_Y, OPEN_Z),
                 "and the air up to the top of the border wall");
         assertTrue(harness.getMatchService().isActiveFighter(fighter.uniqueId()),
-                "the match starter really made him an active fighter");
+                "the match starter really made the player an active fighter");
     }
 
     @Test
@@ -148,7 +148,7 @@ class ArenaBreakProtectionTest {
         assertFalse(isBreakCancelledFor(spectator, ArenaMatchHarness.WALL_MAXIMUM + 3,
                 ArenaMatchHarness.GROUND_Y, ArenaMatchHarness.WALL_MAXIMUM + 3), "the admin on the tribune");
         assertFalse(isBreakCancelledFor(spectator, ArenaMatchHarness.WALL_MINIMUM, ArenaMatchHarness.GROUND_Y,
-                5), "and in the column his own border wall stands in");
+                5), "and in the column the admin's own border wall stands in");
         assertTrue(isBreakCancelledFor(fighter, ArenaMatchHarness.WALL_MINIMUM, ArenaMatchHarness.GROUND_Y,
                 5), "while a fighter of the running round is no admin out there either");
     }
@@ -162,7 +162,7 @@ class ArenaBreakProtectionTest {
         assertTrue(isBreakCancelledFor(fighter, ARENA_FLOOR_X, ArenaMatchHarness.GROUND_Y, ARENA_FLOOR_Z));
         spectator.makeOperator();
         assertFalse(isBreakCancelledFor(spectator, ARENA_FLOOR_X, ArenaMatchHarness.GROUND_Y, ARENA_FLOOR_Z),
-                "the admin is never locked out of his own arena");
+                "the admin is never locked out of their own arena");
     }
 
     @Test
@@ -193,7 +193,7 @@ class ArenaBreakProtectionTest {
         spectator.makeOperator();
         assertFalse(isBucketEmptyCancelledFor(spectator, ArenaMatchHarness.WALL_MAXIMUM + 3,
                 ArenaMatchHarness.GROUND_Y, ArenaMatchHarness.WALL_MAXIMUM + 3),
-                "the admin fills the pond of his own tribune");
+                "the admin fills the pond of their own tribune");
     }
 
     private void captureBaseline() {

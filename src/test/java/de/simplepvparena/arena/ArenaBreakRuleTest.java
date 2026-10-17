@@ -16,7 +16,7 @@ class ArenaBreakRuleTest {
 
     private static final boolean ACTIVE_FIGHTER = true;
     private static final boolean NOT_FIGHTING = false;
-    private static final boolean ARENA_ADMIN = true;
+    private static final boolean ADMIN = true;
     private static final boolean REGULAR_PLAYER = false;
     private static final boolean INSIDE = true;
     private static final boolean OUTSIDE = false;
@@ -49,9 +49,9 @@ class ArenaBreakRuleTest {
 
     @Test
     void letsAnAdminBreakEverything() {
-        assertTrue(ArenaBreakRule.isBreakingAllowed(NOT_FIGHTING, ARENA_ADMIN, INSIDE, ORIGINAL_ARENA));
-        assertTrue(ArenaBreakRule.isBreakingAllowed(ACTIVE_FIGHTER, ARENA_ADMIN, INSIDE, ORIGINAL_ARENA));
-        assertTrue(ArenaBreakRule.isBreakingAllowed(NOT_FIGHTING, ARENA_ADMIN, OUTSIDE, ORIGINAL_ARENA));
+        assertTrue(ArenaBreakRule.isBreakingAllowed(NOT_FIGHTING, ADMIN, INSIDE, ORIGINAL_ARENA));
+        assertTrue(ArenaBreakRule.isBreakingAllowed(ACTIVE_FIGHTER, ADMIN, INSIDE, ORIGINAL_ARENA));
+        assertTrue(ArenaBreakRule.isBreakingAllowed(NOT_FIGHTING, ADMIN, OUTSIDE, ORIGINAL_ARENA));
     }
 
     @Test
@@ -91,8 +91,8 @@ class ArenaBreakRuleTest {
                 "and the ground under that floor, whatever it is made of");
         assertFalse(ArenaBreakRule.isBreakingAllowed(ACTIVE_FIGHTER, REGULAR_PLAYER, INSIDE,
                 ArenaBreakRule.isPartOfTheOriginalArena(baseline, 0, 63, 0, Material.STONE)),
-                "so no fighter digs the arena out from under his opponent");
-        assertTrue(ArenaBreakRule.isBreakingAllowed(ACTIVE_FIGHTER, ARENA_ADMIN, INSIDE,
+                "so no fighter digs the arena out from under the opponent");
+        assertTrue(ArenaBreakRule.isBreakingAllowed(ACTIVE_FIGHTER, ADMIN, INSIDE,
                 ArenaBreakRule.isPartOfTheOriginalArena(baseline, 0, 63, 0, Material.STONE)),
                 "and the admin who built it still takes it apart");
     }
@@ -102,7 +102,7 @@ class ArenaBreakRuleTest {
         assertTrue(ArenaBreakRule.isPartOfTheOriginalArena(Optional.empty(), 0, 64, 0, Material.OAK_PLANKS));
         assertFalse(ArenaBreakRule.isBreakingAllowed(ACTIVE_FIGHTER, REGULAR_PLAYER, INSIDE,
                 ArenaBreakRule.isPartOfTheOriginalArena(Optional.empty(), 0, 64, 0, Material.OAK_PLANKS)));
-        assertTrue(ArenaBreakRule.isBreakingAllowed(NOT_FIGHTING, ARENA_ADMIN, INSIDE,
+        assertTrue(ArenaBreakRule.isBreakingAllowed(NOT_FIGHTING, ADMIN, INSIDE,
                 ArenaBreakRule.isPartOfTheOriginalArena(Optional.empty(), 0, 64, 0, Material.OAK_PLANKS)),
                 "the admin who calculates the area again is never locked out of it");
     }
@@ -126,7 +126,7 @@ class ArenaBreakRuleTest {
                 ArenaBreakRule.isPartOfTheOriginalArena(baseline, 0, 53, 0, Material.DIRT)));
         assertFalse(ArenaBreakRule.isBreakingAllowed(NOT_FIGHTING, REGULAR_PLAYER, INSIDE,
                 ArenaBreakRule.isPartOfTheOriginalArena(baseline, 0, 53, 0, Material.DIRT)));
-        assertTrue(ArenaBreakRule.isBreakingAllowed(NOT_FIGHTING, ARENA_ADMIN, INSIDE,
+        assertTrue(ArenaBreakRule.isBreakingAllowed(NOT_FIGHTING, ADMIN, INSIDE,
                 ArenaBreakRule.isPartOfTheOriginalArena(baseline, 0, 53, 0, Material.DIRT)),
                 "while the admin still takes it apart");
     }

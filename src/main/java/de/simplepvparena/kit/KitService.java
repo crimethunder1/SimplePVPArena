@@ -103,8 +103,8 @@ public final class KitService {
                 if (hasAppliedKit(player)) {
                     clearWithoutSnapshot(player);
                     warningReporter.accept("The saved inventory and state of " + player.getName()
-                            + " could not be read, the kit was cleared without restoring anything, the file is kept as "
-                            + lookup.fileName());
+                            + " could not be read, the kit was cleared without restoring anything,"
+                            + " the file is kept as " + lookup.fileName());
                 } else {
                     warningReporter.accept("The saved inventory and state of " + player.getName()
                             + " could not be read, nothing was cleared because no kit is marked as applied,"
@@ -167,8 +167,9 @@ public final class KitService {
             snapshotStorage.delete(player.getUniqueId());
         } catch (IOException deleteFailure) {
             setSnapshotAsideAsRestored(player, deleteFailure);
+        } finally {
+            snapshotsInMemory.remove(player.getUniqueId());
         }
-        snapshotsInMemory.remove(player.getUniqueId());
     }
 
     private void setSnapshotAsideAsRestored(Player player, IOException deleteFailure) {

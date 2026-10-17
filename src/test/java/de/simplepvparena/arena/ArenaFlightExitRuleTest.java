@@ -73,7 +73,7 @@ class ArenaFlightExitRuleTest {
     @Test
     void endsTheFlightOfAnAdminWhoLeavesTheArena() {
         assertTrue(ArenaMovementRule.isMovementAllowed(NOT_FIGHTING, BELONGS_INTO_ARENA, ADMIN, INSIDE, OUTSIDE),
-                "the movement rule lets him pass");
+                "the movement rule lets the admin pass");
         assertTrue(leavesTheArena(ARENA_FLIGHT, INSIDE, OUTSIDE),
                 "and the flight ends anyway");
     }
@@ -81,7 +81,7 @@ class ArenaFlightExitRuleTest {
     @Test
     void neverSendsAnAdminWhoIsNotFlyingToTheTribune() {
         assertTrue(ArenaMovementRule.isMovementAllowed(NOT_FIGHTING, BELONGS_OUTSIDE, ADMIN, INSIDE, OUTSIDE),
-                "the movement rule lets him pass");
+                "the movement rule lets the admin pass");
         assertFalse(leavesTheArena(NOT_FLYING, INSIDE, OUTSIDE));
     }
 

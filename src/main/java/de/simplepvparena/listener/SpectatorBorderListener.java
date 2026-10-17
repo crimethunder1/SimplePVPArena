@@ -10,9 +10,10 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockBreakEvent;
-import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.event.player.PlayerTeleportEvent;
+
+import java.util.Objects;
 
 public final class SpectatorBorderListener implements Listener {
 
@@ -22,17 +23,9 @@ public final class SpectatorBorderListener implements Listener {
 
     public SpectatorBorderListener(MatchService matchService, SpectatorService spectatorService,
                                    SpectatorBorderService spectatorBorderService) {
-        this.matchService = matchService;
-        this.spectatorService = spectatorService;
-        this.spectatorBorderService = spectatorBorderService;
-    }
-
-    @EventHandler(ignoreCancelled = true)
-    public void onBlockPlace(BlockPlaceEvent event) {
-        if (!spectatorBorderService.isBorderItem(event.getItemInHand())) {
-            return;
-        }
-        spectatorBorderService.markBlock(event.getBlockPlaced());
+        this.matchService = Objects.requireNonNull(matchService, "matchService");
+        this.spectatorService = Objects.requireNonNull(spectatorService, "spectatorService");
+        this.spectatorBorderService = Objects.requireNonNull(spectatorBorderService, "spectatorBorderService");
     }
 
     @EventHandler(ignoreCancelled = true)

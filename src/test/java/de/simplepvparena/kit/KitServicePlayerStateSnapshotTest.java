@@ -28,6 +28,7 @@ import java.util.stream.Stream;
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class KitServicePlayerStateSnapshotTest {
@@ -371,6 +372,33 @@ class KitServicePlayerStateSnapshotTest {
     }
 
     @Test
+    void forgetsTheSnapshotInMemoryWhenDeletingTheFileThrowsAnUnexpectedException(@TempDir Path snapshotDirectory)
+            throws IOException {
+        KitService kitService = new KitService(PLUGIN, new DeleteCrashingSnapshotStorage(snapshotDirectory),
+                warnings::add);
+        StatefulPlayer player = playerWithPrivateState("Crashing");
+        ItemStack[] privateContents = player.contents.clone();
+        kitService.applyKit(player.player);
+        Path snapshotFile = snapshotFileOf(snapshotDirectory, player);
+        player.wearKitState();
+
+        IllegalStateException failure = assertThrows(IllegalStateException.class,
+                () -> kitService.clearKit(player.player), "the unexpected failure still reaches the caller");
+
+        assertEquals(DeleteCrashingSnapshotStorage.DELETE_FAILURE_MESSAGE, failure.getMessage());
+        assertArrayEquals(privateContents, player.contents);
+        assertTrue(warnings.isEmpty(), warnings.toString());
+
+        Files.delete(snapshotFile);
+        player.inventoryEvents.clear();
+        kitService.clearKit(player.player);
+
+        assertEquals(List.of(), player.inventoryEvents, "the snapshot is gone from memory as well");
+        assertArrayEquals(privateContents, player.contents);
+        assertTrue(warnings.isEmpty(), warnings.toString());
+    }
+
+    @Test
     void keepsTheSnapshotInMemoryWhenTheFileCannotBeWritten(@TempDir Path pluginFolder) throws IOException {
         Path snapshotDirectory = pluginFolder.resolve(FilePlayerStateSnapshotStorage.DIRECTORY_NAME);
         Files.writeString(snapshotDirectory, "a file where the directory belongs", StandardCharsets.UTF_8);
@@ -500,6 +528,37 @@ class KitServicePlayerStateSnapshotTest {
             if (setAsideFailure != null) {
                 throw setAsideFailure;
             }
+            fileStorage.setAsideAsRestored(playerUniqueId);
+        }
+    }
+
+    private static final class DeleteCrashingSnapshotStorage implements PlayerStateSnapshotStorage {
+
+        private static final String DELETE_FAILURE_MESSAGE = "the storage broke down";
+
+        private final FilePlayerStateSnapshotStorage fileStorage;
+
+        private DeleteCrashingSnapshotStorage(Path snapshotDirectory) {
+            this.fileStorage = new FilePlayerStateSnapshotStorage(snapshotDirectory, new FakeItemStackCodec());
+        }
+
+        @Override
+        public void save(UUID playerUniqueId, PlayerStateSnapshot snapshot) throws IOException {
+            fileStorage.save(playerUniqueId, snapshot);
+        }
+
+        @Override
+        public PlayerStateSnapshotLookup find(UUID playerUniqueId) {
+            return fileStorage.find(playerUniqueId);
+        }
+
+        @Override
+        public void delete(UUID playerUniqueId) {
+            throw new IllegalStateException(DELETE_FAILURE_MESSAGE);
+        }
+
+        @Override
+        public void setAsideAsRestored(UUID playerUniqueId) throws IOException {
             fileStorage.setAsideAsRestored(playerUniqueId);
         }
     }

@@ -40,7 +40,7 @@ public final class ArenaBuildListener implements Listener {
         if (arenaShape.isEmpty()) {
             return false;
         }
-        boolean arenaAdmin = isArenaAdmin(player);
+        boolean arenaAdmin = AdminPermission.isAdmin(player);
         boolean insideFightArea = arenaShape.get().containsCell(placedBlock.getX(), placedBlock.getZ());
         if (!ArenaWorldBuildRule.isChangeAllowed(arenaAdmin, insideFightArea)) {
             TournamentMessages.sendError(player, ArenaWorldBuildRule.REFUSAL);
@@ -57,9 +57,5 @@ public final class ArenaBuildListener implements Listener {
     static Optional<ArenaShape> findFightArea(ArenaRegistry arenaRegistry, Block block) {
         return arenaRegistry.getArena().getShape()
                 .filter(shape -> block.getWorld().getName().equals(shape.getWorldName()));
-    }
-
-    static boolean isArenaAdmin(Player player) {
-        return AdminPermission.isAdmin(player);
     }
 }

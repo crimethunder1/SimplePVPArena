@@ -239,7 +239,7 @@ class PluginSettingsTest {
         assertTrue(problems.get(0).startsWith(PluginSettings.FIRST_TEAM_COLOUR_PATH),
                 "the problem has to name the entry an admin fixes: " + problems.get(0));
         assertTrue(problems.get(0).contains("light_purple"),
-                "and the colours he can write instead: " + problems.get(0));
+                "and the colours the admin can write instead: " + problems.get(0));
     }
 
     @Test

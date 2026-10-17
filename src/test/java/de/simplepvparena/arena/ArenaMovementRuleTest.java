@@ -67,7 +67,7 @@ class ArenaMovementRuleTest {
     }
 
     @Test
-    void letsAnAdminPassNoMatterWhichSideHeBelongsTo() {
+    void letsAnAdminPassNoMatterWhichSideTheAdminBelongsTo() {
         for (boolean belongsIntoArena : new boolean[] {BELONGS_INTO_ARENA, BELONGS_OUTSIDE}) {
             assertTrue(isAllowed(NOT_FIGHTING, belongsIntoArena, ADMIN, INSIDE, OUTSIDE));
             assertTrue(isAllowed(NOT_FIGHTING, belongsIntoArena, ADMIN, OUTSIDE, INSIDE));

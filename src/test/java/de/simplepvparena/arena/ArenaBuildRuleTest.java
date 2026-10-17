@@ -9,7 +9,7 @@ class ArenaBuildRuleTest {
 
     private static final boolean ACTIVE_FIGHTER = true;
     private static final boolean NOT_FIGHTING = false;
-    private static final boolean ARENA_ADMIN = true;
+    private static final boolean ADMIN = true;
     private static final boolean REGULAR_PLAYER = false;
     private static final boolean INSIDE = true;
     private static final boolean OUTSIDE = false;
@@ -32,7 +32,7 @@ class ArenaBuildRuleTest {
 
     @Test
     void letsAnAdminBuildEverywhere() {
-        assertTrue(ArenaBuildRule.isPlacementAllowed(NOT_FIGHTING, ARENA_ADMIN, INSIDE));
-        assertTrue(ArenaBuildRule.isPlacementAllowed(NOT_FIGHTING, ARENA_ADMIN, OUTSIDE));
+        assertTrue(ArenaBuildRule.isPlacementAllowed(NOT_FIGHTING, ADMIN, INSIDE));
+        assertTrue(ArenaBuildRule.isPlacementAllowed(NOT_FIGHTING, ADMIN, OUTSIDE));
     }
 }

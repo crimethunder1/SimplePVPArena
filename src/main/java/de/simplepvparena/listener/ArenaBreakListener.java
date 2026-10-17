@@ -7,6 +7,7 @@ import de.simplepvparena.arena.ArenaShape;
 import de.simplepvparena.arena.ArenaWorldBuildRule;
 import de.simplepvparena.match.MatchService;
 import de.simplepvparena.message.TournamentMessages;
+import de.simplepvparena.permission.AdminPermission;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -60,7 +61,7 @@ public final class ArenaBreakListener implements Listener {
             return false;
         }
         ArenaShape shape = arenaShape.get();
-        boolean arenaAdmin = ArenaBuildListener.isArenaAdmin(player);
+        boolean arenaAdmin = AdminPermission.isAdmin(player);
         boolean insideFightArea = shape.containsCell(block.getX(), block.getZ());
         if (!ArenaWorldBuildRule.isChangeAllowed(arenaAdmin, insideFightArea)) {
             TournamentMessages.sendActionBarError(player, ArenaWorldBuildRule.REFUSAL);

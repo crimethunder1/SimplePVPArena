@@ -44,7 +44,7 @@ class FighterInTheArenaTest {
         assertFalse(harness.getShape().containsCell(ArenaMatchHarness.WALL_MINIMUM, 5),
                 "and the column the wall stands in");
         assertTrue(harness.getMatchService().isActiveFighter(fighter.uniqueId()),
-                "the match starter really made him an active fighter");
+                "the match starter really made the player an active fighter");
     }
 
     @Test
@@ -119,7 +119,7 @@ class FighterInTheArenaTest {
         assertFalse(isPlacementCancelledFor(spectator, ArenaMatchHarness.WALL_MAXIMUM + 3,
                 ArenaMatchHarness.GROUND_Y, ArenaMatchHarness.WALL_MAXIMUM + 3), "the admin on the tribune");
         assertFalse(isPlacementCancelledFor(spectator, ArenaMatchHarness.WALL_MINIMUM, ArenaMatchHarness.GROUND_Y,
-                5), "and in the column his own border wall stands in");
+                5), "and in the column the admin's own border wall stands in");
         assertTrue(isPlacementCancelledFor(fighter, ArenaMatchHarness.WALL_MAXIMUM + 3,
                 ArenaMatchHarness.GROUND_Y, ArenaMatchHarness.WALL_MAXIMUM + 3),
                 "while a fighter of the running round is no admin out there either");

@@ -40,7 +40,7 @@ class StartGateRoundStartTest {
         assertEquals(1, match.getRoundNumber());
         assertTrue(harness.getMatchService().isActiveFighter(fighter.uniqueId()));
         assertTrue(harness.getMatchService().isActiveFighter(opponent.uniqueId()));
-        assertEquals(2.5D, fighter.location().getX(), "the fighter still arrives on his team spawn");
+        assertEquals(2.5D, fighter.location().getX(), "the fighter still arrives on the team spawn");
     }
 
     @Test

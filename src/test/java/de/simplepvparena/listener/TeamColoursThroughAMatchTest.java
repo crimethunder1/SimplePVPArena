@@ -121,7 +121,7 @@ class TeamColoursThroughAMatchTest {
         assertTrue(colours.findColourOf("Fighter").isEmpty(), "a fighter of the match before carries nothing");
         assertTrue(colours.findColourOf("Mate").isEmpty());
         assertEquals(NamedTextColor.AQUA, colours.findColourOf("OpponentMate").orElseThrow(),
-                "and a player who fights again is painted for the team he fights for now");
+                "and a player who fights again is painted for the team the player fights for now");
     }
 
     private void winARoundForTheFirstTeam() {

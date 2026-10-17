@@ -4,6 +4,7 @@ import de.simplepvparena.arena.ArenaBaselineService;
 import de.simplepvparena.arena.ArenaEnvironmentProtectionRule;
 import de.simplepvparena.arena.ArenaRegistry;
 import de.simplepvparena.arena.ArenaShape;
+import de.simplepvparena.permission.AdminPermission;
 import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
@@ -55,7 +56,7 @@ public final class ArenaEnvironmentProtectionListener implements Listener {
     @EventHandler(priority = EventPriority.NORMAL, ignoreCancelled = true)
     public void onBlockIgnite(BlockIgniteEvent event) {
         Player ignitingPlayer = event.getPlayer();
-        if (ignitingPlayer != null && ArenaBuildListener.isArenaAdmin(ignitingPlayer)) {
+        if (ignitingPlayer != null && AdminPermission.isAdmin(ignitingPlayer)) {
             return;
         }
         Block ignitedBlock = event.getBlock();

@@ -29,13 +29,13 @@ class FighterRespawnTest {
     }
 
     @Test
-    void respawnsAnActiveFighterOnHisTeamSpawn() {
+    void respawnsAnActiveFighterOnTheTeamSpawn() {
         PlayerRespawnEvent event = respawn(fighter);
 
         assertEquals(2.5D, event.getRespawnLocation().getX(), 1.0E-9D);
         assertEquals(2.5D, event.getRespawnLocation().getZ(), 1.0E-9D);
         assertTrue(harness.getShape().contains(event.getRespawnLocation()),
-                "the spawn he comes back on lies inside the fight area");
+                "the spawn the fighter comes back on lies inside the fight area");
     }
 
     @Test
@@ -45,11 +45,11 @@ class FighterRespawnTest {
 
         assertTrue(harness.getSpectatorService().findSpectatorMode(fighter.uniqueId()).isEmpty());
         assertTrue(harness.getMatchService().isActiveFighter(fighter.uniqueId()),
-                "and he still fights the round he never left");
+                "and the fighter still fights the round they never left");
     }
 
     @Test
-    void handsAnActiveFighterHisKitBackOnTheNextTick() {
+    void handsAnActiveFighterTheKitBackOnTheNextTick() {
         int scheduledBefore = harness.getScheduledTaskCount();
 
         respawn(fighter);

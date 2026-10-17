@@ -7,7 +7,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class ArenaWorldBuildRuleTest {
 
-    private static final boolean ARENA_ADMIN = true;
+    private static final boolean ADMIN = true;
     private static final boolean REGULAR_PLAYER = false;
     private static final boolean INSIDE = true;
     private static final boolean OUTSIDE = false;
@@ -19,13 +19,13 @@ class ArenaWorldBuildRuleTest {
 
     @Test
     void letsAnAdminChangeTheWorldAroundTheArena() {
-        assertTrue(ArenaWorldBuildRule.isChangeAllowed(ARENA_ADMIN, OUTSIDE));
+        assertTrue(ArenaWorldBuildRule.isChangeAllowed(ADMIN, OUTSIDE));
     }
 
     @Test
     void leavesEveryChangeInsideTheFightAreaToTheRulesOfTheArena() {
         assertTrue(ArenaWorldBuildRule.isChangeAllowed(REGULAR_PLAYER, INSIDE));
-        assertTrue(ArenaWorldBuildRule.isChangeAllowed(ARENA_ADMIN, INSIDE));
+        assertTrue(ArenaWorldBuildRule.isChangeAllowed(ADMIN, INSIDE));
     }
 
     @Test

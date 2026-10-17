@@ -129,7 +129,7 @@ class ArenaHeightMarkerCalculationTest {
         assertFalse(shape.hasMarkedHeights());
         assertTrue(fixture.messages.stream().anyMatch(message -> message.contains("not the fight area")
                         && message.contains("y " + MARKED_LOWEST_Y) && message.contains("they are gone")),
-                "the admin reads that his marked heights did not survive the move: " + fixture.messages);
+                "the admin reads that the marked heights did not survive the move: " + fixture.messages);
     }
 
     @Test
@@ -160,7 +160,7 @@ class ArenaHeightMarkerCalculationTest {
         assertEquals(WALL_TOP_Y, shape.getWallTopY());
         assertTrue(fixture.messages.stream().anyMatch(message -> message.contains("Only the lowest point")
                         && message.contains("keeps the height of the border wall")),
-                "the admin reads that his single mark was not used: " + fixture.messages);
+                "the admin reads that the single mark was not used: " + fixture.messages);
         assertEquals(MARKED_LOWEST_Y, fixture.markers.getLowestY().orElseThrow(),
                 "the single mark waits for the second one instead of being thrown away");
     }

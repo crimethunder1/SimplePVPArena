@@ -68,7 +68,7 @@ class WorldOutsideTheArenaTest {
     @Test
     void keepsAFighterOfTheRunningRoundOutOfTheWorldAroundTheArena() {
         assertTrue(harness.getMatchService().isActiveFighter(fighter.uniqueId()),
-                "the match starter really made him an active fighter");
+                "the match starter really made the player an active fighter");
 
         assertTrue(isPlacementCancelledFor(fighter, TRIBUNE_X, ArenaMatchHarness.GROUND_Y + 1, TRIBUNE_Z));
         assertTrue(isBreakCancelledFor(fighter, TRIBUNE_X, ArenaMatchHarness.GROUND_Y, TRIBUNE_Z));
@@ -80,7 +80,7 @@ class WorldOutsideTheArenaTest {
                 "on the tribune");
         assertFalse(isBreakCancelledFor(admin, TRIBUNE_X, ArenaMatchHarness.GROUND_Y, TRIBUNE_Z));
         assertFalse(isPlacementCancelledFor(admin, WALL_X, ArenaMatchHarness.GROUND_Y + 1, WALL_Z),
-                "in the column his own border wall stands in");
+                "in the column the admin's own border wall stands in");
         assertFalse(isBreakCancelledFor(admin, WALL_X, ArenaMatchHarness.GROUND_Y, WALL_Z));
         assertFalse(isPlacementCancelledFor(admin, OPEN_X, ArenaMatchHarness.GROUND_Y + 1, OPEN_Z),
                 "and inside the fight area, while a match runs");
@@ -113,7 +113,7 @@ class WorldOutsideTheArenaTest {
         assertFalse(breakThroughTheListeners(admin, WALL_X, ArenaMatchHarness.GROUND_Y, WALL_Z));
         assertFalse(harness.getBorderService().isBorderBlock(harness.createBlock(WALL_X,
                 ArenaMatchHarness.GROUND_Y, WALL_Z)),
-                "and the admin who takes a piece of his wall out really takes its mark with it");
+                "and the admin who takes a piece of their wall out really takes its mark with it");
     }
 
     @Test
