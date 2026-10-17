@@ -4,8 +4,10 @@ import de.simplepvparena.support.EncodableItemStack;
 import de.simplepvparena.support.FakeKitItemSerializer;
 import de.simplepvparena.support.FakeSerializedKits;
 import de.simplepvparena.support.SharedBukkitServer;
+import org.bukkit.Material;
 import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.configuration.file.YamlConfiguration;
+import org.bukkit.inventory.ItemStack;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
@@ -211,6 +213,62 @@ class KitLibraryLoaderTest {
     }
 
     @Test
+    void reportsUnusableItemsOfTheTypedKitAndTakesTheUsableItemsOver(@TempDir Path pluginFolder)
+            throws InvalidConfigurationException {
+        YamlConfiguration configuration = configurationOf("""
+                kit:
+                  armor:
+                    head:
+                      material: DIAMOND_HELMET
+                  items:
+                    - material: WATER
+                    - material: DIAMOND_SWORD
+                    - material: ARROW
+                      amount: 0
+                    - material: BOW
+                """);
+        KitLibrary kitLibrary = libraryIn(pluginFolder);
+
+        loaderIn(pluginFolder, kitLibrary).load(configuration.getConfigurationSection("kit"));
+
+        assertEquals(List.of(KitLibraryLoader.MIGRATED_KIT_NAME), kitLibrary.getKitNames());
+        assertEquals(Optional.of("default"), kitLibrary.getDefaultKitName());
+        assertEquals(Map.of(KitEquipmentSlot.HEAD, "DIAMOND_HELMET x1"),
+                equipmentLabelsOf(kitService.getKitDefinition()));
+        assertEquals(List.of("DIAMOND_SWORD x1", "BOW x1"),
+                List.of(inventoryLabelOf(kitService.getKitDefinition(), 0),
+                        inventoryLabelOf(kitService.getKitDefinition(), 1)));
+        assertEquals(2, kitService.getKitDefinition().inventoryItems().size());
+        assertEquals(List.of("Unusable item WATER in kit configuration: WATER isn't an item",
+                "Unusable item ARROW in kit configuration: the amount 0 is not between 1 and 99"), problems);
+        assertEquals(List.of(MIGRATION_NOTICE), adminNotices);
+    }
+
+    @Test
+    void takesNoKitOverAndWarnsWhenEveryItemOfTheTypedKitIsUnusable(@TempDir Path pluginFolder)
+            throws InvalidConfigurationException {
+        YamlConfiguration configuration = configurationOf("""
+                kit:
+                  armor:
+                    head:
+                      material: WATER
+                  items:
+                    - material: DIAMOND_SWORD
+                      amount: 0
+                """);
+        KitLibrary kitLibrary = libraryIn(pluginFolder);
+
+        loaderIn(pluginFolder, kitLibrary).load(configuration.getConfigurationSection("kit"));
+
+        assertEquals(List.of(), kitLibrary.getKitNames());
+        assertTrue(kitService.getKitDefinition().isEmpty());
+        assertEquals(List.of(NO_READABLE_ITEM_NOTICE), adminNotices);
+        assertEquals(List.of("Unusable item WATER in kit configuration: WATER isn't an item",
+                "Unusable item DIAMOND_SWORD in kit configuration: the amount 0 is not between 1 and 99"), problems);
+        assertFalse(Files.exists(pluginFolder.resolve(FileKitLibraryStorage.FILE_NAME)));
+    }
+
+    @Test
     void takesNoTypedKitOverWhileKitsYmlExists(@TempDir Path pluginFolder)
             throws IOException, InvalidConfigurationException {
         storageIn(pluginFolder).save(new SavedKitLibrary(List.of(
@@ -374,7 +432,14 @@ class KitLibraryLoaderTest {
 
     private KitConfigurationLoader kitConfigurationLoader() {
         return new KitConfigurationLoader(problems::add, new FakeKitItemSerializer(),
-                kitItem -> new EncodableItemStack(kitItem.material().name() + " x" + kitItem.amount()));
+                KitLibraryLoaderTest::createItemStackLikeTheServer);
+    }
+
+    private static ItemStack createItemStackLikeTheServer(KitItem kitItem) {
+        if (kitItem.material() == Material.WATER) {
+            throw new IllegalArgumentException("WATER isn't an item");
+        }
+        return new EncodableItemStack(kitItem.material().name() + " x" + kitItem.amount());
     }
 
     private FileKitLibraryStorage storageIn(Path pluginFolder) {

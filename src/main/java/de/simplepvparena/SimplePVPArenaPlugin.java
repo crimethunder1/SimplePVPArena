@@ -89,9 +89,13 @@ import de.simplepvparena.tournament.KitChoiceService;
 import de.simplepvparena.tournament.OnlineAdminNotifier;
 import de.simplepvparena.tournament.TournamentManager;
 import org.bukkit.command.PluginCommand;
+import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.io.File;
+import java.util.function.Consumer;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public final class SimplePVPArenaPlugin extends JavaPlugin {
 
@@ -161,10 +165,11 @@ public final class SimplePVPArenaPlugin extends JavaPlugin {
                 new File(getDataFolder(), FileKitLibraryStorage.FILE_NAME).toPath(), getLogger()::warning);
         kitLibrary = new KitLibrary(kitLibraryStorage, kitService, kitItemSerializer, getLogger()::warning,
                 adminNotifier::notifyAdmins);
-        new KitLibraryLoader(kitLibraryStorage, kitLibrary,
-                new KitConfigurationLoader(getLogger()::warning, kitItemSerializer, KitItem::toItemStack),
-                adminNotifier::notifyAdmins, getLogger()::warning)
-                .load(getConfig().getConfigurationSection(PluginSettings.KIT_SECTION_PATH));
+        loadKitLibrary(new KitLibraryLoader(kitLibraryStorage, kitLibrary,
+                        new KitConfigurationLoader(getLogger()::warning, kitItemSerializer, KitItem::toItemStack),
+                        adminNotifier::notifyAdmins, getLogger()::warning),
+                getConfig().getConfigurationSection(PluginSettings.KIT_SECTION_PATH), getLogger(),
+                adminNotifier::notifyAdmins);
         kitSaveService = new KitSaveService(kitLibrary, kitItemSerializer);
 
         spectatorService = new SpectatorService(arenaRegistry, new SpectatorItemFactory(this));
@@ -322,6 +327,22 @@ public final class SimplePVPArenaPlugin extends JavaPlugin {
 
     public TournamentManager getTournamentManager() {
         return tournamentManager;
+    }
+
+    static void loadKitLibrary(KitLibraryLoader kitLibraryLoader, ConfigurationSection legacyKitSection,
+                               Logger logger, Consumer<String> adminNotifier) {
+        try {
+            kitLibraryLoader.load(legacyKitSection);
+        } catch (RuntimeException failure) {
+            String notice = "The kits could not be loaded (" + describe(failure) + "), there is no kit until one "
+                    + "is created in the kit menu of /" + COMMAND_NAME;
+            logger.log(Level.WARNING, notice, failure);
+            adminNotifier.accept(notice);
+        }
+    }
+
+    private static String describe(RuntimeException failure) {
+        return failure.getMessage() == null ? failure.getClass().getSimpleName() : failure.getMessage();
     }
 
     private void warnAboutLegacyMultiArenaConfiguration() {
