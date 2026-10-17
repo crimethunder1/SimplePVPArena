@@ -201,7 +201,7 @@ class MatchAdminMenuClickTest {
         assertRefreshedOnce(matchHolder);
         MenuTile finalTile = fixture.lastMenu().findTile(FINAL_SLOT).orElseThrow();
         assertEquals(MenuItems.UNAVAILABLE_MATERIAL, finalTile.material());
-        assertEquals(List.of("The final is not ready, its stage is RUNNING"), finalTile.loreLines());
+        assertEquals(List.of("The final is running"), finalTile.loreLines());
     }
 
     @Test

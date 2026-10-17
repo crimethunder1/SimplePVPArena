@@ -2,11 +2,15 @@ package de.simplepvparena.gui;
 
 import org.junit.jupiter.api.Test;
 
+import java.util.List;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class TeamsAdminMenuSnapshotTest {
 
     private static final int MAIN_TEAMS_SLOT = 11;
+    private static final int PREVIOUS_PAGE_SLOT = 45;
+    private static final int INFO_SLOT = 47;
     private static final int NEXT_PAGE_SLOT = 53;
 
     private final AdminMenuFixture fixture = new AdminMenuFixture();
@@ -85,7 +89,7 @@ class TeamsAdminMenuSnapshotTest {
                 Asks for a confirmation first
                 51 | LIME_WOOL | Add a team | Asks for <teamName> <firstPlayer> <secondPlayer> in the chat / \
                 Two player names cannot be typed into an inventory / The menu closes so you can type
-                53 | ARROW | Next page | Page 1 of 2
+                53 | ARROW | Next page | Page 2 of 2
                 """, fixture.describeLastMenu());
     }
 
@@ -99,7 +103,7 @@ class TeamsAdminMenuSnapshotTest {
         assertEquals("""
                 Teams (page 2) | 54
                 0 | PLAYER_HEAD | Team46 | Members: Team46-first, Team46-second / Click for the options of this team
-                45 | ARROW | Previous page | Page 2 of 2
+                45 | ARROW | Previous page | Page 1 of 2
                 47 | BOOK | Teams | Registered teams: 46 / Page 2 of 2 / A click on a team opens its options
                 49 | OAK_DOOR | Back | Returns to the main menu
                 50 | WRITABLE_BOOK | Load the teams from event.json | Reads event.json of the plugin folder / \
@@ -110,6 +114,29 @@ class TeamsAdminMenuSnapshotTest {
                 51 | LIME_WOOL | Add a team | Asks for <teamName> <firstPlayer> <secondPlayer> in the chat / \
                 Two player names cannot be typed into an inventory / The menu closes so you can type
                 """, fixture.describeLastMenu());
+    }
+
+    @Test
+    void namesTheTargetPageOnTheNextPageTileOfTheFirstOfTwoPages() {
+        fixture.registerNumberedTeams(46);
+
+        fixture.openMenuFromTheMainMenu(MAIN_TEAMS_SLOT);
+
+        assertEquals(List.of("Page 2 of 2"),
+                fixture.lastMenu().findTile(NEXT_PAGE_SLOT).orElseThrow().loreLines());
+        assertEquals("Page 1 of 2", fixture.lastMenu().findTile(INFO_SLOT).orElseThrow().loreLines().get(1));
+    }
+
+    @Test
+    void namesTheTargetPageOnThePreviousPageTileOfTheSecondOfTwoPages() {
+        fixture.registerNumberedTeams(46);
+        fixture.openMenuFromTheMainMenu(MAIN_TEAMS_SLOT);
+
+        fixture.click(NEXT_PAGE_SLOT);
+
+        assertEquals(List.of("Page 1 of 2"),
+                fixture.lastMenu().findTile(PREVIOUS_PAGE_SLOT).orElseThrow().loreLines());
+        assertEquals("Page 2 of 2", fixture.lastMenu().findTile(INFO_SLOT).orElseThrow().loreLines().get(1));
     }
 
     @Test

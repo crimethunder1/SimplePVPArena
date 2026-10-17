@@ -108,10 +108,30 @@ class AdminMenuChatInputTest {
         fixture.typeInChat("alpha Steve Alex");
         fixture.runNextTick();
 
-        assertEquals(List.of("a team named alpha already exists"), fixture.messages());
+        assertEquals(List.of("Team alpha could not be registered\nA team named alpha already exists"),
+                fixture.messages());
         assertNoTeamAdded();
         assertEquals("Alpha-first, Alpha-second",
                 fixture.teamRegistry().findTeam("Alpha").orElseThrow().getMemberNamesJoined());
+        assertTeamsReopened(0, "Teams (page 1)");
+    }
+
+    @Test
+    void rejectsAPlayerThatIsAlreadyInAnotherTeamAndNamesTheTypedTeam() {
+        fixture.makePlayersKnown("Notch");
+        askForTheTeamToAdd();
+        fixture.typeInChat("Bravo Steve Alex");
+        fixture.runNextTick();
+        fixture.click(TEAMS_ADD_SLOT);
+        fixture.messages().clear();
+
+        fixture.typeInChat("Charlie Steve Notch");
+        fixture.runNextTick();
+
+        assertEquals(List.of("Team Charlie could not be registered\nSteve is already registered in team Bravo"),
+                fixture.messages());
+        assertEquals(List.of("Alpha", "Bravo"), fixture.teamRegistry().getTeamNames());
+        assertEquals(1, fixture.teamConfigurationSaveCount());
         assertTeamsReopened(0, "Teams (page 1)");
     }
 

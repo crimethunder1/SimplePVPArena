@@ -2,6 +2,7 @@ package de.simplepvparena.gui;
 
 import de.simplepvparena.match.Match;
 import de.simplepvparena.match.MatchService;
+import de.simplepvparena.tournament.FinalMatchStage;
 import de.simplepvparena.tournament.TournamentManager;
 import org.bukkit.Material;
 
@@ -19,11 +20,19 @@ final class TournamentMenuStatus {
 
     MenuTile buildFinalItem() {
         if (!currentOptions().finalStartOffered()) {
-            return MenuItems.unavailable("Start the final",
-                    "The final is not ready, its stage is " + tournamentManager.getFinalMatchStage());
+            return MenuItems.unavailable("Start the final", describeUnavailableFinal());
         }
         return MenuItems.create(Material.NETHER_STAR, "Start the final",
                 "Both finalists are known", "Starts the final on the arena");
+    }
+
+    private String describeUnavailableFinal() {
+        FinalMatchStage finalMatchStage = tournamentManager.getFinalMatchStage();
+        return switch (finalMatchStage) {
+            case RUNNING -> "The final is running";
+            case FINISHED -> "The final is over";
+            default -> "The final is not ready, its stage is " + finalMatchStage;
+        };
     }
 
     TournamentMenuOptions currentOptions() {

@@ -79,8 +79,7 @@ final class ArenaAdminMenu implements AdminMenu {
         canvas.set(ARENA_FIRST_TEAM_SPAWN_SLOT, buildSpawnItem(Material.BLUE_BED, ArenaSpawnType.FIRST_TEAM));
         canvas.set(ARENA_SECOND_TEAM_SPAWN_SLOT, buildSpawnItem(Material.RED_BED, ArenaSpawnType.SECOND_TEAM));
         canvas.set(ARENA_TRIBUNE_SPAWN_SLOT, buildSpawnItem(Material.YELLOW_BED, ArenaSpawnType.TRIBUNE));
-        canvas.set(ARENA_CLEAN_SLOT, MenuItems.create(Material.TNT, "Clean the arena",
-                buildCleaningLore("Asks for a confirmation first")));
+        canvas.set(ARENA_CLEAN_SLOT, MenuItems.create(Material.TNT, "Clean the arena", buildCleaningTileLore()));
         canvas.set(ARENA_RESET_SLOT, MenuItems.create(MenuItems.DESTRUCTIVE_MATERIAL, "Reset the arena",
                 "Drops the fight area and all three spawns",
                 "The blocks and the border blocks stay untouched",
@@ -261,6 +260,13 @@ final class ArenaAdminMenu implements AdminMenu {
         lore.add("A gate nobody placed is skipped, the round still starts");
         lore.addAll(gateItemService.describeGate());
         return lore;
+    }
+
+    private List<String> buildCleaningTileLore() {
+        if (arenaSetupService.getShape().isEmpty()) {
+            return List.of("No fight area is calculated, there is nothing to clean");
+        }
+        return buildCleaningLore("Asks for a confirmation first");
     }
 
     private List<String> buildCleaningLore(String... closingLines) {

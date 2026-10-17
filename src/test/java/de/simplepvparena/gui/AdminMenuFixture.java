@@ -108,6 +108,7 @@ final class AdminMenuFixture {
     private final List<Runnable> scheduledTasks = new ArrayList<>();
     private final Map<String, TeamMember> knownPlayersByLowerCaseName = new LinkedHashMap<>();
     private final List<ItemStack> handedOutItems = new ArrayList<>();
+    private final Map<Integer, ItemStack> adminInventoryItems = new HashMap<>();
     private final List<SerializedKit> savedKits = new ArrayList<>();
     private final File importFile = new File("target/admin-menu-fixture/" + adminUniqueId + "/"
             + EventTeamImportFile.FILE_NAME);
@@ -268,6 +269,10 @@ final class AdminMenuFixture {
 
     List<String> describeKit() {
         return kitService.getKitDefinition().describe();
+    }
+
+    void placeInAdminInventory(int slotIndex, ItemStack itemStack) {
+        adminInventoryItems.put(slotIndex, itemStack);
     }
 
     void switchBorderSelectorModeOn() {
@@ -456,7 +461,7 @@ final class AdminMenuFixture {
 
     private PlayerInventory createAdminInventory() {
         return SharedBukkitServer.proxy(PlayerInventory.class, (method, arguments) -> switch (method.getName()) {
-            case "getItem" -> null;
+            case "getItem" -> adminInventoryItems.get(arguments[0]);
             case "addItem" -> {
                 handedOutItems.addAll(List.of((ItemStack[]) arguments[0]));
                 yield new HashMap<Integer, ItemStack>();

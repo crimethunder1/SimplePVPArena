@@ -7,6 +7,9 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 class ArenaAdminMenuSnapshotTest {
 
     private static final int MAIN_ARENA_SLOT = 10;
+    private static final int ARENA_CLEAN_SLOT = 15;
+    private static final int ARENA_RESET_SLOT = 16;
+    private static final int CONFIRM_YES_SLOT = 11;
 
     private final AdminMenuFixture fixture = new AdminMenuFixture();
 
@@ -33,9 +36,7 @@ class ArenaAdminMenuSnapshotTest {
                 14 | YELLOW_BED | Set the tribune spawn | Sets it to the position you stand on / \
                 Stand outside the border wall, where the spectators wait / \
                 A position on the wrong side of the fight area / is refused once the area is calculated
-                15 | TNT | Clean the arena | No baseline is stored, every block of the / fight area is set to air / \
-                A baseline is taken by the calculation and is / gone after a server restart / 0 blocks are affected / \
-                Asks for a confirmation first
+                15 | TNT | Clean the arena | No fight area is calculated, there is nothing to clean
                 16 | BARRIER | Reset the arena | Drops the fight area and all three spawns / \
                 The blocks and the border blocks stay untouched / Asks for a confirmation first
                 19 | TARGET | Mark the height of the fight area | Hands you the item that marks the lowest and the / \
@@ -53,6 +54,30 @@ class ArenaAdminMenuSnapshotTest {
                 It comes down over 10 seconds
                 22 | OAK_DOOR | Back | Returns to the main menu
                 """, fixture.describeLastMenu());
+    }
+
+    @Test
+    void showsOnlyTheMissingFightAreaOnTheCleanTileAfterTheArenaWasReset() {
+        fixture.configureArena();
+        fixture.openMenuFromTheMainMenu(MAIN_ARENA_SLOT);
+        fixture.click(ARENA_RESET_SLOT);
+        fixture.click(CONFIRM_YES_SLOT);
+
+        assertEquals("15 | TNT | Clean the arena | No fight area is calculated, there is nothing to clean",
+                describeTile(ARENA_CLEAN_SLOT));
+    }
+
+    @Test
+    void keepsTheCleanTileOfACalculatedFightAreaWithoutSpawns() {
+        fixture.storeTheFightArea();
+
+        fixture.openMenuFromTheMainMenu(MAIN_ARENA_SLOT);
+
+        assertEquals("""
+                15 | TNT | Clean the arena | No baseline is stored, every block of the / fight area is set to air / \
+                A baseline is taken by the calculation and is / gone after a server restart / \
+                Covers y 64 to y 67, the height of the fight area / 100 blocks are affected / \
+                Asks for a confirmation first""", describeTile(ARENA_CLEAN_SLOT));
     }
 
     @Test
@@ -153,5 +178,12 @@ class ArenaAdminMenuSnapshotTest {
                 It comes down over 10 seconds
                 22 | OAK_DOOR | Back | Returns to the main menu
                 """, fixture.describeLastMenu());
+    }
+
+    private String describeTile(int slot) {
+        return fixture.describeLastMenu().lines()
+                .filter(line -> line.startsWith(slot + " | "))
+                .findFirst()
+                .orElseThrow();
     }
 }

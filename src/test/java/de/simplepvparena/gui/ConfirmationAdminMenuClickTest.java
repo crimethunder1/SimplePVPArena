@@ -1,5 +1,6 @@
 package de.simplepvparena.gui;
 
+import de.simplepvparena.support.EncodableItemStack;
 import de.simplepvparena.tournament.TournamentState;
 import org.junit.jupiter.api.Test;
 
@@ -118,21 +119,37 @@ class ConfirmationAdminMenuClickTest {
     }
 
     @Test
-    void savesTheEmptyInventoryAsTheKitAfterYesAndReturnsToTheKitMenuThatShowsTheNewKit() {
+    void keepsTheKitWhenTheInventoryIsEmptyAfterYesAndReturnsToTheKitMenu() {
         fixture.fillKit();
+        openTheKitConfirmation();
+
+        fixture.click(YES_SLOT);
+
+        assertEquals(List.of("Your inventory is empty, the kit was not changed"), fixture.messages());
+        assertTrue(fixture.savedKits().isEmpty());
+        assertEquals(List.of("Worn items: 2 of 5", "Inventory items: 3 of 36 slots"), fixture.describeKit());
+        assertReturnedTo(AdminMenuType.KIT, "Kit", 0);
+        assertEquals(List.of("Worn items: 2 of 5", "Inventory items: 3 of 36 slots",
+                "Every fighter is given it when a round starts"), infoLore());
+    }
+
+    @Test
+    void savesAFilledInventoryAsTheKitAfterYesAndReturnsToTheKitMenu() {
+        fixture.fillKit();
+        fixture.placeInAdminInventory(0, new EncodableItemStack("sword"));
         openTheKitConfirmation();
 
         fixture.click(YES_SLOT);
 
         assertEquals(List.of("Kit saved: 0 items, 0 worn and 0 in the inventory",
                 "It is written into config.yml and is handed out from the next round on, "
-                        + "a running round keeps the kit its fighters were given"), fixture.messages());
+                        + "a running round keeps the kit its fighters were given",
+                "1 item could not be read back and are no part of the kit, the log names them"),
+                fixture.messages());
         assertEquals(1, fixture.savedKits().size());
-        assertEquals(0, fixture.savedKits().get(0).itemCount());
+        assertEquals(1, fixture.savedKits().get(0).itemCount());
         assertEquals(List.of("The kit is empty, no fighter is given anything"), fixture.describeKit());
         assertReturnedTo(AdminMenuType.KIT, "Kit", 0);
-        assertEquals(List.of("The kit is empty, no fighter is given anything",
-                "Every fighter is given it when a round starts"), infoLore());
     }
 
     @Test

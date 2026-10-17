@@ -1,5 +1,6 @@
 package de.simplepvparena.gui;
 
+import de.simplepvparena.kit.KitSaveResult;
 import de.simplepvparena.kit.KitSaveService;
 import de.simplepvparena.message.TournamentMessages;
 import org.bukkit.Material;
@@ -76,7 +77,12 @@ final class KitAdminMenu implements AdminMenu {
     }
 
     private void saveKit(Player player) {
-        TournamentMessages.sendSuccessReport(player, kitSaveService.saveFromInventory(player).describe());
+        KitSaveResult result = kitSaveService.saveFromInventory(player);
+        if (result.isSaved()) {
+            TournamentMessages.sendSuccessReport(player, result.describe());
+            return;
+        }
+        TournamentMessages.sendErrorReport(player, result.describe());
     }
 
     private List<String> buildKitInfoLore() {

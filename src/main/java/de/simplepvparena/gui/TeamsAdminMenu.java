@@ -15,6 +15,7 @@ import org.bukkit.entity.Player;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.OptionalInt;
@@ -84,11 +85,11 @@ final class TeamsAdminMenu implements AdminMenu {
                         "Asks for a confirmation first")));
         if (pagination.hasPreviousPage()) {
             canvas.set(TEAMS_PREVIOUS_PAGE_SLOT, MenuItems.create(MenuItems.PAGE_MATERIAL, "Previous page",
-                    "Page " + pagination.getPageNumber() + " of " + pagination.getPageCount()));
+                    "Page " + (pagination.getPreviousPageIndex() + 1) + " of " + pagination.getPageCount()));
         }
         if (pagination.hasNextPage()) {
             canvas.set(TEAMS_NEXT_PAGE_SLOT, MenuItems.create(MenuItems.PAGE_MATERIAL, "Next page",
-                    "Page " + pagination.getPageNumber() + " of " + pagination.getPageCount()));
+                    "Page " + (pagination.getNextPageIndex() + 1) + " of " + pagination.getPageCount()));
         }
         canvas.set(TEAMS_BACK_SLOT, MenuItems.back("the main menu"));
     }
@@ -222,13 +223,25 @@ final class TeamsAdminMenu implements AdminMenu {
             TournamentMessages.sendSuccess(player, "Team " + team.getTeamName() + " registered with "
                     + team.getMemberNamesJoined());
         } catch (IllegalArgumentException | IllegalStateException failure) {
-            TournamentMessages.sendError(player, failure.getMessage());
+            TournamentMessages.sendError(player, describeRegistrationFailure(request.getTeamName(), failure));
         }
     }
 
     private String describeUnknownPlayer(String playerName) {
         return "Unknown player " + playerName
                 + TournamentMessages.LINE_BREAK + "The player has to be online or known to the server";
+    }
+
+    private String describeRegistrationFailure(String teamName, RuntimeException failure) {
+        return "Team " + teamName + " could not be registered"
+                + TournamentMessages.LINE_BREAK + startWithCapitalLetter(failure.getMessage());
+    }
+
+    private String startWithCapitalLetter(String text) {
+        if (text.isEmpty()) {
+            return text;
+        }
+        return text.substring(0, 1).toUpperCase(Locale.ROOT) + text.substring(1);
     }
 
     private List<Team> collectTeams() {
