@@ -11,6 +11,7 @@ import de.simplepvparena.message.TournamentMessages;
 import de.simplepvparena.team.Team;
 import de.simplepvparena.team.TeamMember;
 import de.simplepvparena.team.TeamRegistry;
+import de.simplepvparena.team.TeamSizeSetting;
 import de.simplepvparena.tournament.Bracket;
 import de.simplepvparena.tournament.BracketMatch;
 import de.simplepvparena.tournament.FinalMatchGate;
@@ -43,6 +44,7 @@ public final class TournamentDryRun {
     private final KitService kitService;
     private final StartGateMarks gateMarks;
     private final StartGateDuration gateDuration;
+    private final TeamSizeSetting teamSizeSetting;
 
     public TournamentDryRun(Supplier<TournamentState> tournamentState,
                             BooleanSupplier runningMatchLookup,
@@ -51,6 +53,18 @@ public final class TournamentDryRun {
                             KitService kitService,
                             StartGateMarks gateMarks,
                             StartGateDuration gateDuration) {
+        this(tournamentState, runningMatchLookup, teamRegistry, arena, kitService, gateMarks, gateDuration,
+                new TeamSizeSetting());
+    }
+
+    public TournamentDryRun(Supplier<TournamentState> tournamentState,
+                            BooleanSupplier runningMatchLookup,
+                            TeamRegistry teamRegistry,
+                            DryRunArena arena,
+                            KitService kitService,
+                            StartGateMarks gateMarks,
+                            StartGateDuration gateDuration,
+                            TeamSizeSetting teamSizeSetting) {
         this.tournamentState = Objects.requireNonNull(tournamentState, "tournamentState");
         this.runningMatchLookup = Objects.requireNonNull(runningMatchLookup, "runningMatchLookup");
         this.teamRegistry = Objects.requireNonNull(teamRegistry, "teamRegistry");
@@ -58,6 +72,7 @@ public final class TournamentDryRun {
         this.kitService = Objects.requireNonNull(kitService, "kitService");
         this.gateMarks = Objects.requireNonNull(gateMarks, "gateMarks");
         this.gateDuration = Objects.requireNonNull(gateDuration, "gateDuration");
+        this.teamSizeSetting = Objects.requireNonNull(teamSizeSetting, "teamSizeSetting");
     }
 
     public Optional<String> findRejection() {
@@ -84,7 +99,7 @@ public final class TournamentDryRun {
             return DryRunReport.rejected(rejection.get());
         }
         int teamCountBefore = teamRegistry.getTeamCount();
-        List<DryRunTeam> testTeams = DryRunTeam.createTestTeams();
+        List<DryRunTeam> testTeams = DryRunTeam.createTestTeams(teamSizeSetting.getTeamSize());
         List<DryRunTeam> registeredTeams = new ArrayList<>();
         List<DryRunStep> steps = new ArrayList<>();
         try {

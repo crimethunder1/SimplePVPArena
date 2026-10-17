@@ -2,7 +2,7 @@ name: SimplePVPArena
 version: '${project.version}'
 main: de.simplepvparena.SimplePVPArenaPlugin
 api-version: '26.2'
-description: Tournament plugin running a team versus team single elimination bracket
+description: Tournament plugin running a team versus team single elimination bracket with teams of 1 to 8 players, the team size is match.team-size in config.yml
 authors:
   - crimethunder
 softdepend:
@@ -16,7 +16,7 @@ commands:
       - turnier
 permissions:
   tournament.admin:
-    description: Allows opening the tournament menu that manages teams, the arena, border blocks, matches and the tournament
+    description: Allows opening the tournament menu that manages teams and the team size, the arena, border blocks, matches and the tournament
     default: op
   tournament.spectate:
     description: Allows returning to the tribune of the arena

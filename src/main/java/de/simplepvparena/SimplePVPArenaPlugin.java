@@ -32,6 +32,7 @@ import de.simplepvparena.config.ConfigurationReloadReport;
 import de.simplepvparena.config.ConfigurationReloadService;
 import de.simplepvparena.config.PluginLiveConfiguration;
 import de.simplepvparena.config.PluginSettings;
+import de.simplepvparena.config.TeamSizeConfigurationWriter;
 import de.simplepvparena.diagnostics.PluginDryRunArena;
 import de.simplepvparena.diagnostics.TournamentDryRun;
 import de.simplepvparena.gate.StartGateDuration;
@@ -79,6 +80,7 @@ import de.simplepvparena.match.MatchService;
 import de.simplepvparena.match.ScoreboardFighterColours;
 import de.simplepvparena.team.TeamMemberLookup;
 import de.simplepvparena.team.TeamRegistry;
+import de.simplepvparena.team.TeamSizeSetting;
 import de.simplepvparena.team.TeamStorage;
 import de.simplepvparena.tournament.AdminNotifier;
 import de.simplepvparena.tournament.AutomaticArenaCleanup;
@@ -100,6 +102,7 @@ public final class SimplePVPArenaPlugin extends JavaPlugin {
     private static final String COMMAND_NAME = "tournament";
     private static final String TEAMS_FILE_NAME = "teams.yml";
     private static final String BORDERS_FILE_NAME = "borders.yml";
+    private static final String CONFIGURATION_FILE_NAME = "config.yml";
 
     private ArenaRegistry arenaRegistry;
     private TeamRegistry teamRegistry;
@@ -224,17 +227,18 @@ public final class SimplePVPArenaPlugin extends JavaPlugin {
         KitChoiceService kitChoiceService = new KitChoiceService(this, kitLibrary, adminNotifier);
         arenaSetupService.setArenaReservedForMatch(kitChoiceService::isPending);
 
+        TeamSizeSetting teamSizeSetting = new TeamSizeSetting();
         tournamentManager = new TournamentManager(this, teamRegistry, arenaRegistry, matchService,
                 new AutomaticArenaCleanup(arenaSetupService, arenaCleaningService),
                 adminNotifier, new FileTournamentStateStorage(
                         new File(getDataFolder(), FileTournamentStateStorage.FILE_NAME).toPath()),
-                kitChoiceService);
+                kitChoiceService, teamSizeSetting);
         tournamentManager.restoreSavedTournament();
 
         tournamentDryRun = new TournamentDryRun(tournamentManager::getState,
                 matchService::hasActiveMatch, teamRegistry,
                 new PluginDryRunArena(arenaRegistry.getArena(), arenaSetupService), kitService,
-                startGateMarks, startGateDuration);
+                startGateMarks, startGateDuration, teamSizeSetting);
 
         chatInputService = new ChatInputService(this);
         TeamMemberLookup teamMemberLookup = new TeamMemberLookup(getServer());
@@ -242,13 +246,15 @@ public final class SimplePVPArenaPlugin extends JavaPlugin {
                 teamMemberLookup, matchService, arenaSetupService,
                 arenaHeightMarkerService, startGateItemService,
                 borderSelectorModes, kitLibrary, kitSaveService, chatInputService, this::saveTeamConfiguration,
-                this::reloadConfiguration);
+                this::reloadConfiguration, new TeamSizeConfigurationWriter(this::getConfig,
+                        new File(getDataFolder(), CONFIGURATION_FILE_NAME), getLogger()));
 
         configurationReloadService = new ConfigurationReloadService(this::getConfig, this::reloadConfig,
                 new PluginLiveConfiguration(matchService, startGateDuration, fighterColours,
                         arenaCleaningService, arenaCleaningVisualEffect, arenaBaselineService, arenaSetupService,
                         arenaSafetyZone, arenaRegistry, borderParticleService, borderWallPreview,
-                        borderVisualEffect,
+                        borderVisualEffect, teamSizeSetting, teamRegistry, tournamentManager::isTournamentInProgress,
+                        adminNotifier::notifyAdmins,
                         getLogger()::warning),
                 getLogger()::warning);
         configurationReloadService.applyStoredConfiguration();

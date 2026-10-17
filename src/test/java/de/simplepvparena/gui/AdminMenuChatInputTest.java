@@ -1,5 +1,6 @@
 package de.simplepvparena.gui;
 
+import de.simplepvparena.team.Team;
 import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
@@ -26,6 +27,7 @@ class AdminMenuChatInputTest {
 
     @Test
     void closesTheTeamsMenuRegistersOneRequestAndAsksForTheTeamToAdd() {
+        fixture.setTeamSize(Team.MAXIMUM_MEMBER_COUNT);
         fixture.registerTeams("Alpha");
         fixture.openMenuFromTheMainMenu(MAIN_TEAMS_SLOT);
 
@@ -81,6 +83,7 @@ class AdminMenuChatInputTest {
 
     @Test
     void rejectsATeamLineWithTooFewValuesAndReopensTheTeamList() {
+        fixture.setTeamSize(Team.MAXIMUM_MEMBER_COUNT);
         askForTheTeamToAdd();
 
         fixture.typeInChat("Bravo");
@@ -94,6 +97,7 @@ class AdminMenuChatInputTest {
 
     @Test
     void rejectsATeamLineThatNamesOnePlayerTwiceAndReopensTheTeamList() {
+        fixture.setTeamSize(Team.MAXIMUM_MEMBER_COUNT);
         askForTheTeamToAdd();
 
         fixture.typeInChat("Bravo Steve steve");
@@ -166,6 +170,7 @@ class AdminMenuChatInputTest {
 
     @Test
     void registersTypedTeamsOfOneToEightPlayers() {
+        fixture.setTeamSize(Team.MAXIMUM_MEMBER_COUNT);
         askForTheTeamToAdd();
         List<String> expectedTeamNames = new ArrayList<>(List.of("Alpha"));
 
@@ -194,6 +199,7 @@ class AdminMenuChatInputTest {
 
     @Test
     void rejectsATeamLineWithNinePlayersAndReopensTheTeamList() {
+        fixture.setTeamSize(Team.MAXIMUM_MEMBER_COUNT);
         askForTheTeamToAdd();
 
         fixture.typeInChat("Bravo P1 P2 P3 P4 P5 P6 P7 P8 P9");
@@ -207,6 +213,7 @@ class AdminMenuChatInputTest {
 
     @Test
     void rejectsATeamLineThatNamesAPlayerTwiceApartAndReopensTheTeamList() {
+        fixture.setTeamSize(Team.MAXIMUM_MEMBER_COUNT);
         askForTheTeamToAdd();
         fixture.makePlayersKnown("Notch", "Jeb_");
 
@@ -220,6 +227,7 @@ class AdminMenuChatInputTest {
 
     @Test
     void rejectsAPlayerThatTheLookupDoesNotFindAtAnyPositionAndReopensTheTeamList() {
+        fixture.setTeamSize(Team.MAXIMUM_MEMBER_COUNT);
         List<String> knownPlayerNames = List.of("Steve", "Alex", "Notch", "Jeb_");
         askForTheTeamToAdd();
         fixture.makePlayersKnown("Notch", "Jeb_");
@@ -473,6 +481,104 @@ class AdminMenuChatInputTest {
         assertEquals(List.of(NOT_ALLOWED), fixture.messages());
         assertTrue(fixture.handedOutItems().isEmpty());
         assertTrue(fixture.isMenuClosed());
+    }
+
+    @Test
+    void asksForATeamOfTheCurrentTeamSize() {
+        List<String> expectedSizeLines = List.of(
+                "A team has 1 player, a team name has 1 to 16 letters, digits, hyphens or underscores",
+                "A team has 1 to 2 players, a team name has 1 to 16 letters, digits, hyphens or underscores",
+                "A team has 1 to 3 players, a team name has 1 to 16 letters, digits, hyphens or underscores");
+
+        for (int teamSize = 1; teamSize <= 3; teamSize++) {
+            fixture.setTeamSize(teamSize);
+            fixture.openMenuFromTheMainMenu(MAIN_TEAMS_SLOT);
+
+            fixture.click(TEAMS_ADD_SLOT);
+
+            assertEquals(expectedSizeLines.get(teamSize - 1), fixture.messages().get(1), "a team size of " + teamSize);
+            fixture.typeInChat("cancel");
+            fixture.runNextTick();
+        }
+    }
+
+    @Test
+    void registersTypedTeamsUpToTheTeamSizeAndRejectsATeamOfOnePlayerMore() {
+        askForTheTeamToAdd();
+        List<String> expectedTeamNames = new ArrayList<>(List.of("Alpha"));
+        List<String> expectedRejections = List.of(
+                "Expected 2 values separated by spaces (<teamName> <player> [<player> ...]), but got 3: "
+                        + "Large1 L1Player1 L1Player2",
+                "Expected 2 to 3 values separated by spaces (<teamName> <player> [<player> ...]), but got 4: "
+                        + "Large2 L2Player1 L2Player2 L2Player3",
+                "Expected 2 to 4 values separated by spaces (<teamName> <player> [<player> ...]), but got 5: "
+                        + "Large3 L3Player1 L3Player2 L3Player3 L3Player4");
+
+        for (int teamSize = 1; teamSize <= 3; teamSize++) {
+            fixture.setTeamSize(teamSize);
+            for (int playerCount = 1; playerCount <= teamSize; playerCount++) {
+                String teamName = "S" + teamSize + "Team" + playerCount;
+                List<String> playerNames = createKnownPlayerNames(teamName, playerCount);
+                fixture.messages().clear();
+
+                fixture.typeInChat(teamName + " " + String.join(" ", playerNames));
+                fixture.runNextTick();
+
+                assertEquals(List.of("Team " + teamName + " registered with " + String.join(", ", playerNames)),
+                        fixture.messages(), playerCount + " players at a team size of " + teamSize);
+                expectedTeamNames.add(teamName);
+                fixture.click(TEAMS_ADD_SLOT);
+            }
+            List<String> tooManyPlayerNames = createKnownPlayerNames("L" + teamSize, teamSize + 1);
+            fixture.messages().clear();
+
+            fixture.typeInChat("Large" + teamSize + " " + String.join(" ", tooManyPlayerNames));
+            fixture.runNextTick();
+
+            assertEquals(List.of(expectedRejections.get(teamSize - 1)), fixture.messages());
+            assertEquals(expectedTeamNames, fixture.teamRegistry().getTeamNames());
+            assertTeamsReopened(0, "Teams (page 1)");
+            fixture.click(TEAMS_ADD_SLOT);
+        }
+        assertEquals(6, fixture.teamConfigurationSaveCount());
+    }
+
+    @Test
+    void namesTheCurrentTeamSizeWhenATypedTeamNamesAPlayerTwice() {
+        fixture.setTeamSize(3);
+        askForTheTeamToAdd();
+
+        fixture.typeInChat("Bravo Alex Steve ALEX");
+        fixture.runNextTick();
+
+        assertEquals(List.of("A team needs 1 to 3 different players, Alex was named twice"), fixture.messages());
+        assertNoTeamAdded();
+        assertTeamsReopened(0, "Teams (page 1)");
+    }
+
+    @Test
+    void checksTheTypedTeamAgainstTheTeamSizeOfTheMomentTheLineArrives() {
+        fixture.makePlayersKnown("Notch");
+        fixture.setTeamSize(3);
+        askForTheTeamToAdd();
+
+        fixture.setTeamSize(2);
+        fixture.typeInChat("Bravo Steve Alex Notch");
+        fixture.runNextTick();
+
+        assertEquals(List.of("Expected 2 to 3 values separated by spaces (<teamName> <player> [<player> ...]), "
+                + "but got 4: Bravo Steve Alex Notch"), fixture.messages());
+        assertNoTeamAdded();
+        assertTeamsReopened(0, "Teams (page 1)");
+    }
+
+    private List<String> createKnownPlayerNames(String prefix, int playerCount) {
+        List<String> playerNames = new ArrayList<>();
+        for (int playerNumber = 1; playerNumber <= playerCount; playerNumber++) {
+            playerNames.add(prefix + "Player" + playerNumber);
+        }
+        fixture.makePlayersKnown(playerNames.toArray(String[]::new));
+        return playerNames;
     }
 
     private void askForTheTeamToAdd() {

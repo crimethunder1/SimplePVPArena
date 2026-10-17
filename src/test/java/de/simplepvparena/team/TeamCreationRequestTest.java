@@ -13,9 +13,11 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class TeamCreationRequestTest {
 
+    private static final int LARGEST_TEAM_SIZE = Team.MAXIMUM_MEMBER_COUNT;
+
     @Test
     void acceptsATeamNameAndTwoPlayerNames() {
-        TeamCreationRequest request = TeamCreationRequest.parse("Alpha Steve Alex");
+        TeamCreationRequest request = TeamCreationRequest.parse("Alpha Steve Alex", LARGEST_TEAM_SIZE);
 
         assertTrue(request.isAccepted());
         assertEquals("Alpha", request.getTeamName());
@@ -27,7 +29,8 @@ class TeamCreationRequestTest {
         for (int playerCount = 1; playerCount <= 8; playerCount++) {
             List<String> playerNames = createPlayerNames(playerCount);
 
-            TeamCreationRequest request = TeamCreationRequest.parse("Alpha " + String.join(" ", playerNames));
+            TeamCreationRequest request = TeamCreationRequest.parse("Alpha " + String.join(" ", playerNames),
+                    LARGEST_TEAM_SIZE);
 
             assertTrue(request.isAccepted(), playerCount + " players");
             assertEquals("Alpha", request.getTeamName());
@@ -37,7 +40,7 @@ class TeamCreationRequestTest {
 
     @Test
     void ignoresTheSpacesAroundTheValues() {
-        TeamCreationRequest request = TeamCreationRequest.parse("  Alpha   Steve  Alex ");
+        TeamCreationRequest request = TeamCreationRequest.parse("  Alpha   Steve  Alex ", LARGEST_TEAM_SIZE);
 
         assertTrue(request.isAccepted());
         assertEquals("Alpha", request.getTeamName());
@@ -46,7 +49,7 @@ class TeamCreationRequestTest {
 
     @Test
     void rejectsALineWithTooFewValues() {
-        TeamCreationRequest request = TeamCreationRequest.parse("Alpha");
+        TeamCreationRequest request = TeamCreationRequest.parse("Alpha", LARGEST_TEAM_SIZE);
 
         assertFalse(request.isAccepted());
         assertEquals("Expected 2 to 9 values separated by spaces (<teamName> <player> [<player> ...]), "
@@ -55,7 +58,8 @@ class TeamCreationRequestTest {
 
     @Test
     void rejectsALineWithTooManyValues() {
-        TeamCreationRequest request = TeamCreationRequest.parse("Alpha " + String.join(" ", createPlayerNames(9)));
+        TeamCreationRequest request = TeamCreationRequest.parse("Alpha " + String.join(" ", createPlayerNames(9)),
+                LARGEST_TEAM_SIZE);
 
         assertFalse(request.isAccepted());
         assertEquals("Expected 2 to 9 values separated by spaces (<teamName> <player> [<player> ...]), "
@@ -65,7 +69,7 @@ class TeamCreationRequestTest {
 
     @Test
     void rejectsAnEmptyLine() {
-        TeamCreationRequest request = TeamCreationRequest.parse("   ");
+        TeamCreationRequest request = TeamCreationRequest.parse("   ", LARGEST_TEAM_SIZE);
 
         assertFalse(request.isAccepted());
         assertEquals("Nothing was typed, expected <teamName> <player> [<player> ...]",
@@ -74,7 +78,7 @@ class TeamCreationRequestTest {
 
     @Test
     void rejectsTheSamePlayerNamedTwice() {
-        TeamCreationRequest request = TeamCreationRequest.parse("Alpha Steve steve");
+        TeamCreationRequest request = TeamCreationRequest.parse("Alpha Steve steve", LARGEST_TEAM_SIZE);
 
         assertFalse(request.isAccepted());
         assertEquals("A team needs 1 to 8 different players, Steve was named twice",
@@ -88,7 +92,8 @@ class TeamCreationRequestTest {
                 List<String> playerNames = new ArrayList<>(createPlayerNames(8));
                 playerNames.set(secondPosition, playerNames.get(firstPosition).toUpperCase(Locale.ROOT));
 
-                TeamCreationRequest request = TeamCreationRequest.parse("Alpha " + String.join(" ", playerNames));
+                TeamCreationRequest request = TeamCreationRequest.parse("Alpha " + String.join(" ", playerNames),
+                        LARGEST_TEAM_SIZE);
 
                 assertFalse(request.isAccepted(), "positions " + firstPosition + " and " + secondPosition);
                 assertEquals("A team needs 1 to 8 different players, Player" + (firstPosition + 1)
@@ -99,10 +104,73 @@ class TeamCreationRequestTest {
 
     @Test
     void handsOutNoValuesOfARejectedLine() {
-        TeamCreationRequest request = TeamCreationRequest.parse("Alpha");
+        TeamCreationRequest request = TeamCreationRequest.parse("Alpha", LARGEST_TEAM_SIZE);
 
         assertThrows(IllegalStateException.class, request::getTeamName);
         assertThrows(IllegalStateException.class, request::getPlayerNames);
+    }
+
+    @Test
+    void acceptsUpToTheTeamSizeAndRejectsOnePlayerMoreNamingTheTeamSize() {
+        for (int teamSize = 1; teamSize <= 8; teamSize++) {
+            for (int playerCount = 1; playerCount <= teamSize; playerCount++) {
+                TeamCreationRequest request = TeamCreationRequest.parse(
+                        "Alpha " + String.join(" ", createPlayerNames(playerCount)), teamSize);
+
+                assertTrue(request.isAccepted(), playerCount + " players at a team size of " + teamSize);
+            }
+
+            TeamCreationRequest tooLarge = TeamCreationRequest.parse(
+                    "Alpha " + String.join(" ", createPlayerNames(teamSize + 1)), teamSize);
+
+            assertFalse(tooLarge.isAccepted(), (teamSize + 1) + " players at a team size of " + teamSize);
+            assertTrue(tooLarge.getRejectionMessage().orElseThrow().startsWith("Expected 2"
+                    + (teamSize == 1 ? "" : " to " + (teamSize + 1)) + " values separated by spaces"),
+                    tooLarge.getRejectionMessage().orElseThrow());
+        }
+    }
+
+    @Test
+    void namesTheValueCountOfTeamsOfTwoAndOfThreePlayers() {
+        assertEquals("Expected 2 to 3 values separated by spaces (<teamName> <player> [<player> ...]), "
+                        + "but got 4: Alpha Steve Alex Notch",
+                TeamCreationRequest.parse("Alpha Steve Alex Notch", 2).getRejectionMessage().orElseThrow());
+        assertEquals("Expected 2 to 4 values separated by spaces (<teamName> <player> [<player> ...]), "
+                        + "but got 5: Alpha Steve Alex Notch Jeb_",
+                TeamCreationRequest.parse("Alpha Steve Alex Notch Jeb_", 3).getRejectionMessage().orElseThrow());
+        assertEquals("Expected 2 to 4 values separated by spaces (<teamName> <player> [<player> ...]), "
+                        + "but got 1: Alpha",
+                TeamCreationRequest.parse("Alpha", 3).getRejectionMessage().orElseThrow());
+    }
+
+    @Test
+    void namesTheSingleValueCountOfTeamsOfOnePlayer() {
+        assertEquals("Expected 2 values separated by spaces (<teamName> <player> [<player> ...]), "
+                        + "but got 3: Alpha Steve Alex",
+                TeamCreationRequest.parse("Alpha Steve Alex", 1).getRejectionMessage().orElseThrow());
+
+        TeamCreationRequest solo = TeamCreationRequest.parse("Alpha Steve", 1);
+
+        assertTrue(solo.isAccepted());
+        assertEquals(List.of("Steve"), solo.getPlayerNames());
+    }
+
+    @Test
+    void namesTheTeamSizeWhenAPlayerIsNamedTwice() {
+        assertEquals("A team needs 1 to 2 different players, Steve was named twice",
+                TeamCreationRequest.parse("Alpha Steve steve", 2).getRejectionMessage().orElseThrow());
+        assertEquals("A team needs 1 to 3 different players, Alex was named twice",
+                TeamCreationRequest.parse("Alpha Alex Steve ALEX", 3).getRejectionMessage().orElseThrow());
+    }
+
+    @Test
+    void refusesATeamSizeOutsideOfOneToEight() {
+        for (int teamSize : new int[] {0, 9}) {
+            IllegalArgumentException refusal = assertThrows(IllegalArgumentException.class,
+                    () -> TeamCreationRequest.parse("Alpha Steve", teamSize));
+
+            assertEquals("The team size must lie between 1 and 8 players, not " + teamSize, refusal.getMessage());
+        }
     }
 
     private static List<String> createPlayerNames(int playerCount) {

@@ -28,6 +28,8 @@ import de.simplepvparena.match.FighterColours;
 import de.simplepvparena.match.MatchService;
 import de.simplepvparena.support.FakeSpectatorItems;
 import de.simplepvparena.support.SharedBukkitServer;
+import de.simplepvparena.team.TeamRegistry;
+import de.simplepvparena.team.TeamSizeSetting;
 import org.bukkit.configuration.MemoryConfiguration;
 import org.bukkit.plugin.Plugin;
 import org.junit.jupiter.api.Test;
@@ -219,6 +221,7 @@ class EffectAreaSettingsTest {
                 new ArenaSafetyZone(arenaRegistry.getArena()::getShape, playerUniqueId -> false), arenaRegistry,
                 new BorderParticleService(plugin, new BorderMarkIndex(), borderVisualEffect,
                         playerUniqueId -> false, borderConfirmation),
-                wallPreview, borderVisualEffect, logger);
+                wallPreview, borderVisualEffect, new TeamSizeSetting(), new TeamRegistry(), () -> false,
+                notice -> { }, logger);
     }
 }

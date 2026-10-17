@@ -37,6 +37,7 @@ class ConfigurationReloadServiceTest {
         assertEquals(4, liveConfiguration.intValueOf(RecordingLiveConfiguration.START_GATE_DURATION));
         assertEquals(new TeamColourSettings(NamedTextColor.GOLD, NamedTextColor.DARK_PURPLE),
                 liveConfiguration.teamColourSettings());
+        assertEquals(4, liveConfiguration.intValueOf(RecordingLiveConfiguration.TEAM_SIZE));
         assertEquals(1024, liveConfiguration.intValueOf(RecordingLiveConfiguration.CLEANING_BLOCKS_PER_TICK));
         assertEquals(2048, liveConfiguration.intValueOf(RecordingLiveConfiguration.BASELINE_BLOCKS_PER_TICK));
         assertEquals(20, liveConfiguration.intValueOf(RecordingLiveConfiguration.BASELINE_DEPTH_BELOW_FLOOR));

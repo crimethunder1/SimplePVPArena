@@ -10,6 +10,7 @@ import de.simplepvparena.gate.StartGateMarks;
 import de.simplepvparena.team.Team;
 import de.simplepvparena.team.TeamMember;
 import de.simplepvparena.team.TeamRegistry;
+import de.simplepvparena.team.TeamSizeSetting;
 import de.simplepvparena.tournament.TournamentState;
 import org.bukkit.Material;
 import org.junit.jupiter.api.Test;
@@ -320,9 +321,75 @@ class TournamentDryRunTest {
                 "the report always says what it could not check");
     }
 
+    @Test
+    void reportsEveryLineOfTeamsOfTwoPlayersExactlyAsTheDryRunWithoutATeamSizeDid() {
+        makeTheServerReadyForItsEvent();
+        TeamSizeSetting teamSizeSetting = new TeamSizeSetting();
+        List<String> withoutTeamSize = dryRun().run().describe();
+
+        List<String> withTeamSizeTwo = dryRunWith(teamSizeSetting).run().describe();
+
+        assertEquals(withoutTeamSize, withTeamSizeTwo);
+        assertTrue(withTeamSizeTwo.contains(
+                "    Both are found by name and both placeholder players are found by their unique id"),
+                withTeamSizeTwo.toString());
+    }
+
+    @Test
+    void registersTestTeamsOfThreePlaceholderPlayersAtATeamSizeOfThree() {
+        TeamSizeSetting teamSizeSetting = new TeamSizeSetting();
+        teamSizeSetting.setTeamSize(3);
+        registerRealTeam("Alpha");
+
+        DryRunReport report = dryRunWith(teamSizeSetting).run();
+
+        assertEquals(List.of("Dry-Run-Alpha with Dry-Run-Alpha-1, Dry-Run-Alpha-2, Dry-Run-Alpha-3",
+                "Dry-Run-Bravo with Dry-Run-Bravo-1, Dry-Run-Bravo-2, Dry-Run-Bravo-3",
+                "Both are found by name and every placeholder player is found by their unique id",
+                "The members are placeholders and no account of this server, and nothing was written to teams.yml"),
+                findStep(report, TournamentDryRun.TEAM_STEP).details());
+        assertTrue(findStep(report, TournamentDryRun.CLEANUP_STEP).isPassed());
+        assertEquals(List.of("Alpha"), teamRegistry.getTeamNames());
+        assertEquals(3, teamSizeSetting.getTeamSize(), "the dry run never changes the team size");
+    }
+
+    @Test
+    void registersTestTeamsOfOnePlaceholderPlayerAtATeamSizeOfOne() {
+        TeamSizeSetting teamSizeSetting = new TeamSizeSetting();
+        teamSizeSetting.setTeamSize(1);
+
+        DryRunReport report = dryRunWith(teamSizeSetting).run();
+
+        assertEquals(List.of("Dry-Run-Alpha with Dry-Run-Alpha-1", "Dry-Run-Bravo with Dry-Run-Bravo-1",
+                "Both are found by name and every placeholder player is found by their unique id",
+                "The members are placeholders and no account of this server, and nothing was written to teams.yml"),
+                findStep(report, TournamentDryRun.TEAM_STEP).details());
+        assertEquals(1, teamSizeSetting.getTeamSize());
+    }
+
+    @Test
+    void walksTheSimulatedMatchWithTestTeamsOfEightPlayers() {
+        makeTheServerReadyForItsEvent();
+        TeamSizeSetting teamSizeSetting = new TeamSizeSetting();
+        teamSizeSetting.setTeamSize(8);
+
+        DryRunReport report = dryRunWith(teamSizeSetting).run();
+
+        assertTrue(findStep(report, TournamentDryRun.TEAM_STEP).isPassed());
+        assertTrue(findStep(report, TournamentDryRun.MATCH_STEP).isPassed());
+        assertTrue(findStep(report, TournamentDryRun.CLEANUP_STEP).isPassed());
+        assertEquals(0, teamRegistry.getTeamCount());
+        assertEquals(8, teamSizeSetting.getTeamSize());
+    }
+
     private TournamentDryRun dryRun() {
         return new TournamentDryRun(() -> tournamentState, () -> matchRunning, teamRegistry, arena,
                 kitService, gateMarks, gateDuration);
+    }
+
+    private TournamentDryRun dryRunWith(TeamSizeSetting teamSizeSetting) {
+        return new TournamentDryRun(() -> tournamentState, () -> matchRunning, teamRegistry, arena,
+                kitService, gateMarks, gateDuration, teamSizeSetting);
     }
 
     private void makeTheServerReadyForItsEvent() {

@@ -116,6 +116,9 @@ class AdminMenuSeamTest {
                 () -> {
                     throw new UnsupportedOperationException("the configuration is not reloaded in this test");
                 },
+                teamSize -> {
+                    throw new UnsupportedOperationException("the team size is not written in this test");
+                },
                 windows,
                 List::of);
         player = createPlayer();

@@ -279,7 +279,8 @@ class ConfirmationAdminMenuClickTest {
         assertEquals(1, fixture.teamConfigurationSaveCount());
         assertReturnedTo(AdminMenuType.TEAMS, "Teams (page 1)", 1);
         assertEquals("Team01", fixture.lastMenu().findTile(TEAMS_FIRST_TEAM_SLOT).orElseThrow().displayName());
-        assertEquals(List.of("Registered teams: 45", "Page 1 of 1", "A click on a team opens its options"),
+        assertEquals(List.of("Registered teams: 45", "Page 1 of 1", "Team size: 2 (2 versus 2)",
+                        "A click on a team opens its options"),
                 fixture.lastMenu().findTile(47).orElseThrow().loreLines());
     }
 

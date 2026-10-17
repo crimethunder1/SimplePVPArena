@@ -69,6 +69,7 @@ import org.bukkit.plugin.Plugin;
 import org.bukkit.scheduler.BukkitScheduler;
 import org.bukkit.scheduler.BukkitTask;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -119,6 +120,7 @@ final class AdminMenuFixture {
     private final Map<Integer, ItemStack> adminInventoryItems = new HashMap<>();
     private final List<Player> onlinePlayers = new ArrayList<>();
     private final List<String> adminNotifications = new ArrayList<>();
+    private final List<Integer> writtenTeamSizes = new ArrayList<>();
     private final TickingScheduler kitChoiceScheduler = new TickingScheduler();
     private final KitChoiceService kitChoiceService;
     private final World world;
@@ -136,6 +138,7 @@ final class AdminMenuFixture {
     private Location adminLocation;
     private int teamConfigurationSaveCount;
     private int arenaConfigurationSaveCount;
+    private IOException teamSizeWriteFailure;
 
     AdminMenuFixture() {
         this(false);
@@ -177,7 +180,7 @@ final class AdminMenuFixture {
         TournamentDryRun tournamentDryRun = new TournamentDryRun(tournamentManager::getState,
                 matchService::hasActiveMatch, teamRegistry,
                 new PluginDryRunArena(arenaRegistry.getArena(), arenaSetupService), kitService, gateMarks,
-                gateDuration);
+                gateDuration, tournamentManager.getTeamSizeSetting());
         chatInputService = new ChatInputService(plugin, chatInputRegistry);
         chatInputListener = new ChatInputListener(chatInputService);
         adminInventory = createAdminInventory();
@@ -193,6 +196,7 @@ final class AdminMenuFixture {
                 new KitSaveService(kitLibrary, new FakeKitItemSerializer()),
                 chatInputService, this::saveTeamConfiguration,
                 this::reloadConfiguration,
+                this::writeTeamSize,
                 windows,
                 () -> List.copyOf(onlinePlayers));
     }
@@ -277,6 +281,22 @@ final class AdminMenuFixture {
 
     static String numberedTeamName(int teamNumber) {
         return String.format(Locale.ROOT, "Team%02d", teamNumber);
+    }
+
+    void setTeamSize(int teamSize) {
+        tournamentManager.getTeamSizeSetting().setTeamSize(teamSize);
+    }
+
+    int teamSize() {
+        return tournamentManager.getTeamSizeSetting().getTeamSize();
+    }
+
+    List<Integer> writtenTeamSizes() {
+        return writtenTeamSizes;
+    }
+
+    void failTeamSizeWrites(IOException failure) {
+        teamSizeWriteFailure = failure;
     }
 
     void makePlayersKnown(String... playerNames) {
@@ -554,6 +574,13 @@ final class AdminMenuFixture {
 
     private void saveTeamConfiguration() {
         teamConfigurationSaveCount++;
+    }
+
+    private void writeTeamSize(int teamSize) throws IOException {
+        if (teamSizeWriteFailure != null) {
+            throw teamSizeWriteFailure;
+        }
+        writtenTeamSizes.add(teamSize);
     }
 
     private static void assertSuccessful(TournamentOperationResult result) {

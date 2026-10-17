@@ -1,5 +1,6 @@
 package de.simplepvparena.team;
 
+import org.bukkit.configuration.MemoryConfiguration;
 import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
@@ -208,6 +209,39 @@ class TeamRegistryTest {
 
         assertEquals("a team named BÜFFEL already exists", refusal.getMessage());
         assertEquals("Büffel", registry.findTeam("büffel").orElseThrow().getTeamName());
+    }
+
+    @Test
+    void registersTeamsLargerThanTheTeamSizeBecauseOnlyTheTeamMenuChecksIt() {
+        TeamRegistry registry = new TeamRegistry();
+        TeamSizeSetting teamSizeSetting = new TeamSizeSetting();
+        teamSizeSetting.setTeamSize(1);
+
+        registry.registerTeam("Trio", createMembers(3));
+        registry.registerTeam("Squad", createMembers(8));
+
+        assertEquals(1, teamSizeSetting.getTeamSize());
+        assertEquals(3, registry.findTeam("Trio").orElseThrow().getMembers().size());
+        assertEquals(8, registry.findTeam("Squad").orElseThrow().getMembers().size());
+    }
+
+    @Test
+    void loadsEveryStoredTeamUpToEightPlayersWhateverTheTeamSizeIs() {
+        TeamRegistry registry = new TeamRegistry();
+        registry.registerTeam("Solo", createMembers(1));
+        registry.registerTeam("Quartet", createMembers(4));
+        registry.registerTeam("Squad", createMembers(8));
+        MemoryConfiguration configuration = new MemoryConfiguration();
+        registry.saveToConfiguration(configuration);
+        TeamSizeSetting teamSizeSetting = new TeamSizeSetting();
+
+        TeamRegistry reloadedRegistry = new TeamRegistry();
+        List<String> skippedEntries = reloadedRegistry.loadFromConfiguration(configuration);
+
+        assertEquals(List.of(), skippedEntries);
+        assertEquals(2, teamSizeSetting.getTeamSize());
+        assertEquals(List.of("Solo", "Quartet", "Squad"), reloadedRegistry.getTeamNames());
+        assertEquals(8, reloadedRegistry.findTeam("Squad").orElseThrow().getMembers().size());
     }
 
     private static List<TeamMember> createMembers(int memberCount) {

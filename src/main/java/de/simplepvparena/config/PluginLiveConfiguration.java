@@ -17,8 +17,12 @@ import de.simplepvparena.match.FighterColours;
 import de.simplepvparena.match.MatchService;
 import de.simplepvparena.match.RoundTimeoutSettings;
 import de.simplepvparena.match.TeamColourSettings;
+import de.simplepvparena.team.TeamRegistry;
+import de.simplepvparena.team.TeamSizeSetting;
 
 import java.util.Objects;
+import java.util.Optional;
+import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
 
 public final class PluginLiveConfiguration implements LiveConfiguration {
@@ -35,6 +39,10 @@ public final class PluginLiveConfiguration implements LiveConfiguration {
     private final BorderParticleService borderParticleService;
     private final BorderWallPreview borderWallPreview;
     private final BorderVisualEffect borderVisualEffect;
+    private final TeamSizeSetting teamSizeSetting;
+    private final TeamRegistry teamRegistry;
+    private final BooleanSupplier tournamentInProgress;
+    private final Consumer<String> adminNotifier;
     private final Consumer<String> problemReporter;
 
     public PluginLiveConfiguration(MatchService matchService,
@@ -49,6 +57,10 @@ public final class PluginLiveConfiguration implements LiveConfiguration {
                                    BorderParticleService borderParticleService,
                                    BorderWallPreview borderWallPreview,
                                    BorderVisualEffect borderVisualEffect,
+                                   TeamSizeSetting teamSizeSetting,
+                                   TeamRegistry teamRegistry,
+                                   BooleanSupplier tournamentInProgress,
+                                   Consumer<String> adminNotifier,
                                    Consumer<String> problemReporter) {
         this.matchService = Objects.requireNonNull(matchService, "matchService");
         this.startGateDuration = Objects.requireNonNull(startGateDuration, "startGateDuration");
@@ -63,6 +75,10 @@ public final class PluginLiveConfiguration implements LiveConfiguration {
         this.borderParticleService = Objects.requireNonNull(borderParticleService, "borderParticleService");
         this.borderWallPreview = Objects.requireNonNull(borderWallPreview, "borderWallPreview");
         this.borderVisualEffect = Objects.requireNonNull(borderVisualEffect, "borderVisualEffect");
+        this.teamSizeSetting = Objects.requireNonNull(teamSizeSetting, "teamSizeSetting");
+        this.teamRegistry = Objects.requireNonNull(teamRegistry, "teamRegistry");
+        this.tournamentInProgress = Objects.requireNonNull(tournamentInProgress, "tournamentInProgress");
+        this.adminNotifier = Objects.requireNonNull(adminNotifier, "adminNotifier");
         this.problemReporter = Objects.requireNonNull(problemReporter, "problemReporter");
     }
 
@@ -89,6 +105,25 @@ public final class PluginLiveConfiguration implements LiveConfiguration {
     @Override
     public void setTeamColourSettings(TeamColourSettings teamColourSettings) {
         fighterColours.applySettings(teamColourSettings);
+    }
+
+    @Override
+    public void setTeamSize(int teamSize) {
+        int currentTeamSize = teamSizeSetting.getTeamSize();
+        if (teamSize == currentTeamSize) {
+            return;
+        }
+        Optional<String> rejection = TeamSizeSetting.findChangeRejection(teamSize, tournamentInProgress.getAsBoolean(),
+                teamRegistry);
+        if (rejection.isPresent()) {
+            String warning = rejection.get() + ". The team size " + teamSize + " of " + PluginSettings.TEAM_SIZE_PATH
+                    + " in config.yml was not taken over, the team size stays "
+                    + TeamSizeSetting.describeMatchUp(currentTeamSize);
+            problemReporter.accept(warning);
+            adminNotifier.accept(warning);
+            return;
+        }
+        teamSizeSetting.setTeamSize(teamSize);
     }
 
     @Override

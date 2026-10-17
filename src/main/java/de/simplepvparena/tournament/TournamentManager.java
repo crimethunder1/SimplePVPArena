@@ -8,6 +8,7 @@ import de.simplepvparena.match.MatchService;
 import de.simplepvparena.message.TournamentMessages;
 import de.simplepvparena.team.Team;
 import de.simplepvparena.team.TeamRegistry;
+import de.simplepvparena.team.TeamSizeSetting;
 import net.kyori.adventure.text.Component;
 import org.bukkit.plugin.Plugin;
 
@@ -40,6 +41,11 @@ public final class TournamentManager implements MatchCompletionHandler {
             + "restart. If the server crashed, repair the arena first, then run " + Arena.CALCULATE_ACTION
             + " again, that takes the arena as it is now as the new baseline, and only then continue the tournament";
 
+    static final String SMALLER_TEAMS_NOTICE = "The tournament starts anyway, a missing player counts as absent";
+
+    static final String LARGER_TEAMS_NOTICE = "The tournament starts anyway, every online player of these teams "
+            + "fights";
+
     static final String SAVE_FAILURE_WARNING = "The tournament state could not be saved, the tournament carries on "
             + "and the next decision tries again: ";
 
@@ -55,6 +61,7 @@ public final class TournamentManager implements MatchCompletionHandler {
     private final TournamentStateStorage stateStorage;
     private final KitChoiceService kitChoiceService;
     private final FinalMatchGate finalMatchGate;
+    private final TeamSizeSetting teamSizeSetting;
     private final Random seedingRandom = new Random();
     private final Map<String, MatchDecisionKind> decisionKindsByMatchId = new HashMap<>();
     private final Set<String> matchIdsWarnedAboutMissingTeams = new HashSet<>();
@@ -84,6 +91,14 @@ public final class TournamentManager implements MatchCompletionHandler {
                              MatchService matchService, ArenaCleanup arenaCleanup,
                              AdminNotifier adminNotifier, TournamentStateStorage stateStorage,
                              KitChoiceService kitChoiceService) {
+        this(plugin, teamRegistry, arenaRegistry, matchService, arenaCleanup, adminNotifier, stateStorage,
+                kitChoiceService, new TeamSizeSetting());
+    }
+
+    public TournamentManager(Plugin plugin, TeamRegistry teamRegistry, ArenaRegistry arenaRegistry,
+                             MatchService matchService, ArenaCleanup arenaCleanup,
+                             AdminNotifier adminNotifier, TournamentStateStorage stateStorage,
+                             KitChoiceService kitChoiceService, TeamSizeSetting teamSizeSetting) {
         this.plugin = plugin;
         this.teamRegistry = teamRegistry;
         this.arenaRegistry = arenaRegistry;
@@ -92,12 +107,17 @@ public final class TournamentManager implements MatchCompletionHandler {
         this.adminNotifier = adminNotifier;
         this.stateStorage = Objects.requireNonNull(stateStorage, "stateStorage");
         this.kitChoiceService = Objects.requireNonNull(kitChoiceService, "kitChoiceService");
+        this.teamSizeSetting = Objects.requireNonNull(teamSizeSetting, "teamSizeSetting");
         this.finalMatchGate = new FinalMatchGate(adminNotifier);
         this.matchService.setMatchCompletionHandler(this);
     }
 
     public TournamentState getState() {
         return state;
+    }
+
+    public boolean isTournamentInProgress() {
+        return state == TournamentState.RUNNING || state == TournamentState.PAUSED;
     }
 
     public Optional<Bracket> getBracket() {
@@ -110,6 +130,10 @@ public final class TournamentManager implements MatchCompletionHandler {
 
     public KitChoiceService getKitChoiceService() {
         return kitChoiceService;
+    }
+
+    public TeamSizeSetting getTeamSizeSetting() {
+        return teamSizeSetting;
     }
 
     public boolean isKitChoicePending() {
@@ -155,6 +179,7 @@ public final class TournamentManager implements MatchCompletionHandler {
         if (!arenaCleanup.hasBaseline()) {
             adminNotifier.notifyAdmins(NO_BASELINE_WARNING);
         }
+        notifyAboutTeamsOfAnotherSize();
         startNextMatch();
         synchronizeFinalMatchStage();
         return TournamentOperationResult.success("Tournament started");
@@ -335,6 +360,24 @@ public final class TournamentManager implements MatchCompletionHandler {
         warnAboutUnregisteredTeams();
         synchronizeFinalMatchStage();
         return true;
+    }
+
+    private void notifyAboutTeamsOfAnotherSize() {
+        int teamSize = teamSizeSetting.getTeamSize();
+        List<Team> smallerTeams = TeamSizeSetting.findTeamsSmallerThan(teamSize, teamRegistry);
+        if (!smallerTeams.isEmpty()) {
+            adminNotifier.notifyAdmins(TeamSizeSetting.describeTeams(smallerTeams, "fewer than", teamSize,
+                    TournamentManager::describeMemberCount) + ". " + SMALLER_TEAMS_NOTICE);
+        }
+        List<Team> largerTeams = TeamSizeSetting.findTeamsLargerThan(teamSize, teamRegistry);
+        if (!largerTeams.isEmpty()) {
+            adminNotifier.notifyAdmins(TeamSizeSetting.describeTeams(largerTeams, "more than", teamSize,
+                    TournamentManager::describeMemberCount) + ". " + LARGER_TEAMS_NOTICE);
+        }
+    }
+
+    private static String describeMemberCount(Team team) {
+        return String.valueOf(team.getMembers().size());
     }
 
     private void warnAboutUnregisteredTeams() {

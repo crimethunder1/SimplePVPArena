@@ -12,6 +12,7 @@ import de.simplepvparena.kit.KitSaveService;
 import de.simplepvparena.match.MatchService;
 import de.simplepvparena.team.TeamMemberLookup;
 import de.simplepvparena.team.TeamRegistry;
+import de.simplepvparena.team.TeamSizeWriter;
 import de.simplepvparena.tournament.KitChoiceService;
 import de.simplepvparena.tournament.TournamentManager;
 import org.bukkit.entity.Player;
@@ -39,11 +40,12 @@ public final class AdminMenuService {
                             KitSaveService kitSaveService,
                             ChatInputService chatInputService,
                             Runnable teamConfigurationSaver,
-                            Supplier<ConfigurationReloadReport> configurationReloader) {
+                            Supplier<ConfigurationReloadReport> configurationReloader,
+                            TeamSizeWriter teamSizeWriter) {
         this(plugin, tournamentManager, tournamentDryRun, teamRegistry, teamMemberLookup,
                 matchService, arenaSetupService, heightMarkerService, gateItemService, borderSelectorModes,
                 kitLibrary, kitSaveService, chatInputService, teamConfigurationSaver, configurationReloader,
-                new InventoryAdminMenuWindows(plugin), () -> plugin.getServer().getOnlinePlayers());
+                teamSizeWriter, new InventoryAdminMenuWindows(plugin), () -> plugin.getServer().getOnlinePlayers());
     }
 
     AdminMenuService(Plugin plugin,
@@ -61,6 +63,7 @@ public final class AdminMenuService {
                      ChatInputService chatInputService,
                      Runnable teamConfigurationSaver,
                      Supplier<ConfigurationReloadReport> configurationReloader,
+                     TeamSizeWriter teamSizeWriter,
                      AdminMenuWindows windows,
                      Supplier<Collection<? extends Player>> onlinePlayers) {
         Objects.requireNonNull(plugin, "plugin");
@@ -83,6 +86,7 @@ public final class AdminMenuService {
         kitChoiceService.setPresenter(new KitChoiceAdminMenuPresenter(navigator, onlinePlayers));
         Objects.requireNonNull(teamConfigurationSaver, "teamConfigurationSaver");
         Objects.requireNonNull(configurationReloader, "configurationReloader");
+        Objects.requireNonNull(teamSizeWriter, "teamSizeWriter");
         TeamActionsAdminMenu teamActionsAdminMenu = new TeamActionsAdminMenu(navigator, teamRegistry,
                 teamConfigurationSaver);
         ForceResultAdminMenu forceResultAdminMenu = new ForceResultAdminMenu(navigator, tournamentManager,
@@ -95,7 +99,8 @@ public final class AdminMenuService {
         MatchAdminMenu matchAdminMenu = new MatchAdminMenu(navigator, tournamentManager, matchService,
                 tournamentMenuStatus, forceResultAdminMenu, waitingMatchesAdminMenu);
         TeamsAdminMenu teamsAdminMenu = new TeamsAdminMenu(navigator, teamRegistry, teamMemberLookup,
-                chatInputService, teamConfigurationSaver);
+                chatInputService, teamConfigurationSaver, tournamentManager.getTeamSizeSetting(),
+                tournamentManager::isTournamentInProgress, teamSizeWriter);
         ArenaAdminMenu arenaAdminMenu = new ArenaAdminMenu(navigator, arenaSetupService, heightMarkerService,
                 gateItemService, chatInputService);
         MainAdminMenu mainAdminMenu = new MainAdminMenu(navigator, tournamentManager, tournamentDryRun, teamRegistry,

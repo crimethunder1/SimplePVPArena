@@ -16,7 +16,7 @@ class DryRunTeamTest {
 
     @Test
     void createsTwoTestTeamsOfTwoPlaceholderPlayersEach() {
-        List<DryRunTeam> testTeams = DryRunTeam.createTestTeams();
+        List<DryRunTeam> testTeams = DryRunTeam.createTestTeams(2);
 
         assertEquals(List.of(DryRunTeam.FIRST_TEAM_NAME, DryRunTeam.SECOND_TEAM_NAME),
                 testTeams.stream().map(DryRunTeam::teamName).toList());
@@ -27,6 +27,22 @@ class DryRunTeamTest {
                 .map(TeamMember::uniqueId)
                 .collect(Collectors.toSet());
         assertEquals(4, uniqueIds.size());
+    }
+
+    @Test
+    void createsTwoTestTeamsOfTheGivenNumberOfPlaceholderPlayers() {
+        for (int memberCount = 1; memberCount <= 8; memberCount++) {
+            List<DryRunTeam> testTeams = DryRunTeam.createTestTeams(memberCount);
+
+            assertEquals(memberCount, testTeams.get(0).members().size());
+            assertEquals(memberCount, testTeams.get(1).members().size());
+            assertEquals("Dry-Run-Alpha-" + memberCount, playerNames(testTeams.get(0)).get(memberCount - 1));
+            assertEquals("Dry-Run-Bravo-1", playerNames(testTeams.get(1)).get(0));
+            assertEquals(2 * memberCount, testTeams.stream()
+                    .flatMap(testTeam -> testTeam.members().stream())
+                    .map(TeamMember::uniqueId)
+                    .collect(Collectors.toSet()).size());
+        }
     }
 
     @Test

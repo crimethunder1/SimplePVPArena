@@ -17,6 +17,7 @@ final class RecordingLiveConfiguration implements LiveConfiguration {
     static final String SUDDEN_DEATH_IN_FINAL = "suddenDeathDisabledInFinal";
     static final String START_GATE_DURATION = "startGateDurationSeconds";
     static final String TEAM_COLOURS = "teamColourSettings";
+    static final String TEAM_SIZE = "teamSize";
     static final String CLEANING_BLOCKS_PER_TICK = "arenaCleaningBlocksPerTick";
     static final String BASELINE_BLOCKS_PER_TICK = "arenaBaselineBlocksPerTick";
     static final String BASELINE_DEPTH_BELOW_FLOOR = "arenaBaselineDepthBelowFloor";
@@ -33,7 +34,7 @@ final class RecordingLiveConfiguration implements LiveConfiguration {
     static final String CONFIRMED_PARTICLE = "confirmedBorderParticleSettings";
 
     static final List<String> EVERY_APPLIED_VALUE = List.of(
-            ROUND_RESET_DELAY, ROUND_TIMEOUT, SUDDEN_DEATH_IN_FINAL, START_GATE_DURATION, TEAM_COLOURS,
+            ROUND_RESET_DELAY, ROUND_TIMEOUT, SUDDEN_DEATH_IN_FINAL, START_GATE_DURATION, TEAM_COLOURS, TEAM_SIZE,
             CLEANING_BLOCKS_PER_TICK, BASELINE_BLOCKS_PER_TICK, BASELINE_DEPTH_BELOW_FLOOR,
             CLEANING_PARTICLE, MAXIMUM_CELL_COUNT, SAFETY_ZONE_RADIUS, EFFECT_MARGIN, TELEPORT_ON_JOIN,
             PARTICLE_PERIOD, PARTICLE_VIEW_RADIUS,
@@ -66,6 +67,11 @@ final class RecordingLiveConfiguration implements LiveConfiguration {
     @Override
     public void setTeamColourSettings(TeamColourSettings teamColourSettings) {
         appliedValues.put(TEAM_COLOURS, teamColourSettings);
+    }
+
+    @Override
+    public void setTeamSize(int teamSize) {
+        appliedValues.put(TEAM_SIZE, teamSize);
     }
 
     @Override

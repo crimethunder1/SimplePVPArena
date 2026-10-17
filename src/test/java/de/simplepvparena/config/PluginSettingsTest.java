@@ -39,6 +39,7 @@ class PluginSettingsTest {
         assertEquals(4, settings.startGateDurationSeconds());
         assertEquals(new TeamColourSettings(NamedTextColor.GOLD, NamedTextColor.DARK_PURPLE),
                 settings.teamColourSettings());
+        assertEquals(4, settings.teamSize());
         assertEquals(1024, settings.arenaCleaningBlocksPerTick());
         assertEquals(2048, settings.arenaBaselineBlocksPerTick());
         assertEquals(20, settings.arenaBaselineDepthBelowFloor());
@@ -68,6 +69,7 @@ class PluginSettingsTest {
         assertTrue(shipped.suddenDeathDisabledInFinal() != settings.suddenDeathDisabledInFinal());
         assertTrue(shipped.startGateDurationSeconds() != settings.startGateDurationSeconds());
         assertTrue(!shipped.teamColourSettings().equals(settings.teamColourSettings()));
+        assertTrue(shipped.teamSize() != settings.teamSize());
         assertTrue(shipped.arenaCleaningBlocksPerTick() != settings.arenaCleaningBlocksPerTick());
         assertTrue(shipped.arenaBaselineBlocksPerTick() != settings.arenaBaselineBlocksPerTick());
         assertTrue(shipped.arenaBaselineDepthBelowFloor() != settings.arenaBaselineDepthBelowFloor());
@@ -376,6 +378,7 @@ class PluginSettingsTest {
         configuration.set(PluginSettings.SUDDEN_DEATH_DAMAGE_INCREASE_PATH, 0.5D);
         configuration.set(PluginSettings.DISABLE_SUDDEN_DEATH_IN_FINAL_PATH, false);
         configuration.set(PluginSettings.START_GATE_DURATION_SECONDS_PATH, 4);
+        configuration.set(PluginSettings.TEAM_SIZE_PATH, 4);
         configuration.set(PluginSettings.FIRST_TEAM_COLOUR_PATH, "GOLD");
         configuration.set(PluginSettings.SECOND_TEAM_COLOUR_PATH, "dark purple");
         configuration.set(PluginSettings.ARENA_CLEAN_BLOCKS_PER_TICK_PATH, 1024);

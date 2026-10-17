@@ -164,6 +164,18 @@ final class TournamentManagerFixture {
         return adminMessages.stream().filter(message -> message.contains(text)).toList();
     }
 
+    void setTeamSize(int teamSize) {
+        tournamentManager.getTeamSizeSetting().setTeamSize(teamSize);
+    }
+
+    void registerTeamOf(String teamName, int playerCount) {
+        List<TeamMember> members = new ArrayList<>();
+        for (int playerNumber = 1; playerNumber <= playerCount; playerNumber++) {
+            members.add(new TeamMember(UUID.randomUUID(), teamName + "-" + playerNumber));
+        }
+        teamRegistry.registerTeam(teamName, members);
+    }
+
     void startTournament() {
         TournamentOperationResult start = tournamentManager.startTournament(false);
         assertTrue(start.successful(), start.message());

@@ -14,6 +14,8 @@ import de.simplepvparena.gate.StartGateDuration;
 import de.simplepvparena.match.MatchService;
 import de.simplepvparena.match.RoundTimeoutSettings;
 import de.simplepvparena.match.TeamColourSettings;
+import de.simplepvparena.team.Team;
+import de.simplepvparena.team.TeamSizeSetting;
 import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.configuration.ConfigurationSection;
 
@@ -26,6 +28,7 @@ public record PluginSettings(long roundResetDelayTicks,
                              boolean suddenDeathDisabledInFinal,
                              int startGateDurationSeconds,
                              TeamColourSettings teamColourSettings,
+                             int teamSize,
                              int arenaCleaningBlocksPerTick,
                              int arenaBaselineBlocksPerTick,
                              int arenaBaselineDepthBelowFloor,
@@ -50,6 +53,7 @@ public record PluginSettings(long roundResetDelayTicks,
     public static final String SUDDEN_DEATH_DAMAGE_INCREASE_PATH = "match.sudden-death-damage-increase-per-second";
     public static final String DISABLE_SUDDEN_DEATH_IN_FINAL_PATH = "match.disable-sudden-death-in-final";
     public static final String START_GATE_DURATION_SECONDS_PATH = "match.start-gate-duration-seconds";
+    public static final String TEAM_SIZE_PATH = "match.team-size";
     public static final String FIRST_TEAM_COLOUR_PATH = TeamColourSettings.FIRST_TEAM_CONFIGURATION_PATH;
     public static final String SECOND_TEAM_COLOUR_PATH = TeamColourSettings.SECOND_TEAM_CONFIGURATION_PATH;
     public static final String ARENA_CLEAN_BLOCKS_PER_TICK_PATH = "arena.clean-blocks-per-tick";
@@ -78,6 +82,7 @@ public record PluginSettings(long roundResetDelayTicks,
             SUDDEN_DEATH_DAMAGE_INCREASE_PATH,
             DISABLE_SUDDEN_DEATH_IN_FINAL_PATH,
             START_GATE_DURATION_SECONDS_PATH,
+            TEAM_SIZE_PATH,
             FIRST_TEAM_COLOUR_PATH,
             SECOND_TEAM_COLOUR_PATH,
             ARENA_CLEAN_BLOCKS_PER_TICK_PATH,
@@ -108,6 +113,7 @@ public record PluginSettings(long roundResetDelayTicks,
                 MatchService.DEFAULT_SUDDEN_DEATH_DISABLED_IN_FINAL,
                 StartGateDuration.DEFAULT_SECONDS,
                 TeamColourSettings.defaults(),
+                TeamSizeSetting.DEFAULT_TEAM_SIZE,
                 ArenaCleaningService.DEFAULT_BLOCKS_PER_TICK,
                 ArenaBaselineService.DEFAULT_BLOCKS_PER_TICK,
                 ArenaBaselineService.DEFAULT_DEPTH_BELOW_FLOOR,
@@ -136,6 +142,7 @@ public record PluginSettings(long roundResetDelayTicks,
                         shipped.suddenDeathDisabledInFinal()),
                 readStartGateDurationSeconds(configuration, problemReporter),
                 readTeamColourSettings(configuration, problemReporter),
+                readTeamSize(configuration, problemReporter),
                 configuration.getInt(ARENA_CLEAN_BLOCKS_PER_TICK_PATH, shipped.arenaCleaningBlocksPerTick()),
                 configuration.getInt(ARENA_BASELINE_BLOCKS_PER_TICK_PATH, shipped.arenaBaselineBlocksPerTick()),
                 readBaselineDepthBelowFloor(configuration, problemReporter),
@@ -161,6 +168,7 @@ public record PluginSettings(long roundResetDelayTicks,
         liveConfiguration.setSuddenDeathDisabledInFinal(suddenDeathDisabledInFinal);
         liveConfiguration.setStartGateDurationSeconds(startGateDurationSeconds);
         liveConfiguration.setTeamColourSettings(teamColourSettings);
+        liveConfiguration.setTeamSize(teamSize);
         liveConfiguration.setArenaCleaningBlocksPerTick(arenaCleaningBlocksPerTick);
         liveConfiguration.setArenaBaselineBlocksPerTick(arenaBaselineBlocksPerTick);
         liveConfiguration.setArenaBaselineDepthBelowFloor(arenaBaselineDepthBelowFloor);
@@ -226,6 +234,22 @@ public record PluginSettings(long roundResetDelayTicks,
                 + EffectArea.MINIMUM_MARGIN + " and " + EffectArea.MAXIMUM_MARGIN + " blocks, falling back to "
                 + EffectArea.DEFAULT_MARGIN + " blocks");
         return EffectArea.DEFAULT_MARGIN;
+    }
+
+    private static int readTeamSize(ConfigurationSection configuration, Consumer<String> problemReporter) {
+        if (!configuration.isSet(TEAM_SIZE_PATH)) {
+            return TeamSizeSetting.DEFAULT_TEAM_SIZE;
+        }
+        if (configuration.isInt(TEAM_SIZE_PATH)) {
+            int teamSize = configuration.getInt(TEAM_SIZE_PATH);
+            if (TeamSizeSetting.isAllowed(teamSize)) {
+                return teamSize;
+            }
+        }
+        problemReporter.accept(TEAM_SIZE_PATH + " must be a whole number between " + Team.MINIMUM_MEMBER_COUNT
+                + " and " + Team.MAXIMUM_MEMBER_COUNT + " players, falling back to "
+                + TeamSizeSetting.DEFAULT_TEAM_SIZE + " players");
+        return TeamSizeSetting.DEFAULT_TEAM_SIZE;
     }
 
     private static ArenaCleaningParticleSettings readArenaCleaningParticleSettings(

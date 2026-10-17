@@ -8,7 +8,6 @@ import java.util.Optional;
 public final class TeamCreationRequest {
 
     public static final int MINIMUM_VALUE_COUNT = 1 + Team.MINIMUM_MEMBER_COUNT;
-    public static final int MAXIMUM_VALUE_COUNT = 1 + Team.MAXIMUM_MEMBER_COUNT;
     public static final String USAGE = "<teamName> <player> [<player> ...]";
 
     private final String teamName;
@@ -21,10 +20,12 @@ public final class TeamCreationRequest {
         this.rejectionMessage = rejectionMessage;
     }
 
-    public static TeamCreationRequest parse(String line) {
+    public static TeamCreationRequest parse(String line, int teamSize) {
+        if (!TeamSizeSetting.isAllowed(teamSize)) {
+            throw new IllegalArgumentException(TeamSizeSetting.ALLOWED_RANGE_REJECTION + ", not " + teamSize);
+        }
         ChatInputValues values = ChatInputValues.of(line);
-        Optional<String> countRejection = values.findCountRejection(MINIMUM_VALUE_COUNT, MAXIMUM_VALUE_COUNT,
-                USAGE);
+        Optional<String> countRejection = values.findCountRejection(MINIMUM_VALUE_COUNT, 1 + teamSize, USAGE);
         if (countRejection.isPresent()) {
             return rejected(countRejection.get());
         }
@@ -32,7 +33,7 @@ public final class TeamCreationRequest {
         List<String> playerNames = List.copyOf(values.values().subList(1, values.count()));
         Optional<String> playerNamedTwice = findPlayerNamedTwice(playerNames);
         if (playerNamedTwice.isPresent()) {
-            return rejected("A team needs " + Team.MINIMUM_MEMBER_COUNT + " to " + Team.MAXIMUM_MEMBER_COUNT
+            return rejected("A team needs " + Team.MINIMUM_MEMBER_COUNT + " to " + teamSize
                     + " different players, " + playerNamedTwice.get() + " was named twice");
         }
         return new TeamCreationRequest(teamName, playerNames, null);

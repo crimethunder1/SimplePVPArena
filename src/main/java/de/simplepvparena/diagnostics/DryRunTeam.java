@@ -2,6 +2,7 @@ package de.simplepvparena.diagnostics;
 
 import de.simplepvparena.team.TeamMember;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
@@ -18,13 +19,15 @@ public record DryRunTeam(String teamName, List<TeamMember> members) {
         members = List.copyOf(members);
     }
 
-    public static List<DryRunTeam> createTestTeams() {
-        return List.of(create(FIRST_TEAM_NAME), create(SECOND_TEAM_NAME));
+    public static List<DryRunTeam> createTestTeams(int memberCount) {
+        return List.of(create(FIRST_TEAM_NAME, memberCount), create(SECOND_TEAM_NAME, memberCount));
     }
 
-    private static DryRunTeam create(String teamName) {
-        return new DryRunTeam(teamName, List.of(
-                new TeamMember(UUID.randomUUID(), teamName + "-1"),
-                new TeamMember(UUID.randomUUID(), teamName + "-2")));
+    private static DryRunTeam create(String teamName, int memberCount) {
+        List<TeamMember> members = new ArrayList<>();
+        for (int memberNumber = 1; memberNumber <= memberCount; memberNumber++) {
+            members.add(new TeamMember(UUID.randomUUID(), teamName + "-" + memberNumber));
+        }
+        return new DryRunTeam(teamName, members);
     }
 }
