@@ -1,5 +1,7 @@
 package de.simplepvparena.gui;
 
+import de.simplepvparena.message.TournamentMessages;
+import de.simplepvparena.tournament.BracketMatch;
 import de.simplepvparena.tournament.FinalMatchStage;
 import de.simplepvparena.tournament.TournamentState;
 import org.bukkit.Material;
@@ -202,6 +204,50 @@ class MatchAdminMenuClickTest {
         MenuTile finalTile = fixture.lastMenu().findTile(FINAL_SLOT).orElseThrow();
         assertEquals(MenuItems.UNAVAILABLE_MATERIAL, finalTile.material());
         assertEquals(List.of("The final is running"), finalTile.loreLines());
+    }
+
+    @Test
+    void reportsTheFinalDecidedByAWalkoverAsASuccessAndRefreshesTheMenu() {
+        fixture.configureArena();
+        fixture.registerTeams("Alpha", "Bravo");
+        fixture.startTournament();
+        BracketMatch finalMatch = fixture.tournamentManager().getBracket().orElseThrow().getFinalMatch();
+        String remainingTeamName = finalMatch.getFirstTeamName().orElseThrow();
+        assertTrue(fixture.teamRegistry().removeTeam(finalMatch.getSecondTeamName().orElseThrow()));
+        fixture.openMenuFromTheMainMenu(MAIN_MATCH_SLOT);
+        AdminMenuHolder matchHolder = fixture.lastMenu().holder();
+
+        fixture.click(FINAL_SLOT);
+
+        String walkoverMessage = "The final was decided by a walkover, " + remainingTeamName
+                + " wins the tournament";
+        assertEquals(List.of(walkoverMessage), fixture.messages());
+        assertEquals(TournamentMessages.success(walkoverMessage), fixture.lastSentMessage());
+        assertEquals(TournamentState.FINISHED, fixture.tournamentManager().getState());
+        assertFalse(fixture.matchService().hasActiveMatch());
+        assertRefreshedOnce(matchHolder);
+        assertEquals(List.of("The final is over"),
+                fixture.lastMenu().findTile(FINAL_SLOT).orElseThrow().loreLines());
+    }
+
+    @Test
+    void reportsTheFinalWithBothFinalistsGoneAsAnErrorAndRefreshesTheMenu() {
+        fixture.configureArena();
+        fixture.registerTeams("Alpha", "Bravo");
+        fixture.startTournament();
+        assertTrue(fixture.teamRegistry().removeTeam("Alpha"));
+        assertTrue(fixture.teamRegistry().removeTeam("Bravo"));
+        fixture.openMenuFromTheMainMenu(MAIN_MATCH_SLOT);
+        AdminMenuHolder matchHolder = fixture.lastMenu().holder();
+
+        fixture.click(FINAL_SLOT);
+
+        String refusal = "The final cannot be started, at least one finalist is no longer registered";
+        assertEquals(List.of(refusal), fixture.messages());
+        assertEquals(TournamentMessages.error(refusal), fixture.lastSentMessage());
+        assertEquals(TournamentState.RUNNING, fixture.tournamentManager().getState());
+        assertEquals(FinalMatchStage.READY, fixture.tournamentManager().getFinalMatchStage());
+        assertRefreshedOnce(matchHolder);
     }
 
     @Test

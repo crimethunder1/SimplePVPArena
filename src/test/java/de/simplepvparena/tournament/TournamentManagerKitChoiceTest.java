@@ -14,6 +14,8 @@ class TournamentManagerKitChoiceTest {
 
     private static final List<String> TWO_TEAMS = List.of("Alpha", "Bravo");
     private static final List<String> FOUR_TEAMS = List.of("Alpha", "Bravo", "Charlie", "Delta");
+    private static final List<String> EIGHT_TEAMS = List.of("Alpha", "Bravo", "Charlie", "Delta", "Echo",
+            "Foxtrot", "Golf", "Hotel");
     private static final String FIRST_MATCH_REJECTION = "A kit is being chosen for match round1-match1, wait for "
             + "it or pause the tournament";
 
@@ -154,6 +156,100 @@ class TournamentManagerKitChoiceTest {
         assertEquals("round1-match2", fixture.kitChoiceService().getPending().orElseThrow().matchId());
         assertEquals(2, fixture.kitChoicePresenter().shownChoices().size());
         assertSame(fixture.kitDefinitionOf("Archer"), fixture.activeKitDefinition());
+
+        fixture.kitChoiceScheduler().advanceSeconds(30);
+
+        assertEquals(Optional.of("round1-match2"), fixture.runningMatchId());
+    }
+
+    @Test
+    void beginsOneKitChoiceForTheNextMatchWhenAWalkoverFollowsThePlayedMatch() {
+        TournamentManagerFixture fixture = TournamentManagerFixture.withKitChoice(EIGHT_TEAMS);
+        fixture.startTournament();
+        BracketMatch secondMatch = fixture.bracketMatch("round1-match2");
+        String remainingTeamName = secondMatch.getFirstTeamName().orElseThrow();
+        assertTrue(fixture.teamRegistry().removeTeam(secondMatch.getSecondTeamName().orElseThrow()));
+        assertTrue(fixture.kitChoiceService().choose("Knight", "KT"));
+
+        fixture.endRunningMatchAsPlayedByTheFirstTeam();
+
+        assertEquals(Optional.of(remainingTeamName), fixture.bracketMatch("round1-match2").getWinnerTeamName());
+        assertEquals(Optional.empty(), fixture.runningMatchId());
+        assertEquals("round1-match3", fixture.kitChoiceService().getPending().orElseThrow().matchId());
+        assertEquals(2, fixture.kitChoicePresenter().shownChoices().size());
+        assertEquals(TournamentState.RUNNING, fixture.tournamentManager().getState());
+
+        fixture.kitChoiceScheduler().advanceSeconds(30);
+
+        assertEquals(Optional.of("round1-match3"), fixture.runningMatchId());
+    }
+
+    @Test
+    void beginsTheKitChoiceOfTheFirstMatchWithBothTeamsAfterAChainOfTwoWalkovers() {
+        TournamentManagerFixture fixture = TournamentManagerFixture.withKitChoice(EIGHT_TEAMS);
+        fixture.startTournament();
+        BracketMatch secondMatch = fixture.bracketMatch("round1-match2");
+        BracketMatch thirdMatch = fixture.bracketMatch("round1-match3");
+        String secondMatchWinnerName = secondMatch.getFirstTeamName().orElseThrow();
+        String thirdMatchWinnerName = thirdMatch.getFirstTeamName().orElseThrow();
+        assertTrue(fixture.teamRegistry().removeTeam(secondMatch.getSecondTeamName().orElseThrow()));
+        assertTrue(fixture.teamRegistry().removeTeam(thirdMatch.getSecondTeamName().orElseThrow()));
+        assertTrue(fixture.kitChoiceService().choose("Knight", "KT"));
+
+        fixture.endRunningMatchAsPlayedByTheFirstTeam();
+
+        assertEquals(Optional.of(secondMatchWinnerName), fixture.bracketMatch("round1-match2").getWinnerTeamName());
+        assertEquals(Optional.of(thirdMatchWinnerName), fixture.bracketMatch("round1-match3").getWinnerTeamName());
+        assertEquals(Optional.empty(), fixture.runningMatchId());
+        assertEquals("round1-match4", fixture.kitChoiceService().getPending().orElseThrow().matchId());
+        assertEquals(2, fixture.kitChoicePresenter().shownChoices().size());
+
+        fixture.kitChoiceScheduler().advanceSeconds(30);
+
+        assertEquals(Optional.of("round1-match4"), fixture.runningMatchId());
+    }
+
+    @Test
+    void declaresTheWalkoverAndBeginsOneKitChoiceOnlyWhenTheArenaIsCleaned() {
+        TournamentManagerFixture fixture = TournamentManagerFixture.withKitChoiceAndArenaCleaning(EIGHT_TEAMS);
+        fixture.startTournament();
+        BracketMatch secondMatch = fixture.bracketMatch("round1-match2");
+        String remainingTeamName = secondMatch.getFirstTeamName().orElseThrow();
+        assertTrue(fixture.teamRegistry().removeTeam(secondMatch.getSecondTeamName().orElseThrow()));
+        assertTrue(fixture.kitChoiceService().choose("Knight", "KT"));
+        fixture.endRunningMatchAsPlayedByTheFirstTeam();
+        assertTrue(fixture.isArenaBeingCleaned());
+        assertFalse(fixture.bracketMatch("round1-match2").isDecided());
+        assertFalse(fixture.tournamentManager().isKitChoicePending());
+
+        fixture.finishArenaCleaning();
+
+        assertEquals(Optional.of(remainingTeamName), fixture.bracketMatch("round1-match2").getWinnerTeamName());
+        assertEquals(Optional.empty(), fixture.runningMatchId());
+        assertEquals("round1-match3", fixture.kitChoiceService().getPending().orElseThrow().matchId());
+        assertEquals(2, fixture.kitChoicePresenter().shownChoices().size());
+
+        fixture.kitChoiceScheduler().advanceSeconds(30);
+
+        assertEquals(Optional.of("round1-match3"), fixture.runningMatchId());
+    }
+
+    @Test
+    void declaresTheWalkoverAndBeginsOneKitChoiceWhenThePausedTournamentContinues() {
+        TournamentManagerFixture fixture = TournamentManagerFixture.withKitChoice(EIGHT_TEAMS);
+        fixture.startTournament();
+        BracketMatch firstMatch = fixture.bracketMatch("round1-match1");
+        String remainingTeamName = firstMatch.getFirstTeamName().orElseThrow();
+        assertTrue(fixture.tournamentManager().togglePause().successful());
+        assertTrue(fixture.teamRegistry().removeTeam(firstMatch.getSecondTeamName().orElseThrow()));
+
+        TournamentOperationResult resume = fixture.tournamentManager().togglePause();
+
+        assertTrue(resume.successful(), resume.message());
+        assertEquals(Optional.of(remainingTeamName), fixture.bracketMatch("round1-match1").getWinnerTeamName());
+        assertEquals(Optional.empty(), fixture.runningMatchId());
+        assertEquals("round1-match2", fixture.kitChoiceService().getPending().orElseThrow().matchId());
+        assertEquals(2, fixture.kitChoicePresenter().shownChoices().size());
 
         fixture.kitChoiceScheduler().advanceSeconds(30);
 

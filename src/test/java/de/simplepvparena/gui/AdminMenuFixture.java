@@ -99,6 +99,7 @@ final class AdminMenuFixture {
 
     private final RecordingAdminMenuWindows windows = new RecordingAdminMenuWindows();
     private final List<String> messages = new ArrayList<>();
+    private final List<Component> sentMessages = new ArrayList<>();
     private final UUID adminUniqueId = UUID.randomUUID();
     private final TeamRegistry teamRegistry = new TeamRegistry();
     private final ArenaRegistry arenaRegistry = new ArenaRegistry();
@@ -495,6 +496,10 @@ final class AdminMenuFixture {
         return messages;
     }
 
+    Component lastSentMessage() {
+        return sentMessages.get(sentMessages.size() - 1);
+    }
+
     List<List<String>> reloadedConfigurations() {
         return reloadedConfigurations;
     }
@@ -600,6 +605,7 @@ final class AdminMenuFixture {
             case "getLocation" -> adminLocation.clone();
             case "getInventory" -> adminInventory;
             case "sendMessage" -> {
+                sentMessages.add((Component) arguments[0]);
                 messages.add(TournamentMessages.toPlainBody((Component) arguments[0]));
                 yield null;
             }

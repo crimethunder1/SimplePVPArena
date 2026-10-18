@@ -1,5 +1,7 @@
 package de.simplepvparena.gui;
 
+import de.simplepvparena.message.TournamentMessages;
+import de.simplepvparena.tournament.BracketMatch;
 import de.simplepvparena.tournament.FinalMatchStage;
 import de.simplepvparena.tournament.TournamentState;
 import org.bukkit.Material;
@@ -146,6 +148,29 @@ class MainAdminMenuClickTest {
         assertEquals(0, fixture.lastMenu().refreshCount());
         assertEquals(Material.NETHER_STAR, fixture.lastMenu().findTile(FINAL_SLOT).orElseThrow().material(),
                 "the tile still shows the final as ready");
+    }
+
+    @Test
+    void reportsTheFinalDecidedByAWalkoverAsASuccessWithoutRefreshingTheMenu() {
+        fixture.configureArena();
+        fixture.registerTeams("Alpha", "Bravo");
+        fixture.startTournament();
+        BracketMatch finalMatch = fixture.tournamentManager().getBracket().orElseThrow().getFinalMatch();
+        String remainingTeamName = finalMatch.getSecondTeamName().orElseThrow();
+        assertTrue(fixture.teamRegistry().removeTeam(finalMatch.getFirstTeamName().orElseThrow()));
+        fixture.openMainMenu();
+        AdminMenuHolder mainHolder = fixture.lastMenu().holder();
+
+        fixture.click(FINAL_SLOT);
+
+        String walkoverMessage = "The final was decided by a walkover, " + remainingTeamName
+                + " wins the tournament";
+        assertEquals(List.of(walkoverMessage), fixture.messages());
+        assertEquals(TournamentMessages.success(walkoverMessage), fixture.lastSentMessage());
+        assertEquals(TournamentState.FINISHED, fixture.tournamentManager().getState());
+        assertSame(mainHolder, fixture.lastMenu().holder());
+        assertFalse(fixture.isMenuClosed());
+        assertEquals(0, fixture.lastMenu().refreshCount());
     }
 
     @Test

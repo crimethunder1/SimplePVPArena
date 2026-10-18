@@ -57,18 +57,21 @@ final class TournamentManagerFixture {
     private final TickingScheduler kitChoiceScheduler = new TickingScheduler();
     private final RecordingKitChoicePresenter kitChoicePresenter = new RecordingKitChoicePresenter();
     private final KitChoiceService kitChoiceService;
+    private final ControlledArenaCleanup arenaCleanup;
     private final Plugin plugin;
     private final MatchService matchService;
     private final TournamentManager tournamentManager;
 
     private TournamentManagerFixture(Optional<TournamentStateStorage> stateStorage, List<String> teamNames,
                                      boolean baselineStored) {
-        this(stateStorage, teamNames, baselineStored, false);
+        this(stateStorage, teamNames, baselineStored, false, false);
     }
 
     private TournamentManagerFixture(Optional<TournamentStateStorage> stateStorage, List<String> teamNames,
-                                     boolean baselineStored, boolean kitChoiceEnabled) {
+                                     boolean baselineStored, boolean kitChoiceEnabled,
+                                     boolean arenaCleanedAfterEveryMatch) {
         SharedBukkitServer.register(createWorld(), playerUniqueId -> null);
+        this.arenaCleanup = new ControlledArenaCleanup(baselineStored, arenaCleanedAfterEveryMatch);
         this.plugin = createPlugin();
         this.matchService = new MatchService(plugin, kitService,
                 new SpectatorService(arenaRegistry, new SpectatorItemFactory(plugin)),
@@ -81,14 +84,14 @@ final class TournamentManagerFixture {
             kitLibrary.createKit("Archer", FakeSerializedKits.carrying("bow"));
             kitLibrary.createKit("Knight", FakeSerializedKits.carrying("sword"));
             this.tournamentManager = new TournamentManager(plugin, teamRegistry, arenaRegistry, matchService,
-                    new SkippedArenaCleanup(baselineStored), adminNotifier,
-                    stateStorage.orElse(TournamentStateStorage.NONE), kitChoiceService);
+                    arenaCleanup, adminNotifier, stateStorage.orElse(TournamentStateStorage.NONE),
+                    kitChoiceService);
         } else {
             this.tournamentManager = stateStorage
                     .map(storage -> new TournamentManager(plugin, teamRegistry, arenaRegistry, matchService,
-                            new SkippedArenaCleanup(baselineStored), adminNotifier, storage))
+                            arenaCleanup, adminNotifier, storage))
                     .orElseGet(() -> new TournamentManager(plugin, teamRegistry, arenaRegistry, matchService,
-                            new SkippedArenaCleanup(baselineStored), adminNotifier));
+                            arenaCleanup, adminNotifier));
         }
         buildArena();
         for (String teamName : teamNames) {
@@ -112,12 +115,24 @@ final class TournamentManagerFixture {
     }
 
     static TournamentManagerFixture withKitChoice(List<String> teamNames) {
-        return new TournamentManagerFixture(Optional.empty(), teamNames, true, true);
+        return new TournamentManagerFixture(Optional.empty(), teamNames, true, true, false);
+    }
+
+    static TournamentManagerFixture withKitChoiceAndArenaCleaning(List<String> teamNames) {
+        return new TournamentManagerFixture(Optional.empty(), teamNames, true, true, true);
     }
 
     static TournamentManagerFixture withStorageAndKitChoice(TournamentStateStorage stateStorage,
                                                             List<String> teamNames) {
-        return new TournamentManagerFixture(Optional.of(stateStorage), teamNames, true, true);
+        return new TournamentManagerFixture(Optional.of(stateStorage), teamNames, true, true, false);
+    }
+
+    boolean isArenaBeingCleaned() {
+        return arenaCleanup.isCleaning();
+    }
+
+    void finishArenaCleaning() {
+        arenaCleanup.finishCleaning();
     }
 
     KitChoiceService kitChoiceService() {
@@ -287,22 +302,38 @@ final class TournamentManagerFixture {
                 });
     }
 
-    private static final class SkippedArenaCleanup implements ArenaCleanup {
+    private static final class ControlledArenaCleanup implements ArenaCleanup {
+
+        private static final String CLEANED_OUTCOME = "the arena is clean";
 
         private final boolean baselineStored;
+        private final boolean cleanedAfterEveryMatch;
+        private Consumer<String> completionHandler;
 
-        private SkippedArenaCleanup(boolean baselineStored) {
+        private ControlledArenaCleanup(boolean baselineStored, boolean cleanedAfterEveryMatch) {
             this.baselineStored = baselineStored;
+            this.cleanedAfterEveryMatch = cleanedAfterEveryMatch;
         }
 
         @Override
         public Optional<String> startCleaningAfterMatch(Consumer<String> completionHandler) {
-            return Optional.of(SKIPPED_CLEANING_REASON);
+            if (!cleanedAfterEveryMatch) {
+                return Optional.of(SKIPPED_CLEANING_REASON);
+            }
+            this.completionHandler = completionHandler;
+            return Optional.empty();
         }
 
         @Override
         public boolean isCleaning() {
-            return false;
+            return completionHandler != null;
+        }
+
+        private void finishCleaning() {
+            Consumer<String> runningHandler = completionHandler;
+            assertTrue(runningHandler != null, "no cleaning is running");
+            completionHandler = null;
+            runningHandler.accept(CLEANED_OUTCOME);
         }
 
         @Override

@@ -341,6 +341,10 @@ public final class TournamentManager implements MatchCompletionHandler {
         }
         BracketMatch finalMatch = bracket.getFinalMatch();
         if (!resolveTeamsOrDeclareWalkover(finalMatch)) {
+            if (finalMatch.isDecided()) {
+                return TournamentOperationResult.success("The final was decided by a walkover, "
+                        + bracket.getChampionTeamName().orElseThrow() + " wins the tournament");
+            }
             return TournamentOperationResult.failure("The final cannot be started, at least one finalist is "
                     + "no longer registered");
         }
@@ -610,10 +614,8 @@ public final class TournamentManager implements MatchCompletionHandler {
     }
 
     private void startNextMatch() {
-        if (waitingForArenaCleaning || kitChoiceService.isPending()) {
-            return;
-        }
-        while (state == TournamentState.RUNNING && bracket != null && !matchService.hasActiveMatch()) {
+        while (state == TournamentState.RUNNING && bracket != null && !matchService.hasActiveMatch()
+                && !kitChoiceService.isPending() && !waitingForArenaCleaning) {
             Optional<BracketMatch> nextMatch = MatchSequence.findNextMatch(bracket);
             if (nextMatch.isEmpty()) {
                 return;
