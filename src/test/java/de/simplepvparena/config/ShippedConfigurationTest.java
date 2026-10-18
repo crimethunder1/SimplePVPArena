@@ -1,5 +1,6 @@
 package de.simplepvparena.config;
 
+import de.simplepvparena.message.MessageCatalogLoader;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.junit.jupiter.api.Test;
 
@@ -13,6 +14,7 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class ShippedConfigurationTest {
 
@@ -51,6 +53,22 @@ class ShippedConfigurationTest {
         YamlConfiguration configuration = shippedConfiguration();
 
         assertFalse(configuration.contains(PluginSettings.KIT_SECTION_PATH));
+    }
+
+    @Test
+    void shipsEnglishAsTheLanguageAtTheTopWithAComment() throws Exception {
+        List<String> lines;
+        try (InputStream shippedFile = ShippedConfigurationTest.class.getResourceAsStream("/config.yml")) {
+            assertNotNull(shippedFile, "config.yml is missing from the plugin resources");
+            lines = new String(shippedFile.readAllBytes(), StandardCharsets.UTF_8).lines().toList();
+        }
+
+        int languageIndex = lines.indexOf("language: en");
+
+        assertTrue(languageIndex > 0, "config.yml has to hold the language at the top level: " + lines);
+        assertTrue(lines.get(languageIndex - 1).startsWith("# "), "a comment explains the language");
+        assertEquals(MessageCatalogLoader.DEFAULT_LANGUAGE,
+                shippedConfiguration().getString(PluginSettings.LANGUAGE_PATH));
     }
 
     private static YamlConfiguration shippedConfiguration() {

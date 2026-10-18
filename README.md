@@ -47,6 +47,20 @@ Changes can be applied while the server runs with the "Reload config.yml" item i
 
 The kits live in `kits.yml` and are created from the inventory of an admin, replaced, deleted and chosen as the default kit in the kit menu of `/tournament`. Every fighter receives the default kit at the start of a round. A `kit` section that an older version saved in `config.yml` is taken over into `kits.yml` once as the kit `default`.
 
+## Languages
+
+The texts players and admins see come from language files. English (`en`) and German (`de`) are shipped. On the first start the plugin copies `lang/en.yml` and `lang/de.yml` into `plugins/SimplePVPArena/lang/`. `language` at the top of `config.yml` picks the language, `en` by default. Any other value counts as `en`, the log and the answer of the reload name it.
+
+The files can be changed to adjust the wording. Every value stands in single quotes, a text of several lines is a list of lines, and words in braces such as `{team}` are filled in by the plugin and have to stay. A key that is missing in the file falls back to the shipped text of the same language, then to the shipped English text. A file that is no valid YAML is not used at all: the shipped texts of that language apply, and the log and the online admins name the file and the reason.
+
+The plugin never overwrites or rewrites the files in the `lang` folder, also not after an update. When an update brings new texts, the log lists once after loading how many keys a file lacks and the first ten of them, their shipped texts are used until they are added by hand. To start over with the shipped texts, delete the file, the next start copies it again.
+
+"Reload config.yml" in the main menu reads `language` and the language files again. Texts created afterwards use them, a menu that is open keeps its texts until it is opened again, and messages already sent stay as they were.
+
+A chat input of the menu is cancelled with `cancel` in every language, in German also with `abbrechen`.
+
+The texts are converted step by step: so far the chat prefix, the back and page tiles of the menus, the refusal of the menu and the messages of a chat input follow the language. All other texts are still English in both languages.
+
 ## Area of effect
 
 The protection of the world and the pvp lock only apply around the arena. The area of effect is a circle around the centre of the frame of the fight area, in the world of the arena and at every height. Its radius is the distance from that centre to the farthest corner of the frame plus `arena.effect-margin` from `config.yml`. The info tile of the arena menu shows the centre and the radius. Without a calculated fight area there is no area of effect.

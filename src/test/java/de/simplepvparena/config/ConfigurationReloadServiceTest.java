@@ -55,6 +55,7 @@ class ConfigurationReloadServiceTest {
                 liveConfiguration.longValueOf(RecordingLiveConfiguration.WALL_PREVIEW_DURATION));
         assertEquals(new ConfirmedBorderParticleSettings("DUST", 1.5D, 10, 20, 30),
                 liveConfiguration.confirmedBorderParticleSettings());
+        assertEquals("de", liveConfiguration.valueOf(RecordingLiveConfiguration.LANGUAGE));
     }
 
     @Test

@@ -14,12 +14,14 @@ import de.simplepvparena.gate.StartGateDuration;
 import de.simplepvparena.match.MatchService;
 import de.simplepvparena.match.RoundTimeoutSettings;
 import de.simplepvparena.match.TeamColourSettings;
+import de.simplepvparena.message.MessageCatalogLoader;
 import de.simplepvparena.team.Team;
 import de.simplepvparena.team.TeamSizeSetting;
 import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.configuration.ConfigurationSection;
 
 import java.util.List;
+import java.util.Locale;
 import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.function.IntConsumer;
@@ -43,9 +45,12 @@ public record PluginSettings(long roundResetDelayTicks,
                              int borderParticleMaximumBlocksPerPlayer,
                              int borderParticleMaximumLinesPerPlayer,
                              long borderWallPreviewDurationTicks,
-                             ConfirmedBorderParticleSettings confirmedBorderParticleSettings) {
+                             ConfirmedBorderParticleSettings confirmedBorderParticleSettings,
+                             String language) {
 
     public static final String KIT_SECTION_PATH = "kit";
+
+    public static final String LANGUAGE_PATH = "language";
 
     public static final String ROUND_RESET_DELAY_PATH = "match.round-reset-delay-ticks";
     public static final String ROUND_TIMEOUT_SECONDS_PATH = "match.round-timeout-seconds";
@@ -76,6 +81,7 @@ public record PluginSettings(long roundResetDelayTicks,
     public static final long TICKS_PER_SECOND = 20L;
 
     public static final List<String> CONFIGURATION_PATHS = List.of(
+            LANGUAGE_PATH,
             ROUND_RESET_DELAY_PATH,
             ROUND_TIMEOUT_SECONDS_PATH,
             SUDDEN_DEATH_WARNING_SECONDS_PATH,
@@ -128,7 +134,8 @@ public record PluginSettings(long roundResetDelayTicks,
                 BorderParticleService.DEFAULT_MAXIMUM_BLOCKS_PER_PLAYER,
                 BorderParticleService.DEFAULT_MAXIMUM_LINES_PER_PLAYER,
                 BorderWallPreview.DEFAULT_DURATION_TICKS,
-                ConfirmedBorderParticleSettings.defaults());
+                ConfirmedBorderParticleSettings.defaults(),
+                MessageCatalogLoader.DEFAULT_LANGUAGE);
     }
 
     public static PluginSettings read(ConfigurationSection configuration, Consumer<String> problemReporter) {
@@ -160,10 +167,27 @@ public record PluginSettings(long roundResetDelayTicks,
                         shipped.borderParticleMaximumLinesPerPlayer()),
                 TICKS_PER_SECOND * configuration.getInt(BORDER_WALL_PREVIEW_SECONDS_PATH,
                         DEFAULT_WALL_PREVIEW_SECONDS),
-                readConfirmedBorderParticleSettings(configuration, problemReporter));
+                readConfirmedBorderParticleSettings(configuration, problemReporter),
+                readLanguage(configuration, problemReporter));
+    }
+
+    public static String readLanguage(ConfigurationSection configuration, Consumer<String> problemReporter) {
+        if (configuration == null || !configuration.isSet(LANGUAGE_PATH)) {
+            return MessageCatalogLoader.DEFAULT_LANGUAGE;
+        }
+        String writtenLanguage = String.valueOf(configuration.get(LANGUAGE_PATH));
+        String language = writtenLanguage.strip().toLowerCase(Locale.ROOT);
+        if (MessageCatalogLoader.isShipped(language)) {
+            return language;
+        }
+        problemReporter.accept(LANGUAGE_PATH + " " + writtenLanguage + " is no shipped language, falling back to "
+                + MessageCatalogLoader.DEFAULT_LANGUAGE + ". Shipped languages: "
+                + String.join(", ", MessageCatalogLoader.SHIPPED_LANGUAGES));
+        return MessageCatalogLoader.DEFAULT_LANGUAGE;
     }
 
     public void applyTo(LiveConfiguration liveConfiguration) {
+        liveConfiguration.setLanguage(language);
         applyTo(liveConfiguration, liveConfiguration::setTeamSize);
     }
 

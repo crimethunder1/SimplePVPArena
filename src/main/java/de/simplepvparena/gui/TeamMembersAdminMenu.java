@@ -1,5 +1,7 @@
 package de.simplepvparena.gui;
 
+import de.simplepvparena.message.MenuMessage;
+import de.simplepvparena.message.Placeholder;
 import de.simplepvparena.message.TournamentMessages;
 import de.simplepvparena.team.Team;
 import de.simplepvparena.team.TeamMember;
@@ -56,7 +58,8 @@ final class TeamMembersAdminMenu implements AdminMenu {
             canvas.set(FIRST_MEMBER_SLOT + memberIndex, MenuItems.create(Material.PLAYER_HEAD,
                     members.get(memberIndex).playerName(), "Click to remove the player from the team"));
         }
-        canvas.set(AdminMenuLayout.BACK_SLOT, MenuItems.back("the options of team " + teamName));
+        canvas.set(AdminMenuLayout.BACK_SLOT, MenuItems.back(MenuMessage.BACK_TO_TEAM_OPTIONS,
+                Placeholder.of("team", teamName)));
     }
 
     @Override

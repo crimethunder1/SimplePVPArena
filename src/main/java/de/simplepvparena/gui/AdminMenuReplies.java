@@ -1,5 +1,8 @@
 package de.simplepvparena.gui;
 
+import de.simplepvparena.message.MenuMessage;
+import de.simplepvparena.message.Messages;
+import de.simplepvparena.message.Placeholder;
 import de.simplepvparena.message.TournamentMessages;
 import de.simplepvparena.permission.AdminPermission;
 import de.simplepvparena.tournament.TournamentOperationResult;
@@ -17,7 +20,7 @@ final class AdminMenuReplies {
         if (AdminPermission.isAdmin(player)) {
             return true;
         }
-        TournamentMessages.sendError(player, "You are not allowed to use the tournament menu");
+        TournamentMessages.sendError(player, Messages.text(MenuMessage.NOT_ALLOWED));
         return false;
     }
 
@@ -34,8 +37,7 @@ final class AdminMenuReplies {
     }
 
     static String describeUnknownPlayer(String playerName) {
-        return "Unknown player " + playerName
-                + TournamentMessages.LINE_BREAK + "The player has to be online or known to the server";
+        return Messages.text(MenuMessage.UNKNOWN_PLAYER, Placeholder.of("player", playerName));
     }
 
     static String startWithCapitalLetter(String text) {

@@ -2,6 +2,7 @@ package de.simplepvparena.gui;
 
 import de.simplepvparena.match.Match;
 import de.simplepvparena.match.MatchService;
+import de.simplepvparena.message.MenuMessage;
 import de.simplepvparena.message.TournamentMessages;
 import de.simplepvparena.team.Team;
 import de.simplepvparena.team.TeamMember;
@@ -47,7 +48,7 @@ final class ForceResultAdminMenu implements AdminMenu {
         if (activeMatch.isEmpty()) {
             canvas.set(AdminMenuLayout.INFO_SLOT, MenuItems.info("Force a result",
                     List.of("Match " + matchId + " is not running any more")));
-            canvas.set(AdminMenuLayout.BACK_SLOT, MenuItems.back("the match menu"));
+            canvas.set(AdminMenuLayout.BACK_SLOT, MenuItems.back(MenuMessage.BACK_TO_MATCH_MENU));
             return;
         }
         Match match = activeMatch.get();
@@ -57,7 +58,7 @@ final class ForceResultAdminMenu implements AdminMenu {
                 "A click decides the match for that team")));
         canvas.set(FORCE_RESULT_FIRST_TEAM_SLOT, buildWinnerItem(match.getFirstTeam()));
         canvas.set(FORCE_RESULT_SECOND_TEAM_SLOT, buildWinnerItem(match.getSecondTeam()));
-        canvas.set(AdminMenuLayout.BACK_SLOT, MenuItems.back("the match menu"));
+        canvas.set(AdminMenuLayout.BACK_SLOT, MenuItems.back(MenuMessage.BACK_TO_MATCH_MENU));
     }
 
     @Override

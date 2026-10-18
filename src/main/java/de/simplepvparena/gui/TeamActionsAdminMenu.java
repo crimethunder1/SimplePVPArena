@@ -1,6 +1,7 @@
 package de.simplepvparena.gui;
 
 import de.simplepvparena.input.ChatInputService;
+import de.simplepvparena.message.MenuMessage;
 import de.simplepvparena.message.TournamentMessages;
 import de.simplepvparena.team.Team;
 import de.simplepvparena.team.TeamMember;
@@ -85,7 +86,7 @@ final class TeamActionsAdminMenu implements AdminMenu {
                 .orElseGet(() -> MenuItems.create(MenuItems.REFUSE_MATERIAL, "Remove the team",
                         "Removes " + teamName + " from the registry",
                         "Asks for a confirmation first")));
-        canvas.set(AdminMenuLayout.BACK_SLOT, MenuItems.back("the team list"));
+        canvas.set(AdminMenuLayout.BACK_SLOT, MenuItems.back(MenuMessage.BACK_TO_TEAM_LIST));
     }
 
     @Override

@@ -7,6 +7,8 @@ import de.simplepvparena.match.TeamColourSettings;
 
 public interface LiveConfiguration {
 
+    void setLanguage(String language);
+
     void setRoundResetDelayTicks(long roundResetDelayTicks);
 
     void setRoundTimeoutSettings(RoundTimeoutSettings roundTimeoutSettings);

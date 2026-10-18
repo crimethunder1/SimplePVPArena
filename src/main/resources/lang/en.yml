@@ -1,0 +1,47 @@
+# English texts of SimplePVPArena. Words in braces such as {team} are filled in by the plugin.
+# A key missing here falls back to the shipped text. The plugin never changes this file.
+message:
+  prefix: 'Tournament'
+common:
+  list:
+    and: '{items} and {last}'
+    more: '{items} and {count} more'
+  language-file-unreadable: 'The language file {file} could not be read ({reason}), the built-in texts are used until it is fixed'
+  no-tournament-in-progress: 'No tournament is in progress'
+  tournament-already-in-progress: 'A tournament is already in progress'
+  asks-for-confirmation: 'Asks for a confirmation first'
+  menu-closes-to-type: 'The menu closes so you can type'
+  menu-closes-to-read: 'The menu closes so you can read the answer'
+  round-timer-keeps-time: 'The round timer keeps its remaining time'
+  command-not-allowed: 'You are not allowed to use this command'
+menu:
+  back:
+    name: 'Back'
+    main-menu: 'Returns to the main menu'
+    match-menu: 'Returns to the match menu'
+    waiting-matches: 'Returns to the waiting matches'
+    team-list: 'Returns to the team list'
+    team-options: 'Returns to the options of team {team}'
+    kit-list: 'Returns to the kit list'
+  page:
+    previous: 'Previous page'
+    next: 'Next page'
+    target: 'Page {page} of {pageCount}'
+  not-allowed: 'You are not allowed to use the tournament menu'
+  unknown-player:
+    - 'Unknown player {player}'
+    - 'The player has to be online or known to the server'
+input:
+  cancel-word: 'cancel'
+  prompt-footer: 'Type {word} to abort, the request expires in {seconds} seconds'
+  cancelled: 'The input for {description} was cancelled, nothing was changed'
+  expired:
+    - 'The input for {description} expired, nothing was changed'
+    - 'Open /tournament again to start over'
+  nothing-typed: 'Nothing was typed, expected {usage}'
+  expected-values: 'Expected {count} values separated by spaces ({usage}), but got {givenCount}: {values}'
+  expected-value-range: 'Expected {minimum} to {maximum} values separated by spaces ({usage}), but got {givenCount}: {values}'
+  unknown-material: 'Unknown material {material}'
+  not-a-block: '{material} cannot be placed as a block'
+  amount-not-a-number: 'The amount {amount} is not a number'
+  amount-out-of-range: 'The amount has to be between {minimum} and {maximum}'

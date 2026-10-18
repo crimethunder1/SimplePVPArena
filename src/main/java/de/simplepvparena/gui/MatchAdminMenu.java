@@ -1,6 +1,7 @@
 package de.simplepvparena.gui;
 
 import de.simplepvparena.match.MatchService;
+import de.simplepvparena.message.MenuMessage;
 import de.simplepvparena.tournament.TournamentManager;
 import de.simplepvparena.tournament.TournamentOperationResult;
 import org.bukkit.Material;
@@ -77,7 +78,7 @@ final class MatchAdminMenu implements AdminMenu {
                 ? MenuItems.create(Material.ANVIL, "Force a result",
                         "Decides the running match for one of its two teams")
                 : MenuItems.unavailable("Force a result", "No match is running"));
-        canvas.set(AdminMenuLayout.BACK_SLOT, MenuItems.back("the main menu"));
+        canvas.set(AdminMenuLayout.BACK_SLOT, MenuItems.back(MenuMessage.BACK_TO_MAIN_MENU));
     }
 
     @Override

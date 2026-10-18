@@ -79,6 +79,8 @@ import de.simplepvparena.listener.StartGateListener;
 import de.simplepvparena.match.FighterColours;
 import de.simplepvparena.match.MatchService;
 import de.simplepvparena.match.ScoreboardFighterColours;
+import de.simplepvparena.message.MessageCatalogLoader;
+import de.simplepvparena.message.Messages;
 import de.simplepvparena.team.TeamMemberLookup;
 import de.simplepvparena.team.TeamRegistry;
 import de.simplepvparena.team.TeamSizeSetting;
@@ -146,6 +148,14 @@ public final class SimplePVPArenaPlugin extends JavaPlugin {
     public void onEnable() {
         saveDefaultConfig();
 
+        AdminNotifier adminNotifier = new OnlineAdminNotifier(getServer());
+        MessageCatalogLoader messageCatalogLoader = new MessageCatalogLoader(
+                new File(getDataFolder(), MessageCatalogLoader.FOLDER_NAME).toPath(), getLogger()::warning,
+                adminNotifier::notifyAdmins);
+        messageCatalogLoader.installShippedFiles();
+        Messages.useWarningLogger(getLogger()::warning);
+        messageCatalogLoader.useLanguage(PluginSettings.readLanguage(getConfig(), problem -> { }));
+
         arenaRegistry = new ArenaRegistry();
         warnAboutLegacyMultiArenaConfiguration();
         warnAboutLegacyRegionConfiguration();
@@ -157,7 +167,6 @@ public final class SimplePVPArenaPlugin extends JavaPlugin {
         teamStorage = new TeamStorage(new File(getDataFolder(), TEAMS_FILE_NAME), getLogger());
         teamStorage.load(teamRegistry);
 
-        AdminNotifier adminNotifier = new OnlineAdminNotifier(getServer());
         kitService = new KitService(this, new FilePlayerStateSnapshotStorage(
                 new File(getDataFolder(), FilePlayerStateSnapshotStorage.DIRECTORY_NAME).toPath(),
                 new BukkitItemStackCodec()), adminNotifier::notifyAdmins);
@@ -259,7 +268,7 @@ public final class SimplePVPArenaPlugin extends JavaPlugin {
                         arenaSafetyZone, arenaRegistry, borderParticleService, borderWallPreview,
                         borderVisualEffect, teamSizeSetting, teamRegistry, tournamentManager::isTournamentInProgress,
                         adminNotifier::notifyAdmins,
-                        getLogger()::warning),
+                        getLogger()::warning, messageCatalogLoader::useLanguage),
                 getLogger()::warning);
         configurationReloadService.applyStoredConfiguration();
 
@@ -305,6 +314,7 @@ public final class SimplePVPArenaPlugin extends JavaPlugin {
         if (spectatorService != null) {
             spectatorService.clearAllAssignments();
         }
+        Messages.reset();
     }
 
     public void saveArenaConfiguration() {

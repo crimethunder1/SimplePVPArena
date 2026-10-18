@@ -6,6 +6,7 @@ import java.util.List;
 public record ConfigurationReloadReport(List<String> problems) {
 
     public static final List<String> RELOADED_CATEGORIES = List.of(
+            "the language and the language files in the lang folder, for every text shown from now on",
             "the round reset delay, the round timeout, the sudden death damage and whether the "
                     + "final is fought without a time limit",
             "the seconds the start gate takes at the beginning of a round",

@@ -12,6 +12,7 @@ import java.util.Map;
 
 final class RecordingLiveConfiguration implements LiveConfiguration {
 
+    static final String LANGUAGE = "language";
     static final String ROUND_RESET_DELAY = "roundResetDelayTicks";
     static final String ROUND_TIMEOUT = "roundTimeoutSettings";
     static final String SUDDEN_DEATH_IN_FINAL = "suddenDeathDisabledInFinal";
@@ -34,6 +35,7 @@ final class RecordingLiveConfiguration implements LiveConfiguration {
     static final String CONFIRMED_PARTICLE = "confirmedBorderParticleSettings";
 
     static final List<String> EVERY_APPLIED_VALUE = List.of(
+            LANGUAGE,
             ROUND_RESET_DELAY, ROUND_TIMEOUT, SUDDEN_DEATH_IN_FINAL, START_GATE_DURATION, TEAM_COLOURS, TEAM_SIZE,
             CLEANING_BLOCKS_PER_TICK, BASELINE_BLOCKS_PER_TICK, BASELINE_DEPTH_BELOW_FLOOR,
             CLEANING_PARTICLE, MAXIMUM_CELL_COUNT, SAFETY_ZONE_RADIUS, EFFECT_MARGIN, TELEPORT_ON_JOIN,
@@ -42,6 +44,11 @@ final class RecordingLiveConfiguration implements LiveConfiguration {
 
     private final Map<String, Object> appliedValues = new LinkedHashMap<>();
     private final StartGateDuration startGateDuration = new StartGateDuration();
+
+    @Override
+    public void setLanguage(String language) {
+        appliedValues.put(LANGUAGE, language);
+    }
 
     @Override
     public void setRoundResetDelayTicks(long roundResetDelayTicks) {

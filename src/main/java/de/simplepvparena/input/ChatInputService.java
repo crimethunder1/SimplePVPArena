@@ -1,5 +1,8 @@
 package de.simplepvparena.input;
 
+import de.simplepvparena.message.InputMessage;
+import de.simplepvparena.message.Messages;
+import de.simplepvparena.message.Placeholder;
 import de.simplepvparena.message.TournamentMessages;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.Plugin;
@@ -50,8 +53,9 @@ public final class ChatInputService {
     public void await(Player player, String description, List<String> promptLines, Consumer<String> lineHandler) {
         registry.await(player.getUniqueId(), description, lineHandler);
         TournamentMessages.sendInfoReport(player, promptLines);
-        TournamentMessages.sendDetail(player, "Type " + CANCEL_KEYWORD + " to abort, the request expires in "
-                + registry.getTimeoutMillis() / MILLIS_PER_SECOND + " seconds");
+        TournamentMessages.sendDetail(player, Messages.text(InputMessage.PROMPT_FOOTER,
+                Placeholder.of("word", Messages.text(InputMessage.CANCEL_WORD)),
+                Placeholder.of("seconds", registry.getTimeoutMillis() / MILLIS_PER_SECOND)));
     }
 
     public boolean handleLine(Player player, String line) {
@@ -60,9 +64,9 @@ public final class ChatInputService {
             return false;
         }
         String description = request.get().description();
-        if (line.trim().equalsIgnoreCase(CANCEL_KEYWORD)) {
-            runOnMainThread(() -> TournamentMessages.sendWarning(player, "The input for " + description
-                    + " was cancelled, nothing was changed"));
+        if (isCancelWord(line)) {
+            runOnMainThread(() -> TournamentMessages.sendWarning(player, Messages.text(InputMessage.CANCELLED,
+                    Placeholder.of("description", description))));
             return true;
         }
         Consumer<String> lineHandler = request.get().lineHandler();
@@ -82,11 +86,16 @@ public final class ChatInputService {
         for (ExpiredChatInput expiredRequest : registry.collectExpired()) {
             Player player = plugin.getServer().getPlayer(expiredRequest.playerUniqueId());
             if (player != null) {
-                TournamentMessages.sendWarning(player, "The input for " + expiredRequest.description()
-                        + " expired, nothing was changed"
-                        + TournamentMessages.LINE_BREAK + "Open /tournament again to start over");
+                TournamentMessages.sendWarning(player, Messages.text(InputMessage.EXPIRED,
+                        Placeholder.of("description", expiredRequest.description())));
             }
         }
+    }
+
+    private static boolean isCancelWord(String line) {
+        String trimmedLine = line.trim();
+        return trimmedLine.equalsIgnoreCase(CANCEL_KEYWORD)
+                || trimmedLine.equalsIgnoreCase(Messages.text(InputMessage.CANCEL_WORD));
     }
 
     private void runOnMainThread(Runnable action) {

@@ -359,6 +359,6 @@ class TeamSizeSettingsTest {
                 new BorderParticleService(plugin, new BorderMarkIndex(), borderVisualEffect,
                         playerUniqueId -> false, borderConfirmation),
                 wallPreview, borderVisualEffect, teamSizeSetting, teamRegistry, () -> tournamentInProgress,
-                adminNotices::add, logLines::add);
+                adminNotices::add, logLines::add, language -> { });
     }
 }

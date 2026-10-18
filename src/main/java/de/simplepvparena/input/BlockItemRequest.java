@@ -1,5 +1,8 @@
 package de.simplepvparena.input;
 
+import de.simplepvparena.message.InputMessage;
+import de.simplepvparena.message.Messages;
+import de.simplepvparena.message.Placeholder;
 import org.bukkit.Material;
 
 import java.util.Locale;
@@ -31,20 +34,23 @@ public record BlockItemRequest(Material material, int amount) {
                                                Predicate<Material> placeableBlockCheck) {
         Material material = Material.getMaterial(normalizeMaterialArgument(materialArgument));
         if (material == null) {
-            return BlockItemRequestResult.rejected("Unknown material " + materialArgument);
+            return BlockItemRequestResult.rejected(Messages.text(InputMessage.UNKNOWN_MATERIAL,
+                    Placeholder.of("material", materialArgument)));
         }
         if (!placeableBlockCheck.test(material)) {
-            return BlockItemRequestResult.rejected(material.name() + " cannot be placed as a block");
+            return BlockItemRequestResult.rejected(Messages.text(InputMessage.NOT_A_BLOCK,
+                    Placeholder.of("material", material.name())));
         }
         int amount;
         try {
             amount = Integer.parseInt(amountArgument.trim());
         } catch (NumberFormatException notANumber) {
-            return BlockItemRequestResult.rejected("The amount " + amountArgument + " is not a number");
+            return BlockItemRequestResult.rejected(Messages.text(InputMessage.AMOUNT_NOT_A_NUMBER,
+                    Placeholder.of("amount", amountArgument)));
         }
         if (amount < MINIMUM_AMOUNT || amount > MAXIMUM_AMOUNT) {
-            return BlockItemRequestResult.rejected("The amount has to be between " + MINIMUM_AMOUNT
-                    + " and " + MAXIMUM_AMOUNT);
+            return BlockItemRequestResult.rejected(Messages.text(InputMessage.AMOUNT_OUT_OF_RANGE,
+                    Placeholder.of("minimum", MINIMUM_AMOUNT), Placeholder.of("maximum", MAXIMUM_AMOUNT)));
         }
         return BlockItemRequestResult.accepted(new BlockItemRequest(material, amount));
     }

@@ -56,6 +56,7 @@ class PluginSettingsTest {
         assertEquals(6L * PluginSettings.TICKS_PER_SECOND, settings.borderWallPreviewDurationTicks());
         assertEquals(new ConfirmedBorderParticleSettings("DUST", 1.5D, 10, 20, 30),
                 settings.confirmedBorderParticleSettings());
+        assertEquals("de", settings.language());
     }
 
     @Test
@@ -84,6 +85,7 @@ class PluginSettingsTest {
         assertTrue(shipped.borderParticleMaximumLinesPerPlayer() != settings.borderParticleMaximumLinesPerPlayer());
         assertTrue(shipped.borderWallPreviewDurationTicks() != settings.borderWallPreviewDurationTicks());
         assertTrue(!shipped.confirmedBorderParticleSettings().equals(settings.confirmedBorderParticleSettings()));
+        assertTrue(!shipped.language().equals(settings.language()));
     }
 
     @Test
@@ -371,6 +373,7 @@ class PluginSettingsTest {
 
     static MemoryConfiguration configurationWithEveryValueChanged() {
         MemoryConfiguration configuration = new MemoryConfiguration();
+        configuration.set(PluginSettings.LANGUAGE_PATH, "de");
         configuration.set(PluginSettings.ROUND_RESET_DELAY_PATH, 60);
         configuration.set(PluginSettings.ROUND_TIMEOUT_SECONDS_PATH, 120);
         configuration.set(PluginSettings.SUDDEN_DEATH_WARNING_SECONDS_PATH, 30);

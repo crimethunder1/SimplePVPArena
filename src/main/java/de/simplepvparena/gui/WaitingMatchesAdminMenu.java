@@ -1,5 +1,6 @@
 package de.simplepvparena.gui;
 
+import de.simplepvparena.message.MenuMessage;
 import de.simplepvparena.message.TournamentMessages;
 import de.simplepvparena.team.TeamRegistry;
 import de.simplepvparena.tournament.BracketMatch;
@@ -52,7 +53,7 @@ final class WaitingMatchesAdminMenu implements AdminMenu {
         List<BracketMatch> waitingMatches = tournamentManager.findWaitingMatches();
         if (waitingMatches.isEmpty()) {
             canvas.set(WAITING_MATCHES_INFO_SLOT, MenuItems.info("Waiting matches", List.of("No match is waiting")));
-            canvas.set(WAITING_MATCHES_BACK_SLOT, MenuItems.back("the match menu"));
+            canvas.set(WAITING_MATCHES_BACK_SLOT, MenuItems.back(MenuMessage.BACK_TO_MATCH_MENU));
             return;
         }
         MenuPagination pagination = MenuPagination.of(waitingMatches.size(), holder.getPageIndex());
@@ -64,14 +65,12 @@ final class WaitingMatchesAdminMenu implements AdminMenu {
                 "Page " + pagination.getPageNumber() + " of " + pagination.getPageCount(),
                 "A click on a match decides it for one of its teams")));
         if (pagination.hasPreviousPage()) {
-            canvas.set(WAITING_MATCHES_PREVIOUS_PAGE_SLOT, MenuItems.create(MenuItems.PAGE_MATERIAL, "Previous page",
-                    "Page " + (pagination.getPreviousPageIndex() + 1) + " of " + pagination.getPageCount()));
+            canvas.set(WAITING_MATCHES_PREVIOUS_PAGE_SLOT, MenuItems.previousPage(pagination));
         }
         if (pagination.hasNextPage()) {
-            canvas.set(WAITING_MATCHES_NEXT_PAGE_SLOT, MenuItems.create(MenuItems.PAGE_MATERIAL, "Next page",
-                    "Page " + (pagination.getNextPageIndex() + 1) + " of " + pagination.getPageCount()));
+            canvas.set(WAITING_MATCHES_NEXT_PAGE_SLOT, MenuItems.nextPage(pagination));
         }
-        canvas.set(WAITING_MATCHES_BACK_SLOT, MenuItems.back("the match menu"));
+        canvas.set(WAITING_MATCHES_BACK_SLOT, MenuItems.back(MenuMessage.BACK_TO_MATCH_MENU));
     }
 
     @Override

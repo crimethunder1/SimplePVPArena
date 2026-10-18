@@ -1,6 +1,7 @@
 package de.simplepvparena.gui;
 
 import de.simplepvparena.input.ChatInputService;
+import de.simplepvparena.message.MenuMessage;
 import de.simplepvparena.message.TournamentMessages;
 import de.simplepvparena.team.Team;
 import de.simplepvparena.team.TeamCreationRequest;
@@ -91,14 +92,12 @@ final class TeamsAdminMenu implements AdminMenu {
                 "Player names cannot be typed into an inventory",
                 "The menu closes so you can type"));
         if (pagination.hasPreviousPage()) {
-            canvas.set(TEAMS_PREVIOUS_PAGE_SLOT, MenuItems.create(MenuItems.PAGE_MATERIAL, "Previous page",
-                    "Page " + (pagination.getPreviousPageIndex() + 1) + " of " + pagination.getPageCount()));
+            canvas.set(TEAMS_PREVIOUS_PAGE_SLOT, MenuItems.previousPage(pagination));
         }
         if (pagination.hasNextPage()) {
-            canvas.set(TEAMS_NEXT_PAGE_SLOT, MenuItems.create(MenuItems.PAGE_MATERIAL, "Next page",
-                    "Page " + (pagination.getNextPageIndex() + 1) + " of " + pagination.getPageCount()));
+            canvas.set(TEAMS_NEXT_PAGE_SLOT, MenuItems.nextPage(pagination));
         }
-        canvas.set(TEAMS_BACK_SLOT, MenuItems.back("the main menu"));
+        canvas.set(TEAMS_BACK_SLOT, MenuItems.back(MenuMessage.BACK_TO_MAIN_MENU));
     }
 
     @Override

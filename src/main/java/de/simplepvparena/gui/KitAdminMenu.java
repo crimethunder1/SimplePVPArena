@@ -7,6 +7,7 @@ import de.simplepvparena.kit.KitSaveResult;
 import de.simplepvparena.kit.KitSaveService;
 import de.simplepvparena.kit.LibraryKit;
 import de.simplepvparena.kit.SerializedKit;
+import de.simplepvparena.message.MenuMessage;
 import de.simplepvparena.message.TournamentMessages;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
@@ -67,14 +68,12 @@ final class KitAdminMenu implements AdminMenu {
         canvas.set(KITS_CREATE_SLOT, MenuItems.create(MenuItems.CONFIRM_MATERIAL, "Create a kit from your inventory",
                 buildCreationLore()));
         if (pagination.hasPreviousPage()) {
-            canvas.set(KITS_PREVIOUS_PAGE_SLOT, MenuItems.create(MenuItems.PAGE_MATERIAL, "Previous page",
-                    "Page " + (pagination.getPreviousPageIndex() + 1) + " of " + pagination.getPageCount()));
+            canvas.set(KITS_PREVIOUS_PAGE_SLOT, MenuItems.previousPage(pagination));
         }
         if (pagination.hasNextPage()) {
-            canvas.set(KITS_NEXT_PAGE_SLOT, MenuItems.create(MenuItems.PAGE_MATERIAL, "Next page",
-                    "Page " + (pagination.getNextPageIndex() + 1) + " of " + pagination.getPageCount()));
+            canvas.set(KITS_NEXT_PAGE_SLOT, MenuItems.nextPage(pagination));
         }
-        canvas.set(KITS_BACK_SLOT, MenuItems.back("the main menu"));
+        canvas.set(KITS_BACK_SLOT, MenuItems.back(MenuMessage.BACK_TO_MAIN_MENU));
     }
 
     @Override

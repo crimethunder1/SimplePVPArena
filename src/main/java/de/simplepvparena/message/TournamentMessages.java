@@ -14,9 +14,8 @@ public final class TournamentMessages {
 
     public static final String LINE_BREAK = "\n";
 
-    public static final String PREFIX_NAME = "Tournament";
-
-    public static final String PLAIN_PREFIX = "[" + PREFIX_NAME + "] ";
+    private static final String OPENING_BRACKET = "[";
+    private static final String CLOSING_BRACKET = "] ";
 
     public static final TextColor PREFIX_COLOUR = NamedTextColor.GOLD;
     public static final TextColor BRACKET_COLOUR = NamedTextColor.DARK_GRAY;
@@ -53,10 +52,18 @@ public final class TournamentMessages {
     public static Component prefix() {
         return Component.text()
                 .decoration(TextDecoration.ITALIC, false)
-                .append(line(BRACKET_COLOUR, "["))
-                .append(line(PREFIX_COLOUR, PREFIX_NAME))
-                .append(line(BRACKET_COLOUR, "] "))
+                .append(line(BRACKET_COLOUR, OPENING_BRACKET))
+                .append(line(PREFIX_COLOUR, prefixName()))
+                .append(line(BRACKET_COLOUR, CLOSING_BRACKET))
                 .build();
+    }
+
+    public static String prefixName() {
+        return Messages.text(CommonMessage.PREFIX);
+    }
+
+    public static String plainPrefix() {
+        return OPENING_BRACKET + prefixName() + CLOSING_BRACKET;
     }
 
     public static void sendSuccess(CommandSender receiver, String text) {
@@ -116,7 +123,8 @@ public final class TournamentMessages {
 
     public static String toPlainBody(Component message) {
         String plainText = toPlainText(message);
-        return plainText.startsWith(PLAIN_PREFIX) ? plainText.substring(PLAIN_PREFIX.length()) : plainText;
+        String plainPrefix = plainPrefix();
+        return plainText.startsWith(plainPrefix) ? plainText.substring(plainPrefix.length()) : plainText;
     }
 
     private static void sendReport(CommandSender receiver, TextColor headColour, List<String> lines) {

@@ -1,5 +1,6 @@
 package de.simplepvparena.gui;
 
+import de.simplepvparena.message.MenuMessage;
 import de.simplepvparena.message.TournamentMessages;
 import de.simplepvparena.team.Team;
 import de.simplepvparena.team.TeamMember;
@@ -47,7 +48,7 @@ final class WaitingMatchResultAdminMenu implements AdminMenu {
         if (waitingMatch.isEmpty()) {
             canvas.set(AdminMenuLayout.INFO_SLOT, MenuItems.info("Decide a waiting match",
                     List.of("Match " + matchId + " is not waiting any more")));
-            canvas.set(AdminMenuLayout.BACK_SLOT, MenuItems.back("the waiting matches"));
+            canvas.set(AdminMenuLayout.BACK_SLOT, MenuItems.back(MenuMessage.BACK_TO_WAITING_MATCHES));
             return;
         }
         BracketMatch match = waitingMatch.get();
@@ -57,7 +58,7 @@ final class WaitingMatchResultAdminMenu implements AdminMenu {
                 "A click decides the match for that team")));
         canvas.set(WAITING_MATCH_RESULT_FIRST_TEAM_SLOT, buildWinnerItem(match.getFirstTeamName().orElseThrow()));
         canvas.set(WAITING_MATCH_RESULT_SECOND_TEAM_SLOT, buildWinnerItem(match.getSecondTeamName().orElseThrow()));
-        canvas.set(AdminMenuLayout.BACK_SLOT, MenuItems.back("the waiting matches"));
+        canvas.set(AdminMenuLayout.BACK_SLOT, MenuItems.back(MenuMessage.BACK_TO_WAITING_MATCHES));
     }
 
     @Override

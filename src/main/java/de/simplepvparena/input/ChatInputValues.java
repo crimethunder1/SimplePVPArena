@@ -1,5 +1,9 @@
 package de.simplepvparena.input;
 
+import de.simplepvparena.message.InputMessage;
+import de.simplepvparena.message.Messages;
+import de.simplepvparena.message.Placeholder;
+
 import java.util.List;
 import java.util.Optional;
 import java.util.regex.Pattern;
@@ -36,13 +40,18 @@ public record ChatInputValues(List<String> values) {
         if (values.size() >= minimumValueCount && values.size() <= maximumValueCount) {
             return Optional.empty();
         }
+        Placeholder usagePlaceholder = Placeholder.of("usage", usage);
         if (values.isEmpty()) {
-            return Optional.of("Nothing was typed, expected " + usage);
+            return Optional.of(Messages.text(InputMessage.NOTHING_TYPED, usagePlaceholder));
         }
-        String expectedValueCount = minimumValueCount == maximumValueCount
-                ? String.valueOf(minimumValueCount)
-                : minimumValueCount + " to " + maximumValueCount;
-        return Optional.of("Expected " + expectedValueCount + " values separated by spaces (" + usage
-                + "), but got " + values.size() + ": " + String.join(" ", values));
+        Placeholder givenCount = Placeholder.of("givenCount", values.size());
+        Placeholder givenValues = Placeholder.of("values", String.join(" ", values));
+        if (minimumValueCount == maximumValueCount) {
+            return Optional.of(Messages.text(InputMessage.EXPECTED_VALUES, Placeholder.of("count", minimumValueCount),
+                    usagePlaceholder, givenCount, givenValues));
+        }
+        return Optional.of(Messages.text(InputMessage.EXPECTED_VALUE_RANGE,
+                Placeholder.of("minimum", minimumValueCount), Placeholder.of("maximum", maximumValueCount),
+                usagePlaceholder, givenCount, givenValues));
     }
 }

@@ -3,6 +3,7 @@ package de.simplepvparena.gui;
 import de.simplepvparena.kit.KitLibrary;
 import de.simplepvparena.kit.KitSaveService;
 import de.simplepvparena.kit.LibraryKit;
+import de.simplepvparena.message.MenuMessage;
 import de.simplepvparena.message.TournamentMessages;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
@@ -55,7 +56,7 @@ final class KitActionsAdminMenu implements AdminMenu {
                 .map(rejection -> MenuItems.unavailable("Delete the kit", rejection))
                 .orElseGet(() -> MenuItems.create(MenuItems.REFUSE_MATERIAL, "Delete the kit",
                         "Removes the kit " + kitName, "Asks for a confirmation first")));
-        canvas.set(AdminMenuLayout.BACK_SLOT, MenuItems.back("the kit list"));
+        canvas.set(AdminMenuLayout.BACK_SLOT, MenuItems.back(MenuMessage.BACK_TO_KIT_LIST));
     }
 
     @Override

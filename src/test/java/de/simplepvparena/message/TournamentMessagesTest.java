@@ -55,7 +55,7 @@ class TournamentMessagesTest {
         Component message = TournamentMessages.info("A fact");
 
         assertEquals(TournamentMessages.BRACKET_COLOUR, colourOf(message, "["));
-        assertEquals(TournamentMessages.PREFIX_COLOUR, colourOf(message, TournamentMessages.PREFIX_NAME));
+        assertEquals(TournamentMessages.PREFIX_COLOUR, colourOf(message, TournamentMessages.prefixName()));
         assertEquals(TournamentMessages.BRACKET_COLOUR, colourOf(message, "] "));
         assertEquals(TournamentMessages.INFO_COLOUR, colourOf(message, "A fact"),
                 "the name of the plugin is no part of the sentence it introduces");
@@ -70,7 +70,7 @@ class TournamentMessagesTest {
         String plainText = TournamentMessages.toPlainText(message);
 
         assertEquals("[Tournament] It was refused\nbecause of this\nand because of that", plainText);
-        assertEquals(1, countOccurrences(plainText, TournamentMessages.PLAIN_PREFIX),
+        assertEquals(1, countOccurrences(plainText, TournamentMessages.plainPrefix()),
                 "a message carries its prefix once: " + plainText);
         assertEquals(TournamentMessages.ERROR_COLOUR, colourOf(message, "It was refused"),
                 "the head line is the category");

@@ -1,0 +1,47 @@
+# German texts of SimplePVPArena. Words in braces such as {team} are filled in by the plugin.
+# A key missing here falls back to the shipped text. The plugin never changes this file.
+message:
+  prefix: 'Turnier'
+common:
+  list:
+    and: '{items} und {last}'
+    more: '{items} und {count} weitere'
+  language-file-unreadable: 'Die Sprachdatei {file} konnte nicht gelesen werden ({reason}), bis zur Korrektur gelten die mitgelieferten Texte'
+  no-tournament-in-progress: 'Es läuft kein Turnier'
+  tournament-already-in-progress: 'Es läuft bereits ein Turnier'
+  asks-for-confirmation: 'Fragt vorher nach einer Bestätigung'
+  menu-closes-to-type: 'Das Menü schließt sich, damit du tippen kannst'
+  menu-closes-to-read: 'Das Menü schließt sich, damit du die Antwort lesen kannst'
+  round-timer-keeps-time: 'Die Rundenzeit behält ihre verbleibende Zeit'
+  command-not-allowed: 'Du darfst diesen Befehl nicht benutzen'
+menu:
+  back:
+    name: 'Zurück'
+    main-menu: 'Zurück zum Hauptmenü'
+    match-menu: 'Zurück zum Match-Menü'
+    waiting-matches: 'Zurück zu den wartenden Matches'
+    team-list: 'Zurück zur Team-Liste'
+    team-options: 'Zurück zu den Optionen von Team {team}'
+    kit-list: 'Zurück zur Kit-Liste'
+  page:
+    previous: 'Vorherige Seite'
+    next: 'Nächste Seite'
+    target: 'Seite {page} von {pageCount}'
+  not-allowed: 'Du darfst das Turniermenü nicht benutzen'
+  unknown-player:
+    - 'Unbekannter Spieler {player}'
+    - 'Der Spieler muss online oder dem Server bekannt sein'
+input:
+  cancel-word: 'abbrechen'
+  prompt-footer: 'Gib {word} ein, um abzubrechen, die Anfrage läuft in {seconds} Sekunden ab'
+  cancelled: 'Die Eingabe für {description} wurde abgebrochen, nichts wurde geändert'
+  expired:
+    - 'Die Eingabe für {description} ist abgelaufen, nichts wurde geändert'
+    - 'Öffne /tournament erneut, um neu zu beginnen'
+  nothing-typed: 'Es wurde nichts eingegeben, erwartet wird {usage}'
+  expected-values: 'Erwartet werden {count} durch Leerzeichen getrennte Werte ({usage}), eingegeben wurden {givenCount}: {values}'
+  expected-value-range: 'Erwartet werden {minimum} bis {maximum} durch Leerzeichen getrennte Werte ({usage}), eingegeben wurden {givenCount}: {values}'
+  unknown-material: 'Unbekanntes Material {material}'
+  not-a-block: '{material} lässt sich nicht als Block setzen'
+  amount-not-a-number: 'Die Menge {amount} ist keine Zahl'
+  amount-out-of-range: 'Die Menge muss zwischen {minimum} und {maximum} liegen'

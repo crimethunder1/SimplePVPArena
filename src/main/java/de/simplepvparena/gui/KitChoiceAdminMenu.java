@@ -56,12 +56,10 @@ final class KitChoiceAdminMenu implements AdminMenu {
                 .map(this::buildInfoLore)
                 .orElseGet(() -> List.of("Match " + matchId, describeOverChoice(matchId)))));
         if (pagination.hasPreviousPage()) {
-            canvas.set(KIT_CHOICE_PREVIOUS_PAGE_SLOT, MenuItems.create(MenuItems.PAGE_MATERIAL, "Previous page",
-                    "Page " + (pagination.getPreviousPageIndex() + 1) + " of " + pagination.getPageCount()));
+            canvas.set(KIT_CHOICE_PREVIOUS_PAGE_SLOT, MenuItems.previousPage(pagination));
         }
         if (pagination.hasNextPage()) {
-            canvas.set(KIT_CHOICE_NEXT_PAGE_SLOT, MenuItems.create(MenuItems.PAGE_MATERIAL, "Next page",
-                    "Page " + (pagination.getNextPageIndex() + 1) + " of " + pagination.getPageCount()));
+            canvas.set(KIT_CHOICE_NEXT_PAGE_SLOT, MenuItems.nextPage(pagination));
         }
     }
 

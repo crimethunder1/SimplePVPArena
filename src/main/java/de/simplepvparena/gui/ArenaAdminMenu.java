@@ -9,6 +9,7 @@ import de.simplepvparena.gate.StartGateItemService;
 import de.simplepvparena.input.BlockItemRequest;
 import de.simplepvparena.input.BlockItemRequestResult;
 import de.simplepvparena.input.ChatInputService;
+import de.simplepvparena.message.MenuMessage;
 import de.simplepvparena.message.TournamentMessages;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
@@ -84,7 +85,7 @@ final class ArenaAdminMenu implements AdminMenu {
                 "Drops the fight area and all three spawns",
                 "The blocks and the border blocks stay untouched",
                 "Asks for a confirmation first"));
-        canvas.set(AdminMenuLayout.BACK_SLOT, MenuItems.back("the main menu"));
+        canvas.set(AdminMenuLayout.BACK_SLOT, MenuItems.back(MenuMessage.BACK_TO_MAIN_MENU));
     }
 
     @Override
