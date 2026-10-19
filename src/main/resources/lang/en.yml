@@ -238,3 +238,168 @@ confirmation:
     delete-kit: 'Delete the kit?'
     remove-team: 'Remove the team?'
     cancel-tournament: 'Cancel the tournament?'
+team:
+  name-rule: '1 to {maximumLength} letters, digits, hyphens or underscores'
+  name-missing: 'A team needs a name, a team name has {rule}'
+  name-not-allowed: 'The team name {team} is not allowed, a team name has {rule}'
+  member-count-out-of-range: 'a team has {minimum} to {maximum} players'
+  same-player-twice: 'a team cannot hold the same player twice'
+  already-exists: 'a team named {team} already exists'
+  team-full:
+    one: 'team {team} already has {count} player, a team has at most {count} player'
+    other: 'team {team} already has {count} players, a team has at most {count} players'
+  player-not-in-team: 'the player {uniqueId} is not in team {team}'
+  last-member:
+    one: 'a team keeps at least {count} player, remove the team instead'
+    other: 'a team keeps at least {count} players, remove the team instead'
+  not-registered: 'no team named {team} is registered'
+  player-already-in-team: '{player} is already registered in team {team}'
+  creation:
+    usage: '<teamName> <player> [<player> ...]'
+    player-named-twice: 'A team needs {minimum} to {maximum} different players, {player} was named twice'
+  size:
+    out-of-range: 'The team size must lie between {minimum} and {maximum} players'
+    tournament-in-progress: 'The team size cannot be changed while a tournament is in progress'
+    match-up: '{teamSize} ({teamSize} versus {teamSize})'
+    larger-teams:
+      than-one-player:
+        one: '{count} team has more than {teamSize} player: {teams}'
+        other: '{count} teams have more than {teamSize} player: {teams}'
+      than-several-players:
+        one: '{count} team has more than {teamSize} players: {teams}'
+        other: '{count} teams have more than {teamSize} players: {teams}'
+    smaller-teams:
+      than-one-player:
+        one: '{count} team has fewer than {teamSize} player: {teams}'
+        other: '{count} teams have fewer than {teamSize} player: {teams}'
+      than-several-players:
+        one: '{count} team has fewer than {teamSize} players: {teams}'
+        other: '{count} teams have fewer than {teamSize} players: {teams}'
+    remove-larger-teams-first:
+      one: '{largerTeams}. Remove it first'
+      other: '{largerTeams}. Remove them first'
+    team-with-members: '{team} ({members})'
+    team-with-member-count: '{team} ({memberCount})'
+teams-menu:
+  title: 'Teams (page {page})'
+  smallest-team-size: 'The smallest team size is {minimum}'
+  largest-team-size: 'The largest team size is {maximum}'
+  team-size-changed: 'Team size is now {matchUp}'
+  team-size-not-written: 'Team size is now {matchUp}, but config.yml could not be written: {reason}'
+  team-registered: 'Team {team} registered with {members}'
+  registration-failed:
+    - 'Team {team} could not be registered'
+    - '{reason}'
+  tile:
+    team:
+      members: 'Members: {members}'
+      lore: 'Click for the options of this team'
+    info:
+      title: 'Teams'
+      registered-teams:
+        one: 'Registered teams: {count}'
+        other: 'Registered teams: {count}'
+      team-size: 'Team size: {matchUp}'
+      hint: 'A click on a team opens its options'
+    smaller:
+      title: 'Smaller teams'
+      lore:
+        one: 'Click to make teams of {count} player'
+        other: 'Click to make teams of {count} players'
+    larger:
+      title: 'Larger teams'
+      lore:
+        one: 'Click to make teams of {count} player'
+        other: 'Click to make teams of {count} players'
+    add:
+      title: 'Add a team'
+      lore:
+        - 'Asks for {usage} in the chat'
+        - 'Player names cannot be typed into an inventory'
+  add-input:
+    description: 'the team to add'
+    type: 'Type: {usage} in chat'
+    exact-size:
+      one: 'A team has {count} player, a team name has {rule}'
+      other: 'A team has {count} players, a team name has {rule}'
+    size-range: 'A team has {minimum} to {maximum} players, a team name has {rule}'
+    examples:
+      - 'Example: Alpha Steve Alex'
+      - 'Example: Bravo Notch Jeb_ Dinnerbone'
+    players-known: 'Every player has to be online or known to the server'
+team-actions-menu:
+  title: 'Team {team}'
+  not-registered: 'This team is not registered any more'
+  team-full:
+    one: 'Team {team} already has {count} player, the team size is {teamSize}'
+    other: 'Team {team} already has {count} players, the team size is {teamSize}'
+  remove-confirmation:
+    - 'Team {team} is removed from the registry'
+    - 'A team that plays a match cannot be removed'
+  team-renamed: 'Team {formerName} is now called {newName}'
+  rename-failed:
+    - 'Team {team} could not be renamed'
+    - '{reason}'
+  player-joined: '{player} joined team {team}'
+  join-failed:
+    - '{player} could not join team {team}'
+    - '{reason}'
+  unknown-team: 'Unknown team {team}'
+  team-removed: 'Team {team} removed'
+  tile:
+    info:
+      members: 'Members: {members}'
+      player-count:
+        one: 'Players: {count} of {teamSize}'
+        other: 'Players: {count} of {teamSize}'
+      not-registered: 'This team is not registered any more'
+    rename:
+      title: 'Rename the team'
+      lore:
+        - 'Asks for the new name in the chat'
+        - 'The team keeps its place in the team list'
+    add-player:
+      title: 'Add a player'
+      lore: 'Asks for the name of the player in the chat'
+      team-full:
+        one: 'The team already has {count} player, the team size is {teamSize}'
+        other: 'The team already has {count} players, the team size is {teamSize}'
+    remove-player:
+      title: 'Remove a player'
+      lore:
+        - 'Shows the players of {team}'
+        - 'A click on a player removes the player'
+    remove:
+      title: 'Remove the team'
+      lore: 'Removes {team} from the registry'
+  rename-input:
+    description: 'the new name of team {team}'
+    prompt:
+      - 'Type: <newName> in chat'
+      - 'A team name has {rule}'
+      - 'Example: Phoenix'
+      - 'The team keeps its players and its place in the team list'
+  add-player-input:
+    description: 'the player to add to team {team}'
+    type: 'Type: <player> in chat'
+    player-count:
+      one: 'Team {team} has {memberCount} of {count} player'
+      other: 'Team {team} has {memberCount} of {count} players'
+    hints:
+      - 'Example: Steve'
+      - 'Every player has to be online or known to the server'
+team-members-menu:
+  title: 'Players of {team}'
+  player-left: '{player} left team {team}'
+  leave-failed:
+    - '{player} could not leave team {team}'
+    - '{reason}'
+  tile:
+    info:
+      player-count:
+        one: 'Players: {count} of {teamSize}'
+        other: 'Players: {count} of {teamSize}'
+      hint: 'A click on a player removes the player'
+      not-registered: 'This team is not registered any more'
+    member:
+      lore: 'Click to remove the player from the team'

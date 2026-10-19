@@ -59,7 +59,7 @@ class GermanMenuSnapshotTest {
                 16 | WRITTEN_BOOK | Turnierbaum | Schreibt jede Turnierrunde und jedes Match in den Chat / \
                 Der Chat zeigt einen Turnierbaum besser als ein Raster / \
                 Das Menü schließt sich, damit du ihn lesen kannst
-                18 | OBSERVER | Probelauf des Ablaufs | Geht den ganzen Ablauf einmal durch, ohne Event / \
+                18 | OBSERVER | Probelauf des Turnierablaufs | Geht den ganzen Ablauf einmal durch, ohne Event / \
                 Registriert zwei Testteams, baut ihren Turnierbaum, / \
                 entscheidet ein simuliertes Match und entfernt sie wieder / \
                 Prüft die Arena und ihre Spawns, das Kit, den / Countdown des Starttors und ob die / \

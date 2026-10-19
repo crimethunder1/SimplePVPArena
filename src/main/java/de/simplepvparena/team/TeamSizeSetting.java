@@ -1,19 +1,16 @@
 package de.simplepvparena.team;
 
+import de.simplepvparena.message.Messages;
+import de.simplepvparena.message.Placeholder;
+import de.simplepvparena.message.TeamMessage;
+
 import java.util.List;
 import java.util.Optional;
 import java.util.function.Function;
-import java.util.stream.Collectors;
 
 public final class TeamSizeSetting {
 
     public static final int DEFAULT_TEAM_SIZE = 2;
-
-    public static final String TOURNAMENT_IN_PROGRESS_REJECTION =
-            "The team size cannot be changed while a tournament is in progress";
-
-    public static final String ALLOWED_RANGE_REJECTION = "The team size must lie between "
-            + Team.MINIMUM_MEMBER_COUNT + " and " + Team.MAXIMUM_MEMBER_COUNT + " players";
 
     private static final int MAXIMUM_NAMED_TEAM_COUNT = 5;
 
@@ -24,9 +21,7 @@ public final class TeamSizeSetting {
     }
 
     public void setTeamSize(int teamSize) {
-        if (!isAllowed(teamSize)) {
-            throw new IllegalArgumentException(ALLOWED_RANGE_REJECTION + ", not " + teamSize);
-        }
+        requireAllowed(teamSize);
         this.teamSize = teamSize;
     }
 
@@ -34,24 +29,26 @@ public final class TeamSizeSetting {
         return teamSize >= Team.MINIMUM_MEMBER_COUNT && teamSize <= Team.MAXIMUM_MEMBER_COUNT;
     }
 
-    public static String describeMatchUp(int teamSize) {
-        return teamSize + " (" + teamSize + " versus " + teamSize + ")";
+    static void requireAllowed(int teamSize) {
+        if (!isAllowed(teamSize)) {
+            throw new IllegalArgumentException("The team size must lie between %d and %d players, not %d"
+                    .formatted(Team.MINIMUM_MEMBER_COUNT, Team.MAXIMUM_MEMBER_COUNT, teamSize));
+        }
     }
 
-    public static String describePlayerRange(int teamSize) {
-        if (teamSize == Team.MINIMUM_MEMBER_COUNT) {
-            return teamSize + " player";
-        }
-        return Team.MINIMUM_MEMBER_COUNT + " to " + teamSize + " players";
+    public static String describeMatchUp(int teamSize) {
+        return Messages.text(TeamMessage.SIZE_MATCH_UP, Placeholder.of("teamSize", teamSize));
     }
 
     public static Optional<String> findChangeRejection(int currentTeamSize, int newTeamSize,
                                                        boolean tournamentInProgress, TeamRegistry teamRegistry) {
         if (!isAllowed(newTeamSize)) {
-            return Optional.of(ALLOWED_RANGE_REJECTION);
+            return Optional.of(Messages.text(TeamMessage.SIZE_OUT_OF_RANGE,
+                    Placeholder.of("minimum", Team.MINIMUM_MEMBER_COUNT),
+                    Placeholder.of("maximum", Team.MAXIMUM_MEMBER_COUNT)));
         }
         if (tournamentInProgress) {
-            return Optional.of(TOURNAMENT_IN_PROGRESS_REJECTION);
+            return Optional.of(Messages.text(TeamMessage.SIZE_TOURNAMENT_IN_PROGRESS));
         }
         if (newTeamSize >= currentTeamSize) {
             return Optional.empty();
@@ -60,24 +57,29 @@ public final class TeamSizeSetting {
         if (largerTeams.isEmpty()) {
             return Optional.empty();
         }
-        return Optional.of(describeTeams(largerTeams, "more than", newTeamSize, Team::getMemberNamesJoined)
-                + ". Remove " + (largerTeams.size() == 1 ? "it" : "them") + " first");
+        String largerTeamsDescription = describeLargerTeams(largerTeams, newTeamSize,
+                TeamSizeSetting::describeWithMembers);
+        return Optional.of(Messages.plural(TeamMessage.REMOVE_LARGER_TEAMS_FIRST, largerTeams.size(),
+                Placeholder.of("largerTeams", largerTeamsDescription)));
     }
 
     public static Optional<String> describeTeamsLargerThan(int teamSize, TeamRegistry teamRegistry) {
-        return describeMemberCounts(findTeamsLargerThan(teamSize, teamRegistry), "more than", teamSize);
+        List<Team> largerTeams = findTeamsLargerThan(teamSize, teamRegistry);
+        if (largerTeams.isEmpty()) {
+            return Optional.empty();
+        }
+        return Optional.of(describeLargerTeams(largerTeams, teamSize, TeamSizeSetting::describeWithMemberCount));
     }
 
     public static Optional<String> describeTeamsSmallerThan(int teamSize, TeamRegistry teamRegistry) {
-        return describeMemberCounts(findTeamsSmallerThan(teamSize, teamRegistry), "fewer than", teamSize);
-    }
-
-    private static Optional<String> describeMemberCounts(List<Team> teams, String sizeComparison, int teamSize) {
-        if (teams.isEmpty()) {
+        List<Team> smallerTeams = findTeamsSmallerThan(teamSize, teamRegistry);
+        if (smallerTeams.isEmpty()) {
             return Optional.empty();
         }
-        return Optional.of(describeTeams(teams, sizeComparison, teamSize,
-                team -> String.valueOf(team.getMembers().size())));
+        TeamMessage key = teamSize == 1
+                ? TeamMessage.TEAMS_SMALLER_THAN_ONE_PLAYER
+                : TeamMessage.TEAMS_SMALLER_THAN_SEVERAL_PLAYERS;
+        return Optional.of(describeTeams(key, smallerTeams, teamSize, TeamSizeSetting::describeWithMemberCount));
     }
 
     public static List<Team> findTeamsLargerThan(int teamSize, TeamRegistry teamRegistry) {
@@ -92,15 +94,27 @@ public final class TeamSizeSetting {
                 .toList();
     }
 
-    public static String describeTeams(List<Team> teams, String sizeComparison, int teamSize,
-                                       Function<Team, String> teamDetail) {
-        String namedTeams = teams.stream()
-                .limit(MAXIMUM_NAMED_TEAM_COUNT)
-                .map(team -> team.getTeamName() + " (" + teamDetail.apply(team) + ")")
-                .collect(Collectors.joining(", "));
-        int unnamedTeamCount = teams.size() - Math.min(teams.size(), MAXIMUM_NAMED_TEAM_COUNT);
-        return teams.size() + (teams.size() == 1 ? " team has " : " teams have ") + sizeComparison + " "
-                + teamSize + (teamSize == 1 ? " player: " : " players: ") + namedTeams
-                + (unnamedTeamCount > 0 ? " and " + unnamedTeamCount + " more" : "");
+    private static String describeLargerTeams(List<Team> teams, int teamSize, Function<Team, String> describeTeam) {
+        TeamMessage key = teamSize == 1
+                ? TeamMessage.TEAMS_LARGER_THAN_ONE_PLAYER
+                : TeamMessage.TEAMS_LARGER_THAN_SEVERAL_PLAYERS;
+        return describeTeams(key, teams, teamSize, describeTeam);
+    }
+
+    private static String describeTeams(TeamMessage key, List<Team> teams, int teamSize,
+                                        Function<Team, String> describeTeam) {
+        List<String> describedTeams = teams.stream().map(describeTeam).toList();
+        return Messages.plural(key, teams.size(), Placeholder.of("teamSize", teamSize),
+                Placeholder.of("teams", Messages.listLimited(describedTeams, MAXIMUM_NAMED_TEAM_COUNT)));
+    }
+
+    private static String describeWithMembers(Team team) {
+        return Messages.text(TeamMessage.TEAM_WITH_MEMBERS, Placeholder.of("team", team.getTeamName()),
+                Placeholder.of("members", team.getMemberNamesJoined()));
+    }
+
+    private static String describeWithMemberCount(Team team) {
+        return Messages.text(TeamMessage.TEAM_WITH_MEMBER_COUNT, Placeholder.of("team", team.getTeamName()),
+                Placeholder.of("memberCount", team.getMembers().size()));
     }
 }

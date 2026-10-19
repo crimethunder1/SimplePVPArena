@@ -88,7 +88,7 @@ main-menu:
         - 'Der Chat zeigt einen Turnierbaum besser als ein Raster'
         - 'Das Menü schließt sich, damit du ihn lesen kannst'
     dry-run:
-      title: 'Probelauf des Ablaufs'
+      title: 'Probelauf des Turnierablaufs'
       lore:
         - 'Geht den ganzen Ablauf einmal durch, ohne Event'
         - 'Registriert zwei Testteams, baut ihren Turnierbaum,'
@@ -238,3 +238,168 @@ confirmation:
     delete-kit: 'Kit löschen?'
     remove-team: 'Team entfernen?'
     cancel-tournament: 'Turnier abbrechen?'
+team:
+  name-rule: '1 bis {maximumLength} Buchstaben, Ziffern, Bindestriche oder Unterstriche'
+  name-missing: 'Ein Team braucht einen Namen, ein Teamname hat {rule}'
+  name-not-allowed: 'Der Teamname {team} ist nicht erlaubt, ein Teamname hat {rule}'
+  member-count-out-of-range: 'ein Team hat {minimum} bis {maximum} Spieler'
+  same-player-twice: 'ein Team kann denselben Spieler nicht zweimal enthalten'
+  already-exists: 'ein Team namens {team} gibt es bereits'
+  team-full:
+    one: 'Team {team} hat bereits {count} Spieler, ein Team hat höchstens {count} Spieler'
+    other: 'Team {team} hat bereits {count} Spieler, ein Team hat höchstens {count} Spieler'
+  player-not-in-team: 'der Spieler {uniqueId} ist nicht in Team {team}'
+  last-member:
+    one: 'ein Team behält mindestens {count} Spieler, entferne stattdessen das Team'
+    other: 'ein Team behält mindestens {count} Spieler, entferne stattdessen das Team'
+  not-registered: 'kein Team namens {team} ist registriert'
+  player-already-in-team: '{player} ist bereits in Team {team} registriert'
+  creation:
+    usage: '<Teamname> <Spieler> [<Spieler> ...]'
+    player-named-twice: 'Ein Team braucht {minimum} bis {maximum} verschiedene Spieler, {player} wurde zweimal genannt'
+  size:
+    out-of-range: 'Die Teamgröße muss zwischen {minimum} und {maximum} Spielern liegen'
+    tournament-in-progress: 'Die Teamgröße lässt sich nicht ändern, solange ein Turnier läuft'
+    match-up: '{teamSize} ({teamSize} gegen {teamSize})'
+    larger-teams:
+      than-one-player:
+        one: '{count} Team hat mehr als {teamSize} Spieler: {teams}'
+        other: '{count} Teams haben mehr als {teamSize} Spieler: {teams}'
+      than-several-players:
+        one: '{count} Team hat mehr als {teamSize} Spieler: {teams}'
+        other: '{count} Teams haben mehr als {teamSize} Spieler: {teams}'
+    smaller-teams:
+      than-one-player:
+        one: '{count} Team hat weniger als {teamSize} Spieler: {teams}'
+        other: '{count} Teams haben weniger als {teamSize} Spieler: {teams}'
+      than-several-players:
+        one: '{count} Team hat weniger als {teamSize} Spieler: {teams}'
+        other: '{count} Teams haben weniger als {teamSize} Spieler: {teams}'
+    remove-larger-teams-first:
+      one: '{largerTeams}. Entferne es zuerst'
+      other: '{largerTeams}. Entferne sie zuerst'
+    team-with-members: '{team} ({members})'
+    team-with-member-count: '{team} ({memberCount})'
+teams-menu:
+  title: 'Teams (Seite {page})'
+  smallest-team-size: 'Die kleinste Teamgröße ist {minimum}'
+  largest-team-size: 'Die größte Teamgröße ist {maximum}'
+  team-size-changed: 'Die Teamgröße ist jetzt {matchUp}'
+  team-size-not-written: 'Die Teamgröße ist jetzt {matchUp}, aber config.yml konnte nicht geschrieben werden: {reason}'
+  team-registered: 'Team {team} mit {members} registriert'
+  registration-failed:
+    - 'Team {team} konnte nicht registriert werden'
+    - '{reason}'
+  tile:
+    team:
+      members: 'Mitglieder: {members}'
+      lore: 'Klicke für die Optionen dieses Teams'
+    info:
+      title: 'Teams'
+      registered-teams:
+        one: 'Registrierte Teams: {count}'
+        other: 'Registrierte Teams: {count}'
+      team-size: 'Teamgröße: {matchUp}'
+      hint: 'Ein Klick auf ein Team öffnet seine Optionen'
+    smaller:
+      title: 'Kleinere Teams'
+      lore:
+        one: 'Klicke, um Teams aus {count} Spieler zu bilden'
+        other: 'Klicke, um Teams aus {count} Spielern zu bilden'
+    larger:
+      title: 'Größere Teams'
+      lore:
+        one: 'Klicke, um Teams aus {count} Spieler zu bilden'
+        other: 'Klicke, um Teams aus {count} Spielern zu bilden'
+    add:
+      title: 'Team hinzufügen'
+      lore:
+        - 'Fragt im Chat nach {usage}'
+        - 'Spielernamen lassen sich nicht in ein Inventar tippen'
+  add-input:
+    description: 'das neue Team'
+    type: 'Gib im Chat ein: {usage}'
+    exact-size:
+      one: 'Ein Team hat {count} Spieler, ein Teamname hat {rule}'
+      other: 'Ein Team hat {count} Spieler, ein Teamname hat {rule}'
+    size-range: 'Ein Team hat {minimum} bis {maximum} Spieler, ein Teamname hat {rule}'
+    examples:
+      - 'Beispiel: Alpha Steve Alex'
+      - 'Beispiel: Bravo Notch Jeb_ Dinnerbone'
+    players-known: 'Jeder Spieler muss online oder dem Server bekannt sein'
+team-actions-menu:
+  title: 'Team {team}'
+  not-registered: 'Dieses Team ist nicht mehr registriert'
+  team-full:
+    one: 'Team {team} hat bereits {count} Spieler, die Teamgröße ist {teamSize}'
+    other: 'Team {team} hat bereits {count} Spieler, die Teamgröße ist {teamSize}'
+  remove-confirmation:
+    - 'Team {team} wird aus den registrierten Teams entfernt'
+    - 'Ein Team, das ein Match spielt, lässt sich nicht entfernen'
+  team-renamed: 'Team {formerName} heißt jetzt {newName}'
+  rename-failed:
+    - 'Team {team} konnte nicht umbenannt werden'
+    - '{reason}'
+  player-joined: '{player} ist Team {team} beigetreten'
+  join-failed:
+    - '{player} konnte Team {team} nicht beitreten'
+    - '{reason}'
+  unknown-team: 'Unbekanntes Team {team}'
+  team-removed: 'Team {team} entfernt'
+  tile:
+    info:
+      members: 'Mitglieder: {members}'
+      player-count:
+        one: 'Spieler: {count} von {teamSize}'
+        other: 'Spieler: {count} von {teamSize}'
+      not-registered: 'Dieses Team ist nicht mehr registriert'
+    rename:
+      title: 'Team umbenennen'
+      lore:
+        - 'Fragt im Chat nach dem neuen Namen'
+        - 'Das Team behält seinen Platz in der Team-Liste'
+    add-player:
+      title: 'Spieler hinzufügen'
+      lore: 'Fragt im Chat nach dem Namen des Spielers'
+      team-full:
+        one: 'Das Team hat bereits {count} Spieler, die Teamgröße ist {teamSize}'
+        other: 'Das Team hat bereits {count} Spieler, die Teamgröße ist {teamSize}'
+    remove-player:
+      title: 'Spieler entfernen'
+      lore:
+        - 'Zeigt die Spieler von {team}'
+        - 'Ein Klick auf einen Spieler entfernt ihn'
+    remove:
+      title: 'Team entfernen'
+      lore: 'Entfernt {team} aus den registrierten Teams'
+  rename-input:
+    description: 'den neuen Namen von Team {team}'
+    prompt:
+      - 'Gib im Chat ein: <Neuer Name>'
+      - 'Ein Teamname hat {rule}'
+      - 'Beispiel: Phoenix'
+      - 'Das Team behält seine Spieler und seinen Platz in der Team-Liste'
+  add-player-input:
+    description: 'den neuen Spieler von Team {team}'
+    type: 'Gib im Chat ein: <Spieler>'
+    player-count:
+      one: 'Team {team} hat {memberCount} von {count} Spieler'
+      other: 'Team {team} hat {memberCount} von {count} Spielern'
+    hints:
+      - 'Beispiel: Steve'
+      - 'Jeder Spieler muss online oder dem Server bekannt sein'
+team-members-menu:
+  title: 'Spieler von {team}'
+  player-left: '{player} hat Team {team} verlassen'
+  leave-failed:
+    - '{player} konnte Team {team} nicht verlassen'
+    - '{reason}'
+  tile:
+    info:
+      player-count:
+        one: 'Spieler: {count} von {teamSize}'
+        other: 'Spieler: {count} von {teamSize}'
+      hint: 'Ein Klick auf einen Spieler entfernt ihn'
+      not-registered: 'Dieses Team ist nicht mehr registriert'
+    member:
+      lore: 'Klicke, um den Spieler aus dem Team zu entfernen'

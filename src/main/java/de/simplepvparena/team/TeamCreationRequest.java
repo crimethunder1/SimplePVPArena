@@ -1,6 +1,9 @@
 package de.simplepvparena.team;
 
 import de.simplepvparena.input.ChatInputValues;
+import de.simplepvparena.message.Messages;
+import de.simplepvparena.message.Placeholder;
+import de.simplepvparena.message.TeamMessage;
 
 import java.util.List;
 import java.util.Optional;
@@ -8,7 +11,6 @@ import java.util.Optional;
 public final class TeamCreationRequest {
 
     public static final int MINIMUM_VALUE_COUNT = 1 + Team.MINIMUM_MEMBER_COUNT;
-    public static final String USAGE = "<teamName> <player> [<player> ...]";
 
     private final String teamName;
     private final List<String> playerNames;
@@ -20,12 +22,15 @@ public final class TeamCreationRequest {
         this.rejectionMessage = rejectionMessage;
     }
 
+    public static String describeUsage() {
+        return Messages.text(TeamMessage.CREATION_USAGE);
+    }
+
     public static TeamCreationRequest parse(String line, int teamSize) {
-        if (!TeamSizeSetting.isAllowed(teamSize)) {
-            throw new IllegalArgumentException(TeamSizeSetting.ALLOWED_RANGE_REJECTION + ", not " + teamSize);
-        }
+        TeamSizeSetting.requireAllowed(teamSize);
         ChatInputValues values = ChatInputValues.of(line);
-        Optional<String> countRejection = values.findCountRejection(MINIMUM_VALUE_COUNT, 1 + teamSize, USAGE);
+        Optional<String> countRejection = values.findCountRejection(MINIMUM_VALUE_COUNT, 1 + teamSize,
+                describeUsage());
         if (countRejection.isPresent()) {
             return rejected(countRejection.get());
         }
@@ -33,8 +38,9 @@ public final class TeamCreationRequest {
         List<String> playerNames = List.copyOf(values.values().subList(1, values.count()));
         Optional<String> playerNamedTwice = findPlayerNamedTwice(playerNames);
         if (playerNamedTwice.isPresent()) {
-            return rejected("A team needs " + Team.MINIMUM_MEMBER_COUNT + " to " + teamSize
-                    + " different players, " + playerNamedTwice.get() + " was named twice");
+            return rejected(Messages.text(TeamMessage.CREATION_PLAYER_NAMED_TWICE,
+                    Placeholder.of("minimum", Team.MINIMUM_MEMBER_COUNT), Placeholder.of("maximum", teamSize),
+                    Placeholder.of("player", playerNamedTwice.get())));
         }
         return new TeamCreationRequest(teamName, playerNames, null);
     }

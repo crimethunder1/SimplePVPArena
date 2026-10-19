@@ -1,7 +1,11 @@
 package de.simplepvparena.gui;
 
 import de.simplepvparena.input.ChatInputService;
+import de.simplepvparena.message.CommonMessage;
 import de.simplepvparena.message.MenuMessage;
+import de.simplepvparena.message.Messages;
+import de.simplepvparena.message.Placeholder;
+import de.simplepvparena.message.TeamMenuMessage;
 import de.simplepvparena.message.TournamentMessages;
 import de.simplepvparena.team.Team;
 import de.simplepvparena.team.TeamCreationRequest;
@@ -33,9 +37,6 @@ final class TeamsAdminMenu implements AdminMenu {
     private static final int TEAMS_ADD_SLOT = 51;
     private static final int TEAMS_NEXT_PAGE_SLOT = 53;
 
-    private static final String SMALLEST_TEAM_SIZE_REASON = "The smallest team size is " + Team.MINIMUM_MEMBER_COUNT;
-    private static final String LARGEST_TEAM_SIZE_REASON = "The largest team size is " + Team.MAXIMUM_MEMBER_COUNT;
-
     private final AdminMenuNavigation navigation;
     private final TeamRegistry teamRegistry;
     private final TeamMemberLookup teamMemberLookup;
@@ -61,8 +62,8 @@ final class TeamsAdminMenu implements AdminMenu {
 
     @Override
     public String title(AdminMenuHolder holder) {
-        return "Teams (page "
-                + MenuPagination.of(teamRegistry.getTeamCount(), holder.getPageIndex()).getPageNumber() + ")";
+        return Messages.text(TeamMenuMessage.TITLE, Placeholder.of("page",
+                MenuPagination.of(teamRegistry.getTeamCount(), holder.getPageIndex()).getPageNumber()));
     }
 
     @Override
@@ -77,20 +78,24 @@ final class TeamsAdminMenu implements AdminMenu {
         for (int slot = 0; slot < pagination.getItemCountOnPage(); slot++) {
             Team team = teams.get(pagination.getFirstItemIndex() + slot);
             canvas.set(slot, MenuItems.create(Material.PLAYER_HEAD, team.getTeamName(),
-                    "Members: " + team.getMemberNamesJoined(), "Click for the options of this team"));
+                    Messages.text(TeamMenuMessage.TEAM_MEMBERS, Placeholder.of("members", team.getMemberNamesJoined())),
+                    Messages.text(TeamMenuMessage.TEAM_LORE)));
         }
         int teamSize = teamSizeSetting.getTeamSize();
-        canvas.set(TEAMS_INFO_SLOT, MenuItems.info("Teams", List.of(
-                "Registered teams: " + teams.size(),
-                "Page " + pagination.getPageNumber() + " of " + pagination.getPageCount(),
-                "Team size: " + TeamSizeSetting.describeMatchUp(teamSize),
-                "A click on a team opens its options")));
+        canvas.set(TEAMS_INFO_SLOT, MenuItems.info(Messages.text(TeamMenuMessage.INFO_TITLE), List.of(
+                Messages.plural(TeamMenuMessage.REGISTERED_TEAMS, teams.size()),
+                Messages.text(MenuMessage.PAGE_OF_PAGES, Placeholder.of("page", pagination.getPageNumber()),
+                        Placeholder.of("pageCount", pagination.getPageCount())),
+                Messages.text(TeamMenuMessage.TEAM_SIZE,
+                        Placeholder.of("matchUp", TeamSizeSetting.describeMatchUp(teamSize))),
+                Messages.text(TeamMenuMessage.INFO_HINT))));
         canvas.set(TEAMS_SMALLER_SLOT, buildSmallerTeamsItem(teamSize));
         canvas.set(TEAMS_LARGER_SLOT, buildLargerTeamsItem(teamSize));
-        canvas.set(TEAMS_ADD_SLOT, MenuItems.create(MenuItems.CONFIRM_MATERIAL, "Add a team",
-                "Asks for " + TeamCreationRequest.USAGE + " in the chat",
-                "Player names cannot be typed into an inventory",
-                "The menu closes so you can type"));
+        List<String> addLore = new ArrayList<>(Messages.lines(TeamMenuMessage.ADD_LORE,
+                Placeholder.of("usage", TeamCreationRequest.describeUsage())));
+        addLore.add(Messages.text(CommonMessage.MENU_CLOSES_TO_TYPE));
+        canvas.set(TEAMS_ADD_SLOT, MenuItems.create(MenuItems.CONFIRM_MATERIAL,
+                Messages.text(TeamMenuMessage.ADD_TITLE), addLore));
         if (pagination.hasPreviousPage()) {
             canvas.set(TEAMS_PREVIOUS_PAGE_SLOT, MenuItems.previousPage(pagination));
         }
@@ -126,24 +131,24 @@ final class TeamsAdminMenu implements AdminMenu {
 
     private MenuTile buildSmallerTeamsItem(int teamSize) {
         if (teamSize <= Team.MINIMUM_MEMBER_COUNT) {
-            return MenuItems.unavailable("Smaller teams", SMALLEST_TEAM_SIZE_REASON);
+            return MenuItems.unavailable(Messages.text(TeamMenuMessage.SMALLER_TITLE), describeSmallestTeamSize());
         }
-        return MenuItems.create(Material.RED_DYE, "Smaller teams",
-                "Click to make teams of " + describePlayerCount(teamSize - 1));
+        return MenuItems.create(Material.RED_DYE, Messages.text(TeamMenuMessage.SMALLER_TITLE),
+                Messages.plural(TeamMenuMessage.SMALLER_LORE, teamSize - 1));
     }
 
     private MenuTile buildLargerTeamsItem(int teamSize) {
         if (teamSize >= Team.MAXIMUM_MEMBER_COUNT) {
-            return MenuItems.unavailable("Larger teams", LARGEST_TEAM_SIZE_REASON);
+            return MenuItems.unavailable(Messages.text(TeamMenuMessage.LARGER_TITLE), describeLargestTeamSize());
         }
-        return MenuItems.create(Material.LIME_DYE, "Larger teams",
-                "Click to make teams of " + describePlayerCount(teamSize + 1));
+        return MenuItems.create(Material.LIME_DYE, Messages.text(TeamMenuMessage.LARGER_TITLE),
+                Messages.plural(TeamMenuMessage.LARGER_LORE, teamSize + 1));
     }
 
     private void makeTeamsSmaller(Player player, AdminMenuHolder holder) {
         int teamSize = teamSizeSetting.getTeamSize();
         if (teamSize <= Team.MINIMUM_MEMBER_COUNT) {
-            TournamentMessages.sendError(player, SMALLEST_TEAM_SIZE_REASON);
+            TournamentMessages.sendError(player, describeSmallestTeamSize());
             return;
         }
         changeTeamSize(player, holder, teamSize - 1);
@@ -152,7 +157,7 @@ final class TeamsAdminMenu implements AdminMenu {
     private void makeTeamsLarger(Player player, AdminMenuHolder holder) {
         int teamSize = teamSizeSetting.getTeamSize();
         if (teamSize >= Team.MAXIMUM_MEMBER_COUNT) {
-            TournamentMessages.sendError(player, LARGEST_TEAM_SIZE_REASON);
+            TournamentMessages.sendError(player, describeLargestTeamSize());
             return;
         }
         changeTeamSize(player, holder, teamSize + 1);
@@ -166,19 +171,23 @@ final class TeamsAdminMenu implements AdminMenu {
             return;
         }
         teamSizeSetting.setTeamSize(newTeamSize);
-        String announcement = "Team size is now " + TeamSizeSetting.describeMatchUp(newTeamSize);
+        Placeholder matchUp = Placeholder.of("matchUp", TeamSizeSetting.describeMatchUp(newTeamSize));
         try {
             teamSizeWriter.write(newTeamSize);
-            TournamentMessages.sendSuccess(player, announcement);
+            TournamentMessages.sendSuccess(player, Messages.text(TeamMenuMessage.TEAM_SIZE_CHANGED, matchUp));
         } catch (IOException failure) {
-            TournamentMessages.sendWarning(player, announcement + ", but config.yml could not be written: "
-                    + describeFailure(failure));
+            TournamentMessages.sendWarning(player, Messages.text(TeamMenuMessage.TEAM_SIZE_NOT_WRITTEN, matchUp,
+                    Placeholder.of("reason", describeFailure(failure))));
         }
         navigation.refresh(player, holder);
     }
 
-    private static String describePlayerCount(int playerCount) {
-        return playerCount + (playerCount == 1 ? " player" : " players");
+    private static String describeSmallestTeamSize() {
+        return Messages.text(TeamMenuMessage.SMALLEST_TEAM_SIZE, Placeholder.of("minimum", Team.MINIMUM_MEMBER_COUNT));
+    }
+
+    private static String describeLargestTeamSize() {
+        return Messages.text(TeamMenuMessage.LARGEST_TEAM_SIZE, Placeholder.of("maximum", Team.MAXIMUM_MEMBER_COUNT));
     }
 
     private static String describeFailure(IOException failure) {
@@ -196,14 +205,23 @@ final class TeamsAdminMenu implements AdminMenu {
 
     private void askForTeamLine(Player player, int pageIndex) {
         navigation.close(player);
-        chatInputService.await(player, "the team to add", List.of(
-                        "Type: " + TeamCreationRequest.USAGE + " in chat",
-                        "A team has " + TeamSizeSetting.describePlayerRange(teamSizeSetting.getTeamSize())
-                                + ", a team name has " + TeamRegistry.NAME_RULE,
-                        "Example: Alpha Steve Alex",
-                        "Example: Bravo Notch Jeb_ Dinnerbone",
-                        "Every player has to be online or known to the server"),
+        List<String> promptLines = new ArrayList<>();
+        promptLines.add(Messages.text(TeamMenuMessage.ADD_INPUT_TYPE,
+                Placeholder.of("usage", TeamCreationRequest.describeUsage())));
+        promptLines.add(describeTeamRule(teamSizeSetting.getTeamSize()));
+        promptLines.addAll(Messages.lines(TeamMenuMessage.ADD_INPUT_EXAMPLES));
+        promptLines.add(Messages.text(TeamMenuMessage.ADD_INPUT_PLAYERS_KNOWN));
+        chatInputService.await(player, Messages.text(TeamMenuMessage.ADD_INPUT_DESCRIPTION), promptLines,
                 line -> handleTeamLine(player, pageIndex, line));
+    }
+
+    private static String describeTeamRule(int teamSize) {
+        Placeholder nameRule = Placeholder.of("rule", TeamRegistry.describeNameRule());
+        if (teamSize == Team.MINIMUM_MEMBER_COUNT) {
+            return Messages.plural(TeamMenuMessage.ADD_INPUT_EXACT_SIZE, teamSize, nameRule);
+        }
+        return Messages.text(TeamMenuMessage.ADD_INPUT_SIZE_RANGE, Placeholder.of("minimum", Team.MINIMUM_MEMBER_COUNT),
+                Placeholder.of("maximum", teamSize), nameRule);
     }
 
     private void handleTeamLine(Player player, int pageIndex, String line) {
@@ -233,16 +251,17 @@ final class TeamsAdminMenu implements AdminMenu {
         try {
             Team team = teamRegistry.registerTeam(request.getTeamName(), members);
             teamConfigurationSaver.run();
-            TournamentMessages.sendSuccess(player, "Team " + team.getTeamName() + " registered with "
-                    + team.getMemberNamesJoined());
+            TournamentMessages.sendSuccess(player, Messages.text(TeamMenuMessage.TEAM_REGISTERED,
+                    Placeholder.of("team", team.getTeamName()),
+                    Placeholder.of("members", team.getMemberNamesJoined())));
         } catch (IllegalArgumentException | IllegalStateException failure) {
             TournamentMessages.sendError(player, describeRegistrationFailure(request.getTeamName(), failure));
         }
     }
 
     private String describeRegistrationFailure(String teamName, RuntimeException failure) {
-        return "Team " + teamName + " could not be registered"
-                + TournamentMessages.LINE_BREAK + AdminMenuReplies.startWithCapitalLetter(failure.getMessage());
+        return Messages.text(TeamMenuMessage.REGISTRATION_FAILED, Placeholder.of("team", teamName),
+                Placeholder.of("reason", AdminMenuReplies.startWithCapitalLetter(failure.getMessage())));
     }
 
     private List<Team> collectTeams() {

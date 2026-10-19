@@ -35,7 +35,7 @@ class TournamentManagerTeamSizeTest {
 
         fixture.startTournament();
 
-        assertEquals(List.of("2 teams have fewer than 3 players: Bravo (2), Charlie (1). The tournament starts "
+        assertEquals(List.of("2 teams have fewer than 3 players: Bravo (2) and Charlie (1). The tournament starts "
                 + "anyway, a missing player counts as absent"), fixture.adminMessages());
         assertEquals(TournamentState.RUNNING, fixture.tournamentManager().getState());
         assertTrue(fixture.runningMatchId().isPresent());

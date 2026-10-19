@@ -50,13 +50,10 @@ class TeamSizeSettingTest {
     }
 
     @Test
-    void describesTheMatchUpAndThePlayerRangeOfATeamSize() {
+    void describesTheMatchUpOfATeamSize() {
         assertEquals("1 (1 versus 1)", TeamSizeSetting.describeMatchUp(1));
         assertEquals("2 (2 versus 2)", TeamSizeSetting.describeMatchUp(2));
         assertEquals("8 (8 versus 8)", TeamSizeSetting.describeMatchUp(8));
-        assertEquals("1 player", TeamSizeSetting.describePlayerRange(1));
-        assertEquals("1 to 2 players", TeamSizeSetting.describePlayerRange(2));
-        assertEquals("1 to 8 players", TeamSizeSetting.describePlayerRange(8));
     }
 
     @Test
@@ -100,8 +97,8 @@ class TeamSizeSettingTest {
         registerTeam("Bravo", 1);
         registerTeam("Charlie", 2);
 
-        assertEquals(Optional.of("2 teams have more than 1 player: Alpha (Alpha1, Alpha2, Alpha3), "
-                        + "Charlie (Charlie1, Charlie2). Remove them first"),
+        assertEquals(Optional.of("2 teams have more than 1 player: Alpha (Alpha1, Alpha2, Alpha3) "
+                        + "and Charlie (Charlie1, Charlie2). Remove them first"),
                 TeamSizeSetting.findChangeRejection(3, 1, false, teamRegistry));
     }
 
@@ -124,7 +121,7 @@ class TeamSizeSettingTest {
         }
 
         assertEquals(Optional.of("5 teams have more than 1 player: Alpha (Alpha1, Alpha2), Bravo (Bravo1, Bravo2), "
-                        + "Charlie (Charlie1, Charlie2), Delta (Delta1, Delta2), Echo (Echo1, Echo2). "
+                        + "Charlie (Charlie1, Charlie2), Delta (Delta1, Delta2) and Echo (Echo1, Echo2). "
                         + "Remove them first"),
                 TeamSizeSetting.findChangeRejection(2, 1, false, teamRegistry));
     }
@@ -184,7 +181,7 @@ class TeamSizeSettingTest {
         registerTeam("Charlie", 2);
         registerTeam("Delta", 4);
 
-        assertEquals(Optional.of("2 teams have more than 2 players: Alpha (3), Delta (4)"),
+        assertEquals(Optional.of("2 teams have more than 2 players: Alpha (3) and Delta (4)"),
                 TeamSizeSetting.describeTeamsLargerThan(2, teamRegistry));
         assertEquals(Optional.of("1 team has fewer than 2 players: Bravo (1)"),
                 TeamSizeSetting.describeTeamsSmallerThan(2, teamRegistry));

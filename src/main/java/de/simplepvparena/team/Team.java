@@ -1,5 +1,9 @@
 package de.simplepvparena.team;
 
+import de.simplepvparena.message.Messages;
+import de.simplepvparena.message.Placeholder;
+import de.simplepvparena.message.TeamMessage;
+
 import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -24,13 +28,13 @@ public final class Team {
         }
         List<TeamMember> copiedMembers = List.copyOf(members);
         if (copiedMembers.size() < MINIMUM_MEMBER_COUNT || copiedMembers.size() > MAXIMUM_MEMBER_COUNT) {
-            throw new IllegalArgumentException("a team has " + MINIMUM_MEMBER_COUNT + " to " + MAXIMUM_MEMBER_COUNT
-                    + " players");
+            throw new IllegalArgumentException(Messages.text(TeamMessage.MEMBER_COUNT_OUT_OF_RANGE,
+                    Placeholder.of("minimum", MINIMUM_MEMBER_COUNT), Placeholder.of("maximum", MAXIMUM_MEMBER_COUNT)));
         }
         Set<UUID> memberUniqueIds = new HashSet<>();
         for (TeamMember member : copiedMembers) {
             if (!memberUniqueIds.add(member.uniqueId())) {
-                throw new IllegalArgumentException("a team cannot hold the same player twice");
+                throw new IllegalArgumentException(Messages.text(TeamMessage.SAME_PLAYER_TWICE));
             }
         }
         this.teamName = teamName;

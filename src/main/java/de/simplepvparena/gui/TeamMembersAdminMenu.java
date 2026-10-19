@@ -1,7 +1,9 @@
 package de.simplepvparena.gui;
 
 import de.simplepvparena.message.MenuMessage;
+import de.simplepvparena.message.Messages;
 import de.simplepvparena.message.Placeholder;
+import de.simplepvparena.message.TeamActionsMessage;
 import de.simplepvparena.message.TournamentMessages;
 import de.simplepvparena.team.Team;
 import de.simplepvparena.team.TeamMember;
@@ -36,7 +38,8 @@ final class TeamMembersAdminMenu implements AdminMenu {
 
     @Override
     public String title(AdminMenuHolder holder) {
-        return "Players of " + holder.getSubject().orElseThrow();
+        return Messages.text(TeamActionsMessage.MEMBERS_TITLE,
+                Placeholder.of("team", holder.getSubject().orElseThrow()));
     }
 
     @Override
@@ -50,13 +53,15 @@ final class TeamMembersAdminMenu implements AdminMenu {
         Optional<Team> team = teamRegistry.findTeam(teamName);
         canvas.set(AdminMenuLayout.INFO_SLOT, MenuItems.info(teamName, team
                 .map(registeredTeam -> List.of(
-                        TeamActionsAdminMenu.describePlayerCount(registeredTeam, teamSizeSetting.getTeamSize()),
-                        "A click on a player removes the player"))
-                .orElse(List.of(TeamActionsAdminMenu.NOT_REGISTERED_REASON))));
+                        Messages.plural(TeamActionsMessage.MEMBERS_INFO_PLAYER_COUNT,
+                                registeredTeam.getMembers().size(),
+                                Placeholder.of("teamSize", teamSizeSetting.getTeamSize())),
+                        Messages.text(TeamActionsMessage.MEMBERS_INFO_HINT)))
+                .orElse(List.of(Messages.text(TeamActionsMessage.MEMBERS_INFO_NOT_REGISTERED)))));
         List<TeamMember> members = team.map(Team::getMembers).orElse(List.of());
         for (int memberIndex = 0; memberIndex < members.size(); memberIndex++) {
             canvas.set(FIRST_MEMBER_SLOT + memberIndex, MenuItems.create(Material.PLAYER_HEAD,
-                    members.get(memberIndex).playerName(), "Click to remove the player from the team"));
+                    members.get(memberIndex).playerName(), Messages.text(TeamActionsMessage.MEMBER_LORE)));
         }
         canvas.set(AdminMenuLayout.BACK_SLOT, MenuItems.back(MenuMessage.BACK_TO_TEAM_OPTIONS,
                 Placeholder.of("team", teamName)));
@@ -84,16 +89,18 @@ final class TeamMembersAdminMenu implements AdminMenu {
             return;
         }
         if (team.getMembers().size() <= Team.MINIMUM_MEMBER_COUNT) {
-            TournamentMessages.sendError(player, TeamActionsAdminMenu.LAST_PLAYER_REASON);
+            TournamentMessages.sendError(player, TeamActionsAdminMenu.describeLastPlayerRejection());
             return;
         }
         try {
             Team changedTeam = teamRegistry.removeMember(team.getTeamName(), member.uniqueId());
             teamConfigurationSaver.run();
-            TournamentMessages.sendSuccess(player, member.playerName() + " left team " + changedTeam.getTeamName());
+            TournamentMessages.sendSuccess(player, Messages.text(TeamActionsMessage.PLAYER_LEFT,
+                    Placeholder.of("player", member.playerName()), Placeholder.of("team", changedTeam.getTeamName())));
         } catch (IllegalArgumentException | IllegalStateException failure) {
-            TournamentMessages.sendError(player, member.playerName() + " could not leave team " + team.getTeamName()
-                    + TournamentMessages.LINE_BREAK + AdminMenuReplies.startWithCapitalLetter(failure.getMessage()));
+            TournamentMessages.sendError(player, Messages.text(TeamActionsMessage.LEAVE_FAILED,
+                    Placeholder.of("player", member.playerName()), Placeholder.of("team", team.getTeamName()),
+                    Placeholder.of("reason", AdminMenuReplies.startWithCapitalLetter(failure.getMessage()))));
             return;
         }
         navigation.open(player, AdminMenuHolder.teamMembers(holder.getSubject().orElseThrow(),

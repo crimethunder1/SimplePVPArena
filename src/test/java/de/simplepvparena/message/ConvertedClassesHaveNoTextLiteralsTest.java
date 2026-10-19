@@ -41,7 +41,15 @@ class ConvertedClassesHaveNoTextLiteralsTest {
             "input/ChatInputService.java",
             "input/ChatInputValues.java",
             "input/ExpiredChatInput.java",
-            "input/PendingChatInput.java");
+            "input/PendingChatInput.java",
+            "team/Team.java",
+            "team/TeamCreationRequest.java",
+            "team/TeamMemberLookup.java",
+            "team/TeamSizeWriter.java",
+            "team/TeamSizeSetting.java",
+            "gui/TeamsAdminMenu.java",
+            "gui/TeamActionsAdminMenu.java",
+            "gui/TeamMembersAdminMenu.java");
 
     private static final Pattern STRING_LITERAL = Pattern.compile("\"((?:[^\"\\\\]|\\\\.)*)\"");
     private static final Pattern USAGE_TOKEN = Pattern.compile("<[^<>]*>");

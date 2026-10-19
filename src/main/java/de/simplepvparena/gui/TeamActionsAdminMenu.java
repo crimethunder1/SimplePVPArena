@@ -1,7 +1,11 @@
 package de.simplepvparena.gui;
 
 import de.simplepvparena.input.ChatInputService;
+import de.simplepvparena.message.CommonMessage;
 import de.simplepvparena.message.MenuMessage;
+import de.simplepvparena.message.Messages;
+import de.simplepvparena.message.Placeholder;
+import de.simplepvparena.message.TeamActionsMessage;
 import de.simplepvparena.message.TournamentMessages;
 import de.simplepvparena.team.Team;
 import de.simplepvparena.team.TeamMember;
@@ -12,15 +16,12 @@ import de.simplepvparena.tournament.TournamentManager;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
 final class TeamActionsAdminMenu implements AdminMenu {
-
-    static final String NOT_REGISTERED_REASON = "This team is not registered any more";
-    static final String LAST_PLAYER_REASON = AdminMenuReplies.startWithCapitalLetter(
-            TeamRegistry.LAST_MEMBER_REJECTION);
 
     private static final int TEAM_RENAME_SLOT = 10;
     private static final int TEAM_ADD_PLAYER_SLOT = 11;
@@ -49,7 +50,7 @@ final class TeamActionsAdminMenu implements AdminMenu {
 
     @Override
     public String title(AdminMenuHolder holder) {
-        return "Team " + holder.getSubject().orElseThrow();
+        return Messages.text(TeamActionsMessage.TITLE, Placeholder.of("team", holder.getSubject().orElseThrow()));
     }
 
     @Override
@@ -62,30 +63,33 @@ final class TeamActionsAdminMenu implements AdminMenu {
         String teamName = holder.getSubject().orElseThrow();
         Optional<Team> team = teamRegistry.findTeam(teamName);
         canvas.set(AdminMenuLayout.INFO_SLOT, MenuItems.info(teamName, team
-                .map(registeredTeam -> List.of("Members: " + registeredTeam.getMemberNamesJoined(),
-                        describePlayerCount(registeredTeam, teamSizeSetting.getTeamSize())))
-                .orElse(List.of(NOT_REGISTERED_REASON))));
+                .map(registeredTeam -> List.of(
+                        Messages.text(TeamActionsMessage.INFO_MEMBERS,
+                                Placeholder.of("members", registeredTeam.getMemberNamesJoined())),
+                        Messages.plural(TeamActionsMessage.INFO_PLAYER_COUNT, registeredTeam.getMembers().size(),
+                                Placeholder.of("teamSize", teamSizeSetting.getTeamSize()))))
+                .orElse(List.of(Messages.text(TeamActionsMessage.INFO_NOT_REGISTERED)))));
+        String renameTitle = Messages.text(TeamActionsMessage.RENAME_TITLE);
         canvas.set(TEAM_RENAME_SLOT, findRenameRejection(teamName)
-                .map(rejection -> MenuItems.unavailable("Rename the team", rejection))
-                .orElseGet(() -> MenuItems.create(Material.NAME_TAG, "Rename the team",
-                        "Asks for the new name in the chat",
-                        "The team keeps its place in the team list",
-                        "The menu closes so you can type")));
-        canvas.set(TEAM_ADD_PLAYER_SLOT, findAddPlayerRejection(teamName, "The team")
-                .map(rejection -> MenuItems.unavailable("Add a player", rejection))
-                .orElseGet(() -> MenuItems.create(Material.LIME_DYE, "Add a player",
-                        "Asks for the name of the player in the chat",
-                        "The menu closes so you can type")));
+                .map(rejection -> MenuItems.unavailable(renameTitle, rejection))
+                .orElseGet(() -> MenuItems.create(Material.NAME_TAG, renameTitle,
+                        withMenuClosingLine(Messages.lines(TeamActionsMessage.RENAME_LORE)))));
+        String addPlayerTitle = Messages.text(TeamActionsMessage.ADD_PLAYER_TITLE);
+        canvas.set(TEAM_ADD_PLAYER_SLOT, findAddPlayerTileRejection(teamName)
+                .map(rejection -> MenuItems.unavailable(addPlayerTitle, rejection))
+                .orElseGet(() -> MenuItems.create(Material.LIME_DYE, addPlayerTitle,
+                        withMenuClosingLine(Messages.lines(TeamActionsMessage.ADD_PLAYER_LORE)))));
+        String removePlayerTitle = Messages.text(TeamActionsMessage.REMOVE_PLAYER_TITLE);
         canvas.set(TEAM_REMOVE_PLAYER_SLOT, findRemovePlayerRejection(teamName)
-                .map(rejection -> MenuItems.unavailable("Remove a player", rejection))
-                .orElseGet(() -> MenuItems.create(Material.RED_DYE, "Remove a player",
-                        "Shows the players of " + teamName,
-                        "A click on a player removes the player")));
+                .map(rejection -> MenuItems.unavailable(removePlayerTitle, rejection))
+                .orElseGet(() -> MenuItems.create(Material.RED_DYE, removePlayerTitle,
+                        Messages.lines(TeamActionsMessage.REMOVE_PLAYER_LORE, Placeholder.of("team", teamName)))));
+        String removeTitle = Messages.text(TeamActionsMessage.REMOVE_TITLE);
         canvas.set(TEAM_REMOVE_SLOT, tournamentManager.findTeamChangeRejection(teamName)
-                .map(rejection -> MenuItems.unavailable("Remove the team", rejection))
-                .orElseGet(() -> MenuItems.create(MenuItems.REFUSE_MATERIAL, "Remove the team",
-                        "Removes " + teamName + " from the registry",
-                        "Asks for a confirmation first")));
+                .map(rejection -> MenuItems.unavailable(removeTitle, rejection))
+                .orElseGet(() -> MenuItems.create(MenuItems.REFUSE_MATERIAL, removeTitle,
+                        Messages.text(TeamActionsMessage.REMOVE_LORE, Placeholder.of("team", teamName)),
+                        Messages.text(CommonMessage.ASKS_FOR_CONFIRMATION))));
         canvas.set(AdminMenuLayout.BACK_SLOT, MenuItems.back(MenuMessage.BACK_TO_TEAM_LIST));
     }
 
@@ -106,9 +110,8 @@ final class TeamActionsAdminMenu implements AdminMenu {
         return new AdminMenuConfirmation() {
             @Override
             public List<String> describe(AdminMenuHolder holder) {
-                return List.of(
-                        "Team " + holder.getSubject().orElseThrow() + " is removed from the registry",
-                        "A team that plays a match cannot be removed");
+                return Messages.lines(TeamActionsMessage.REMOVE_CONFIRMATION,
+                        Placeholder.of("team", holder.getSubject().orElseThrow()));
             }
 
             @Override
@@ -123,8 +126,8 @@ final class TeamActionsAdminMenu implements AdminMenu {
         };
     }
 
-    static String describePlayerCount(Team team, int teamSize) {
-        return "Players: " + team.getMembers().size() + " of " + teamSize;
+    static String describeLastPlayerRejection() {
+        return AdminMenuReplies.startWithCapitalLetter(TeamRegistry.describeLastMemberRejection());
     }
 
     private Optional<String> findRenameRejection(String teamName) {
@@ -135,28 +138,41 @@ final class TeamActionsAdminMenu implements AdminMenu {
         return findUnknownTeamRejection(teamName).or(() -> tournamentManager.findTeamChangeRejection(teamName));
     }
 
-    private Optional<String> findAddPlayerRejection(String teamName, String teamDescription) {
-        return findChangeRejection(teamName).or(() -> teamRegistry.findTeam(teamName)
-                .filter(team -> team.getMembers().size() >= teamSizeSetting.getTeamSize())
-                .map(team -> teamDescription + " already has " + describeMembers(team.getMembers().size())
-                        + ", the team size is " + teamSizeSetting.getTeamSize()));
+    private Optional<String> findAddPlayerTileRejection(String teamName) {
+        return findChangeRejection(teamName).or(() -> findFullTeam(teamName)
+                .map(team -> Messages.plural(TeamActionsMessage.ADD_PLAYER_TEAM_FULL, team.getMembers().size(),
+                        Placeholder.of("teamSize", teamSizeSetting.getTeamSize()))));
+    }
+
+    private Optional<String> findAddPlayerRejection(String teamName) {
+        return findChangeRejection(teamName).or(() -> findFullTeam(teamName)
+                .map(team -> Messages.plural(TeamActionsMessage.TEAM_FULL, team.getMembers().size(),
+                        Placeholder.of("team", teamName),
+                        Placeholder.of("teamSize", teamSizeSetting.getTeamSize()))));
+    }
+
+    private Optional<Team> findFullTeam(String teamName) {
+        return teamRegistry.findTeam(teamName)
+                .filter(team -> team.getMembers().size() >= teamSizeSetting.getTeamSize());
     }
 
     private Optional<String> findRemovePlayerRejection(String teamName) {
         return findChangeRejection(teamName).or(() -> teamRegistry.findTeam(teamName)
                 .filter(team -> team.getMembers().size() <= Team.MINIMUM_MEMBER_COUNT)
-                .map(team -> LAST_PLAYER_REASON));
+                .map(team -> describeLastPlayerRejection()));
     }
 
     private Optional<String> findUnknownTeamRejection(String teamName) {
         if (teamRegistry.findTeam(teamName).isPresent()) {
             return Optional.empty();
         }
-        return Optional.of(NOT_REGISTERED_REASON);
+        return Optional.of(Messages.text(TeamActionsMessage.NOT_REGISTERED));
     }
 
-    private static String describeMembers(int memberCount) {
-        return memberCount + (memberCount == 1 ? " player" : " players");
+    private static List<String> withMenuClosingLine(List<String> loreLines) {
+        List<String> lines = new ArrayList<>(loreLines);
+        lines.add(Messages.text(CommonMessage.MENU_CLOSES_TO_TYPE));
+        return lines;
     }
 
     private void askForNewName(Player player, String teamName, int pageIndex) {
@@ -166,11 +182,10 @@ final class TeamActionsAdminMenu implements AdminMenu {
             return;
         }
         navigation.close(player);
-        chatInputService.await(player, "the new name of team " + teamName, List.of(
-                        "Type: <newName> in chat",
-                        "A team name has " + TeamRegistry.NAME_RULE,
-                        "Example: Phoenix",
-                        "The team keeps its players and its place in the team list"),
+        chatInputService.await(player,
+                Messages.text(TeamActionsMessage.RENAME_INPUT_DESCRIPTION, Placeholder.of("team", teamName)),
+                Messages.lines(TeamActionsMessage.RENAME_INPUT_PROMPT,
+                        Placeholder.of("rule", TeamRegistry.describeNameRule())),
                 line -> handleNewName(player, teamName, pageIndex, line));
     }
 
@@ -188,38 +203,41 @@ final class TeamActionsAdminMenu implements AdminMenu {
         try {
             Team renamedTeam = teamRegistry.renameTeam(formerName, line.trim());
             teamConfigurationSaver.run();
-            TournamentMessages.sendSuccess(player, "Team " + formerName + " is now called "
-                    + renamedTeam.getTeamName());
+            TournamentMessages.sendSuccess(player, Messages.text(TeamActionsMessage.TEAM_RENAMED,
+                    Placeholder.of("formerName", formerName), Placeholder.of("newName", renamedTeam.getTeamName())));
             navigation.open(player, AdminMenuHolder.teamActions(renamedTeam.getTeamName(), pageIndex));
         } catch (IllegalArgumentException | IllegalStateException failure) {
-            TournamentMessages.sendError(player, "Team " + formerName + " could not be renamed"
-                    + TournamentMessages.LINE_BREAK + AdminMenuReplies.startWithCapitalLetter(failure.getMessage()));
+            TournamentMessages.sendError(player, Messages.text(TeamActionsMessage.RENAME_FAILED,
+                    Placeholder.of("team", formerName),
+                    Placeholder.of("reason", AdminMenuReplies.startWithCapitalLetter(failure.getMessage()))));
             reopen(player, formerName, pageIndex);
         }
     }
 
     private void askForPlayerToAdd(Player player, String teamName, int pageIndex) {
-        Optional<String> rejection = findAddPlayerRejection(teamName, "Team " + teamName);
+        Optional<String> rejection = findAddPlayerRejection(teamName);
         if (rejection.isPresent()) {
             TournamentMessages.sendError(player, rejection.get());
             return;
         }
         Team team = teamRegistry.findTeam(teamName).orElseThrow();
         navigation.close(player);
-        chatInputService.await(player, "the player to add to team " + teamName, List.of(
-                        "Type: <player> in chat",
-                        "Team " + team.getTeamName() + " has " + team.getMembers().size() + " of "
-                                + teamSizeSetting.getTeamSize() + " players",
-                        "Example: Steve",
-                        "Every player has to be online or known to the server"),
-                line -> handlePlayerToAdd(player, teamName, pageIndex, line));
+        List<String> promptLines = new ArrayList<>();
+        promptLines.add(Messages.text(TeamActionsMessage.ADD_PLAYER_INPUT_TYPE));
+        promptLines.add(Messages.plural(TeamActionsMessage.ADD_PLAYER_INPUT_PLAYER_COUNT,
+                teamSizeSetting.getTeamSize(), Placeholder.of("team", team.getTeamName()),
+                Placeholder.of("memberCount", team.getMembers().size())));
+        promptLines.addAll(Messages.lines(TeamActionsMessage.ADD_PLAYER_INPUT_HINTS));
+        chatInputService.await(player,
+                Messages.text(TeamActionsMessage.ADD_PLAYER_INPUT_DESCRIPTION, Placeholder.of("team", teamName)),
+                promptLines, line -> handlePlayerToAdd(player, teamName, pageIndex, line));
     }
 
     private void handlePlayerToAdd(Player player, String teamName, int pageIndex, String line) {
         if (!AdminMenuReplies.isStillAdmin(player)) {
             return;
         }
-        Optional<String> rejection = findAddPlayerRejection(teamName, "Team " + teamName);
+        Optional<String> rejection = findAddPlayerRejection(teamName);
         if (rejection.isPresent()) {
             TournamentMessages.sendError(player, rejection.get());
             reopen(player, teamName, pageIndex);
@@ -235,11 +253,13 @@ final class TeamActionsAdminMenu implements AdminMenu {
         try {
             Team changedTeam = teamRegistry.addMember(teamName, member.get());
             teamConfigurationSaver.run();
-            TournamentMessages.sendSuccess(player, member.get().playerName() + " joined team "
-                    + changedTeam.getTeamName());
+            TournamentMessages.sendSuccess(player, Messages.text(TeamActionsMessage.PLAYER_JOINED,
+                    Placeholder.of("player", member.get().playerName()),
+                    Placeholder.of("team", changedTeam.getTeamName())));
         } catch (IllegalArgumentException | IllegalStateException failure) {
-            TournamentMessages.sendError(player, member.get().playerName() + " could not join team " + teamName
-                    + TournamentMessages.LINE_BREAK + AdminMenuReplies.startWithCapitalLetter(failure.getMessage()));
+            TournamentMessages.sendError(player, Messages.text(TeamActionsMessage.JOIN_FAILED,
+                    Placeholder.of("player", member.get().playerName()), Placeholder.of("team", teamName),
+                    Placeholder.of("reason", AdminMenuReplies.startWithCapitalLetter(failure.getMessage()))));
         }
         reopen(player, teamName, pageIndex);
     }
@@ -277,10 +297,12 @@ final class TeamActionsAdminMenu implements AdminMenu {
             return;
         }
         if (!teamRegistry.removeTeam(teamName)) {
-            TournamentMessages.sendError(player, "Unknown team " + teamName);
+            TournamentMessages.sendError(player, Messages.text(TeamActionsMessage.UNKNOWN_TEAM,
+                    Placeholder.of("team", teamName)));
             return;
         }
         teamConfigurationSaver.run();
-        TournamentMessages.sendSuccess(player, "Team " + teamName + " removed");
+        TournamentMessages.sendSuccess(player, Messages.text(TeamActionsMessage.TEAM_REMOVED,
+                Placeholder.of("team", teamName)));
     }
 }

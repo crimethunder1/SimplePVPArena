@@ -1,5 +1,8 @@
 package de.simplepvparena.team;
 
+import de.simplepvparena.message.Messages;
+import de.simplepvparena.message.Placeholder;
+import de.simplepvparena.message.TeamMessage;
 import org.bukkit.configuration.ConfigurationSection;
 
 import java.util.ArrayList;
@@ -15,10 +18,6 @@ import java.util.UUID;
 public final class TeamRegistry {
 
     public static final int MAXIMUM_NAME_LENGTH = 16;
-    public static final String NAME_RULE = "1 to " + MAXIMUM_NAME_LENGTH
-            + " letters, digits, hyphens or underscores";
-    public static final String LAST_MEMBER_REJECTION = "a team keeps at least " + Team.MINIMUM_MEMBER_COUNT
-            + " player, remove the team instead";
 
     private static final String TEAMS_KEY = "teams";
     private static final String TEAM_NAME_KEY = "name";
@@ -27,6 +26,14 @@ public final class TeamRegistry {
     private static final String MEMBER_NAME_KEY = "name";
 
     private final Map<String, Team> teamsByLowerCaseName = new LinkedHashMap<>();
+
+    public static String describeNameRule() {
+        return Messages.text(TeamMessage.NAME_RULE, Placeholder.of("maximumLength", MAXIMUM_NAME_LENGTH));
+    }
+
+    public static String describeLastMemberRejection() {
+        return Messages.plural(TeamMessage.LAST_MEMBER, Team.MINIMUM_MEMBER_COUNT);
+    }
 
     public Team registerTeam(String teamName, List<TeamMember> members) {
         Objects.requireNonNull(teamName, "teamName");
@@ -42,7 +49,8 @@ public final class TeamRegistry {
         Objects.requireNonNull(members, "members");
         String key = toKey(teamName);
         if (teamsByLowerCaseName.containsKey(key)) {
-            throw new IllegalStateException("a team named " + teamName + " already exists");
+            throw new IllegalStateException(Messages.text(TeamMessage.ALREADY_EXISTS,
+                    Placeholder.of("team", teamName)));
         }
         for (TeamMember member : members) {
             rejectAlreadyRegisteredPlayer(member);
@@ -66,7 +74,8 @@ public final class TeamRegistry {
         String key = toKey(team.getTeamName());
         String newKey = toKey(newName);
         if (!newKey.equals(key) && teamsByLowerCaseName.containsKey(newKey)) {
-            throw new IllegalStateException("a team named " + newName + " already exists");
+            throw new IllegalStateException(Messages.text(TeamMessage.ALREADY_EXISTS,
+                    Placeholder.of("team", newName)));
         }
         Team renamedTeam = new Team(newName, team.getMembers());
         replaceTeam(key, newKey, renamedTeam);
@@ -78,9 +87,8 @@ public final class TeamRegistry {
         Team team = requireTeam(teamName);
         rejectAlreadyRegisteredPlayer(member);
         if (team.getMembers().size() >= Team.MAXIMUM_MEMBER_COUNT) {
-            throw new IllegalStateException("team " + team.getTeamName() + " already has "
-                    + Team.MAXIMUM_MEMBER_COUNT + " players, a team has at most " + Team.MAXIMUM_MEMBER_COUNT
-                    + " players");
+            throw new IllegalStateException(Messages.plural(TeamMessage.TEAM_FULL, Team.MAXIMUM_MEMBER_COUNT,
+                    Placeholder.of("team", team.getTeamName())));
         }
         List<TeamMember> members = new ArrayList<>(team.getMembers());
         members.add(member);
@@ -91,11 +99,11 @@ public final class TeamRegistry {
         Objects.requireNonNull(memberUniqueId, "memberUniqueId");
         Team team = requireTeam(teamName);
         if (!team.containsPlayer(memberUniqueId)) {
-            throw new IllegalArgumentException("the player " + memberUniqueId + " is not in team "
-                    + team.getTeamName());
+            throw new IllegalArgumentException(Messages.text(TeamMessage.PLAYER_NOT_IN_TEAM,
+                    Placeholder.of("uniqueId", memberUniqueId), Placeholder.of("team", team.getTeamName())));
         }
         if (team.getMembers().size() <= Team.MINIMUM_MEMBER_COUNT) {
-            throw new IllegalStateException(LAST_MEMBER_REJECTION);
+            throw new IllegalStateException(describeLastMemberRejection());
         }
         List<TeamMember> members = team.getMembers().stream()
                 .filter(member -> !member.uniqueId().equals(memberUniqueId))
@@ -104,8 +112,8 @@ public final class TeamRegistry {
     }
 
     private Team requireTeam(String teamName) {
-        return findTeam(teamName).orElseThrow(() -> new IllegalArgumentException("no team named " + teamName
-                + " is registered"));
+        return findTeam(teamName).orElseThrow(() -> new IllegalArgumentException(Messages.text(
+                TeamMessage.NOT_REGISTERED, Placeholder.of("team", teamName))));
     }
 
     private Team replaceMembers(Team team, List<TeamMember> members) {
@@ -266,10 +274,11 @@ public final class TeamRegistry {
 
     private static Optional<String> findNameRejection(String teamName) {
         if (teamName.isBlank()) {
-            return Optional.of("A team needs a name, a team name has " + NAME_RULE);
+            return Optional.of(Messages.text(TeamMessage.NAME_MISSING, Placeholder.of("rule", describeNameRule())));
         }
         if (!isAllowedName(teamName)) {
-            return Optional.of("The team name " + teamName + " is not allowed, a team name has " + NAME_RULE);
+            return Optional.of(Messages.text(TeamMessage.NAME_NOT_ALLOWED, Placeholder.of("team", teamName),
+                    Placeholder.of("rule", describeNameRule())));
         }
         return Optional.empty();
     }
@@ -286,8 +295,8 @@ public final class TeamRegistry {
 
     private void rejectAlreadyRegisteredPlayer(TeamMember member) {
         findTeamByPlayer(member.uniqueId()).ifPresent(team -> {
-            throw new IllegalStateException(member.playerName() + " is already registered in team "
-                    + team.getTeamName());
+            throw new IllegalStateException(Messages.text(TeamMessage.PLAYER_ALREADY_IN_TEAM,
+                    Placeholder.of("player", member.playerName()), Placeholder.of("team", team.getTeamName())));
         });
     }
 
