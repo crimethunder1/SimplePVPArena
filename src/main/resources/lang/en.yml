@@ -45,3 +45,196 @@ input:
   not-a-block: '{material} cannot be placed as a block'
   amount-not-a-number: 'The amount {amount} is not a number'
   amount-out-of-range: 'The amount has to be between {minimum} and {maximum}'
+main-menu:
+  title: 'Tournament administration'
+  registered-teams:
+    one: 'Registered teams: {count}'
+    other: 'Registered teams: {count}'
+  tile:
+    info:
+      title: 'Tournament'
+      arena-ready: 'Arena: ready'
+      arena-incomplete: 'Arena: incomplete'
+    arena:
+      title: 'Arena'
+      lore: 'Fight area, spawns, cleaning and reset'
+      ready: 'Arena ready'
+      incomplete: 'Arena incomplete'
+    teams:
+      title: 'Teams'
+      lore: 'Shows every team, adds one and removes one'
+    match:
+      title: 'Match and tournament'
+      lore: 'Start, pause, cancel and force a result'
+    border-selector:
+      title: 'Mark border blocks by clicking them'
+      lore:
+        - 'Turns every right click of yours into a border mark'
+        - 'A click marks a block, a click on a marked block'
+        - 'takes the mark away again'
+        - 'No border item is needed: stairs, fences and every'
+        - 'other block that already stands there can be marked'
+        - 'Chests, doors and everything else stay shut while it is on'
+        - 'The menu closes so you can click the blocks'
+      mode-on: 'The mode is on, this tile switches it off'
+      mode-off: 'The mode is off, this tile switches it on'
+    status:
+      title: 'Tournament status'
+      lore: 'Writes the state, the rounds and the running match into the chat'
+    bracket:
+      title: 'Bracket'
+      lore:
+        - 'Writes every round and every match into the chat'
+        - 'A bracket is a tree, the chat shows it better than a grid'
+        - 'The menu closes so you can read it'
+    dry-run:
+      title: 'Dry run of the pipeline'
+      lore:
+        - 'Walks the whole pipeline once, without an event'
+        - 'Registers two test teams, builds their bracket,'
+        - 'decides a simulated match and removes them again'
+        - 'Checks the arena and its spawns, the kit, the'
+        - 'countdown of the start gate and whether the'
+        - 'cleaning after a match would start'
+        - 'Nothing is started, taught, written or cleaned:'
+        - 'no block, no file and no fighter is touched'
+        - 'A real test player stays necessary for the kit'
+        - 'and the teleport really arriving'
+        - 'Refused while a tournament or a match runs'
+    reload:
+      title: 'Reload config.yml'
+      lore:
+        - 'Reads config.yml again and applies it live'
+        - 'Round timeout, cleaning batch sizes, cell limit,'
+        - 'safety zone and border particles'
+        - 'The arena, the teams and a running match stay untouched'
+      match-running:
+        - 'A match is running: the new round timeout'
+        - 'arrives with the next round'
+    kits:
+      title: 'Kits'
+      count:
+        one: 'Kits: {count}'
+        other: 'Kits: {count}'
+      default-kit: 'Default kit: {kit}'
+      no-default-kit: 'Default kit: none'
+      lore:
+        - 'The items every fighter is given when a round starts'
+        - 'Create, replace and delete kits'
+    kit-choice:
+      title: 'Choose the kit for the next match'
+      match: 'Match {match}: {teams}'
+      lore: 'The popup closes when the time is over or a kit is chosen'
+    close:
+      title: 'Close'
+      lore: 'Closes the menu'
+  border-selector:
+    switched-on:
+      - 'Border selector mode is on'
+      - 'Right click any block in the world to mark it as a border block, right click a marked one to take its mark away again'
+      - 'No border item is needed: stairs, fences and everything else that already stands there can become part of the wall'
+      - 'Every other right click is blocked while the mode is on, chests and doors included'
+      - 'Open the tournament menu and click the tile again to switch it off'
+    switched-off:
+      - 'Border selector mode is off'
+      - 'Right clicking works the way it always did again, every mark you set stays'
+  bracket:
+    heading: 'Bracket'
+  reload:
+    running-match-delay:
+      - 'A match is running, the new settings arrive with the next round'
+      - 'The running round keeps its timer and its fighters keep the kit they were given'
+match-menu:
+  title: 'Match and tournament'
+  running-match: 'Running match: {match}'
+  no-running-match: 'Running match: none'
+  no-match-running: 'No match is running'
+  cancel-confirmation:
+    - 'The running tournament is cancelled'
+    - 'The running match is stopped and its bracket is dropped'
+  tile:
+    info:
+      title: 'Tournament'
+      round-timer-paused: 'Round timer: paused'
+      round-timer-running: 'Round timer: running'
+    start:
+      title: 'Start the tournament'
+      lore: 'Needs an even number of teams'
+    force-start:
+      title: 'Force start'
+      lore: 'Starts the tournament with an uneven number of teams'
+    pause:
+      title: 'Pause the tournament'
+      lore: 'No further match is started until it continues'
+    continue:
+      title: 'Continue the tournament'
+      lore: 'The round timer continues with its remaining time'
+    cancel:
+      title: 'Cancel the tournament'
+      lore: 'Stops the running match and the bracket'
+    decide-waiting-match:
+      title: 'Decide a waiting match'
+      lore: 'Decides a match that is not running for one of its two teams'
+    force-result:
+      title: 'Force a result'
+      lore: 'Decides the running match for one of its two teams'
+    final:
+      title: 'Start the final'
+      lore:
+        - 'Both finalists are known'
+        - 'Starts the final on the arena'
+      pending: 'The final is not ready, its stage is PENDING'
+      ready: 'The final is not ready, its stage is READY'
+      running: 'The final is running'
+      over: 'The final is over'
+force-result-menu:
+  title: 'Result of {match}'
+  match-not-running: 'Match {match} is not running any more'
+  tile:
+    info:
+      title: 'Force a result'
+      match: 'Match {match}'
+      round: 'Round {round}'
+      hint: 'A click decides the match for that team'
+    team:
+      lore: 'Decides the match for this team'
+waiting-matches-menu:
+  title: 'Waiting matches (page {page})'
+  tile:
+    info:
+      title: 'Waiting matches'
+      no-match-waiting: 'No match is waiting'
+      count:
+        one: 'Waiting matches: {count}'
+        other: 'Waiting matches: {count}'
+      hint: 'A click on a match decides it for one of its teams'
+    match:
+      teams: '{firstTeam} vs {secondTeam}'
+      round: 'Round {round}'
+      team-not-registered: '{team} is no longer registered'
+waiting-match-result-menu:
+  title: 'Result of {match}'
+  match-not-waiting: 'Match {match} is not waiting any more'
+  tile:
+    info:
+      title: 'Decide a waiting match'
+      match: 'Match {match} ({firstTeam} vs {secondTeam})'
+      hint: 'A click decides the match for that team'
+    team:
+      not-registered: 'No longer registered'
+      lore: 'Decides the match for this team'
+confirmation:
+  tile:
+    confirm:
+      title: 'Yes'
+      lore: 'Carries the action out'
+    refuse:
+      title: 'No'
+      lore: 'Changes nothing and returns'
+  question:
+    clean-arena: 'Clean the arena?'
+    reset-arena: 'Reset the arena?'
+    replace-kit: 'Replace the kit with your inventory?'
+    delete-kit: 'Delete the kit?'
+    remove-team: 'Remove the team?'
+    cancel-tournament: 'Cancel the tournament?'

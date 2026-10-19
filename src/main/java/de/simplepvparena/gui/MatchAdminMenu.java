@@ -1,7 +1,10 @@
 package de.simplepvparena.gui;
 
 import de.simplepvparena.match.MatchService;
+import de.simplepvparena.message.CommonMessage;
+import de.simplepvparena.message.MatchMenuMessage;
 import de.simplepvparena.message.MenuMessage;
+import de.simplepvparena.message.Messages;
 import de.simplepvparena.tournament.TournamentManager;
 import de.simplepvparena.tournament.TournamentOperationResult;
 import org.bukkit.Material;
@@ -41,7 +44,7 @@ final class MatchAdminMenu implements AdminMenu {
 
     @Override
     public String title(AdminMenuHolder holder) {
-        return "Match and tournament";
+        return Messages.text(MatchMenuMessage.TITLE);
     }
 
     @Override
@@ -52,32 +55,39 @@ final class MatchAdminMenu implements AdminMenu {
     @Override
     public void fill(Player player, AdminMenuHolder holder, AdminMenuCanvas canvas) {
         TournamentMenuOptions options = tournamentMenuStatus.currentOptions();
-        canvas.set(AdminMenuLayout.INFO_SLOT, MenuItems.info("Tournament", List.of(
+        canvas.set(AdminMenuLayout.INFO_SLOT, MenuItems.info(Messages.text(MatchMenuMessage.INFO_TITLE), List.of(
                 tournamentManager.describeStatus(),
-                "Running match: " + tournamentMenuStatus.describeActiveMatch(),
-                "Round timer: " + (matchService.isRoundTimerPaused() ? "paused" : "running"))));
+                tournamentMenuStatus.describeActiveMatchLine(),
+                Messages.text(matchService.isRoundTimerPaused()
+                        ? MatchMenuMessage.ROUND_TIMER_PAUSED
+                        : MatchMenuMessage.ROUND_TIMER_RUNNING))));
         canvas.set(MATCH_START_SLOT, options.startOffered()
-                ? MenuItems.create(MenuItems.CONFIRM_MATERIAL, "Start the tournament",
-                        "Needs an even number of teams")
-                : MenuItems.unavailable("Start the tournament", "A tournament is already in progress"));
+                ? MenuItems.create(MenuItems.CONFIRM_MATERIAL, Messages.text(MatchMenuMessage.START_TITLE),
+                        Messages.lines(MatchMenuMessage.START_LORE))
+                : MenuItems.unavailable(Messages.text(MatchMenuMessage.START_TITLE),
+                        Messages.text(CommonMessage.TOURNAMENT_ALREADY_IN_PROGRESS)));
         canvas.set(MATCH_FORCE_START_SLOT, options.forceStartOffered()
-                ? MenuItems.create(Material.YELLOW_WOOL, "Force start",
-                        "Starts the tournament with an uneven number of teams")
-                : MenuItems.unavailable("Force start", "A tournament is already in progress"));
+                ? MenuItems.create(Material.YELLOW_WOOL, Messages.text(MatchMenuMessage.FORCE_START_TITLE),
+                        Messages.lines(MatchMenuMessage.FORCE_START_LORE))
+                : MenuItems.unavailable(Messages.text(MatchMenuMessage.FORCE_START_TITLE),
+                        Messages.text(CommonMessage.TOURNAMENT_ALREADY_IN_PROGRESS)));
         canvas.set(MATCH_PAUSE_SLOT, buildPauseItem(options));
         canvas.set(MATCH_CANCEL_SLOT, options.cancelOffered()
-                ? MenuItems.create(MenuItems.REFUSE_MATERIAL, "Cancel the tournament",
-                        "Stops the running match and the bracket", "Asks for a confirmation first")
-                : MenuItems.unavailable("Cancel the tournament", "No tournament is in progress"));
+                ? MenuItems.create(MenuItems.REFUSE_MATERIAL, Messages.text(MatchMenuMessage.CANCEL_TITLE),
+                        Messages.text(MatchMenuMessage.CANCEL_LORE), Messages.text(CommonMessage.ASKS_FOR_CONFIRMATION))
+                : MenuItems.unavailable(Messages.text(MatchMenuMessage.CANCEL_TITLE),
+                        Messages.text(CommonMessage.NO_TOURNAMENT_IN_PROGRESS)));
         canvas.set(MATCH_DECIDE_WAITING_MATCH_SLOT, waitingMatchesAdminMenu.isTournamentInProgress()
-                ? MenuItems.create(Material.LECTERN, "Decide a waiting match",
-                        "Decides a match that is not running for one of its two teams")
-                : MenuItems.unavailable("Decide a waiting match", WaitingMatchesAdminMenu.NO_TOURNAMENT_IN_PROGRESS));
+                ? MenuItems.create(Material.LECTERN, Messages.text(MatchMenuMessage.DECIDE_WAITING_MATCH_TITLE),
+                        Messages.lines(MatchMenuMessage.DECIDE_WAITING_MATCH_LORE))
+                : MenuItems.unavailable(Messages.text(MatchMenuMessage.DECIDE_WAITING_MATCH_TITLE),
+                        Messages.text(CommonMessage.NO_TOURNAMENT_IN_PROGRESS)));
         canvas.set(MATCH_FINAL_SLOT, tournamentMenuStatus.buildFinalItem());
         canvas.set(MATCH_FORCE_RESULT_SLOT, options.forceResultOffered()
-                ? MenuItems.create(Material.ANVIL, "Force a result",
-                        "Decides the running match for one of its two teams")
-                : MenuItems.unavailable("Force a result", "No match is running"));
+                ? MenuItems.create(Material.ANVIL, Messages.text(MatchMenuMessage.FORCE_RESULT_TITLE),
+                        Messages.lines(MatchMenuMessage.FORCE_RESULT_LORE))
+                : MenuItems.unavailable(Messages.text(MatchMenuMessage.FORCE_RESULT_TITLE),
+                        Messages.text(MatchMenuMessage.NO_MATCH_RUNNING)));
         canvas.set(AdminMenuLayout.BACK_SLOT, MenuItems.back(MenuMessage.BACK_TO_MAIN_MENU));
     }
 
@@ -117,9 +127,7 @@ final class MatchAdminMenu implements AdminMenu {
     }
 
     private List<String> describeCancelConfirmation() {
-        return List.of(
-                "The running tournament is cancelled",
-                "The running match is stopped and its bracket is dropped");
+        return Messages.lines(MatchMenuMessage.CANCEL_CONFIRMATION);
     }
 
     private void cancelTournament(Player player) {
@@ -128,15 +136,16 @@ final class MatchAdminMenu implements AdminMenu {
 
     private MenuTile buildPauseItem(TournamentMenuOptions options) {
         if (options.resumeOffered()) {
-            return MenuItems.create(Material.CLOCK, "Continue the tournament",
-                    "The round timer continues with its remaining time");
+            return MenuItems.create(Material.CLOCK, Messages.text(MatchMenuMessage.CONTINUE_TITLE),
+                    Messages.lines(MatchMenuMessage.CONTINUE_LORE));
         }
         if (options.pauseOffered()) {
-            return MenuItems.create(Material.CLOCK, "Pause the tournament",
-                    "No further match is started until it continues",
-                    "The round timer keeps its remaining time");
+            return MenuItems.create(Material.CLOCK, Messages.text(MatchMenuMessage.PAUSE_TITLE),
+                    Messages.text(MatchMenuMessage.PAUSE_LORE),
+                    Messages.text(CommonMessage.ROUND_TIMER_KEEPS_TIME));
         }
-        return MenuItems.unavailable("Pause the tournament", "No tournament is in progress");
+        return MenuItems.unavailable(Messages.text(MatchMenuMessage.PAUSE_TITLE),
+                Messages.text(CommonMessage.NO_TOURNAMENT_IN_PROGRESS));
     }
 
     private void runOperation(Player player, AdminMenuHolder holder,

@@ -59,7 +59,7 @@ The plugin never overwrites or rewrites the files in the `lang` folder, also not
 
 A chat input of the menu is cancelled with `cancel` in every language, in German also with `abbrechen`.
 
-The texts are converted step by step: so far the chat prefix, the back and page tiles of the menus, the refusal of the menu and the messages of a chat input follow the language. All other texts are still English in both languages.
+The texts are converted step by step: so far the chat prefix, the back and page tiles of the menus, the refusal of the menu, the messages of a chat input, the main menu, the match menu, the menus that force a result or decide a waiting match, and the confirmations follow the language. Texts these menus show from other parts of the plugin, such as the tournament state, the bracket, the dry run and the reload answer, and all other menus and messages are still English in both languages.
 
 ## Area of effect
 

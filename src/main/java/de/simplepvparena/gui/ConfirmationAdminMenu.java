@@ -1,5 +1,7 @@
 package de.simplepvparena.gui;
 
+import de.simplepvparena.message.ConfirmationMessage;
+import de.simplepvparena.message.Messages;
 import org.bukkit.entity.Player;
 
 import java.util.EnumMap;
@@ -54,10 +56,10 @@ final class ConfirmationAdminMenu implements AdminMenu {
         ConfirmationRequest request = holder.getConfirmationRequest().orElseThrow();
         canvas.set(AdminMenuLayout.INFO_SLOT, MenuItems.info(request.getTitle(),
                 buildConfirmationLore(request, holder)));
-        canvas.set(CONFIRM_YES_SLOT, MenuItems.create(MenuItems.CONFIRM_MATERIAL, "Yes",
-                "Carries the action out"));
-        canvas.set(CONFIRM_NO_SLOT, MenuItems.create(MenuItems.REFUSE_MATERIAL, "No",
-                "Changes nothing and returns"));
+        canvas.set(CONFIRM_YES_SLOT, MenuItems.create(MenuItems.CONFIRM_MATERIAL,
+                Messages.text(ConfirmationMessage.CONFIRM_TITLE), Messages.lines(ConfirmationMessage.CONFIRM_LORE)));
+        canvas.set(CONFIRM_NO_SLOT, MenuItems.create(MenuItems.REFUSE_MATERIAL,
+                Messages.text(ConfirmationMessage.REFUSE_TITLE), Messages.lines(ConfirmationMessage.REFUSE_LORE)));
     }
 
     @Override

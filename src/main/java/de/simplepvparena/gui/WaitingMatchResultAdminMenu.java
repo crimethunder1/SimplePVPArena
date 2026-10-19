@@ -1,7 +1,10 @@
 package de.simplepvparena.gui;
 
 import de.simplepvparena.message.MenuMessage;
+import de.simplepvparena.message.Messages;
+import de.simplepvparena.message.Placeholder;
 import de.simplepvparena.message.TournamentMessages;
+import de.simplepvparena.message.WaitingMatchMessage;
 import de.simplepvparena.team.Team;
 import de.simplepvparena.team.TeamMember;
 import de.simplepvparena.team.TeamRegistry;
@@ -33,7 +36,8 @@ final class WaitingMatchResultAdminMenu implements AdminMenu {
 
     @Override
     public String title(AdminMenuHolder holder) {
-        return "Result of " + holder.getSubject().orElseThrow();
+        return Messages.text(WaitingMatchMessage.RESULT_MENU_TITLE,
+                Placeholder.of("match", holder.getSubject().orElseThrow()));
     }
 
     @Override
@@ -46,16 +50,18 @@ final class WaitingMatchResultAdminMenu implements AdminMenu {
         String matchId = holder.getSubject().orElseThrow();
         Optional<BracketMatch> waitingMatch = findMatchOfMenu(holder);
         if (waitingMatch.isEmpty()) {
-            canvas.set(AdminMenuLayout.INFO_SLOT, MenuItems.info("Decide a waiting match",
-                    List.of("Match " + matchId + " is not waiting any more")));
+            canvas.set(AdminMenuLayout.INFO_SLOT, MenuItems.info(Messages.text(WaitingMatchMessage.RESULT_INFO_TITLE),
+                    List.of(describeMatchNotWaiting(matchId))));
             canvas.set(AdminMenuLayout.BACK_SLOT, MenuItems.back(MenuMessage.BACK_TO_WAITING_MATCHES));
             return;
         }
         BracketMatch match = waitingMatch.get();
-        canvas.set(AdminMenuLayout.INFO_SLOT, MenuItems.info("Decide a waiting match", List.of(
-                "Match " + matchId + " (" + WaitingMatchesAdminMenu.describeTeams(match) + ")",
-                WaitingMatchesAdminMenu.describeRound(match),
-                "A click decides the match for that team")));
+        canvas.set(AdminMenuLayout.INFO_SLOT, MenuItems.info(Messages.text(WaitingMatchMessage.RESULT_INFO_TITLE),
+                List.of(Messages.text(WaitingMatchMessage.RESULT_INFO_MATCH, Placeholder.of("match", matchId),
+                                Placeholder.of("firstTeam", match.getFirstTeamName().orElseThrow()),
+                                Placeholder.of("secondTeam", match.getSecondTeamName().orElseThrow())),
+                        WaitingMatchesAdminMenu.describeRound(match),
+                        Messages.text(WaitingMatchMessage.RESULT_INFO_HINT))));
         canvas.set(WAITING_MATCH_RESULT_FIRST_TEAM_SLOT, buildWinnerItem(match.getFirstTeamName().orElseThrow()));
         canvas.set(WAITING_MATCH_RESULT_SECOND_TEAM_SLOT, buildWinnerItem(match.getSecondTeamName().orElseThrow()));
         canvas.set(AdminMenuLayout.BACK_SLOT, MenuItems.back(MenuMessage.BACK_TO_WAITING_MATCHES));
@@ -69,8 +75,7 @@ final class WaitingMatchResultAdminMenu implements AdminMenu {
         }
         Optional<BracketMatch> waitingMatch = findMatchOfMenu(holder);
         if (waitingMatch.isEmpty()) {
-            TournamentMessages.sendWarning(player,
-                    "Match " + holder.getSubject().orElseThrow() + " is not waiting any more");
+            TournamentMessages.sendWarning(player, describeMatchNotWaiting(holder.getSubject().orElseThrow()));
             openWaitingMatches(player, holder);
             return;
         }
@@ -105,10 +110,14 @@ final class WaitingMatchResultAdminMenu implements AdminMenu {
                 lore.add(member.playerName());
             }
         } else {
-            lore.add("No longer registered");
+            lore.add(Messages.text(WaitingMatchMessage.RESULT_TEAM_NOT_REGISTERED));
         }
-        lore.add("Decides the match for this team");
+        lore.add(Messages.text(WaitingMatchMessage.RESULT_TEAM_LORE));
         return MenuItems.create(Material.PLAYER_HEAD, teamName, lore);
+    }
+
+    private static String describeMatchNotWaiting(String matchId) {
+        return Messages.text(WaitingMatchMessage.RESULT_MATCH_NOT_WAITING, Placeholder.of("match", matchId));
     }
 
     private Optional<BracketMatch> findMatchOfMenu(AdminMenuHolder holder) {

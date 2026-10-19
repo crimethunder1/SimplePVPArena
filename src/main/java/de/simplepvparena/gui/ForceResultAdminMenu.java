@@ -2,7 +2,10 @@ package de.simplepvparena.gui;
 
 import de.simplepvparena.match.Match;
 import de.simplepvparena.match.MatchService;
+import de.simplepvparena.message.MatchMenuMessage;
 import de.simplepvparena.message.MenuMessage;
+import de.simplepvparena.message.Messages;
+import de.simplepvparena.message.Placeholder;
 import de.simplepvparena.message.TournamentMessages;
 import de.simplepvparena.team.Team;
 import de.simplepvparena.team.TeamMember;
@@ -33,7 +36,8 @@ final class ForceResultAdminMenu implements AdminMenu {
 
     @Override
     public String title(AdminMenuHolder holder) {
-        return "Result of " + holder.getSubject().orElseThrow();
+        return Messages.text(MatchMenuMessage.FORCE_RESULT_MENU_TITLE,
+                Placeholder.of("match", holder.getSubject().orElseThrow()));
     }
 
     @Override
@@ -46,16 +50,17 @@ final class ForceResultAdminMenu implements AdminMenu {
         String matchId = holder.getSubject().orElseThrow();
         Optional<Match> activeMatch = matchService.findMatchById(matchId);
         if (activeMatch.isEmpty()) {
-            canvas.set(AdminMenuLayout.INFO_SLOT, MenuItems.info("Force a result",
-                    List.of("Match " + matchId + " is not running any more")));
+            canvas.set(AdminMenuLayout.INFO_SLOT, MenuItems.info(describeInfoTitle(),
+                    List.of(describeMatchNotRunning(matchId))));
             canvas.set(AdminMenuLayout.BACK_SLOT, MenuItems.back(MenuMessage.BACK_TO_MATCH_MENU));
             return;
         }
         Match match = activeMatch.get();
-        canvas.set(AdminMenuLayout.INFO_SLOT, MenuItems.info("Force a result", List.of(
-                "Match " + match.describe(),
-                "Round " + match.getRoundNumber(),
-                "A click decides the match for that team")));
+        canvas.set(AdminMenuLayout.INFO_SLOT, MenuItems.info(describeInfoTitle(), List.of(
+                Messages.text(MatchMenuMessage.FORCE_RESULT_INFO_MATCH, Placeholder.of("match", match.describe())),
+                Messages.text(MatchMenuMessage.FORCE_RESULT_INFO_ROUND,
+                        Placeholder.of("round", match.getRoundNumber())),
+                Messages.text(MatchMenuMessage.FORCE_RESULT_INFO_HINT))));
         canvas.set(FORCE_RESULT_FIRST_TEAM_SLOT, buildWinnerItem(match.getFirstTeam()));
         canvas.set(FORCE_RESULT_SECOND_TEAM_SLOT, buildWinnerItem(match.getSecondTeam()));
         canvas.set(AdminMenuLayout.BACK_SLOT, MenuItems.back(MenuMessage.BACK_TO_MATCH_MENU));
@@ -69,8 +74,7 @@ final class ForceResultAdminMenu implements AdminMenu {
         }
         Optional<Match> activeMatch = findMatchOfMenu(holder);
         if (activeMatch.isEmpty()) {
-            TournamentMessages.sendWarning(player,
-                    "Match " + holder.getSubject().orElseThrow() + " is not running any more");
+            TournamentMessages.sendWarning(player, describeMatchNotRunning(holder.getSubject().orElseThrow()));
             navigation.open(player, AdminMenuHolder.match());
             return;
         }
@@ -86,7 +90,7 @@ final class ForceResultAdminMenu implements AdminMenu {
     void openForceResultMenu(Player player) {
         Optional<Match> activeMatch = matchService.getActiveMatch();
         if (activeMatch.isEmpty()) {
-            TournamentMessages.sendError(player, "No match is running");
+            TournamentMessages.sendError(player, Messages.text(MatchMenuMessage.NO_MATCH_RUNNING));
             return;
         }
         navigation.open(player, AdminMenuHolder.forceResult(activeMatch.get().getMatchId()));
@@ -105,8 +109,16 @@ final class ForceResultAdminMenu implements AdminMenu {
         for (TeamMember member : team.getMembers()) {
             lore.add(member.playerName());
         }
-        lore.add("Decides the match for this team");
+        lore.add(Messages.text(MatchMenuMessage.FORCE_RESULT_TEAM_LORE));
         return MenuItems.create(Material.PLAYER_HEAD, team.getTeamName(), lore);
+    }
+
+    private static String describeInfoTitle() {
+        return Messages.text(MatchMenuMessage.FORCE_RESULT_INFO_TITLE);
+    }
+
+    private static String describeMatchNotRunning(String matchId) {
+        return Messages.text(MatchMenuMessage.FORCE_RESULT_MATCH_NOT_RUNNING, Placeholder.of("match", matchId));
     }
 
     private Optional<Match> findMatchOfMenu(AdminMenuHolder holder) {

@@ -45,3 +45,196 @@ input:
   not-a-block: '{material} lässt sich nicht als Block setzen'
   amount-not-a-number: 'Die Menge {amount} ist keine Zahl'
   amount-out-of-range: 'Die Menge muss zwischen {minimum} und {maximum} liegen'
+main-menu:
+  title: 'Turnierverwaltung'
+  registered-teams:
+    one: 'Registrierte Teams: {count}'
+    other: 'Registrierte Teams: {count}'
+  tile:
+    info:
+      title: 'Turnier'
+      arena-ready: 'Arena: bereit'
+      arena-incomplete: 'Arena: unvollständig'
+    arena:
+      title: 'Arena'
+      lore: 'Kampffläche, Spawns, Reinigung und Zurücksetzen'
+      ready: 'Arena bereit'
+      incomplete: 'Arena unvollständig'
+    teams:
+      title: 'Teams'
+      lore: 'Zeigt alle Teams, fügt eines hinzu und entfernt eines'
+    match:
+      title: 'Match und Turnier'
+      lore: 'Starten, pausieren, abbrechen und ein Ergebnis erzwingen'
+    border-selector:
+      title: 'Wandblöcke per Klick markieren'
+      lore:
+        - 'Macht jeden deiner Rechtsklicks zu einer Wandmarkierung'
+        - 'Ein Klick markiert einen Block, ein Klick auf einen'
+        - 'markierten Block nimmt die Markierung wieder weg'
+        - 'Kein Wand-Item nötig: Treppen, Zäune und jeder'
+        - 'andere Block, der schon dort steht, lässt sich markieren'
+        - 'Truhen, Türen und alles andere bleiben zu, solange er an ist'
+        - 'Das Menü schließt sich, damit du die Blöcke anklicken kannst'
+      mode-on: 'Der Modus ist an, diese Kachel schaltet ihn aus'
+      mode-off: 'Der Modus ist aus, diese Kachel schaltet ihn an'
+    status:
+      title: 'Turnierstatus'
+      lore: 'Schreibt den Stand, die Turnierrunden und das laufende Match in den Chat'
+    bracket:
+      title: 'Turnierbaum'
+      lore:
+        - 'Schreibt jede Turnierrunde und jedes Match in den Chat'
+        - 'Der Chat zeigt einen Turnierbaum besser als ein Raster'
+        - 'Das Menü schließt sich, damit du ihn lesen kannst'
+    dry-run:
+      title: 'Probelauf des Ablaufs'
+      lore:
+        - 'Geht den ganzen Ablauf einmal durch, ohne Event'
+        - 'Registriert zwei Testteams, baut ihren Turnierbaum,'
+        - 'entscheidet ein simuliertes Match und entfernt sie wieder'
+        - 'Prüft die Arena und ihre Spawns, das Kit, den'
+        - 'Countdown des Starttors und ob die'
+        - 'Reinigung nach einem Match starten würde'
+        - 'Nichts wird gestartet, angelernt, geschrieben oder gereinigt:'
+        - 'kein Block, keine Datei und kein Kämpfer wird berührt'
+        - 'Für das Kit und das echte Ankommen nach dem'
+        - 'Teleport bleibt ein echter Testspieler nötig'
+        - 'Gesperrt, solange ein Turnier oder ein Match läuft'
+    reload:
+      title: 'config.yml neu laden'
+      lore:
+        - 'Liest config.yml erneut und wendet sie sofort an'
+        - 'Rundenzeitlimit, Blockmengen der Reinigung, Zellgrenze,'
+        - 'Schutzzone und Wandpartikel'
+        - 'Die Arena, die Teams und ein laufendes Match bleiben unberührt'
+      match-running:
+        - 'Ein Match läuft: das neue Rundenzeitlimit'
+        - 'gilt ab der nächsten Runde'
+    kits:
+      title: 'Kits'
+      count:
+        one: 'Kits: {count}'
+        other: 'Kits: {count}'
+      default-kit: 'Standard-Kit: {kit}'
+      no-default-kit: 'Standard-Kit: keins'
+      lore:
+        - 'Die Items, die jeder Kämpfer zum Start einer Runde bekommt'
+        - 'Kits anlegen, ersetzen und löschen'
+    kit-choice:
+      title: 'Kit für das nächste Match wählen'
+      match: 'Match {match}: {teams}'
+      lore: 'Das Fenster schließt sich, wenn die Zeit um ist oder ein Kit gewählt wurde'
+    close:
+      title: 'Schließen'
+      lore: 'Schließt das Menü'
+  border-selector:
+    switched-on:
+      - 'Der Wandauswahlmodus ist an'
+      - 'Klicke mit rechts auf einen beliebigen Block der Welt, um ihn als Wandblock zu markieren, ein Rechtsklick auf einen markierten Block nimmt die Markierung wieder weg'
+      - 'Kein Wand-Item nötig: Treppen, Zäune und alles andere, was schon dort steht, kann Teil der Wand werden'
+      - 'Jeder andere Rechtsklick ist gesperrt, solange der Modus an ist, auch bei Truhen und Türen'
+      - 'Öffne das Turniermenü und klicke die Kachel erneut an, um ihn auszuschalten'
+    switched-off:
+      - 'Der Wandauswahlmodus ist aus'
+      - 'Rechtsklicks funktionieren wieder wie immer, jede gesetzte Markierung bleibt'
+  bracket:
+    heading: 'Turnierbaum'
+  reload:
+    running-match-delay:
+      - 'Ein Match läuft, die neuen Einstellungen gelten ab der nächsten Runde'
+      - 'Die laufende Runde behält ihre Rundenzeit und ihre Kämpfer behalten ihr Kit'
+match-menu:
+  title: 'Match und Turnier'
+  running-match: 'Laufendes Match: {match}'
+  no-running-match: 'Laufendes Match: keins'
+  no-match-running: 'Es läuft kein Match'
+  cancel-confirmation:
+    - 'Das laufende Turnier wird abgebrochen'
+    - 'Das laufende Match wird gestoppt und sein Turnierbaum verworfen'
+  tile:
+    info:
+      title: 'Turnier'
+      round-timer-paused: 'Rundenzeit: pausiert'
+      round-timer-running: 'Rundenzeit: läuft'
+    start:
+      title: 'Turnier starten'
+      lore: 'Braucht eine gerade Anzahl Teams'
+    force-start:
+      title: 'Start erzwingen'
+      lore: 'Startet das Turnier mit einer ungeraden Anzahl Teams'
+    pause:
+      title: 'Turnier pausieren'
+      lore: 'Bis zur Fortsetzung startet kein weiteres Match'
+    continue:
+      title: 'Turnier fortsetzen'
+      lore: 'Die Rundenzeit läuft mit ihrer verbleibenden Zeit weiter'
+    cancel:
+      title: 'Turnier abbrechen'
+      lore: 'Stoppt das laufende Match und den Turnierbaum'
+    decide-waiting-match:
+      title: 'Wartendes Match entscheiden'
+      lore: 'Entscheidet ein Match, das nicht läuft, für eines seiner zwei Teams'
+    force-result:
+      title: 'Ergebnis erzwingen'
+      lore: 'Entscheidet das laufende Match für eines seiner zwei Teams'
+    final:
+      title: 'Finale starten'
+      lore:
+        - 'Beide Finalisten stehen fest'
+        - 'Startet das Finale in der Arena'
+      pending: 'Das Finale ist nicht bereit, sein Stand ist PENDING'
+      ready: 'Das Finale ist nicht bereit, sein Stand ist READY'
+      running: 'Das Finale läuft'
+      over: 'Das Finale ist vorbei'
+force-result-menu:
+  title: 'Ergebnis von {match}'
+  match-not-running: 'Match {match} läuft nicht mehr'
+  tile:
+    info:
+      title: 'Ergebnis erzwingen'
+      match: 'Match {match}'
+      round: 'Runde {round}'
+      hint: 'Ein Klick entscheidet das Match für dieses Team'
+    team:
+      lore: 'Entscheidet das Match für dieses Team'
+waiting-matches-menu:
+  title: 'Wartende Matches (Seite {page})'
+  tile:
+    info:
+      title: 'Wartende Matches'
+      no-match-waiting: 'Kein Match wartet'
+      count:
+        one: 'Wartende Matches: {count}'
+        other: 'Wartende Matches: {count}'
+      hint: 'Ein Klick auf ein Match entscheidet es für eines seiner Teams'
+    match:
+      teams: '{firstTeam} gegen {secondTeam}'
+      round: 'Turnierrunde {round}'
+      team-not-registered: '{team} ist nicht mehr registriert'
+waiting-match-result-menu:
+  title: 'Ergebnis von {match}'
+  match-not-waiting: 'Match {match} wartet nicht mehr'
+  tile:
+    info:
+      title: 'Wartendes Match entscheiden'
+      match: 'Match {match} ({firstTeam} gegen {secondTeam})'
+      hint: 'Ein Klick entscheidet das Match für dieses Team'
+    team:
+      not-registered: 'Nicht mehr registriert'
+      lore: 'Entscheidet das Match für dieses Team'
+confirmation:
+  tile:
+    confirm:
+      title: 'Ja'
+      lore: 'Führt die Aktion aus'
+    refuse:
+      title: 'Nein'
+      lore: 'Ändert nichts und kehrt zurück'
+  question:
+    clean-arena: 'Arena reinigen?'
+    reset-arena: 'Arena zurücksetzen?'
+    replace-kit: 'Kit durch dein Inventar ersetzen?'
+    delete-kit: 'Kit löschen?'
+    remove-team: 'Team entfernen?'
+    cancel-tournament: 'Turnier abbrechen?'

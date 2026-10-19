@@ -1,8 +1,10 @@
 package de.simplepvparena.gui;
 
-import de.simplepvparena.match.Match;
 import de.simplepvparena.match.MatchService;
-import de.simplepvparena.tournament.FinalMatchStage;
+import de.simplepvparena.message.MatchMenuMessage;
+import de.simplepvparena.message.MessageKey;
+import de.simplepvparena.message.Messages;
+import de.simplepvparena.message.Placeholder;
 import de.simplepvparena.tournament.TournamentManager;
 import org.bukkit.Material;
 
@@ -20,19 +22,20 @@ final class TournamentMenuStatus {
 
     MenuTile buildFinalItem() {
         if (!currentOptions().finalStartOffered()) {
-            return MenuItems.unavailable("Start the final", describeUnavailableFinal());
+            return MenuItems.unavailable(Messages.text(MatchMenuMessage.FINAL_TITLE), describeUnavailableFinal());
         }
-        return MenuItems.create(Material.NETHER_STAR, "Start the final",
-                "Both finalists are known", "Starts the final on the arena");
+        return MenuItems.create(Material.NETHER_STAR, Messages.text(MatchMenuMessage.FINAL_TITLE),
+                Messages.lines(MatchMenuMessage.FINAL_LORE));
     }
 
     private String describeUnavailableFinal() {
-        FinalMatchStage finalMatchStage = tournamentManager.getFinalMatchStage();
-        return switch (finalMatchStage) {
-            case RUNNING -> "The final is running";
-            case FINISHED -> "The final is over";
-            default -> "The final is not ready, its stage is " + finalMatchStage;
+        MessageKey reason = switch (tournamentManager.getFinalMatchStage()) {
+            case PENDING -> MatchMenuMessage.FINAL_PENDING;
+            case READY -> MatchMenuMessage.FINAL_READY;
+            case RUNNING -> MatchMenuMessage.FINAL_RUNNING;
+            case FINISHED -> MatchMenuMessage.FINAL_OVER;
         };
+        return Messages.text(reason);
     }
 
     TournamentMenuOptions currentOptions() {
@@ -40,7 +43,9 @@ final class TournamentMenuStatus {
                 matchService.hasActiveMatch());
     }
 
-    String describeActiveMatch() {
-        return matchService.getActiveMatch().map(Match::describe).orElse("none");
+    String describeActiveMatchLine() {
+        return matchService.getActiveMatch()
+                .map(match -> Messages.text(MatchMenuMessage.RUNNING_MATCH, Placeholder.of("match", match.describe())))
+                .orElseGet(() -> Messages.text(MatchMenuMessage.NO_RUNNING_MATCH));
     }
 }

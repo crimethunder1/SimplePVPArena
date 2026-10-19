@@ -22,7 +22,8 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 class ShippedLanguageFilesTest {
 
     private static final List<Class<? extends MessageKey>> MESSAGE_KEY_TYPES = List.of(CommonMessage.class,
-            MenuMessage.class, InputMessage.class);
+            MenuMessage.class, InputMessage.class, MainMenuMessage.class, MatchMenuMessage.class,
+            WaitingMatchMessage.class, ConfirmationMessage.class);
 
     private static final Pattern PLACEHOLDER = Pattern.compile("\\{([A-Za-z0-9_-]+)}");
     private static final Pattern VALUE_LINE = Pattern.compile("^\\s*(- |[a-z0-9-]+: )(.*)$");

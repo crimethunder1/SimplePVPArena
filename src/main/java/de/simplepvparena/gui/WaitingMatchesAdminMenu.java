@@ -1,7 +1,11 @@
 package de.simplepvparena.gui;
 
+import de.simplepvparena.message.CommonMessage;
 import de.simplepvparena.message.MenuMessage;
+import de.simplepvparena.message.Messages;
+import de.simplepvparena.message.Placeholder;
 import de.simplepvparena.message.TournamentMessages;
+import de.simplepvparena.message.WaitingMatchMessage;
 import de.simplepvparena.team.TeamRegistry;
 import de.simplepvparena.tournament.BracketMatch;
 import de.simplepvparena.tournament.TournamentManager;
@@ -15,8 +19,6 @@ import java.util.Objects;
 import java.util.OptionalInt;
 
 final class WaitingMatchesAdminMenu implements AdminMenu {
-
-    static final String NO_TOURNAMENT_IN_PROGRESS = "No tournament is in progress";
 
     private static final int WAITING_MATCHES_MENU_SIZE = 54;
 
@@ -38,9 +40,9 @@ final class WaitingMatchesAdminMenu implements AdminMenu {
 
     @Override
     public String title(AdminMenuHolder holder) {
-        return "Waiting matches (page "
-                + MenuPagination.of(tournamentManager.findWaitingMatches().size(), holder.getPageIndex())
-                .getPageNumber() + ")";
+        return Messages.text(WaitingMatchMessage.TITLE, Placeholder.of("page",
+                MenuPagination.of(tournamentManager.findWaitingMatches().size(), holder.getPageIndex())
+                        .getPageNumber()));
     }
 
     @Override
@@ -52,7 +54,8 @@ final class WaitingMatchesAdminMenu implements AdminMenu {
     public void fill(Player player, AdminMenuHolder holder, AdminMenuCanvas canvas) {
         List<BracketMatch> waitingMatches = tournamentManager.findWaitingMatches();
         if (waitingMatches.isEmpty()) {
-            canvas.set(WAITING_MATCHES_INFO_SLOT, MenuItems.info("Waiting matches", List.of("No match is waiting")));
+            canvas.set(WAITING_MATCHES_INFO_SLOT, MenuItems.info(Messages.text(WaitingMatchMessage.INFO_TITLE),
+                    List.of(Messages.text(WaitingMatchMessage.NO_MATCH_WAITING))));
             canvas.set(WAITING_MATCHES_BACK_SLOT, MenuItems.back(MenuMessage.BACK_TO_MATCH_MENU));
             return;
         }
@@ -60,10 +63,11 @@ final class WaitingMatchesAdminMenu implements AdminMenu {
         for (int slot = 0; slot < pagination.getItemCountOnPage(); slot++) {
             canvas.set(slot, buildMatchItem(waitingMatches.get(pagination.getFirstItemIndex() + slot)));
         }
-        canvas.set(WAITING_MATCHES_INFO_SLOT, MenuItems.info("Waiting matches", List.of(
-                "Waiting matches: " + waitingMatches.size(),
-                "Page " + pagination.getPageNumber() + " of " + pagination.getPageCount(),
-                "A click on a match decides it for one of its teams")));
+        canvas.set(WAITING_MATCHES_INFO_SLOT, MenuItems.info(Messages.text(WaitingMatchMessage.INFO_TITLE), List.of(
+                Messages.plural(WaitingMatchMessage.WAITING_MATCH_COUNT, waitingMatches.size()),
+                Messages.text(MenuMessage.PAGE_OF_PAGES, Placeholder.of("page", pagination.getPageNumber()),
+                        Placeholder.of("pageCount", pagination.getPageCount())),
+                Messages.text(WaitingMatchMessage.INFO_HINT))));
         if (pagination.hasPreviousPage()) {
             canvas.set(WAITING_MATCHES_PREVIOUS_PAGE_SLOT, MenuItems.previousPage(pagination));
         }
@@ -101,18 +105,14 @@ final class WaitingMatchesAdminMenu implements AdminMenu {
 
     void openWaitingMatchesMenu(Player player) {
         if (!isTournamentInProgress()) {
-            TournamentMessages.sendError(player, NO_TOURNAMENT_IN_PROGRESS);
+            TournamentMessages.sendError(player, Messages.text(CommonMessage.NO_TOURNAMENT_IN_PROGRESS));
             return;
         }
         navigation.open(player, AdminMenuHolder.waitingMatches(0));
     }
 
-    static String describeTeams(BracketMatch match) {
-        return match.getFirstTeamName().orElseThrow() + " vs " + match.getSecondTeamName().orElseThrow();
-    }
-
     static String describeRound(BracketMatch match) {
-        return "Round " + (match.getRoundIndex() + 1);
+        return Messages.text(WaitingMatchMessage.ROUND, Placeholder.of("round", match.getRoundIndex() + 1));
     }
 
     private void openMatchResult(Player player, List<BracketMatch> waitingMatches, MenuPagination pagination,
@@ -127,12 +127,14 @@ final class WaitingMatchesAdminMenu implements AdminMenu {
 
     private MenuTile buildMatchItem(BracketMatch match) {
         List<String> lore = new ArrayList<>();
-        lore.add(describeTeams(match));
+        lore.add(Messages.text(WaitingMatchMessage.TEAMS,
+                Placeholder.of("firstTeam", match.getFirstTeamName().orElseThrow()),
+                Placeholder.of("secondTeam", match.getSecondTeamName().orElseThrow())));
         lore.add(describeRound(match));
         for (String teamName : List.of(match.getFirstTeamName().orElseThrow(),
                 match.getSecondTeamName().orElseThrow())) {
             if (teamRegistry.findTeam(teamName).isEmpty()) {
-                lore.add(teamName + " is no longer registered");
+                lore.add(Messages.text(WaitingMatchMessage.TEAM_NOT_REGISTERED, Placeholder.of("team", teamName)));
             }
         }
         return MenuItems.create(Material.PLAYER_HEAD, match.getMatchId(), lore);
