@@ -1,5 +1,8 @@
 package de.simplepvparena.arena;
 
+import de.simplepvparena.message.ArenaSetupMessage;
+import de.simplepvparena.message.Messages;
+import de.simplepvparena.message.Placeholder;
 import org.bukkit.Location;
 import org.bukkit.configuration.ConfigurationSection;
 
@@ -95,8 +98,9 @@ public final class ArenaRegistry {
         if (area.contains(position.worldName(), position.x(), position.z())) {
             return Optional.empty();
         }
-        return Optional.of("The tribune spawn " + position.describe() + " lies outside of the area of effect, "
-                + area.describeDistanceOf(position.worldName(), position.x(), position.z()));
+        return Optional.of(Messages.text(ArenaSetupMessage.TRIBUNE_OUTSIDE_OF_THE_EFFECT_AREA,
+                Placeholder.of("position", position.describe()),
+                Placeholder.of("distance", area.describeDistanceOf(position.worldName(), position.x(), position.z()))));
     }
 
     public Optional<String> getShapeLoadFailure() {

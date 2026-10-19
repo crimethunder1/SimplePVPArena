@@ -1,5 +1,10 @@
 package de.simplepvparena.arena;
 
+import de.simplepvparena.message.ArenaMenuMessage;
+import de.simplepvparena.message.ArenaSetupMessage;
+import de.simplepvparena.message.MessageKey;
+import de.simplepvparena.message.Messages;
+import de.simplepvparena.message.Placeholder;
 import de.simplepvparena.message.TournamentMessages;
 import org.bukkit.Location;
 
@@ -45,12 +50,18 @@ public final class Arena {
     public List<String> getMissingConfiguration() {
         List<String> missingParts = new ArrayList<>();
         if (shape == null) {
-            missingParts.add("the calculated fight area (" + CALCULATE_ACTION + ")");
+            missingParts.add(Messages.text(ArenaSetupMessage.MISSING_FIGHT_AREA,
+                    Placeholder.of("action", describeArenaMenuTile(ArenaMenuMessage.CALCULATE_TITLE))));
         }
         if (tribuneSpawn == null) {
-            missingParts.add("the tribune spawn (" + TRIBUNE_SPAWN_ACTION + ")");
+            missingParts.add(Messages.text(ArenaSetupMessage.MISSING_TRIBUNE_SPAWN,
+                    Placeholder.of("action", describeArenaMenuTile(ArenaMenuMessage.TRIBUNE_SPAWN_TITLE))));
         }
         return missingParts;
+    }
+
+    static String describeArenaMenuTile(MessageKey tileTitle) {
+        return Messages.text(ArenaSetupMessage.ARENA_MENU_REFERENCE, Placeholder.of("tile", Messages.text(tileTitle)));
     }
 
     public Optional<String> setSpawn(ArenaSpawnType spawnType, PositionSnapshot position) {
@@ -70,9 +81,9 @@ public final class Arena {
         if (fitsShape(spawnType, position)) {
             return Optional.empty();
         }
-        return Optional.of(describeMisplacedSpawn(spawnType, position)
-                + TournamentMessages.LINE_BREAK + "Stand " + spawnType.getPlacementHint()
-                + ", then set it again. Nothing was stored");
+        return Optional.of(describeMisplacedSpawn(spawnType, position) + TournamentMessages.LINE_BREAK
+                + Messages.text(ArenaSetupMessage.SPAWN_SET_AGAIN,
+                        Placeholder.of("placement", spawnType.getPlacementHint())));
     }
 
     public List<String> findSpawnPlacementWarnings() {
@@ -84,8 +95,8 @@ public final class Arena {
             getConfiguredSpawn(spawnType)
                     .filter(spawn -> !fitsShape(spawnType, spawn))
                     .ifPresent(spawn -> warnings.add(describeMisplacedSpawn(spawnType, spawn)
-                            + TournamentMessages.LINE_BREAK + "Set it again: stand "
-                            + spawnType.getPlacementHint() + ", then click its tile"));
+                            + TournamentMessages.LINE_BREAK + Messages.text(ArenaSetupMessage.SPAWN_CLICK_TILE_AGAIN,
+                                    Placeholder.of("placement", spawnType.getPlacementHint()))));
         }
         return warnings;
     }
@@ -158,9 +169,9 @@ public final class Arena {
     }
 
     private String describeMisplacedSpawn(ArenaSpawnType spawnType, PositionSnapshot position) {
-        boolean belongsInside = spawnType.belongsIntoFightArea();
-        return "The " + spawnType.getDisplayName() + " must lie "
-                + (belongsInside ? "inside" : "outside of") + " the calculated fight area, "
-                + position.describe() + " lies " + (belongsInside ? "outside of" : "inside") + " it";
+        MessageKey sentence = spawnType.belongsIntoFightArea()
+                ? ArenaSetupMessage.SPAWN_MUST_LIE_INSIDE : ArenaSetupMessage.SPAWN_MUST_LIE_OUTSIDE;
+        return Messages.text(sentence, Placeholder.of("spawn", spawnType.getDisplayName()),
+                Placeholder.of("position", position.describe()));
     }
 }

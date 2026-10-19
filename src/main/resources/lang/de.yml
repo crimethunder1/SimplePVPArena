@@ -39,7 +39,9 @@ input:
     - 'Die Eingabe für {description} ist abgelaufen, nichts wurde geändert'
     - 'Öffne /tournament erneut, um neu zu beginnen'
   nothing-typed: 'Es wurde nichts eingegeben, erwartet wird {usage}'
-  expected-values: 'Erwartet werden {count} durch Leerzeichen getrennte Werte ({usage}), eingegeben wurden {givenCount}: {values}'
+  expected-values:
+    one: 'Erwartet wird {count} Wert ({usage}), eingegeben wurden {givenCount}: {values}'
+    other: 'Erwartet werden {count} durch Leerzeichen getrennte Werte ({usage}), eingegeben wurden {givenCount}: {values}'
   expected-value-range: 'Erwartet werden {minimum} bis {maximum} durch Leerzeichen getrennte Werte ({usage}), eingegeben wurden {givenCount}: {values}'
   unknown-material: 'Unbekanntes Material {material}'
   not-a-block: '{material} lässt sich nicht als Block setzen'
@@ -534,3 +536,282 @@ kit-actions-menu:
     - 'Seine Items sind danach weg'
   default-kit-set: 'Kit {kit} ist jetzt das Standard-Kit, jeder Kämpfer bekommt es ab der nächsten Runde'
   kit-deleted: 'Kit {kit} gelöscht'
+arena:
+  menu-reference: '"{tile}" im Arena-Menü von /tournament'
+  missing:
+    fight-area: 'die berechnete Kampffläche ({action})'
+    tribune-spawn: 'der Tribünen-Spawn ({action})'
+  still-missing: 'Der Arena fehlt noch:'
+  spawn:
+    first-team: 'Spawn des ersten Teams'
+    second-team: 'Spawn des zweiten Teams'
+    tribune: 'Tribünen-Spawn'
+  spawn-hint:
+    first-team: 'innerhalb der Arenawand, wo das erste Team startet'
+    second-team: 'innerhalb der Arenawand, wo das zweite Team startet'
+    tribune: 'außerhalb der Arenawand, wo die Zuschauer warten'
+  spawn-placement:
+    must-lie-inside: 'Der {spawn} muss innerhalb der berechneten Kampffläche liegen, {position} liegt außerhalb davon'
+    must-lie-outside: 'Der {spawn} muss außerhalb der berechneten Kampffläche liegen, {position} liegt darin'
+    set-again: 'Steh {placement}, dann setze ihn erneut. Es wurde nichts gespeichert'
+    click-tile-again: 'Setze ihn erneut: Steh {placement}, dann klicke auf seine Kachel'
+  spawn-set: 'Der {spawn} wurde auf {position} gesetzt'
+  spawn-outside-of-effect-area:
+    - 'Der {spawn} muss innerhalb des Wirkungsbereichs liegen, {position} liegt {distance}'
+    - 'Stell dich näher an die Kampffläche, dann setze ihn erneut. Es wurde nichts gespeichert'
+    - 'Der Rand um die Kampffläche wird in config.yml unter {path} eingestellt'
+  tribune-outside-of-effect-area: 'Der Tribünen-Spawn {position} liegt außerhalb des Wirkungsbereichs, {distance}'
+  effect-area:
+    description:
+      one: 'Mitte {centreX}/{centreZ}, Radius {radius} Block'
+      other: 'Mitte {centreX}/{centreZ}, Radius {radius} Blöcke'
+    distance:
+      one: '{distance} Block entfernt von seiner {effectArea}'
+      other: '{distance} Blöcke entfernt von seiner {effectArea}'
+    other-world: 'in der Welt {world}, während der Bereich in {areaWorld} liegt, mit seiner {effectArea}'
+  debug-cell-limit:
+    usage: '<Zellenlimit>'
+    not-a-number: 'Das Zellenlimit {value} ist keine Zahl'
+    out-of-range: 'Das Zellenlimit muss zwischen {minimum} und {maximum} liegen'
+  reserved-for-match: 'Das Kit für das nächste Match wird gerade gewählt, die Arena ist bis zu dessen Start für dieses Match reserviert'
+  calculation:
+    during-match: 'Ein Match läuft, die Kampffläche lässt sich nur zwischen den Matches berechnen'
+    diagnosis-run:
+      one:
+        - 'Einmalige Berechnung mit einem Limit von {count} Zelle'
+        - 'statt der {maximumCellCount} aus {path}, config.yml wird nicht geändert'
+      other:
+        - 'Einmalige Berechnung mit einem Limit von {count} Zellen'
+        - 'statt der {maximumCellCount} aus {path}, config.yml wird nicht geändert'
+    calculated:
+      - 'Die Kampffläche wurde aus den Wandblöcken berechnet'
+      - '{fightArea}'
+    tribune-outside-of-effect-area:
+      - '{warning}'
+      - 'Die Berechnung bleibt gültig. Setze den Tribünen-Spawn näher an der Kampffläche erneut, der Rand um sie wird in config.yml unter {path} eingestellt'
+    marked-heights-taken-over:
+      - 'Die markierten Höhen wurden übernommen: Die Kampffläche reicht von y {floorY} bis y {topY} statt bis zur Höhe der Arenawand'
+      - 'Beide Markierungen sind verbraucht. Die Fläche behält diese zwei Höhen, solange sie erneut als dieselbe Fläche berechnet wird, markiere sie erneut mit {action}, um sie zu ändern'
+    marked-heights-kept:
+      - 'Dieselbe Kampffläche wurde erneut berechnet, deshalb behält sie die Höhen, die für sie markiert wurden: Sie reicht von y {floorY} bis y {topY} statt bis zur Höhe der Arenawand'
+      - 'Markiere zwei Höhen mit {action} und berechne erneut, um sie zu ersetzen'
+    marked-heights-dropped:
+      - 'Das ist nicht mehr die Kampffläche, für die die Höhen y {markedFloorY} bis y {markedTopY} markiert wurden, deshalb sind sie weg'
+      - 'Die Kampffläche reicht von y {floorY} bis y {topY}, der Höhe ihrer eigenen Arenawand. Markiere zwei Höhen mit {action} und berechne erneut, wenn sie welche braucht'
+    diagnosis-limit-too-low:
+      - 'Die Wand ist geschlossen, die Fläche ist nur größer als {path}'
+      - 'Erhöhe den Wert in config.yml auf mindestens {cellCount}, sonst wird die nächste Berechnung ohne Limit wieder abgelehnt'
+    recognized-wall-shown:
+      - 'Die erkannte Wand wird ein paar Sekunden lang angezeigt'
+      - '{outline}'
+  gap:
+    guidance:
+      - 'Eine Spur aus Flammenpartikeln zeigt dir beim Gehen den Weg zu {target}.'
+      - '{hint}.'
+      - 'Die Spur endet, wenn du dort ankommst, die nächste Berechnung ersetzt sie durch ihr eigenes Ziel'
+    compass-received: 'Du hast einen Kompass bekommen, der zu {target} zeigt'
+    compass-not-handed-over: 'Dein Inventar ist voll, der Kompass zu {target} konnte nicht ausgegeben werden'
+  baseline:
+    too-large:
+      one:
+        - 'Von der Kampffläche wird kein Ausgangszustand aufgenommen'
+        - 'Die Kampffläche enthält {count} Block, mehr als die {maximum}, die ein Ausgangszustand umfasst.'
+        - '{action} setzt jeden Block der Kampffläche auf Luft, wie bisher'
+      other:
+        - 'Von der Kampffläche wird kein Ausgangszustand aufgenommen'
+        - 'Die Kampffläche enthält {count} Blöcke, mehr als die {maximum}, die ein Ausgangszustand umfasst.'
+        - '{action} setzt jeden Block der Kampffläche auf Luft, wie bisher'
+    too-large-with-layers:
+      one:
+        - 'Von der Kampffläche wird kein Ausgangszustand aufgenommen'
+        - 'Die Kampffläche mit den Schichten unter ihrem Boden enthält {count} Block, mehr als die {maximum}, die ein Ausgangszustand umfasst.'
+        - '{action} setzt jeden Block der Kampffläche auf Luft, wie bisher'
+      other:
+        - 'Von der Kampffläche wird kein Ausgangszustand aufgenommen'
+        - 'Die Kampffläche mit den Schichten unter ihrem Boden enthält {count} Blöcke, mehr als die {maximum}, die ein Ausgangszustand umfasst.'
+        - '{action} setzt jeden Block der Kampffläche auf Luft, wie bisher'
+    reading:
+      one:
+        - 'Der {count} Block von y {floorY} bis y {topY}, die Kampffläche, wird als der Ausgangszustand eingelesen, den {action} wiederherstellt'
+        - 'In Portionen von {batchSize} pro Tick, bis dahin lässt sich die Arena nicht reinigen.'
+        - 'Der Ausgangszustand ist weg, wenn der Server neu startet'
+      other:
+        - 'Die {count} Blöcke von y {floorY} bis y {topY}, die Kampffläche, werden als der Ausgangszustand eingelesen, den {action} wiederherstellt'
+        - 'In Portionen von {batchSize} pro Tick, bis dahin lässt sich die Arena nicht reinigen.'
+        - 'Der Ausgangszustand ist weg, wenn der Server neu startet'
+    reading-with-layers:
+      one:
+        - 'Der {count} Block von y {floorY} bis y {topY}, die Kampffläche und die Schichten unter ihrem Boden, wird als der Ausgangszustand eingelesen, den {action} wiederherstellt'
+        - 'In Portionen von {batchSize} pro Tick, bis dahin lässt sich die Arena nicht reinigen.'
+        - 'Der Ausgangszustand ist weg, wenn der Server neu startet'
+      other:
+        - 'Die {count} Blöcke von y {floorY} bis y {topY}, die Kampffläche und die Schichten unter ihrem Boden, werden als der Ausgangszustand eingelesen, den {action} wiederherstellt'
+        - 'In Portionen von {batchSize} pro Tick, bis dahin lässt sich die Arena nicht reinigen.'
+        - 'Der Ausgangszustand ist weg, wenn der Server neu startet'
+  reset:
+    during-match: 'Ein Match läuft, die Arena lässt sich nur zwischen den Matches zurücksetzen'
+    configuration-removed:
+      - 'Die Konfiguration der Arena wurde entfernt'
+      - 'Ihre Blöcke und die Wandblöcke bleiben unberührt'
+  cleaning:
+    without-fight-area:
+      - 'Die Kampffläche ist nicht berechnet, es gibt nichts zu reinigen'
+      - 'Nutze zuerst {action}, während du innerhalb der Arenawand stehst'
+    during-match: 'Ein Match läuft, die Arena lässt sich nur zwischen den Matches reinigen'
+    already-running: 'Die Arena wird bereits gereinigt'
+    during-baseline-capture:
+      - 'Der Ausgangszustand der Kampffläche wird noch eingelesen, warte einen Moment'
+      - 'Eine Reinigung, die jetzt startet, fände keinen Ausgangszustand und würde die Arena leeren, statt sie wiederherzustellen'
+    effect:
+      with-baseline:
+        - 'Setzt jeden Block der Kampffläche auf den'
+        - 'Zustand zurück, den die letzte Berechnung fand'
+        - 'Seitdem gesetzte Blöcke werden wieder Luft,'
+        - 'abgebaute kommen zurück'
+      without-baseline:
+        - 'Es ist kein Ausgangszustand gespeichert, jeder Block'
+        - 'der Kampffläche wird auf Luft gesetzt'
+        - 'Einen Ausgangszustand nimmt die Berechnung auf, er ist'
+        - 'nach einem Neustart des Servers weg'
+      covers-fight-area: 'Umfasst y {floorY} bis y {topY}, die Höhe der Kampffläche'
+      covers-layers:
+        one:
+          - 'Umfasst y {floorY} bis y {topY}, die Kampffläche und die'
+          - '{count} Schicht unter ihrem Boden, auch sie wird wiederhergestellt'
+        other:
+          - 'Umfasst y {floorY} bis y {topY}, die Kampffläche und die'
+          - '{count} Schichten unter ihrem Boden, auch diese werden wiederhergestellt'
+    not-started: 'Die Reinigung der Arena ließ sich nicht starten'
+    restores-baseline:
+      - 'Die Arena wird auf den Ausgangszustand der letzten Berechnung zurückgesetzt'
+      - '{baseline}'
+    without-baseline:
+      - 'Es ist kein Ausgangszustand der Kampffläche gespeichert, stattdessen wird jeder ihrer Blöcke auf Luft gesetzt'
+      - 'Einen Ausgangszustand nimmt {action} auf, er übersteht keinen Neustart des Servers'
+    started:
+      one:
+        - 'Die Arena wird gereinigt, {count} Block zwischen y {floorY} und y {topY}'
+        - 'Verarbeitet in Portionen von {batchSize} pro Tick'
+        - '{animation}'
+      other:
+        - 'Die Arena wird gereinigt, {count} Blöcke zwischen y {floorY} und y {topY}'
+        - 'Verarbeitet in Portionen von {batchSize} pro Tick'
+        - '{animation}'
+    automatic-without-baseline:
+      - 'es ist kein Ausgangszustand der Kampffläche gespeichert, und eine Reinigung, die niemand verlangt hat, leert die Arena nie'
+      - 'Führe {action} einmal aus, das nimmt einen auf'
+    automatic-not-started: 'die Reinigung der Arena ließ sich nicht starten'
+  description:
+    ready: 'Arena bereit'
+    incomplete: 'Arena unvollständig'
+    fight-area: '  Kampffläche: {fightArea}'
+    no-fight-area: '  Kampffläche: nicht berechnet'
+    spawn: '  {spawn}: {position}'
+    spawn-not-configured: '  {spawn}: nicht gesetzt'
+    effect-area: '  Wirkungsbereich: {effectArea}'
+    no-effect-area: '  Wirkungsbereich: keiner, bis die Kampffläche berechnet ist'
+    running-match: '  Laufendes Match: {match}'
+    no-running-match: '  Laufendes Match: keins'
+arena-menu:
+  title: 'Arena'
+  tile:
+    info:
+      title: 'Arena'
+    calculate:
+      title: 'Kampffläche berechnen'
+      lore:
+        - 'Berechnet die Fläche ab der Stelle, an der du stehst'
+        - 'Steh vor dem Klick innerhalb der geschlossenen Arenawand'
+        - 'Das Menü schließt sich, damit du die erkannte Wand sehen kannst'
+    diagnose:
+      title: 'Diagnose mit höherem Zellenlimit'
+      limit:
+        one: 'Eine Berechnung mit einem Limit, das du eingibst, bis zu {count} Zelle'
+        other: 'Eine Berechnung mit einem Limit, das du eingibst, bis zu {count} Zellen'
+      lore:
+        - 'Zeigt, wie weit eine Füllung durch eine Lücke wirklich kommt'
+        - 'config.yml bleibt unberührt'
+    first-team-spawn:
+      title: 'Spawn des ersten Teams setzen'
+    second-team-spawn:
+      title: 'Spawn des zweiten Teams setzen'
+    tribune-spawn:
+      title: 'Tribünen-Spawn setzen'
+    spawn:
+      lore:
+        - 'Setzt ihn auf die Stelle, an der du stehst'
+        - 'Steh {placement}'
+        - 'Eine Stelle auf der falschen Seite der Kampffläche'
+        - 'wird abgelehnt, sobald die Fläche berechnet ist'
+    clean:
+      title: 'Arena reinigen'
+      without-fight-area: 'Es ist keine Kampffläche berechnet, es gibt nichts zu reinigen'
+    reset:
+      title: 'Arena zurücksetzen'
+      lore:
+        - 'Verwirft die Kampffläche und alle drei Spawns'
+        - 'Die Blöcke und die Wandblöcke bleiben unberührt'
+    height-marker:
+      title: 'Höhe der Kampffläche markieren'
+      lore:
+        - 'Gibt dir das Item, das den tiefsten und den'
+        - 'höchsten Punkt der Kampffläche markiert'
+        - 'Setze damit einen Block, nur seine Höhe wird gemerkt'
+        - 'und der Block verschwindet wieder'
+        - 'Die nächste Berechnung übernimmt sie als Boden'
+        - 'und Decke der Kampffläche, auch unterhalb der'
+        - 'Arenawand, und verbraucht beide Markierungen'
+    start-gate:
+      title: 'Starttor-Blöcke geben'
+      lore:
+        - 'Fragt im Chat nach einem Material und einer Menge und'
+        - 'gibt dir so viele Starttor-Blöcke'
+        - 'Baue um jeden Team-Spawn eine Box und schließe sie'
+        - 'mit ihnen: Jeder gesetzte gehört zum Starttor,'
+        - 'ein abgebauter ist wieder draußen'
+        - 'Jeder Rundenstart stellt das ganze Starttor wieder her'
+        - 'und baut es mit einem Countdown von oben wieder ab'
+        - 'Ein nicht gebautes Starttor wird übersprungen, die Runde startet trotzdem'
+  cleaning:
+    affected-blocks:
+      one: '{count} Block ist betroffen'
+      other: '{count} Blöcke sind betroffen'
+  clean-confirmation:
+    - 'Die Änderung lässt sich nicht rückgängig machen'
+    - 'Die Arenawand um sie herum bleibt unberührt'
+  reset-confirmation:
+    - 'Die Kampffläche und alle drei Spawns werden verworfen'
+    - 'Die Blöcke der Arena und die Wandblöcke bleiben unberührt'
+    - 'Bis zur nächsten Berechnung lässt sich kein Turnier starten'
+  height-marker:
+    inventory-full: 'Dein Inventar ist voll, die Höhenmarke konnte nicht ausgegeben werden'
+    handed-out:
+      - 'Du hast die Höhenmarke der Kampffläche bekommen'
+      - 'Setze damit einen Block am tiefsten Punkt der Fläche, das Item wechselt von selbst zum höchsten'
+      - 'Der gesetzte Block verschwindet wieder, nur seine Höhe wird gemerkt'
+  start-gate-input:
+    description: 'die Starttor-Blöcke'
+    prompt:
+      - 'Gib im Chat ein: {usage}'
+      - 'Beispiel: barrier 32'
+      - 'Die Menge muss zwischen {minimum} und {maximum} liegen'
+  start-gate:
+    inventory-full: 'Dein Inventar ist voll, nicht jeder Starttor-Block konnte ausgegeben werden'
+    handed-out:
+      one:
+        - 'Du hast {count} Starttor-Block aus {material} bekommen'
+        - 'Baue die Box um einen Team-Spawn aus dem, woraus deine Map besteht, und schließe sie mit diesem Block'
+        - 'Sobald du ihn setzt, gehört er sofort zum Starttor, abgebaut ist er wieder draußen'
+        - 'Jeder Rundenstart stellt das ganze Starttor wieder her und baut es von oben wieder ab'
+      other:
+        - 'Du hast {count} Starttor-Blöcke aus {material} bekommen'
+        - 'Baue die Box um einen Team-Spawn aus dem, woraus deine Map besteht, und schließe sie mit diesen Blöcken'
+        - 'Jeder davon, den du setzt, gehört sofort zum Starttor, ein abgebauter ist wieder draußen'
+        - 'Jeder Rundenstart stellt das ganze Starttor wieder her und baut es von oben wieder ab'
+  diagnosis-input:
+    description: 'die Diagnose mit einem höheren Zellenlimit'
+    prompt:
+      - 'Gib im Chat ein: {usage}'
+      - 'Eine Zahl zwischen {minimum} und {maximum}'
+      - 'Steh innerhalb der Arenawand, die Berechnung läuft ab der Stelle, an der du stehst'
+      - 'config.yml wird dadurch nicht geändert'

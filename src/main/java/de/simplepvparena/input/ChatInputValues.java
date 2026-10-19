@@ -47,8 +47,8 @@ public record ChatInputValues(List<String> values) {
         Placeholder givenCount = Placeholder.of("givenCount", values.size());
         Placeholder givenValues = Placeholder.of("values", String.join(" ", values));
         if (minimumValueCount == maximumValueCount) {
-            return Optional.of(Messages.text(InputMessage.EXPECTED_VALUES, Placeholder.of("count", minimumValueCount),
-                    usagePlaceholder, givenCount, givenValues));
+            return Optional.of(Messages.plural(InputMessage.EXPECTED_VALUES, minimumValueCount, usagePlaceholder,
+                    givenCount, givenValues));
         }
         return Optional.of(Messages.text(InputMessage.EXPECTED_VALUE_RANGE,
                 Placeholder.of("minimum", minimumValueCount), Placeholder.of("maximum", maximumValueCount),

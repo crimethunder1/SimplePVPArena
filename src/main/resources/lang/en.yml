@@ -39,7 +39,9 @@ input:
     - 'The input for {description} expired, nothing was changed'
     - 'Open /tournament again to start over'
   nothing-typed: 'Nothing was typed, expected {usage}'
-  expected-values: 'Expected {count} values separated by spaces ({usage}), but got {givenCount}: {values}'
+  expected-values:
+    one: 'Expected {count} value separated by spaces ({usage}), but got {givenCount}: {values}'
+    other: 'Expected {count} values separated by spaces ({usage}), but got {givenCount}: {values}'
   expected-value-range: 'Expected {minimum} to {maximum} values separated by spaces ({usage}), but got {givenCount}: {values}'
   unknown-material: 'Unknown material {material}'
   not-a-block: '{material} cannot be placed as a block'
@@ -534,3 +536,282 @@ kit-actions-menu:
     - 'Its items are gone afterwards'
   default-kit-set: 'Kit {kit} is the default kit now, every fighter is given it from the next round on'
   kit-deleted: 'Kit {kit} deleted'
+arena:
+  menu-reference: '"{tile}" in the arena menu of /tournament'
+  missing:
+    fight-area: 'the calculated fight area ({action})'
+    tribune-spawn: 'the tribune spawn ({action})'
+  still-missing: 'The arena still misses:'
+  spawn:
+    first-team: 'first team spawn'
+    second-team: 'second team spawn'
+    tribune: 'tribune spawn'
+  spawn-hint:
+    first-team: 'inside the border wall, where the first team starts'
+    second-team: 'inside the border wall, where the second team starts'
+    tribune: 'outside the border wall, where the spectators wait'
+  spawn-placement:
+    must-lie-inside: 'The {spawn} must lie inside the calculated fight area, {position} lies outside of it'
+    must-lie-outside: 'The {spawn} must lie outside of the calculated fight area, {position} lies inside it'
+    set-again: 'Stand {placement}, then set it again. Nothing was stored'
+    click-tile-again: 'Set it again: stand {placement}, then click its tile'
+  spawn-set: 'Set the {spawn} to {position}'
+  spawn-outside-of-effect-area:
+    - 'The {spawn} must lie inside the area of effect, {position} lies {distance}'
+    - 'Stand closer to the fight area, then set it again. Nothing was stored'
+    - 'The margin around the fight area is set in config.yml under {path}'
+  tribune-outside-of-effect-area: 'The tribune spawn {position} lies outside of the area of effect, {distance}'
+  effect-area:
+    description:
+      one: 'centre {centreX}/{centreZ}, radius {radius} block'
+      other: 'centre {centreX}/{centreZ}, radius {radius} blocks'
+    distance:
+      one: '{distance} block from its {effectArea}'
+      other: '{distance} blocks from its {effectArea}'
+    other-world: 'in the world {world}, while the area lies in {areaWorld} with its {effectArea}'
+  debug-cell-limit:
+    usage: '<cells>'
+    not-a-number: 'The cell limit {value} is not a number'
+    out-of-range: 'The cell limit has to be between {minimum} and {maximum}'
+  reserved-for-match: 'The kit for the next match is being chosen, the arena is reserved for that match until it starts'
+  calculation:
+    during-match: 'A match is running, the fight area can only be calculated between matches'
+    diagnosis-run:
+      one:
+        - 'Calculating once with a limit of {count} cell'
+        - 'instead of the {maximumCellCount} of {path}, config.yml is not changed'
+      other:
+        - 'Calculating once with a limit of {count} cells'
+        - 'instead of the {maximumCellCount} of {path}, config.yml is not changed'
+    calculated:
+      - 'The fight area was calculated from the border blocks'
+      - '{fightArea}'
+    tribune-outside-of-effect-area:
+      - '{warning}'
+      - 'The calculation stays valid. Set the tribune spawn again closer to the fight area, the margin around it is set in config.yml under {path}'
+    marked-heights-taken-over:
+      - 'The marked heights were taken over: the fight area reaches from y {floorY} to y {topY} instead of the height of the border wall'
+      - 'Both marks are used up. The area keeps these two heights as long as it is calculated again as the same area, mark them again with {action} to change them'
+    marked-heights-kept:
+      - 'The same fight area was calculated again, so it keeps the heights that were marked for it: it reaches from y {floorY} to y {topY} instead of the height of the border wall'
+      - 'Mark two heights with {action} and calculate again to replace them'
+    marked-heights-dropped:
+      - 'This is not the fight area the heights y {markedFloorY} to y {markedTopY} were marked for any more, so they are gone'
+      - 'The fight area reaches from y {floorY} to y {topY}, the height of its own border wall. Mark two heights with {action} and calculate again if it needs them'
+    diagnosis-limit-too-low:
+      - 'The wall is closed, the area is only larger than {path}'
+      - 'Raise it to at least {cellCount} in config.yml, otherwise the next calculation without a limit is rejected again'
+    recognized-wall-shown:
+      - 'The recognized wall is shown for a few seconds'
+      - '{outline}'
+  gap:
+    guidance:
+      - 'A trail of flame particles points towards {target} while you walk.'
+      - '{hint}.'
+      - 'The trail ends when you get there, the next calculation replaces it with its own target'
+    compass-received: 'You received a compass that points to {target}'
+    compass-not-handed-over: 'Your inventory is full, the compass towards {target} could not be handed over'
+  baseline:
+    too-large:
+      one:
+        - 'No baseline is taken of the fight area'
+        - 'The fight area holds {count} block, more than the {maximum} a baseline covers.'
+        - '{action} sets every block of the fight area to air, the way it always did'
+      other:
+        - 'No baseline is taken of the fight area'
+        - 'The fight area holds {count} blocks, more than the {maximum} a baseline covers.'
+        - '{action} sets every block of the fight area to air, the way it always did'
+    too-large-with-layers:
+      one:
+        - 'No baseline is taken of the fight area'
+        - 'The fight area with the layers under its floor holds {count} block, more than the {maximum} a baseline covers.'
+        - '{action} sets every block of the fight area to air, the way it always did'
+      other:
+        - 'No baseline is taken of the fight area'
+        - 'The fight area with the layers under its floor holds {count} blocks, more than the {maximum} a baseline covers.'
+        - '{action} sets every block of the fight area to air, the way it always did'
+    reading:
+      one:
+        - 'Reading the {count} block from y {floorY} to y {topY}, the fight area, as the baseline {action} restores'
+        - 'In batches of {batchSize} per tick, the arena cannot be cleaned until that is done.'
+        - 'The baseline is gone when the server restarts'
+      other:
+        - 'Reading the {count} blocks from y {floorY} to y {topY}, the fight area, as the baseline {action} restores'
+        - 'In batches of {batchSize} per tick, the arena cannot be cleaned until that is done.'
+        - 'The baseline is gone when the server restarts'
+    reading-with-layers:
+      one:
+        - 'Reading the {count} block from y {floorY} to y {topY}, the fight area and the layers under its floor, as the baseline {action} restores'
+        - 'In batches of {batchSize} per tick, the arena cannot be cleaned until that is done.'
+        - 'The baseline is gone when the server restarts'
+      other:
+        - 'Reading the {count} blocks from y {floorY} to y {topY}, the fight area and the layers under its floor, as the baseline {action} restores'
+        - 'In batches of {batchSize} per tick, the arena cannot be cleaned until that is done.'
+        - 'The baseline is gone when the server restarts'
+  reset:
+    during-match: 'A match is running, the arena can only be reset between matches'
+    configuration-removed:
+      - 'The arena configuration was removed'
+      - 'Its blocks and the border blocks stay untouched'
+  cleaning:
+    without-fight-area:
+      - 'The fight area is not calculated, there is nothing to clean'
+      - 'Use {action} while standing inside the border wall first'
+    during-match: 'A match is running, the arena can only be cleaned between matches'
+    already-running: 'The arena is already being cleaned'
+    during-baseline-capture:
+      - 'The baseline of the fight area is still being read, wait a moment'
+      - 'A cleaning that started now would find no baseline and empty the arena instead of restoring it'
+    effect:
+      with-baseline:
+        - 'Restores every block of the fight area to the'
+        - 'state the last calculation found'
+        - 'Blocks placed since then become air again,'
+        - 'broken ones come back'
+      without-baseline:
+        - 'No baseline is stored, every block of the'
+        - 'fight area is set to air'
+        - 'A baseline is taken by the calculation and is'
+        - 'gone after a server restart'
+      covers-fight-area: 'Covers y {floorY} to y {topY}, the height of the fight area'
+      covers-layers:
+        one:
+          - 'Covers y {floorY} to y {topY}, the fight area and the'
+          - '{count} layer under its floor, it is restored too'
+        other:
+          - 'Covers y {floorY} to y {topY}, the fight area and the'
+          - '{count} layers under its floor, those are restored too'
+    not-started: 'The arena cleaning could not be started'
+    restores-baseline:
+      - 'Restoring the arena to the baseline of the last calculation'
+      - '{baseline}'
+    without-baseline:
+      - 'No baseline of the fight area is stored, every block of it is set to air instead'
+      - 'A baseline is taken by {action} and does not survive a server restart'
+    started:
+      one:
+        - 'Cleaning the arena, {count} block between y {floorY} and y {topY}'
+        - 'Processed in batches of {batchSize} per tick'
+        - '{animation}'
+      other:
+        - 'Cleaning the arena, {count} blocks between y {floorY} and y {topY}'
+        - 'Processed in batches of {batchSize} per tick'
+        - '{animation}'
+    automatic-without-baseline:
+      - 'no baseline of the fight area is stored, and a cleaning nobody asked for never empties the arena'
+      - 'Run {action} once, that takes one'
+    automatic-not-started: 'the arena cleaning could not be started'
+  description:
+    ready: 'Arena ready'
+    incomplete: 'Arena incomplete'
+    fight-area: '  fight area: {fightArea}'
+    no-fight-area: '  fight area: not calculated'
+    spawn: '  {spawn}: {position}'
+    spawn-not-configured: '  {spawn}: not configured'
+    effect-area: '  Area of effect: {effectArea}'
+    no-effect-area: '  Area of effect: none until the fight area is calculated'
+    running-match: '  running match: {match}'
+    no-running-match: '  running match: none'
+arena-menu:
+  title: 'Arena'
+  tile:
+    info:
+      title: 'Arena'
+    calculate:
+      title: 'Calculate the fight area'
+      lore:
+        - 'Runs the calculation for the position you stand on'
+        - 'Stand inside the closed border wall before you click'
+        - 'The menu closes so you can see the recognized wall'
+    diagnose:
+      title: 'Diagnose with a higher cell limit'
+      limit:
+        one: 'One calculation with a limit you type, up to {count} cell'
+        other: 'One calculation with a limit you type, up to {count} cells'
+      lore:
+        - 'Shows how far a fill through a gap really gets'
+        - 'config.yml stays untouched'
+    first-team-spawn:
+      title: 'Set the first team spawn'
+    second-team-spawn:
+      title: 'Set the second team spawn'
+    tribune-spawn:
+      title: 'Set the tribune spawn'
+    spawn:
+      lore:
+        - 'Sets it to the position you stand on'
+        - 'Stand {placement}'
+        - 'A position on the wrong side of the fight area'
+        - 'is refused once the area is calculated'
+    clean:
+      title: 'Clean the arena'
+      without-fight-area: 'No fight area is calculated, there is nothing to clean'
+    reset:
+      title: 'Reset the arena'
+      lore:
+        - 'Drops the fight area and all three spawns'
+        - 'The blocks and the border blocks stay untouched'
+    height-marker:
+      title: 'Mark the height of the fight area'
+      lore:
+        - 'Hands you the item that marks the lowest and the'
+        - 'highest point of the fight area'
+        - 'Place a block with it, only its height is kept'
+        - 'and the block disappears again'
+        - 'The next calculation takes them over as the floor'
+        - 'and the ceiling of the fight area, also below the'
+        - 'border wall, and uses both marks up'
+    start-gate:
+      title: 'Give start gate blocks'
+      lore:
+        - 'Asks for a material and an amount in the chat and'
+        - 'hands you that many start gate blocks'
+        - 'Build a box around each team spawn and close it'
+        - 'with them: every placed one is part of the gate,'
+        - 'breaking one takes it out again'
+        - 'Every round start puts the whole gate back and takes'
+        - 'it apart again from the top, with a countdown'
+        - 'A gate nobody placed is skipped, the round still starts'
+  cleaning:
+    affected-blocks:
+      one: '{count} block is affected'
+      other: '{count} blocks are affected'
+  clean-confirmation:
+    - 'The change cannot be undone'
+    - 'The border wall around it stays untouched'
+  reset-confirmation:
+    - 'The fight area and all three spawns are dropped'
+    - 'The blocks of the arena and the border blocks stay untouched'
+    - 'No tournament can be started until it is calculated again'
+  height-marker:
+    inventory-full: 'Your inventory is full, the height marker could not be handed out'
+    handed-out:
+      - 'You received the height marker of the fight area'
+      - 'Place a block with it at the lowest point of the area, the item switches to the highest one by itself'
+      - 'The placed block disappears again, only its height is kept'
+  start-gate-input:
+    description: 'the start gate blocks'
+    prompt:
+      - 'Type: {usage} in chat'
+      - 'Example: barrier 32'
+      - 'The amount has to be between {minimum} and {maximum}'
+  start-gate:
+    inventory-full: 'Your inventory is full, not every gate block could be handed out'
+    handed-out:
+      one:
+        - 'You received {count} {material} start gate block'
+        - 'Build the box around a team spawn out of whatever your map is made of and close it with this block'
+        - 'It is part of the gate right away once you place it, breaking it takes it out again'
+        - 'Every round start puts the whole gate back and takes it apart again from the top'
+      other:
+        - 'You received {count} {material} start gate blocks'
+        - 'Build the box around a team spawn out of whatever your map is made of and close it with these blocks'
+        - 'Every one of them you place is part of the gate right away, breaking one takes it out again'
+        - 'Every round start puts the whole gate back and takes it apart again from the top'
+  diagnosis-input:
+    description: 'the diagnosis cell limit'
+    prompt:
+      - 'Type: {usage} in chat'
+      - 'A number between {minimum} and {maximum}'
+      - 'Stand inside the border wall, the calculation runs from where you stand'
+      - 'config.yml is not changed by it'

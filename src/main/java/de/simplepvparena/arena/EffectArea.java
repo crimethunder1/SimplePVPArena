@@ -1,5 +1,8 @@
 package de.simplepvparena.arena;
 
+import de.simplepvparena.message.ArenaSetupMessage;
+import de.simplepvparena.message.Messages;
+import de.simplepvparena.message.Placeholder;
 import org.bukkit.Location;
 
 import java.util.Locale;
@@ -69,19 +72,31 @@ public final class EffectArea {
 
     public String describeDistanceOf(String otherWorldName, double x, double z) {
         if (!worldName.equals(otherWorldName)) {
-            return "in the world " + otherWorldName + ", while the area lies in " + worldName + " with its "
-                    + describe();
+            return Messages.text(ArenaSetupMessage.EFFECT_AREA_IN_OTHER_WORLD, Placeholder.of("world", otherWorldName),
+                    Placeholder.of("areaWorld", worldName), Placeholder.of("effectArea", describe()));
         }
-        return formatBlocks(distanceToCenter(x, z)) + " blocks from its " + describe();
+        double distance = distanceToCenter(x, z);
+        return Messages.plural(ArenaSetupMessage.EFFECT_AREA_DISTANCE, pluralCountOf(distance),
+                Placeholder.of("distance", formatBlocks(distance)), Placeholder.of("effectArea", describe()));
     }
 
     public String describe() {
-        return "centre " + formatBlocks(center.x()) + "/" + formatBlocks(center.z())
-                + ", radius " + formatBlocks(radius) + " blocks";
+        return Messages.plural(ArenaSetupMessage.EFFECT_AREA_DESCRIPTION, pluralCountOf(radius),
+                Placeholder.of("centreX", formatBlocks(center.x())),
+                Placeholder.of("centreZ", formatBlocks(center.z())),
+                Placeholder.of("radius", formatBlocks(radius)));
+    }
+
+    private static long pluralCountOf(double blocks) {
+        return roundToTenths(blocks) == 1.0D ? 1L : 0L;
+    }
+
+    private static double roundToTenths(double blocks) {
+        return Math.round(blocks * 10.0D) / 10.0D;
     }
 
     private static String formatBlocks(double blocks) {
-        double roundedBlocks = Math.round(blocks * 10.0D) / 10.0D;
+        double roundedBlocks = roundToTenths(blocks);
         if (roundedBlocks == Math.rint(roundedBlocks)) {
             return String.format(Locale.ROOT, "%d", (long) roundedBlocks);
         }

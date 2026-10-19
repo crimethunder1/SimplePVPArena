@@ -58,7 +58,7 @@ class ArenaDebugCellLimitTest {
 
     @Test
     void rejectsALineThatHoldsMoreThanTheCellCount() {
-        assertEquals("Expected 1 values separated by spaces (<cells>), but got 2: 500 cells",
+        assertEquals("Expected 1 value separated by spaces (<cells>), but got 2: 500 cells",
                 ArenaDebugCellLimit.parseLine("500 cells").getRejectionMessage().orElseThrow());
         assertEquals("Nothing was typed, expected <cells>",
                 ArenaDebugCellLimit.parseLine("  ").getRejectionMessage().orElseThrow());

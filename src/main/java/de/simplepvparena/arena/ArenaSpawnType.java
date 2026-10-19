@@ -1,23 +1,27 @@
 package de.simplepvparena.arena;
 
+import de.simplepvparena.message.ArenaSpawnMessage;
+import de.simplepvparena.message.MessageKey;
+import de.simplepvparena.message.Messages;
+
 public enum ArenaSpawnType {
 
-    FIRST_TEAM("first team spawn", true, "inside the border wall, where the first team starts"),
-    SECOND_TEAM("second team spawn", true, "inside the border wall, where the second team starts"),
-    TRIBUNE("tribune spawn", false, "outside the border wall, where the spectators wait");
+    FIRST_TEAM(ArenaSpawnMessage.FIRST_TEAM_NAME, true, ArenaSpawnMessage.FIRST_TEAM_PLACEMENT_HINT),
+    SECOND_TEAM(ArenaSpawnMessage.SECOND_TEAM_NAME, true, ArenaSpawnMessage.SECOND_TEAM_PLACEMENT_HINT),
+    TRIBUNE(ArenaSpawnMessage.TRIBUNE_NAME, false, ArenaSpawnMessage.TRIBUNE_PLACEMENT_HINT);
 
-    private final String displayName;
+    private final MessageKey displayName;
     private final boolean insideFightArea;
-    private final String placementHint;
+    private final MessageKey placementHint;
 
-    ArenaSpawnType(String displayName, boolean insideFightArea, String placementHint) {
+    ArenaSpawnType(MessageKey displayName, boolean insideFightArea, MessageKey placementHint) {
         this.displayName = displayName;
         this.insideFightArea = insideFightArea;
         this.placementHint = placementHint;
     }
 
     public String getDisplayName() {
-        return displayName;
+        return Messages.text(displayName);
     }
 
     public boolean belongsIntoFightArea() {
@@ -25,6 +29,6 @@ public enum ArenaSpawnType {
     }
 
     public String getPlacementHint() {
-        return placementHint;
+        return Messages.text(placementHint);
     }
 }

@@ -9,7 +9,12 @@ import de.simplepvparena.gate.StartGateItemService;
 import de.simplepvparena.input.BlockItemRequest;
 import de.simplepvparena.input.BlockItemRequestResult;
 import de.simplepvparena.input.ChatInputService;
+import de.simplepvparena.message.ArenaMenuMessage;
+import de.simplepvparena.message.CommonMessage;
 import de.simplepvparena.message.MenuMessage;
+import de.simplepvparena.message.MessageKey;
+import de.simplepvparena.message.Messages;
+import de.simplepvparena.message.Placeholder;
 import de.simplepvparena.message.TournamentMessages;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
@@ -52,7 +57,7 @@ final class ArenaAdminMenu implements AdminMenu {
 
     @Override
     public String title(AdminMenuHolder holder) {
-        return "Arena";
+        return Messages.text(ArenaMenuMessage.TITLE);
     }
 
     @Override
@@ -62,29 +67,26 @@ final class ArenaAdminMenu implements AdminMenu {
 
     @Override
     public void fill(Player player, AdminMenuHolder holder, AdminMenuCanvas canvas) {
-        canvas.set(AdminMenuLayout.INFO_SLOT, MenuItems.info("Arena", arenaSetupService.describeArena()));
-        canvas.set(ARENA_CALCULATE_SLOT, MenuItems.create(Material.SPYGLASS, "Calculate the fight area",
-                "Runs the calculation for the position you stand on",
-                "Stand inside the closed border wall before you click",
-                "The menu closes so you can see the recognized wall"));
+        canvas.set(AdminMenuLayout.INFO_SLOT, MenuItems.info(Messages.text(ArenaMenuMessage.INFO_TITLE),
+                arenaSetupService.describeArena()));
+        canvas.set(ARENA_CALCULATE_SLOT, MenuItems.create(Material.SPYGLASS,
+                Messages.text(ArenaMenuMessage.CALCULATE_TITLE), Messages.lines(ArenaMenuMessage.CALCULATE_LORE)));
         canvas.set(ARENA_DIAGNOSE_SLOT, MenuItems.create(Material.REDSTONE_TORCH,
-                "Diagnose with a higher cell limit",
-                "One calculation with a limit you type, up to "
-                        + ArenaShapeFloodFill.MAXIMUM_DEBUG_CELL_COUNT + " cells",
-                "Shows how far a fill through a gap really gets",
-                "config.yml stays untouched"));
+                Messages.text(ArenaMenuMessage.DIAGNOSE_TITLE), buildDiagnoseLore()));
         canvas.set(ARENA_HEIGHT_MARKER_SLOT, MenuItems.create(ArenaHeightMarkerService.MARKER_MATERIAL,
-                "Mark the height of the fight area", buildHeightMarkerLore()));
+                Messages.text(ArenaMenuMessage.HEIGHT_MARKER_TITLE), buildHeightMarkerLore()));
         canvas.set(ARENA_START_GATE_SLOT, MenuItems.create(START_GATE_TILE_MATERIAL,
-                "Give start gate blocks", buildStartGateLore()));
-        canvas.set(ARENA_FIRST_TEAM_SPAWN_SLOT, buildSpawnItem(Material.BLUE_BED, ArenaSpawnType.FIRST_TEAM));
-        canvas.set(ARENA_SECOND_TEAM_SPAWN_SLOT, buildSpawnItem(Material.RED_BED, ArenaSpawnType.SECOND_TEAM));
-        canvas.set(ARENA_TRIBUNE_SPAWN_SLOT, buildSpawnItem(Material.YELLOW_BED, ArenaSpawnType.TRIBUNE));
-        canvas.set(ARENA_CLEAN_SLOT, MenuItems.create(Material.TNT, "Clean the arena", buildCleaningTileLore()));
-        canvas.set(ARENA_RESET_SLOT, MenuItems.create(MenuItems.DESTRUCTIVE_MATERIAL, "Reset the arena",
-                "Drops the fight area and all three spawns",
-                "The blocks and the border blocks stay untouched",
-                "Asks for a confirmation first"));
+                Messages.text(ArenaMenuMessage.START_GATE_TITLE), buildStartGateLore()));
+        canvas.set(ARENA_FIRST_TEAM_SPAWN_SLOT, buildSpawnItem(Material.BLUE_BED, ArenaSpawnType.FIRST_TEAM,
+                ArenaMenuMessage.FIRST_TEAM_SPAWN_TITLE));
+        canvas.set(ARENA_SECOND_TEAM_SPAWN_SLOT, buildSpawnItem(Material.RED_BED, ArenaSpawnType.SECOND_TEAM,
+                ArenaMenuMessage.SECOND_TEAM_SPAWN_TITLE));
+        canvas.set(ARENA_TRIBUNE_SPAWN_SLOT, buildSpawnItem(Material.YELLOW_BED, ArenaSpawnType.TRIBUNE,
+                ArenaMenuMessage.TRIBUNE_SPAWN_TITLE));
+        canvas.set(ARENA_CLEAN_SLOT, MenuItems.create(Material.TNT, Messages.text(ArenaMenuMessage.CLEAN_TITLE),
+                buildCleaningTileLore()));
+        canvas.set(ARENA_RESET_SLOT, MenuItems.create(MenuItems.DESTRUCTIVE_MATERIAL,
+                Messages.text(ArenaMenuMessage.RESET_TITLE), buildResetTileLore()));
         canvas.set(AdminMenuLayout.BACK_SLOT, MenuItems.back(MenuMessage.BACK_TO_MAIN_MENU));
     }
 
@@ -147,15 +149,11 @@ final class ArenaAdminMenu implements AdminMenu {
     }
 
     private List<String> describeCleanConfirmation() {
-        return buildCleaningLore("The change cannot be undone",
-                "The border wall around it stays untouched");
+        return buildCleaningLore(Messages.lines(ArenaMenuMessage.CLEAN_CONFIRMATION));
     }
 
     private List<String> describeResetConfirmation() {
-        return List.of(
-                "The fight area and all three spawns are dropped",
-                "The blocks of the arena and the border blocks stay untouched",
-                "No tournament can be started until it is calculated again");
+        return Messages.lines(ArenaMenuMessage.RESET_CONFIRMATION);
     }
 
     private void startCleaning(Player player) {
@@ -175,24 +173,20 @@ final class ArenaAdminMenu implements AdminMenu {
         Map<Integer, ItemStack> itemsThatDidNotFit = player.getInventory()
                 .addItem(heightMarkerService.createMarkerItem());
         if (!itemsThatDidNotFit.isEmpty()) {
-            TournamentMessages.sendWarning(player,
-                    "Your inventory is full, the height marker could not be handed out");
+            TournamentMessages.sendWarning(player, Messages.text(ArenaMenuMessage.HEIGHT_MARKER_INVENTORY_FULL));
             return;
         }
-        TournamentMessages.sendSuccess(player, "You received the height marker of the fight area"
-                + TournamentMessages.LINE_BREAK + "Place a block with it at the lowest point of the area, "
-                + "the item switches to the highest one by itself"
-                + TournamentMessages.LINE_BREAK + "The placed block disappears again, only its height is kept");
+        TournamentMessages.sendSuccess(player, Messages.text(ArenaMenuMessage.HEIGHT_MARKER_HANDED_OUT));
         navigation.refresh(player, holder);
     }
 
     private void askForStartGateItemLine(Player player) {
         navigation.close(player);
-        chatInputService.await(player, "the start gate blocks", List.of(
-                        "Type: " + BlockItemRequest.USAGE + " in chat",
-                        "Example: barrier 32",
-                        "The amount has to be between " + BlockItemRequest.MINIMUM_AMOUNT
-                                + " and " + BlockItemRequest.MAXIMUM_AMOUNT),
+        chatInputService.await(player, Messages.text(ArenaMenuMessage.START_GATE_INPUT_DESCRIPTION),
+                Messages.lines(ArenaMenuMessage.START_GATE_INPUT_PROMPT,
+                        Placeholder.of("usage", BlockItemRequest.USAGE),
+                        Placeholder.of("minimum", BlockItemRequest.MINIMUM_AMOUNT),
+                        Placeholder.of("maximum", BlockItemRequest.MAXIMUM_AMOUNT)),
                 line -> handleStartGateItemLine(player, line));
     }
 
@@ -211,19 +205,10 @@ final class ArenaAdminMenu implements AdminMenu {
         Map<Integer, ItemStack> itemsThatDidNotFit = player.getInventory()
                 .addItem(gateItemService.createGateItem(request));
         if (!itemsThatDidNotFit.isEmpty()) {
-            TournamentMessages.sendWarning(player,
-                    "Your inventory is full, not every gate block could be handed out");
+            TournamentMessages.sendWarning(player, Messages.text(ArenaMenuMessage.START_GATE_INVENTORY_FULL));
         }
-        TournamentMessages.sendSuccess(player, "You received " + request.amount() + " "
-                + request.material().name() + " start gate blocks"
-                + TournamentMessages.LINE_BREAK
-                + "Build the box around a team spawn out of whatever your map is made of and close it "
-                + "with these blocks"
-                + TournamentMessages.LINE_BREAK
-                + "Every one of them you place is part of the gate right away, breaking one takes it "
-                + "out again"
-                + TournamentMessages.LINE_BREAK
-                + "Every round start puts the whole gate back and takes it apart again from the top");
+        TournamentMessages.sendSuccess(player, Messages.plural(ArenaMenuMessage.START_GATE_HANDED_OUT,
+                request.amount(), Placeholder.of("material", request.material().name())));
     }
 
     private void askForCleaningConfirmation(Player player) {
@@ -244,53 +229,48 @@ final class ArenaAdminMenu implements AdminMenu {
         navigation.open(player, AdminMenuHolder.confirmation(ConfirmationRequest.RESET_ARENA, null, 0));
     }
 
-    private List<String> buildHeightMarkerLore() {
+    private List<String> buildDiagnoseLore() {
         List<String> lore = new ArrayList<>();
-        lore.add("Hands you the item that marks the lowest and the");
-        lore.add("highest point of the fight area");
-        lore.add("Place a block with it, only its height is kept");
-        lore.add("and the block disappears again");
-        lore.add("The next calculation takes them over as the floor");
-        lore.add("and the ceiling of the fight area, also below the");
-        lore.add("border wall, and uses both marks up");
+        lore.add(Messages.plural(ArenaMenuMessage.DIAGNOSE_LIMIT, ArenaShapeFloodFill.MAXIMUM_DEBUG_CELL_COUNT));
+        lore.addAll(Messages.lines(ArenaMenuMessage.DIAGNOSE_LORE));
+        return lore;
+    }
+
+    private List<String> buildHeightMarkerLore() {
+        List<String> lore = new ArrayList<>(Messages.lines(ArenaMenuMessage.HEIGHT_MARKER_LORE));
         lore.addAll(heightMarkerService.describeMarkers());
         return lore;
     }
 
     private List<String> buildStartGateLore() {
-        List<String> lore = new ArrayList<>();
-        lore.add("Asks for a material and an amount in the chat and");
-        lore.add("hands you that many start gate blocks");
-        lore.add("Build a box around each team spawn and close it");
-        lore.add("with them: every placed one is part of the gate,");
-        lore.add("breaking one takes it out again");
-        lore.add("Every round start puts the whole gate back and takes");
-        lore.add("it apart again from the top, with a countdown");
-        lore.add("A gate nobody placed is skipped, the round still starts");
+        List<String> lore = new ArrayList<>(Messages.lines(ArenaMenuMessage.START_GATE_LORE));
         lore.addAll(gateItemService.describeGate());
+        return lore;
+    }
+
+    private List<String> buildResetTileLore() {
+        List<String> lore = new ArrayList<>(Messages.lines(ArenaMenuMessage.RESET_LORE));
+        lore.add(Messages.text(CommonMessage.ASKS_FOR_CONFIRMATION));
         return lore;
     }
 
     private List<String> buildCleaningTileLore() {
         if (arenaSetupService.getShape().isEmpty()) {
-            return List.of("No fight area is calculated, there is nothing to clean");
+            return List.of(Messages.text(ArenaMenuMessage.CLEAN_WITHOUT_FIGHT_AREA));
         }
-        return buildCleaningLore("Asks for a confirmation first");
+        return buildCleaningLore(List.of(Messages.text(CommonMessage.ASKS_FOR_CONFIRMATION)));
     }
 
-    private List<String> buildCleaningLore(String... closingLines) {
+    private List<String> buildCleaningLore(List<String> closingLines) {
         List<String> lore = new ArrayList<>(arenaSetupService.describeCleaningEffect());
-        lore.add(arenaSetupService.countCleaningBlocks() + " blocks are affected");
-        lore.addAll(List.of(closingLines));
+        lore.add(Messages.plural(ArenaMenuMessage.AFFECTED_BLOCKS, arenaSetupService.countCleaningBlocks()));
+        lore.addAll(closingLines);
         return lore;
     }
 
-    private MenuTile buildSpawnItem(Material material, ArenaSpawnType spawnType) {
-        return MenuItems.create(material, "Set the " + spawnType.getDisplayName(),
-                "Sets it to the position you stand on",
-                "Stand " + spawnType.getPlacementHint(),
-                "A position on the wrong side of the fight area",
-                "is refused once the area is calculated");
+    private MenuTile buildSpawnItem(Material material, ArenaSpawnType spawnType, MessageKey title) {
+        return MenuItems.create(material, Messages.text(title), Messages.lines(ArenaMenuMessage.SPAWN_LORE,
+                Placeholder.of("placement", spawnType.getPlacementHint())));
     }
 
     private static boolean isPlaceableBlock(Material material) {
@@ -299,12 +279,11 @@ final class ArenaAdminMenu implements AdminMenu {
 
     private void askForDebugCellLimitLine(Player player) {
         navigation.close(player);
-        chatInputService.await(player, "the diagnosis cell limit", List.of(
-                        "Type: " + ArenaDebugCellLimit.USAGE + " in chat",
-                        "A number between " + ArenaDebugCellLimit.MINIMUM_CELL_COUNT + " and "
-                                + ArenaShapeFloodFill.MAXIMUM_DEBUG_CELL_COUNT,
-                        "Stand inside the border wall, the calculation runs from where you stand",
-                        "config.yml is not changed by it"),
+        chatInputService.await(player, Messages.text(ArenaMenuMessage.DIAGNOSIS_INPUT_DESCRIPTION),
+                Messages.lines(ArenaMenuMessage.DIAGNOSIS_INPUT_PROMPT,
+                        Placeholder.of("usage", ArenaDebugCellLimit.describeUsage()),
+                        Placeholder.of("minimum", ArenaDebugCellLimit.MINIMUM_CELL_COUNT),
+                        Placeholder.of("maximum", ArenaShapeFloodFill.MAXIMUM_DEBUG_CELL_COUNT)),
                 line -> handleDebugCellLimitLine(player, line));
     }
 

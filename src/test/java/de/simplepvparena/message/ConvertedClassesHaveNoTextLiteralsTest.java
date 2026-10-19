@@ -57,7 +57,13 @@ class ConvertedClassesHaveNoTextLiteralsTest {
             "gui/KitAdminMenu.java",
             "gui/KitActionsAdminMenu.java",
             "gui/KitChoiceAdminMenu.java",
-            "gui/KitChoiceAdminMenuPresenter.java");
+            "gui/KitChoiceAdminMenuPresenter.java",
+            "arena/ArenaSpawnType.java",
+            "arena/EffectArea.java",
+            "arena/ArenaRegistry.java",
+            "arena/ArenaDebugCellLimit.java",
+            "arena/ArenaSetupService.java",
+            "gui/ArenaAdminMenu.java");
 
     private static final Pattern STRING_LITERAL = Pattern.compile("\"((?:[^\"\\\\]|\\\\.)*)\"");
     private static final Pattern USAGE_TOKEN = Pattern.compile("<[^<>]*>");
