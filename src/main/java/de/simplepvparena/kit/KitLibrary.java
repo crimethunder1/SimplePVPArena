@@ -1,5 +1,9 @@
 package de.simplepvparena.kit;
 
+import de.simplepvparena.message.KitMessage;
+import de.simplepvparena.message.Messages;
+import de.simplepvparena.message.Placeholder;
+
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -13,8 +17,6 @@ import java.util.function.Consumer;
 public final class KitLibrary {
 
     public static final int MAXIMUM_NAME_LENGTH = 32;
-    public static final String NAME_RULE = "1 to " + MAXIMUM_NAME_LENGTH
-            + " letters, digits, hyphens or underscores";
 
     private final KitLibraryStorage storage;
     private final KitService kitService;
@@ -35,12 +37,21 @@ public final class KitLibrary {
         this.writeFailureReporter = Objects.requireNonNull(writeFailureReporter, "writeFailureReporter");
     }
 
+    public static String describeNameRule() {
+        return Messages.text(KitMessage.NAME_RULE, Placeholder.of("maximumLength", MAXIMUM_NAME_LENGTH));
+    }
+
+    public static String describeUnknownKit(String kitName) {
+        return Messages.text(KitMessage.UNKNOWN_KIT, Placeholder.of("kit", kitName));
+    }
+
     public static Optional<String> findNameRejection(String kitName) {
         if (kitName == null || kitName.isBlank()) {
-            return Optional.of("A kit needs a name, a kit name has " + NAME_RULE);
+            return Optional.of(Messages.text(KitMessage.NAME_MISSING, Placeholder.of("rule", describeNameRule())));
         }
         if (!isAllowedName(kitName)) {
-            return Optional.of("The kit name " + kitName + " is not allowed, a kit name has " + NAME_RULE);
+            return Optional.of(Messages.text(KitMessage.NAME_NOT_ALLOWED, Placeholder.of("kit", kitName),
+                    Placeholder.of("rule", describeNameRule())));
         }
         return Optional.empty();
     }
@@ -81,7 +92,8 @@ public final class KitLibrary {
         if (nameRejection.isPresent()) {
             return nameRejection;
         }
-        return findKit(kitName).map(existingKit -> "A kit named " + existingKit.name() + " exists already");
+        return findKit(kitName).map(existingKit -> Messages.text(KitMessage.ALREADY_EXISTS,
+                Placeholder.of("kit", existingKit.name())));
     }
 
     public Optional<String> findDefaultRejection(String kitName) {
@@ -90,7 +102,7 @@ public final class KitLibrary {
             return Optional.of(describeUnknownKit(kitName));
         }
         if (isDefaultKit(kitName)) {
-            return Optional.of("Kit " + kit.get().name() + " is the default kit already");
+            return Optional.of(Messages.text(KitMessage.ALREADY_DEFAULT_KIT, Placeholder.of("kit", kit.get().name())));
         }
         return Optional.empty();
     }
@@ -101,10 +113,11 @@ public final class KitLibrary {
             return Optional.of(describeUnknownKit(kitName));
         }
         if (kitsByLowerCaseName.size() == 1) {
-            return Optional.of("Kit " + kit.get().name() + " is the last kit and cannot be deleted");
+            return Optional.of(Messages.text(KitMessage.LAST_KIT, Placeholder.of("kit", kit.get().name())));
         }
         if (isDefaultKit(kitName)) {
-            return Optional.of("Kit " + kit.get().name() + " is the default kit and cannot be deleted");
+            return Optional.of(Messages.text(KitMessage.DEFAULT_KIT_NOT_DELETABLE,
+                    Placeholder.of("kit", kit.get().name())));
         }
         return Optional.empty();
     }
@@ -189,7 +202,7 @@ public final class KitLibrary {
                 return nameRejection;
             }
             if (lowerCaseNames.contains(toLowerCase(savedKit.name()))) {
-                return Optional.of("The kit name " + savedKit.name() + " is used twice");
+                return Optional.of(Messages.text(KitMessage.NAME_USED_TWICE, Placeholder.of("kit", savedKit.name())));
             }
             lowerCaseNames.add(toLowerCase(savedKit.name()));
         }
@@ -197,10 +210,11 @@ public final class KitLibrary {
         if (defaultKitName.isEmpty()) {
             return lowerCaseNames.isEmpty()
                     ? Optional.empty()
-                    : Optional.of("No default kit is named although there are kits");
+                    : Optional.of(Messages.text(KitMessage.NO_DEFAULT_KIT_NAMED));
         }
         if (!lowerCaseNames.contains(toLowerCase(defaultKitName.get()))) {
-            return Optional.of("The default kit " + defaultKitName.get() + " is not one of the kits");
+            return Optional.of(Messages.text(KitMessage.DEFAULT_KIT_UNKNOWN,
+                    Placeholder.of("kit", defaultKitName.get())));
         }
         return Optional.empty();
     }
@@ -249,9 +263,9 @@ public final class KitLibrary {
         try {
             storage.save(capture());
         } catch (IOException failure) {
-            writeFailureReporter.accept("The kits could not be written into " + FileKitLibraryStorage.FILE_NAME
-                    + " (" + failure.getMessage() + "), the change counts until the server stops and is "
-                    + "written again with the next change of a kit");
+            writeFailureReporter.accept(Messages.text(KitMessage.WRITE_FAILED,
+                    Placeholder.of("file", FileKitLibraryStorage.FILE_NAME),
+                    Placeholder.of("reason", failure.getMessage())));
         }
     }
 
@@ -263,10 +277,6 @@ public final class KitLibrary {
 
     private static boolean isAllowedNameCharacter(int codePoint) {
         return Character.isLetterOrDigit(codePoint) || codePoint == '-' || codePoint == '_';
-    }
-
-    private static String describeUnknownKit(String kitName) {
-        return "Unknown kit " + kitName;
     }
 
     private static String toLowerCase(String kitName) {

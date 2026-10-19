@@ -96,7 +96,7 @@ main-menu:
         - 'Checks the arena and its spawns, the kit, the'
         - 'countdown of the start gate and whether the'
         - 'cleaning after a match would start'
-        - 'Nothing is started, taught, written or cleaned:'
+        - 'Nothing is started, written or cleaned:'
         - 'no block, no file and no fighter is touched'
         - 'A real test player stays necessary for the kit'
         - 'and the teleport really arriving'
@@ -123,7 +123,7 @@ main-menu:
         - 'Create, replace and delete kits'
     kit-choice:
       title: 'Choose the kit for the next match'
-      match: 'Match {match}: {teams}'
+      match: 'Match {match}: {firstTeam} against {secondTeam}'
       lore: 'The popup closes when the time is over or a kit is chosen'
     close:
       title: 'Close'
@@ -403,3 +403,134 @@ team-members-menu:
       not-registered: 'This team is not registered any more'
     member:
       lore: 'Click to remove the player from the team'
+kit:
+  name-rule: '1 to {maximumLength} letters, digits, hyphens or underscores'
+  name-missing: 'A kit needs a name, a kit name has {rule}'
+  name-not-allowed: 'The kit name {kit} is not allowed, a kit name has {rule}'
+  already-exists: 'A kit named {kit} exists already'
+  already-default-kit: 'Kit {kit} is the default kit already'
+  last-kit: 'Kit {kit} is the last kit and cannot be deleted'
+  default-kit-not-deletable: 'Kit {kit} is the default kit and cannot be deleted'
+  name-used-twice: 'The kit name {kit} is used twice'
+  no-default-kit-named: 'No default kit is named although there are kits'
+  default-kit-unknown: 'The default kit {kit} is not one of the kits'
+  unknown-kit: 'Unknown kit {kit}'
+  write-failed: 'The kits could not be written into {file} ({reason}), the change counts until the server stops and is written again with the next change of a kit'
+  definition:
+    empty: 'The kit is empty, no fighter is given anything'
+    worn-items:
+      one: 'Worn items: {count} of {slotCount}'
+      other: 'Worn items: {count} of {slotCount}'
+    inventory-items:
+      one: 'Inventory items: {count} of {slotCount} slots'
+      other: 'Inventory items: {count} of {slotCount} slots'
+  save:
+    saved:
+      one: 'Kit {kit} saved: {count} item, {wornCount} worn and {inventoryCount} in the inventory'
+      other: 'Kit {kit} saved: {count} items, {wornCount} worn and {inventoryCount} in the inventory'
+    default-kit-written: 'It is written into {file} and is handed out from the next round on, a running round keeps the kit its fighters were given'
+    other-kit-written: 'It is written into {file} and is handed out once it is used as the default kit'
+    unreadable-items:
+      one: '{count} item could not be read back and are no part of the kit, the log names them'
+      other: '{count} items could not be read back and are no part of the kit, the log names them'
+    empty-inventory-creation: 'Your inventory is empty, no kit was created'
+    empty-inventory-replacement: 'Your inventory is empty, the kit was not changed'
+  loader:
+    unknown-reason: 'unknown reason'
+    file-unreadable: 'The kits in {file} could not be read: {reason}. The file was kept as {keptFile}, there is no kit and every fighter starts a round with an empty kit until a kit is created in the kit menu of /tournament'
+    file-set-aside: 'There is no {file}, the kits lie in {keptFile} because it could not be read at an earlier start. Repair {keptFile} and rename it to {file}, or delete it if its kits are to be discarded, then the next start takes the kit section of config.yml over'
+    legacy-kit-unreadable: 'The kit section of config.yml holds no item that could be read, so no kit was taken over into {file}. There is no kit and every fighter starts a round with an empty kit until a kit is created in the kit menu of /tournament'
+    legacy-kit-taken-over: 'The kit of config.yml was taken over into {file} as the kit {kit} and is the default kit. The kit section of config.yml is not read any more, the kits are managed in the kit menu of /tournament'
+kit-choice-menu:
+  title: 'Choose the kit for {match}'
+  choice-over: 'The kit choice for match {match} is over'
+  tile:
+    info:
+      title: 'Kit choice'
+      match: 'Match {match}: {firstTeam} against {secondTeam}'
+      default-kit: 'Default kit: {kit}'
+      time-left:
+        one: 'Time left: {count} seconds'
+        other: 'Time left: {count} seconds'
+      hint: 'The default kit is used when nobody chooses in time'
+      over-match: 'Match {match}'
+    kit:
+      default-kit: 'Default kit'
+      lore: 'Click to use it for this match'
+kit-choice:
+  begin:
+    one: 'Match {match} ({firstTeam} against {secondTeam}): choose the kit within {count} second, otherwise the default kit {kit} is used'
+    other: 'Match {match} ({firstTeam} against {secondTeam}): choose the kit within {count} seconds, otherwise the default kit {kit} is used'
+  reminder:
+    one: '{count} second left to choose the kit for match {match}'
+    other: '{count} seconds left to choose the kit for match {match}'
+  chosen: '{player} chose the kit {kit} for match {match}'
+  expired: 'No kit was chosen for match {match}, the default kit {kit} is used'
+  cancelled: 'The kit choice was cancelled'
+kit-menu:
+  title: 'Kits (page {page})'
+  tile:
+    info:
+      title: 'Kits'
+      kit-count:
+        one: 'Kits: {count}'
+        other: 'Kits: {count}'
+      default-kit: 'Default kit: {kit}'
+      no-default-kit: 'Default kit: none'
+      hint: 'A click on a kit opens its options'
+    kit:
+      default-kit: 'Default kit'
+      lore: 'Click for the options of this kit'
+    create:
+      title: 'Create a kit from your inventory'
+      asks-for-name: 'Asks for the name of the new kit in the chat'
+      first-kit: 'The first kit becomes the default kit'
+  item-counts:
+    worn:
+      one: 'Worn items: {count} of {slotCount}'
+      other: 'Worn items: {count} of {slotCount}'
+    inventory:
+      one: 'Inventory items: {count} of {slotCount}'
+      other: 'Inventory items: {count} of {slotCount}'
+  inventory-capture:
+    - 'Takes your helmet, chestplate, leggings, boots,'
+    - 'your offhand and the 36 slots of your inventory'
+    - 'Enchantments, names, lore and damage are kept exactly'
+    - 'An empty slot stays empty in the kit'
+    - 'The item on your cursor is not taken, it lies in no slot'
+  name-input:
+    description: 'the name of the new kit'
+    prompt:
+      - 'Type the name of the new kit in chat'
+      - 'A kit name has {rule}'
+      - 'Your inventory as it is then becomes the kit'
+kit-actions-menu:
+  title: 'Kit {kit}'
+  tile:
+    info:
+      kit-gone: 'This kit does not exist any more'
+      default-kit: 'Default kit: every fighter is given it when a round starts'
+      not-default-kit: 'Not the default kit, no fighter is given it'
+    default:
+      title: 'Use as the default kit'
+      already-default-title: 'This is the default kit'
+      lore:
+        - 'Every fighter is given it from the next round on'
+        - 'A running round keeps the kit its fighters were given'
+    replace:
+      title: 'Replace with your inventory'
+    delete:
+      title: 'Delete the kit'
+      lore: 'Removes the kit {kit}'
+  replacement:
+    inventory-becomes-kit: 'Your inventory becomes the kit {kit}'
+    match-running:
+      - 'A match is running: its fighters keep their items,'
+      - 'the new kit is handed out from the next round on'
+  replace-confirmation:
+    items-gone: 'The items the kit holds now are gone afterwards'
+  delete-confirmation:
+    - 'Kit {kit} is deleted'
+    - 'Its items are gone afterwards'
+  default-kit-set: 'Kit {kit} is the default kit now, every fighter is given it from the next round on'
+  kit-deleted: 'Kit {kit} deleted'

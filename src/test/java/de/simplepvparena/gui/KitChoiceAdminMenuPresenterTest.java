@@ -100,7 +100,7 @@ class KitChoiceAdminMenuPresenterTest {
         otherFixture.letAnotherPlayerJoin("Visitor", false);
         int[] otherMatchStartCount = new int[1];
 
-        otherFixture.kitChoiceService().begin("round1-match1", "Alpha against Bravo",
+        otherFixture.kitChoiceService().begin("round1-match1", "Alpha", "Bravo",
                 () -> otherMatchStartCount[0]++);
 
         assertEquals(1, otherMatchStartCount[0]);
@@ -127,6 +127,6 @@ class KitChoiceAdminMenuPresenterTest {
     }
 
     private void beginTheChoice() {
-        fixture.kitChoiceService().begin("round1-match1", "Alpha against Bravo", () -> matchStartCount++);
+        fixture.kitChoiceService().begin("round1-match1", "Alpha", "Bravo", () -> matchStartCount++);
     }
 }

@@ -64,7 +64,7 @@ class GermanMenuSnapshotTest {
                 entscheidet ein simuliertes Match und entfernt sie wieder / \
                 Prüft die Arena und ihre Spawns, das Kit, den / Countdown des Starttors und ob die / \
                 Reinigung nach einem Match starten würde / \
-                Nichts wird gestartet, angelernt, geschrieben oder gereinigt: / \
+                Nichts wird gestartet, geschrieben oder gereinigt: / \
                 kein Block, keine Datei und kein Kämpfer wird berührt / \
                 Für das Kit und das echte Ankommen nach dem / Teleport bleibt ein echter Testspieler nötig / \
                 Gesperrt, solange ein Turnier oder ein Match läuft / \
@@ -109,7 +109,7 @@ class GermanMenuSnapshotTest {
         AdminMenuFixture kitChoiceFixture = AdminMenuFixture.withKitChoice();
         kitChoiceFixture.createKit("Archer");
         kitChoiceFixture.createKit("Knight");
-        kitChoiceFixture.kitChoiceService().begin("round1-match1", "Alpha gegen Bravo", () -> { });
+        kitChoiceFixture.kitChoiceService().begin("round1-match1", "Alpha", "Bravo", () -> { });
 
         kitChoiceFixture.openMainMenu();
 

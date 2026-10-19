@@ -1,5 +1,9 @@
 package de.simplepvparena.kit;
 
+import de.simplepvparena.message.KitMessage;
+import de.simplepvparena.message.Messages;
+import de.simplepvparena.message.Placeholder;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -36,23 +40,15 @@ public record KitSaveResult(String kitName, boolean defaultKit, int equipmentIte
             return List.of(rejectionMessage);
         }
         List<String> lines = new ArrayList<>();
-        lines.add("Kit " + kitName + " saved: " + itemCount() + " " + items(itemCount()) + ", " + equipmentItemCount
-                + " worn and " + inventoryItemCount + " in the inventory");
-        if (defaultKit) {
-            lines.add("It is written into " + FileKitLibraryStorage.FILE_NAME + " and is handed out from the next "
-                    + "round on, a running round keeps the kit its fighters were given");
-        } else {
-            lines.add("It is written into " + FileKitLibraryStorage.FILE_NAME + " and is handed out once it is "
-                    + "used as the default kit");
-        }
+        lines.add(Messages.plural(KitMessage.SAVED, itemCount(), Placeholder.of("kit", kitName),
+                Placeholder.of("wornCount", equipmentItemCount), Placeholder.of("inventoryCount", inventoryItemCount)));
+        Placeholder file = Placeholder.of("file", FileKitLibraryStorage.FILE_NAME);
+        lines.add(defaultKit
+                ? Messages.text(KitMessage.SAVED_DEFAULT_KIT_WRITTEN, file)
+                : Messages.text(KitMessage.SAVED_OTHER_KIT_WRITTEN, file));
         if (unreadableItemCount > 0) {
-            lines.add(unreadableItemCount + " " + items(unreadableItemCount)
-                    + " could not be read back and are no part of the kit, the log names them");
+            lines.add(Messages.plural(KitMessage.UNREADABLE_ITEMS, unreadableItemCount));
         }
         return lines;
-    }
-
-    private static String items(int itemCount) {
-        return itemCount == 1 ? "item" : "items";
     }
 }

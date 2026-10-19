@@ -164,7 +164,8 @@ final class MainAdminMenu implements AdminMenu {
     private static MenuTile buildKitChoiceItem(PendingKitChoice choice) {
         return MenuItems.create(Material.CHEST, Messages.text(MainMenuMessage.KIT_CHOICE_TITLE),
                 Messages.text(MainMenuMessage.KIT_CHOICE_MATCH, Placeholder.of("match", choice.matchId()),
-                        Placeholder.of("teams", choice.teamsDescription())),
+                        Placeholder.of("firstTeam", choice.firstTeamName()),
+                        Placeholder.of("secondTeam", choice.secondTeamName())),
                 Messages.text(MainMenuMessage.KIT_CHOICE_LORE));
     }
 

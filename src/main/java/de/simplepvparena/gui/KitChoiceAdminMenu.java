@@ -2,6 +2,9 @@ package de.simplepvparena.gui;
 
 import de.simplepvparena.kit.KitLibrary;
 import de.simplepvparena.kit.LibraryKit;
+import de.simplepvparena.message.KitChoiceMessage;
+import de.simplepvparena.message.Messages;
+import de.simplepvparena.message.Placeholder;
 import de.simplepvparena.message.TournamentMessages;
 import de.simplepvparena.tournament.KitChoiceService;
 import de.simplepvparena.tournament.PendingKitChoice;
@@ -34,7 +37,7 @@ final class KitChoiceAdminMenu implements AdminMenu {
 
     @Override
     public String title(AdminMenuHolder holder) {
-        return "Choose the kit for " + holder.getSubject().orElseThrow();
+        return Messages.text(KitChoiceMessage.TITLE, Placeholder.of("match", holder.getSubject().orElseThrow()));
     }
 
     @Override
@@ -52,9 +55,11 @@ final class KitChoiceAdminMenu implements AdminMenu {
             kitLibrary.findKit(kitNames.get(pagination.getFirstItemIndex() + slot))
                     .ifPresent(kit -> canvas.set(kitSlot, buildKitItem(kit)));
         }
-        canvas.set(KIT_CHOICE_INFO_SLOT, MenuItems.info("Kit choice", findChoiceOfMenu(matchId)
-                .map(this::buildInfoLore)
-                .orElseGet(() -> List.of("Match " + matchId, describeOverChoice(matchId)))));
+        canvas.set(KIT_CHOICE_INFO_SLOT, MenuItems.info(Messages.text(KitChoiceMessage.INFO_TITLE),
+                findChoiceOfMenu(matchId)
+                        .map(this::buildInfoLore)
+                        .orElseGet(() -> List.of(Messages.text(KitChoiceMessage.INFO_OVER_MATCH,
+                                Placeholder.of("match", matchId)), describeOverChoice(matchId)))));
         if (pagination.hasPreviousPage()) {
             canvas.set(KIT_CHOICE_PREVIOUS_PAGE_SLOT, MenuItems.previousPage(pagination));
         }
@@ -85,24 +90,26 @@ final class KitChoiceAdminMenu implements AdminMenu {
     }
 
     static String describeOverChoice(String matchId) {
-        return "The kit choice for match " + matchId + " is over";
+        return Messages.text(KitChoiceMessage.CHOICE_OVER, Placeholder.of("match", matchId));
     }
 
     private MenuTile buildKitItem(LibraryKit kit) {
         List<String> lore = new ArrayList<>(KitAdminMenu.describeItemCounts(kit));
         if (kitLibrary.isDefaultKit(kit.name())) {
-            lore.add("Default kit");
+            lore.add(Messages.text(KitChoiceMessage.KIT_DEFAULT_KIT));
         }
-        lore.add("Click to use it for this match");
+        lore.add(Messages.text(KitChoiceMessage.KIT_LORE));
         return MenuItems.create(Material.CHEST, kit.name(), lore);
     }
 
     private List<String> buildInfoLore(PendingKitChoice choice) {
         return List.of(
-                "Match " + choice.matchId() + ": " + choice.teamsDescription(),
-                "Default kit: " + choice.defaultKitName(),
-                "Time left: " + kitChoiceService.getSecondsLeft() + " seconds",
-                "The default kit is used when nobody chooses in time");
+                Messages.text(KitChoiceMessage.INFO_MATCH, Placeholder.of("match", choice.matchId()),
+                        Placeholder.of("firstTeam", choice.firstTeamName()),
+                        Placeholder.of("secondTeam", choice.secondTeamName())),
+                Messages.text(KitChoiceMessage.INFO_DEFAULT_KIT, Placeholder.of("kit", choice.defaultKitName())),
+                Messages.plural(KitChoiceMessage.INFO_TIME_LEFT, kitChoiceService.getSecondsLeft()),
+                Messages.text(KitChoiceMessage.INFO_HINT));
     }
 
     private Optional<PendingKitChoice> findChoiceOfMenu(String matchId) {

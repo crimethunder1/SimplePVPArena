@@ -1,5 +1,8 @@
 package de.simplepvparena.kit;
 
+import de.simplepvparena.message.KitMessage;
+import de.simplepvparena.message.Messages;
+import de.simplepvparena.message.Placeholder;
 import org.bukkit.inventory.ItemStack;
 
 import java.util.ArrayList;
@@ -39,12 +42,13 @@ public record KitDefinition(Map<KitEquipmentSlot, ItemStack> equipmentItems,
 
     public List<String> describe() {
         if (isEmpty()) {
-            return List.of("The kit is empty, no fighter is given anything");
+            return List.of(Messages.text(KitMessage.DEFINITION_EMPTY));
         }
         List<String> lines = new ArrayList<>();
-        lines.add("Worn items: " + equipmentItems.size() + " of " + KitEquipmentSlot.values().length);
-        lines.add("Inventory items: " + inventoryItems.size() + " of " + SerializedKit.INVENTORY_SLOT_COUNT
-                + " slots");
+        lines.add(Messages.plural(KitMessage.DEFINITION_WORN_ITEMS, equipmentItems.size(),
+                Placeholder.of("slotCount", KitEquipmentSlot.values().length)));
+        lines.add(Messages.plural(KitMessage.DEFINITION_INVENTORY_ITEMS, inventoryItems.size(),
+                Placeholder.of("slotCount", SerializedKit.INVENTORY_SLOT_COUNT)));
         return lines;
     }
 }

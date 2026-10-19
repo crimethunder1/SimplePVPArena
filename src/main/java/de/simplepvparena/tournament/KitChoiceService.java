@@ -2,6 +2,9 @@ package de.simplepvparena.tournament;
 
 import de.simplepvparena.kit.KitLibrary;
 import de.simplepvparena.kit.LibraryKit;
+import de.simplepvparena.message.KitChoiceMessage;
+import de.simplepvparena.message.Messages;
+import de.simplepvparena.message.Placeholder;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.scheduler.BukkitTask;
 
@@ -16,8 +19,6 @@ public final class KitChoiceService {
     public static final int CHOICE_SECONDS = 30;
     public static final int REMINDER_SECONDS_LEFT = 10;
     public static final int MINIMUM_KIT_COUNT_FOR_A_CHOICE = 2;
-
-    static final String CANCELLED_MESSAGE = "The kit choice was cancelled";
 
     private static final long TICKS_PER_SECOND = 20L;
     private static final String NO_DEFAULT_KIT_NAME = "none";
@@ -54,9 +55,10 @@ public final class KitChoiceService {
         this.presenter = Objects.requireNonNull(presenter, "presenter");
     }
 
-    public void begin(String matchId, String teamsDescription, Runnable startMatch) {
+    public void begin(String matchId, String firstTeamName, String secondTeamName, Runnable startMatch) {
         Objects.requireNonNull(matchId, "matchId");
-        Objects.requireNonNull(teamsDescription, "teamsDescription");
+        Objects.requireNonNull(firstTeamName, "firstTeamName");
+        Objects.requireNonNull(secondTeamName, "secondTeamName");
         Objects.requireNonNull(startMatch, "startMatch");
         if (pendingKitChoice != null) {
             throw new IllegalStateException("the kit for match " + pendingKitChoice.matchId()
@@ -79,14 +81,15 @@ public final class KitChoiceService {
             startMatch.run();
             return;
         }
-        PendingKitChoice choice = new PendingKitChoice(matchId, teamsDescription, defaultKitName,
+        PendingKitChoice choice = new PendingKitChoice(matchId, firstTeamName, secondTeamName, defaultKitName,
                 clock.instant().plusSeconds(CHOICE_SECONDS));
         pendingKitChoice = choice;
         pendingMatchStart = startMatch;
         schedule(() -> remind(choice), CHOICE_SECONDS - REMINDER_SECONDS_LEFT);
         schedule(() -> expire(choice), CHOICE_SECONDS);
-        adminNotifier.notifyAdmins("Match " + matchId + " (" + teamsDescription + "): choose the kit within "
-                + CHOICE_SECONDS + " seconds, otherwise the default kit " + defaultKitName + " is used");
+        adminNotifier.notifyAdmins(Messages.plural(KitChoiceMessage.BEGIN, CHOICE_SECONDS,
+                Placeholder.of("match", matchId), Placeholder.of("firstTeam", firstTeamName),
+                Placeholder.of("secondTeam", secondTeamName), Placeholder.of("kit", defaultKitName)));
         presenter.show(choice);
     }
 
@@ -102,7 +105,8 @@ public final class KitChoiceService {
         PendingKitChoice choice = pendingKitChoice;
         Runnable startMatch = finishPendingChoice();
         kitLibrary.activate(kit.get().name());
-        presenter.close(chooserName + " chose the kit " + kit.get().name() + " for match " + choice.matchId());
+        presenter.close(Messages.text(KitChoiceMessage.CHOSEN, Placeholder.of("player", chooserName),
+                Placeholder.of("kit", kit.get().name()), Placeholder.of("match", choice.matchId())));
         startMatch.run();
         return true;
     }
@@ -112,7 +116,7 @@ public final class KitChoiceService {
             return;
         }
         finishPendingChoice();
-        presenter.close(CANCELLED_MESSAGE);
+        presenter.close(Messages.text(KitChoiceMessage.CANCELLED));
     }
 
     public void activateDefaultKit() {
@@ -137,8 +141,8 @@ public final class KitChoiceService {
         if (pendingKitChoice != choice) {
             return;
         }
-        adminNotifier.notifyAdmins(REMINDER_SECONDS_LEFT + " seconds left to choose the kit for match "
-                + choice.matchId());
+        adminNotifier.notifyAdmins(Messages.plural(KitChoiceMessage.REMINDER, REMINDER_SECONDS_LEFT,
+                Placeholder.of("match", choice.matchId())));
     }
 
     private void expire(PendingKitChoice choice) {
@@ -147,8 +151,8 @@ public final class KitChoiceService {
         }
         Runnable startMatch = finishPendingChoice();
         kitLibrary.activateDefaultKit();
-        presenter.close("No kit was chosen for match " + choice.matchId() + ", the default kit "
-                + findDefaultKitName() + " is used");
+        presenter.close(Messages.text(KitChoiceMessage.EXPIRED, Placeholder.of("match", choice.matchId()),
+                Placeholder.of("kit", findDefaultKitName())));
         startMatch.run();
     }
 

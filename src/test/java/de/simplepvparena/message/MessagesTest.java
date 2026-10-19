@@ -193,7 +193,7 @@ class MessagesTest {
         Messages.use(MessageCatalogLoader.shippedCatalog("de"));
 
         assertEquals("Alpha, Beta und Gamma", Messages.join(List.of("Alpha", "Beta", "Gamma")));
-        assertEquals("A, B und 2 weitere", Messages.listLimited(List.of("A", "B", "C", "D"), 2));
+        assertEquals("A, B und 2 mehr", Messages.listLimited(List.of("A", "B", "C", "D"), 2));
     }
 
     @Test

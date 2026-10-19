@@ -30,8 +30,8 @@ class TournamentManagerKitChoiceTest {
         PendingKitChoice pending = fixture.kitChoiceService().getPending().orElseThrow();
         assertEquals("round1-match1", pending.matchId());
         BracketMatch firstMatch = fixture.bracketMatch("round1-match1");
-        assertEquals(firstMatch.getFirstTeamName().orElseThrow() + " against "
-                + firstMatch.getSecondTeamName().orElseThrow(), pending.teamsDescription());
+        assertEquals(firstMatch.getFirstTeamName().orElseThrow(), pending.firstTeamName());
+        assertEquals(firstMatch.getSecondTeamName().orElseThrow(), pending.secondTeamName());
         assertEquals("Archer", pending.defaultKitName());
         assertEquals(List.of(pending), fixture.kitChoicePresenter().shownChoices());
 
@@ -334,7 +334,7 @@ class TournamentManagerKitChoiceTest {
         assertTrue(fixture.tournamentManager().togglePause().successful());
 
         assertFalse(fixture.tournamentManager().isKitChoicePending());
-        assertEquals(List.of(KitChoiceService.CANCELLED_MESSAGE), fixture.kitChoicePresenter().closeMessages());
+        assertEquals(List.of("The kit choice was cancelled"), fixture.kitChoicePresenter().closeMessages());
         fixture.kitChoiceScheduler().advanceSeconds(60);
         assertEquals(Optional.empty(), fixture.runningMatchId());
         assertEquals(0, fixture.kitChoiceScheduler().pendingTaskCount());
@@ -375,7 +375,7 @@ class TournamentManagerKitChoiceTest {
         assertTrue(fixture.tournamentManager().cancelTournament().successful());
 
         assertFalse(fixture.tournamentManager().isKitChoicePending());
-        assertEquals(List.of(KitChoiceService.CANCELLED_MESSAGE), fixture.kitChoicePresenter().closeMessages());
+        assertEquals(List.of("The kit choice was cancelled"), fixture.kitChoicePresenter().closeMessages());
         fixture.kitChoiceScheduler().advanceSeconds(60);
         assertEquals(Optional.empty(), fixture.runningMatchId());
         assertSame(fixture.kitDefinitionOf("Archer"), fixture.activeKitDefinition());
@@ -482,13 +482,13 @@ class TournamentManagerKitChoiceTest {
         assertTrue(before.kitChoiceService().choose("Knight", "KT"));
         TournamentManagerFixture after = TournamentManagerFixture.withStorageAndKitChoice(storage, FOUR_TEAMS);
         int[] matchStartCount = new int[1];
-        after.kitChoiceService().begin("round1-match1", "Alpha against Bravo", () -> matchStartCount[0]++);
+        after.kitChoiceService().begin("round1-match1", "Alpha", "Bravo", () -> matchStartCount[0]++);
         after.kitLibrary().activate("Knight");
 
         assertTrue(after.tournamentManager().restoreSavedTournament());
 
         assertFalse(after.tournamentManager().isKitChoicePending());
-        assertEquals(List.of(KitChoiceService.CANCELLED_MESSAGE), after.kitChoicePresenter().closeMessages());
+        assertEquals(List.of("The kit choice was cancelled"), after.kitChoicePresenter().closeMessages());
         assertSame(after.kitDefinitionOf("Archer"), after.activeKitDefinition());
         after.kitChoiceScheduler().advanceSeconds(60);
         assertEquals(0, matchStartCount[0]);

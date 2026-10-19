@@ -137,7 +137,7 @@ class TeamTextsTest {
                 "2 Teams haben mehr als 2 Spieler: Alpha (3) und Bravo (3)",
                 "5 Teams haben mehr als 2 Spieler: Alpha (3), Bravo (3), Charlie (3), Delta (3) und Echo (3)",
                 "6 Teams haben mehr als 2 Spieler: Alpha (3), Bravo (3), Charlie (3), Delta (3), Echo (3) und 1 "
-                        + "weitere"), describeLargerTeamsOneByOne());
+                        + "mehr"), describeLargerTeamsOneByOne());
     }
 
     @Test

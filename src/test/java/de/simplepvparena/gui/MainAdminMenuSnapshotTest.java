@@ -35,7 +35,7 @@ class MainAdminMenuSnapshotTest {
                 18 | OBSERVER | Dry run of the pipeline | Walks the whole pipeline once, without an event / \
                 Registers two test teams, builds their bracket, / decides a simulated match and removes them again / \
                 Checks the arena and its spawns, the kit, the / countdown of the start gate and whether the / \
-                cleaning after a match would start / Nothing is started, taught, written or cleaned: / \
+                cleaning after a match would start / Nothing is started, written or cleaned: / \
                 no block, no file and no fighter is touched / A real test player stays necessary for the kit / \
                 and the teleport really arriving / Refused while a tournament or a match runs / \
                 The menu closes so you can read the answer
@@ -76,7 +76,7 @@ class MainAdminMenuSnapshotTest {
                 18 | OBSERVER | Dry run of the pipeline | Walks the whole pipeline once, without an event / \
                 Registers two test teams, builds their bracket, / decides a simulated match and removes them again / \
                 Checks the arena and its spawns, the kit, the / countdown of the start gate and whether the / \
-                cleaning after a match would start / Nothing is started, taught, written or cleaned: / \
+                cleaning after a match would start / Nothing is started, written or cleaned: / \
                 no block, no file and no fighter is touched / A real test player stays necessary for the kit / \
                 and the teleport really arriving / Refused while a tournament or a match runs / \
                 The menu closes so you can read the answer
@@ -283,7 +283,7 @@ class MainAdminMenuSnapshotTest {
                 18 | OBSERVER | Dry run of the pipeline | Walks the whole pipeline once, without an event / \
                 Registers two test teams, builds their bracket, / decides a simulated match and removes them again / \
                 Checks the arena and its spawns, the kit, the / countdown of the start gate and whether the / \
-                cleaning after a match would start / Nothing is started, taught, written or cleaned: / \
+                cleaning after a match would start / Nothing is started, written or cleaned: / \
                 no block, no file and no fighter is touched / A real test player stays necessary for the kit / \
                 and the teleport really arriving / Refused while a tournament or a match runs / \
                 The menu closes so you can read the answer
@@ -325,7 +325,7 @@ class MainAdminMenuSnapshotTest {
                 18 | OBSERVER | Dry run of the pipeline | Walks the whole pipeline once, without an event / \
                 Registers two test teams, builds their bracket, / decides a simulated match and removes them again / \
                 Checks the arena and its spawns, the kit, the / countdown of the start gate and whether the / \
-                cleaning after a match would start / Nothing is started, taught, written or cleaned: / \
+                cleaning after a match would start / Nothing is started, written or cleaned: / \
                 no block, no file and no fighter is touched / A real test player stays necessary for the kit / \
                 and the teleport really arriving / Refused while a tournament or a match runs / \
                 The menu closes so you can read the answer

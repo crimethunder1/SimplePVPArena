@@ -5,7 +5,7 @@ message:
 common:
   list:
     and: '{items} und {last}'
-    more: '{items} und {count} weitere'
+    more: '{items} und {count} mehr'
   language-file-unreadable: 'Die Sprachdatei {file} konnte nicht gelesen werden ({reason}), bis zur Korrektur gelten die mitgelieferten Texte'
   no-tournament-in-progress: 'Es läuft kein Turnier'
   tournament-already-in-progress: 'Es läuft bereits ein Turnier'
@@ -96,7 +96,7 @@ main-menu:
         - 'Prüft die Arena und ihre Spawns, das Kit, den'
         - 'Countdown des Starttors und ob die'
         - 'Reinigung nach einem Match starten würde'
-        - 'Nichts wird gestartet, angelernt, geschrieben oder gereinigt:'
+        - 'Nichts wird gestartet, geschrieben oder gereinigt:'
         - 'kein Block, keine Datei und kein Kämpfer wird berührt'
         - 'Für das Kit und das echte Ankommen nach dem'
         - 'Teleport bleibt ein echter Testspieler nötig'
@@ -123,7 +123,7 @@ main-menu:
         - 'Kits anlegen, ersetzen und löschen'
     kit-choice:
       title: 'Kit für das nächste Match wählen'
-      match: 'Match {match}: {teams}'
+      match: 'Match {match}: {firstTeam} gegen {secondTeam}'
       lore: 'Das Fenster schließt sich, wenn die Zeit um ist oder ein Kit gewählt wurde'
     close:
       title: 'Schließen'
@@ -403,3 +403,134 @@ team-members-menu:
       not-registered: 'Dieses Team ist nicht mehr registriert'
     member:
       lore: 'Klicke, um den Spieler aus dem Team zu entfernen'
+kit:
+  name-rule: '1 bis {maximumLength} Buchstaben, Ziffern, Bindestriche oder Unterstriche'
+  name-missing: 'Ein Kit braucht einen Namen, ein Kit-Name hat {rule}'
+  name-not-allowed: 'Der Kit-Name {kit} ist nicht erlaubt, ein Kit-Name hat {rule}'
+  already-exists: 'Ein Kit namens {kit} gibt es bereits'
+  already-default-kit: 'Kit {kit} ist bereits das Standard-Kit'
+  last-kit: 'Kit {kit} ist das letzte Kit und lässt sich nicht löschen'
+  default-kit-not-deletable: 'Kit {kit} ist das Standard-Kit und lässt sich nicht löschen'
+  name-used-twice: 'Der Kit-Name {kit} kommt zweimal vor'
+  no-default-kit-named: 'Es ist kein Standard-Kit angegeben, obwohl es Kits gibt'
+  default-kit-unknown: 'Das Standard-Kit {kit} ist keins der Kits'
+  unknown-kit: 'Unbekanntes Kit {kit}'
+  write-failed: 'Die Kits konnten nicht in {file} geschrieben werden ({reason}), die Änderung gilt bis zum Stopp des Servers und wird mit der nächsten Änderung eines Kits erneut geschrieben'
+  definition:
+    empty: 'Das Kit ist leer, kein Kämpfer bekommt etwas'
+    worn-items:
+      one: 'Getragene Items: {count} von {slotCount}'
+      other: 'Getragene Items: {count} von {slotCount}'
+    inventory-items:
+      one: 'Items im Inventar: {count} von {slotCount} Plätzen'
+      other: 'Items im Inventar: {count} von {slotCount} Plätzen'
+  save:
+    saved:
+      one: 'Kit {kit} gespeichert: {count} Item, {wornCount} getragen und {inventoryCount} im Inventar'
+      other: 'Kit {kit} gespeichert: {count} Items, {wornCount} getragen und {inventoryCount} im Inventar'
+    default-kit-written: 'Es wird in {file} geschrieben und ab der nächsten Runde ausgegeben, eine laufende Runde behält das Kit, das ihre Kämpfer bekommen haben'
+    other-kit-written: 'Es wird in {file} geschrieben und ausgegeben, sobald es als Standard-Kit benutzt wird'
+    unreadable-items:
+      one: '{count} Item ließ sich nicht zurücklesen und gehört nicht zum Kit, das Log nennt es'
+      other: '{count} Items ließen sich nicht zurücklesen und gehören nicht zum Kit, das Log nennt sie'
+    empty-inventory-creation: 'Dein Inventar ist leer, es wurde kein Kit angelegt'
+    empty-inventory-replacement: 'Dein Inventar ist leer, das Kit wurde nicht geändert'
+  loader:
+    unknown-reason: 'unbekannter Grund'
+    file-unreadable: 'Die Kits in {file} konnten nicht gelesen werden: {reason}. Die Datei wurde als {keptFile} aufbewahrt, es gibt kein Kit und jeder Kämpfer startet eine Runde mit einem leeren Kit, bis im Kit-Menü von /tournament ein Kit angelegt wird'
+    file-set-aside: 'Es gibt keine {file}, die Kits liegen in {keptFile}, weil die Datei bei einem früheren Start nicht gelesen werden konnte. Repariere {keptFile} und benenne sie in {file} um, oder lösche sie, wenn ihre Kits verworfen werden sollen, dann übernimmt der nächste Start den Kit-Abschnitt von config.yml'
+    legacy-kit-unreadable: 'Der Kit-Abschnitt von config.yml enthält kein lesbares Item, deshalb wurde kein Kit in {file} übernommen. Es gibt kein Kit und jeder Kämpfer startet eine Runde mit einem leeren Kit, bis im Kit-Menü von /tournament ein Kit angelegt wird'
+    legacy-kit-taken-over: 'Das Kit aus config.yml wurde als Kit {kit} in {file} übernommen und ist das Standard-Kit. Der Kit-Abschnitt von config.yml wird nicht mehr gelesen, die Kits werden im Kit-Menü von /tournament verwaltet'
+kit-choice-menu:
+  title: 'Kit für {match} wählen'
+  choice-over: 'Die Kit-Wahl für Match {match} ist vorbei'
+  tile:
+    info:
+      title: 'Kit-Wahl'
+      match: 'Match {match}: {firstTeam} gegen {secondTeam}'
+      default-kit: 'Standard-Kit: {kit}'
+      time-left:
+        one: 'Restzeit: {count} Sekunde'
+        other: 'Restzeit: {count} Sekunden'
+      hint: 'Das Standard-Kit gilt, wenn niemand rechtzeitig wählt'
+      over-match: 'Match {match}'
+    kit:
+      default-kit: 'Standard-Kit'
+      lore: 'Klicke, um es für dieses Match zu benutzen'
+kit-choice:
+  begin:
+    one: 'Match {match} ({firstTeam} gegen {secondTeam}): Wähle das Kit innerhalb von {count} Sekunde, sonst gilt das Standard-Kit {kit}'
+    other: 'Match {match} ({firstTeam} gegen {secondTeam}): Wähle das Kit innerhalb von {count} Sekunden, sonst gilt das Standard-Kit {kit}'
+  reminder:
+    one: 'Noch {count} Sekunde, um das Kit für Match {match} zu wählen'
+    other: 'Noch {count} Sekunden, um das Kit für Match {match} zu wählen'
+  chosen: '{player} hat das Kit {kit} für Match {match} gewählt'
+  expired: 'Für Match {match} wurde kein Kit gewählt, das Standard-Kit {kit} gilt'
+  cancelled: 'Die Kit-Wahl wurde abgebrochen'
+kit-menu:
+  title: 'Kits (Seite {page})'
+  tile:
+    info:
+      title: 'Kits'
+      kit-count:
+        one: 'Kits: {count}'
+        other: 'Kits: {count}'
+      default-kit: 'Standard-Kit: {kit}'
+      no-default-kit: 'Standard-Kit: keins'
+      hint: 'Ein Klick auf ein Kit öffnet seine Optionen'
+    kit:
+      default-kit: 'Standard-Kit'
+      lore: 'Klicke für die Optionen dieses Kits'
+    create:
+      title: 'Kit aus deinem Inventar anlegen'
+      asks-for-name: 'Fragt im Chat nach dem Namen des neuen Kits'
+      first-kit: 'Das erste Kit wird das Standard-Kit'
+  item-counts:
+    worn:
+      one: 'Getragene Items: {count} von {slotCount}'
+      other: 'Getragene Items: {count} von {slotCount}'
+    inventory:
+      one: 'Items im Inventar: {count} von {slotCount}'
+      other: 'Items im Inventar: {count} von {slotCount}'
+  inventory-capture:
+    - 'Nimmt Helm, Brustpanzer, Hose und Stiefel,'
+    - 'die Zweithand und die 36 Plätze deines Inventars'
+    - 'Verzauberungen, Namen, Beschreibungen und Abnutzung bleiben genau erhalten'
+    - 'Ein leerer Platz bleibt im Kit leer'
+    - 'Das Item an deinem Mauszeiger wird nicht genommen, es liegt in keinem Platz'
+  name-input:
+    description: 'den Namen des neuen Kits'
+    prompt:
+      - 'Gib im Chat den Namen des neuen Kits ein'
+      - 'Ein Kit-Name hat {rule}'
+      - 'Dein Inventar, wie es dann ist, wird das Kit'
+kit-actions-menu:
+  title: 'Kit {kit}'
+  tile:
+    info:
+      kit-gone: 'Dieses Kit gibt es nicht mehr'
+      default-kit: 'Standard-Kit: jeder Kämpfer bekommt es zum Start einer Runde'
+      not-default-kit: 'Nicht das Standard-Kit, kein Kämpfer bekommt es'
+    default:
+      title: 'Als Standard-Kit benutzen'
+      already-default-title: 'Das ist das Standard-Kit'
+      lore:
+        - 'Jeder Kämpfer bekommt es ab der nächsten Runde'
+        - 'Eine laufende Runde behält das Kit, das ihre Kämpfer bekommen haben'
+    replace:
+      title: 'Durch dein Inventar ersetzen'
+    delete:
+      title: 'Kit löschen'
+      lore: 'Entfernt das Kit {kit}'
+  replacement:
+    inventory-becomes-kit: 'Dein Inventar wird das Kit {kit}'
+    match-running:
+      - 'Ein Match läuft: seine Kämpfer behalten ihre Items,'
+      - 'das neue Kit wird ab der nächsten Runde ausgegeben'
+  replace-confirmation:
+    items-gone: 'Die Items, die das Kit jetzt enthält, sind danach weg'
+  delete-confirmation:
+    - 'Kit {kit} wird gelöscht'
+    - 'Seine Items sind danach weg'
+  default-kit-set: 'Kit {kit} ist jetzt das Standard-Kit, jeder Kämpfer bekommt es ab der nächsten Runde'
+  kit-deleted: 'Kit {kit} gelöscht'

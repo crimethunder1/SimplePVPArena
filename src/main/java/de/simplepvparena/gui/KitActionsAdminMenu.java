@@ -3,7 +3,11 @@ package de.simplepvparena.gui;
 import de.simplepvparena.kit.KitLibrary;
 import de.simplepvparena.kit.KitSaveService;
 import de.simplepvparena.kit.LibraryKit;
+import de.simplepvparena.message.CommonMessage;
+import de.simplepvparena.message.KitActionsMessage;
 import de.simplepvparena.message.MenuMessage;
+import de.simplepvparena.message.Messages;
+import de.simplepvparena.message.Placeholder;
 import de.simplepvparena.message.TournamentMessages;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
@@ -35,7 +39,7 @@ final class KitActionsAdminMenu implements AdminMenu {
 
     @Override
     public String title(AdminMenuHolder holder) {
-        return "Kit " + holder.getSubject().orElseThrow();
+        return Messages.text(KitActionsMessage.TITLE, Placeholder.of("kit", holder.getSubject().orElseThrow()));
     }
 
     @Override
@@ -48,14 +52,16 @@ final class KitActionsAdminMenu implements AdminMenu {
         String kitName = holder.getSubject().orElseThrow();
         canvas.set(AdminMenuLayout.INFO_SLOT, MenuItems.info(kitName, kitLibrary.findKit(kitName)
                 .map(this::buildInfoLore)
-                .orElse(List.of("This kit does not exist any more"))));
+                .orElseGet(() -> List.of(Messages.text(KitActionsMessage.INFO_KIT_GONE)))));
         canvas.set(KIT_DEFAULT_SLOT, buildDefaultItem(kitName));
-        canvas.set(KIT_REPLACE_SLOT, MenuItems.create(Material.CHEST, "Replace with your inventory",
-                buildReplacementLore(kitName, "Asks for a confirmation first")));
+        canvas.set(KIT_REPLACE_SLOT, MenuItems.create(Material.CHEST, Messages.text(KitActionsMessage.REPLACE_TITLE),
+                buildReplacementLore(kitName, Messages.text(CommonMessage.ASKS_FOR_CONFIRMATION))));
         canvas.set(KIT_DELETE_SLOT, kitLibrary.findDeletionRejection(kitName)
-                .map(rejection -> MenuItems.unavailable("Delete the kit", rejection))
-                .orElseGet(() -> MenuItems.create(MenuItems.REFUSE_MATERIAL, "Delete the kit",
-                        "Removes the kit " + kitName, "Asks for a confirmation first")));
+                .map(rejection -> MenuItems.unavailable(Messages.text(KitActionsMessage.DELETE_TITLE), rejection))
+                .orElseGet(() -> MenuItems.create(MenuItems.REFUSE_MATERIAL,
+                        Messages.text(KitActionsMessage.DELETE_TITLE),
+                        Messages.text(KitActionsMessage.DELETE_LORE, Placeholder.of("kit", kitName)),
+                        Messages.text(CommonMessage.ASKS_FOR_CONFIRMATION))));
         canvas.set(AdminMenuLayout.BACK_SLOT, MenuItems.back(MenuMessage.BACK_TO_KIT_LIST));
     }
 
@@ -76,7 +82,7 @@ final class KitActionsAdminMenu implements AdminMenu {
             @Override
             public List<String> describe(AdminMenuHolder holder) {
                 return buildReplacementLore(holder.getSubject().orElseThrow(),
-                        "The items the kit holds now are gone afterwards");
+                        Messages.text(KitActionsMessage.REPLACE_CONFIRMATION_ITEMS_GONE));
             }
 
             @Override
@@ -96,9 +102,8 @@ final class KitActionsAdminMenu implements AdminMenu {
         return new AdminMenuConfirmation() {
             @Override
             public List<String> describe(AdminMenuHolder holder) {
-                return List.of(
-                        "Kit " + holder.getSubject().orElseThrow() + " is deleted",
-                        "Its items are gone afterwards");
+                return Messages.lines(KitActionsMessage.DELETE_CONFIRMATION,
+                        Placeholder.of("kit", holder.getSubject().orElseThrow()));
             }
 
             @Override
@@ -116,8 +121,8 @@ final class KitActionsAdminMenu implements AdminMenu {
     private List<String> buildInfoLore(LibraryKit kit) {
         List<String> lore = new ArrayList<>(KitAdminMenu.describeItemCounts(kit));
         lore.add(kitLibrary.isDefaultKit(kit.name())
-                ? "Default kit: every fighter is given it when a round starts"
-                : "Not the default kit, no fighter is given it");
+                ? Messages.text(KitActionsMessage.INFO_DEFAULT_KIT)
+                : Messages.text(KitActionsMessage.INFO_NOT_DEFAULT_KIT));
         return lore;
     }
 
@@ -125,21 +130,19 @@ final class KitActionsAdminMenu implements AdminMenu {
         Optional<String> rejection = kitLibrary.findDefaultRejection(kitName);
         if (rejection.isPresent()) {
             return MenuItems.unavailable(kitLibrary.isDefaultKit(kitName)
-                    ? "This is the default kit"
-                    : "Use as the default kit", rejection.get());
+                    ? Messages.text(KitActionsMessage.DEFAULT_ALREADY_DEFAULT_TITLE)
+                    : Messages.text(KitActionsMessage.DEFAULT_TITLE), rejection.get());
         }
-        return MenuItems.create(Material.NETHER_STAR, "Use as the default kit",
-                "Every fighter is given it from the next round on",
-                "A running round keeps the kit its fighters were given");
+        return MenuItems.create(Material.NETHER_STAR, Messages.text(KitActionsMessage.DEFAULT_TITLE),
+                Messages.lines(KitActionsMessage.DEFAULT_LORE));
     }
 
     private List<String> buildReplacementLore(String kitName, String closingLine) {
         List<String> lore = new ArrayList<>();
-        lore.add("Your inventory becomes the kit " + kitName);
+        lore.add(Messages.text(KitActionsMessage.REPLACEMENT_INVENTORY_BECOMES_KIT, Placeholder.of("kit", kitName)));
         lore.addAll(KitAdminMenu.describeInventoryCapture());
         if (kitLibrary.isDefaultKit(kitName) && matchRunning.getAsBoolean()) {
-            lore.add("A match is running: its fighters keep their items,");
-            lore.add("the new kit is handed out from the next round on");
+            lore.addAll(Messages.lines(KitActionsMessage.REPLACEMENT_MATCH_RUNNING));
         }
         lore.add(closingLine);
         return lore;
@@ -152,18 +155,18 @@ final class KitActionsAdminMenu implements AdminMenu {
             return;
         }
         kitLibrary.setDefaultKit(kitName);
-        TournamentMessages.sendSuccess(player, "Kit " + kitName + " is the default kit now, every fighter is "
-                + "given it from the next round on");
+        TournamentMessages.sendSuccess(player, Messages.text(KitActionsMessage.DEFAULT_KIT_SET,
+                Placeholder.of("kit", kitName)));
         navigation.refresh(player, holder);
     }
 
     private void askForReplacementConfirmation(Player player, AdminMenuHolder holder, String kitName) {
         if (kitLibrary.findKit(kitName).isEmpty()) {
-            TournamentMessages.sendError(player, "Unknown kit " + kitName);
+            TournamentMessages.sendError(player, KitLibrary.describeUnknownKit(kitName));
             return;
         }
         if (kitSaveService.holdsNoItem(player)) {
-            TournamentMessages.sendError(player, KitSaveService.EMPTY_INVENTORY_REPLACEMENT_MESSAGE);
+            TournamentMessages.sendError(player, KitSaveService.describeEmptyInventoryReplacement());
             return;
         }
         navigation.open(player, AdminMenuHolder.confirmation(ConfirmationRequest.REPLACE_KIT, kitName,
@@ -187,6 +190,7 @@ final class KitActionsAdminMenu implements AdminMenu {
             return;
         }
         kitLibrary.deleteKit(kitName);
-        TournamentMessages.sendSuccess(player, "Kit " + kitName + " deleted");
+        TournamentMessages.sendSuccess(player, Messages.text(KitActionsMessage.KIT_DELETED,
+                Placeholder.of("kit", kitName)));
     }
 }

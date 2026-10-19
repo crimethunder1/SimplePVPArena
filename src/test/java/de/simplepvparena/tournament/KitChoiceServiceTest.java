@@ -23,7 +23,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 class KitChoiceServiceTest {
 
     private static final String MATCH_ID = "round1-match1";
-    private static final String TEAMS = "Alpha against Bravo";
+    private static final String FIRST_TEAM = "Alpha";
+    private static final String SECOND_TEAM = "Bravo";
     private static final String OPENING_MESSAGE = "Match round1-match1 (Alpha against Bravo): choose the kit within "
             + "30 seconds, otherwise the default kit Archer is used";
     private static final String REMINDER_MESSAGE = "10 seconds left to choose the kit for match round1-match1";
@@ -53,7 +54,7 @@ class KitChoiceServiceTest {
         begin();
 
         assertTrue(kitChoiceService.isPending());
-        assertEquals(Optional.of(new PendingKitChoice(MATCH_ID, TEAMS, "Archer",
+        assertEquals(Optional.of(new PendingKitChoice(MATCH_ID, FIRST_TEAM, SECOND_TEAM, "Archer",
                 TickingScheduler.START.plusSeconds(30))), kitChoiceService.getPending());
         assertEquals(30, kitChoiceService.getSecondsLeft());
         assertEquals(List.of(kitChoiceService.getPending().orElseThrow()), presenter.shownChoices());
@@ -110,7 +111,7 @@ class KitChoiceServiceTest {
         KitChoiceService neverChoosing = new KitChoiceService();
         neverChoosing.setPresenter(presenter);
 
-        neverChoosing.begin(MATCH_ID, TEAMS, () -> matchStartCount++);
+        neverChoosing.begin(MATCH_ID, FIRST_TEAM, SECOND_TEAM, () -> matchStartCount++);
 
         assertFalse(neverChoosing.isPending());
         assertEquals(1, matchStartCount);
@@ -248,7 +249,7 @@ class KitChoiceServiceTest {
         assertFalse(kitChoiceService.isPending());
         assertEquals(Optional.empty(), kitChoiceService.getPending());
         assertEquals(0, kitChoiceService.getSecondsLeft());
-        assertEquals(List.of(KitChoiceService.CANCELLED_MESSAGE), presenter.closeMessages());
+        assertEquals(List.of("The kit choice was cancelled"), presenter.closeMessages());
         assertEquals(0, scheduler.pendingTaskCount());
         scheduler.advanceSeconds(60);
         assertEquals(0, matchStartCount);
@@ -270,7 +271,7 @@ class KitChoiceServiceTest {
         int[] secondMatchStartCount = new int[1];
 
         IllegalStateException failure = assertThrows(IllegalStateException.class,
-                () -> kitChoiceService.begin("round1-match2", "Charlie against Delta",
+                () -> kitChoiceService.begin("round1-match2", "Charlie", "Delta",
                         () -> secondMatchStartCount[0]++));
 
         assertEquals("the kit for match round1-match1 is still being chosen, match round1-match2 cannot begin "
@@ -289,7 +290,7 @@ class KitChoiceServiceTest {
         begin();
         assertTrue(kitChoiceService.choose("Knight", "KT"));
 
-        kitChoiceService.begin("round1-match2", "Charlie against Delta", () -> matchStartCount++);
+        kitChoiceService.begin("round1-match2", "Charlie", "Delta", () -> matchStartCount++);
 
         assertEquals("round1-match2", kitChoiceService.getPending().orElseThrow().matchId());
         assertEquals(2, presenter.shownChoices().size());
@@ -330,7 +331,7 @@ class KitChoiceServiceTest {
     }
 
     private void begin() {
-        kitChoiceService.begin(MATCH_ID, TEAMS, () -> matchStartCount++);
+        kitChoiceService.begin(MATCH_ID, FIRST_TEAM, SECOND_TEAM, () -> matchStartCount++);
     }
 
     private KitDefinition kitDefinitionOf(String kitName) {

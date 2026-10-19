@@ -82,7 +82,7 @@ class KitChoiceAdminMenuClickTest {
         beginTheChoice();
         AdminMenuHolder formerPopup = fixture.lastMenu().holder();
         fixture.kitChoiceScheduler().advanceSeconds(30);
-        fixture.kitChoiceService().begin("round1-match2", "Charlie against Delta", () -> matchStartCount++);
+        fixture.kitChoiceService().begin("round1-match2", "Charlie", "Delta", () -> matchStartCount++);
         fixture.messages().clear();
 
         fixture.clickIn(formerPopup, SECOND_KIT_SLOT);
@@ -199,6 +199,6 @@ class KitChoiceAdminMenuClickTest {
     }
 
     private void beginTheChoice() {
-        fixture.kitChoiceService().begin("round1-match1", "Alpha against Bravo", () -> matchStartCount++);
+        fixture.kitChoiceService().begin("round1-match1", "Alpha", "Bravo", () -> matchStartCount++);
     }
 }

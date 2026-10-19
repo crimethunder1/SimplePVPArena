@@ -40,7 +40,7 @@ public enum MainMenuMessage implements MessageKey {
     NO_DEFAULT_KIT("main-menu.tile.kits.no-default-kit"),
     KITS_LORE("main-menu.tile.kits.lore"),
     KIT_CHOICE_TITLE("main-menu.tile.kit-choice.title"),
-    KIT_CHOICE_MATCH("main-menu.tile.kit-choice.match", "match", "teams"),
+    KIT_CHOICE_MATCH("main-menu.tile.kit-choice.match", "match", "firstTeam", "secondTeam"),
     KIT_CHOICE_LORE("main-menu.tile.kit-choice.lore"),
     CLOSE_TITLE("main-menu.tile.close.title"),
     CLOSE_LORE("main-menu.tile.close.lore");

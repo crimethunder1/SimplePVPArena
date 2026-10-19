@@ -185,6 +185,6 @@ class KitChoiceAdminMenuSnapshotTest {
     }
 
     private void beginTheChoice() {
-        fixture.kitChoiceService().begin("round1-match1", "Alpha against Bravo", () -> { });
+        fixture.kitChoiceService().begin("round1-match1", "Alpha", "Bravo", () -> { });
     }
 }

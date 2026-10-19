@@ -662,7 +662,7 @@ public final class TournamentManager implements MatchCompletionHandler {
         Match match = finalMatch
                 ? Match.finalMatch(bracketMatch.getMatchId(), firstTeam, secondTeam, arena)
                 : Match.regularMatch(bracketMatch.getMatchId(), firstTeam, secondTeam, arena);
-        kitChoiceService.begin(match.getMatchId(), firstTeam.getTeamName() + " against " + secondTeam.getTeamName(),
+        kitChoiceService.begin(match.getMatchId(), firstTeam.getTeamName(), secondTeam.getTeamName(),
                 () -> startChosenMatch(bracketMatch, match, finalMatch));
     }
 

@@ -7,7 +7,11 @@ import de.simplepvparena.kit.KitSaveResult;
 import de.simplepvparena.kit.KitSaveService;
 import de.simplepvparena.kit.LibraryKit;
 import de.simplepvparena.kit.SerializedKit;
+import de.simplepvparena.message.CommonMessage;
+import de.simplepvparena.message.KitMenuMessage;
 import de.simplepvparena.message.MenuMessage;
+import de.simplepvparena.message.Messages;
+import de.simplepvparena.message.Placeholder;
 import de.simplepvparena.message.TournamentMessages;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
@@ -42,8 +46,8 @@ final class KitAdminMenu implements AdminMenu {
 
     @Override
     public String title(AdminMenuHolder holder) {
-        return "Kits (page "
-                + MenuPagination.of(kitLibrary.getKitCount(), holder.getPageIndex()).getPageNumber() + ")";
+        return Messages.text(KitMenuMessage.TITLE, Placeholder.of("page",
+                MenuPagination.of(kitLibrary.getKitCount(), holder.getPageIndex()).getPageNumber()));
     }
 
     @Override
@@ -60,13 +64,17 @@ final class KitAdminMenu implements AdminMenu {
             kitLibrary.findKit(kitNames.get(pagination.getFirstItemIndex() + slot))
                     .ifPresent(kit -> canvas.set(kitSlot, buildKitItem(kit)));
         }
-        canvas.set(KITS_INFO_SLOT, MenuItems.info("Kits", List.of(
-                "Kits: " + kitNames.size(),
-                "Default kit: " + kitLibrary.getDefaultKitName().orElse("none"),
-                "Page " + pagination.getPageNumber() + " of " + pagination.getPageCount(),
-                "A click on a kit opens its options")));
-        canvas.set(KITS_CREATE_SLOT, MenuItems.create(MenuItems.CONFIRM_MATERIAL, "Create a kit from your inventory",
-                buildCreationLore()));
+        canvas.set(KITS_INFO_SLOT, MenuItems.info(Messages.text(KitMenuMessage.INFO_TITLE), List.of(
+                Messages.plural(KitMenuMessage.KIT_COUNT, kitNames.size()),
+                kitLibrary.getDefaultKitName()
+                        .map(defaultKitName -> Messages.text(KitMenuMessage.DEFAULT_KIT,
+                                Placeholder.of("kit", defaultKitName)))
+                        .orElseGet(() -> Messages.text(KitMenuMessage.NO_DEFAULT_KIT)),
+                Messages.text(MenuMessage.PAGE_OF_PAGES, Placeholder.of("page", pagination.getPageNumber()),
+                        Placeholder.of("pageCount", pagination.getPageCount())),
+                Messages.text(KitMenuMessage.INFO_HINT))));
+        canvas.set(KITS_CREATE_SLOT, MenuItems.create(MenuItems.CONFIRM_MATERIAL,
+                Messages.text(KitMenuMessage.CREATE_TITLE), buildCreationLore()));
         if (pagination.hasPreviousPage()) {
             canvas.set(KITS_PREVIOUS_PAGE_SLOT, MenuItems.previousPage(pagination));
         }
@@ -108,34 +116,31 @@ final class KitAdminMenu implements AdminMenu {
 
     static List<String> describeItemCounts(LibraryKit kit) {
         return List.of(
-                "Worn items: " + kit.wornItemCount() + " of " + KitEquipmentSlot.values().length,
-                "Inventory items: " + kit.inventoryItemCount() + " of " + SerializedKit.INVENTORY_SLOT_COUNT);
+                Messages.plural(KitMenuMessage.WORN_ITEM_COUNT, kit.wornItemCount(),
+                        Placeholder.of("slotCount", KitEquipmentSlot.values().length)),
+                Messages.plural(KitMenuMessage.INVENTORY_ITEM_COUNT, kit.inventoryItemCount(),
+                        Placeholder.of("slotCount", SerializedKit.INVENTORY_SLOT_COUNT)));
     }
 
     static List<String> describeInventoryCapture() {
-        return List.of(
-                "Takes your helmet, chestplate, leggings, boots,",
-                "your offhand and the 36 slots of your inventory",
-                "Enchantments, names, lore and damage are kept exactly",
-                "An empty slot stays empty in the kit",
-                "The item on your cursor is not taken, it lies in no slot");
+        return Messages.lines(KitMenuMessage.INVENTORY_CAPTURE);
     }
 
     private MenuTile buildKitItem(LibraryKit kit) {
         List<String> lore = new ArrayList<>(describeItemCounts(kit));
         if (kitLibrary.isDefaultKit(kit.name())) {
-            lore.add("Default kit");
+            lore.add(Messages.text(KitMenuMessage.KIT_DEFAULT_KIT));
         }
-        lore.add("Click for the options of this kit");
+        lore.add(Messages.text(KitMenuMessage.KIT_LORE));
         return MenuItems.create(Material.CHEST, kit.name(), lore);
     }
 
     private List<String> buildCreationLore() {
         List<String> lore = new ArrayList<>();
-        lore.add("Asks for the name of the new kit in the chat");
+        lore.add(Messages.text(KitMenuMessage.CREATE_ASKS_FOR_NAME));
         lore.addAll(describeInventoryCapture());
-        lore.add("The first kit becomes the default kit");
-        lore.add("The menu closes so you can type");
+        lore.add(Messages.text(KitMenuMessage.CREATE_FIRST_KIT));
+        lore.add(Messages.text(CommonMessage.MENU_CLOSES_TO_TYPE));
         return lore;
     }
 
@@ -150,10 +155,8 @@ final class KitAdminMenu implements AdminMenu {
 
     private void askForKitName(Player player, int pageIndex) {
         navigation.close(player);
-        chatInputService.await(player, "the name of the new kit", List.of(
-                        "Type the name of the new kit in chat",
-                        "A kit name has " + KitLibrary.NAME_RULE,
-                        "Your inventory as it is then becomes the kit"),
+        chatInputService.await(player, Messages.text(KitMenuMessage.NAME_INPUT_DESCRIPTION),
+                Messages.lines(KitMenuMessage.NAME_INPUT_PROMPT, Placeholder.of("rule", KitLibrary.describeNameRule())),
                 line -> handleKitName(player, pageIndex, line));
     }
 

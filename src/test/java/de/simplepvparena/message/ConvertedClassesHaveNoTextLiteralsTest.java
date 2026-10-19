@@ -49,7 +49,15 @@ class ConvertedClassesHaveNoTextLiteralsTest {
             "team/TeamSizeSetting.java",
             "gui/TeamsAdminMenu.java",
             "gui/TeamActionsAdminMenu.java",
-            "gui/TeamMembersAdminMenu.java");
+            "gui/TeamMembersAdminMenu.java",
+            "kit/KitDefinition.java",
+            "kit/KitSaveResult.java",
+            "kit/KitSaveService.java",
+            "tournament/PendingKitChoice.java",
+            "gui/KitAdminMenu.java",
+            "gui/KitActionsAdminMenu.java",
+            "gui/KitChoiceAdminMenu.java",
+            "gui/KitChoiceAdminMenuPresenter.java");
 
     private static final Pattern STRING_LITERAL = Pattern.compile("\"((?:[^\"\\\\]|\\\\.)*)\"");
     private static final Pattern USAGE_TOKEN = Pattern.compile("<[^<>]*>");

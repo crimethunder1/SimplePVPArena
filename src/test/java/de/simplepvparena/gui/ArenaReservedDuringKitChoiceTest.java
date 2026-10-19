@@ -75,7 +75,7 @@ class ArenaReservedDuringKitChoiceTest {
         fixture.standInsideTheFightArea();
         ArenaSetupService arenaSetupService = fixture.arenaSetupService();
         assertEquals(Optional.empty(), arenaSetupService.findCleaningRejection());
-        fixture.kitChoiceService().begin("round1-match1", "Alpha against Bravo", () -> matchStartCount++);
+        fixture.kitChoiceService().begin("round1-match1", "Alpha", "Bravo", () -> matchStartCount++);
         fixture.messages().clear();
 
         assertEquals(Optional.of(RESERVED_MESSAGE), arenaSetupService.findCleaningRejection());
