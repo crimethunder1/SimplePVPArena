@@ -6,7 +6,13 @@ import de.simplepvparena.arena.ArenaRegistry;
 import de.simplepvparena.match.Match;
 import de.simplepvparena.match.MatchCompletionHandler;
 import de.simplepvparena.match.MatchService;
+import de.simplepvparena.message.CommonMessage;
+import de.simplepvparena.message.MatchMenuMessage;
+import de.simplepvparena.message.Messages;
+import de.simplepvparena.message.Placeholder;
+import de.simplepvparena.message.TournamentMessage;
 import de.simplepvparena.message.TournamentMessages;
+import de.simplepvparena.message.TournamentStatusMessage;
 import de.simplepvparena.team.Team;
 import de.simplepvparena.team.TeamRegistry;
 import de.simplepvparena.team.TeamSizeSetting;
@@ -29,24 +35,6 @@ import java.util.Random;
 import java.util.Set;
 
 public final class TournamentManager implements MatchCompletionHandler {
-
-    static final String ARENA_STILL_BEING_CLEANED_MESSAGE = "The arena is still being cleaned. Try again in a moment.";
-
-    static final String SMALLER_TEAMS_NOTICE = "The tournament starts anyway, a missing player counts as absent";
-
-    static final String LARGER_TEAMS_NOTICE = "The tournament starts anyway, every online player of these teams "
-            + "fights";
-
-    static final String SAVE_FAILURE_WARNING = "The tournament state could not be saved, the tournament carries on "
-            + "and the next decision tries again: ";
-
-    static final String DELETE_FAILURE_WARNING = "The saved tournament state could not be removed, the next server "
-            + "start would restore it: ";
-
-    public static final String RENAME_IN_TOURNAMENT_REJECTION = "A team cannot be renamed while a tournament is in "
-            + "progress, the bracket keeps its name";
-
-    private static final String CHANGE_BEFORE_MATCH_END_REJECTION = ", it cannot be changed before the match is over";
 
     private final Plugin plugin;
     private final TeamRegistry teamRegistry;
@@ -143,7 +131,7 @@ public final class TournamentManager implements MatchCompletionHandler {
 
     public Optional<String> findTeamRenameRejection(String teamName) {
         if (isTournamentInProgress()) {
-            return Optional.of(RENAME_IN_TOURNAMENT_REJECTION);
+            return Optional.of(Messages.text(TournamentMessage.RENAME_IN_TOURNAMENT));
         }
         return findTeamChangeRejection(teamName);
     }
@@ -151,15 +139,16 @@ public final class TournamentManager implements MatchCompletionHandler {
     public Optional<String> findTeamChangeRejection(String teamName) {
         Optional<String> runningMatchRejection = matchService.getActiveMatch()
                 .flatMap(match -> match.findTeamByName(teamName)
-                        .map(team -> "Team " + team.getTeamName() + " is in match " + match.getMatchId()
-                                + CHANGE_BEFORE_MATCH_END_REJECTION));
+                        .map(team -> Messages.text(TournamentMessage.TEAM_IN_MATCH,
+                                Placeholder.of("team", team.getTeamName()),
+                                Placeholder.of("match", match.getMatchId()))));
         if (runningMatchRejection.isPresent()) {
             return runningMatchRejection;
         }
         return kitChoiceService.getPending()
                 .flatMap(pending -> findBracketTeamName(pending.matchId(), teamName)
-                        .map(bracketTeamName -> "Team " + bracketTeamName + " is waiting for the kit choice of match "
-                                + pending.matchId() + CHANGE_BEFORE_MATCH_END_REJECTION));
+                        .map(bracketTeamName -> Messages.text(TournamentMessage.TEAM_WAITING_FOR_KIT_CHOICE,
+                                Placeholder.of("team", bracketTeamName), Placeholder.of("match", pending.matchId()))));
     }
 
     private Optional<String> findBracketTeamName(String matchId, String teamName) {
@@ -171,21 +160,22 @@ public final class TournamentManager implements MatchCompletionHandler {
 
     public TournamentOperationResult startTournament(boolean allowUnevenTeamCount) {
         if (state == TournamentState.RUNNING || state == TournamentState.PAUSED) {
-            return TournamentOperationResult.failure("A tournament is already in progress");
+            return TournamentOperationResult.failure(Messages.text(CommonMessage.TOURNAMENT_ALREADY_IN_PROGRESS));
         }
         List<String> teamNames = new ArrayList<>(teamRegistry.getTeamNames());
         if (teamNames.size() < Bracket.MINIMUM_TEAM_COUNT) {
-            return TournamentOperationResult.failure("At least " + Bracket.MINIMUM_TEAM_COUNT + " teams are required");
+            return TournamentOperationResult.failure(Messages.plural(TournamentMessage.AT_LEAST_TEAMS_REQUIRED,
+                    Bracket.MINIMUM_TEAM_COUNT));
         }
         if (!allowUnevenTeamCount && teamNames.size() % 2 != 0) {
-            return TournamentOperationResult.failure("The team count is uneven, use \"Force start\" in the "
-                    + "match menu of /tournament to start anyway");
+            return TournamentOperationResult.failure(Messages.text(TournamentMessage.UNEVEN_TEAM_COUNT,
+                    Placeholder.of("action", MatchService.describeMatchMenuTile(MatchMenuMessage.FORCE_START_TITLE))));
         }
         if (!arenaRegistry.isArenaFullyConfigured()) {
             return TournamentOperationResult.failure(describeArenaNotConfigured());
         }
         if (arenaCleanup.isCleaning()) {
-            return TournamentOperationResult.failure(ARENA_STILL_BEING_CLEANED_MESSAGE);
+            return TournamentOperationResult.failure(describeArenaBeingCleaned());
         }
 
         Collections.shuffle(teamNames, seedingRandom);
@@ -199,11 +189,13 @@ public final class TournamentManager implements MatchCompletionHandler {
         matchService.resumeRoundTimer();
         saveState();
 
-        broadcastSuccess("The tournament has started with " + teamNames.size() + " teams in "
-                + bracket.getRoundCount() + " rounds");
-        if (!bracket.getTeamNamesWithFirstRoundBye().isEmpty()) {
-            broadcast("Teams advancing without a first round opponent: "
-                    + String.join(", ", bracket.getTeamNamesWithFirstRoundBye()));
+        broadcastSuccess(Messages.text(TournamentMessage.STARTED,
+                Placeholder.of("teams", Messages.plural(TournamentMessage.TEAM_COUNT, teamNames.size())),
+                Placeholder.of("rounds", Messages.plural(TournamentMessage.ROUND_COUNT, bracket.getRoundCount()))));
+        List<String> teamNamesWithBye = List.copyOf(bracket.getTeamNamesWithFirstRoundBye());
+        if (!teamNamesWithBye.isEmpty()) {
+            broadcast(Messages.plural(TournamentMessage.BYES, teamNamesWithBye.size(),
+                    Placeholder.of("teams", Messages.join(teamNamesWithBye))));
         }
         if (!arenaCleanup.hasBaseline()) {
             adminNotifier.notifyAdmins(describeNoBaselineWarning());
@@ -211,7 +203,7 @@ public final class TournamentManager implements MatchCompletionHandler {
         notifyAboutTeamsOfAnotherSize();
         startNextMatch();
         synchronizeFinalMatchStage();
-        return TournamentOperationResult.success("Tournament started");
+        return TournamentOperationResult.success(Messages.text(TournamentMessage.STARTED_REPLY));
     }
 
     public TournamentOperationResult togglePause() {
@@ -219,28 +211,27 @@ public final class TournamentManager implements MatchCompletionHandler {
             state = TournamentState.PAUSED;
             kitChoiceService.cancel();
             matchService.pauseRoundTimer();
-            broadcastWarning("The tournament is paused, no further match is started until it is resumed"
-                    + TournamentMessages.LINE_BREAK + "The round timer keeps its remaining time");
+            broadcastWarning(Messages.text(TournamentMessage.PAUSED));
             saveState();
-            return TournamentOperationResult.success("Tournament paused");
+            return TournamentOperationResult.success(Messages.text(TournamentMessage.PAUSED_REPLY));
         }
         if (state == TournamentState.PAUSED) {
             if (arenaCleanup.isCleaning() && !waitingForArenaCleaning) {
-                return TournamentOperationResult.failure(ARENA_STILL_BEING_CLEANED_MESSAGE);
+                return TournamentOperationResult.failure(describeArenaBeingCleaned());
             }
             state = TournamentState.RUNNING;
             matchService.resumeRoundTimer();
-            broadcast("The tournament continues");
+            broadcast(Messages.text(TournamentMessage.CONTINUES));
             saveState();
             startNextMatch();
-            return TournamentOperationResult.success("Tournament resumed");
+            return TournamentOperationResult.success(Messages.text(TournamentMessage.RESUMED_REPLY));
         }
-        return TournamentOperationResult.failure("No tournament is in progress");
+        return TournamentOperationResult.failure(Messages.text(CommonMessage.NO_TOURNAMENT_IN_PROGRESS));
     }
 
     public TournamentOperationResult cancelTournament() {
         if (state != TournamentState.RUNNING && state != TournamentState.PAUSED) {
-            return TournamentOperationResult.failure("No tournament is in progress");
+            return TournamentOperationResult.failure(Messages.text(CommonMessage.NO_TOURNAMENT_IN_PROGRESS));
         }
         kitChoiceService.cancel();
         matchService.cancelActiveMatch();
@@ -253,19 +244,19 @@ public final class TournamentManager implements MatchCompletionHandler {
         waitingForArenaCleaning = false;
         state = TournamentState.CANCELLED;
         deleteSavedState();
-        broadcastWarning("The tournament has been cancelled");
-        return TournamentOperationResult.success("Tournament cancelled");
+        broadcastWarning(Messages.text(TournamentMessage.CANCELLED));
+        return TournamentOperationResult.success(Messages.text(TournamentMessage.CANCELLED_REPLY));
     }
 
     public TournamentOperationResult forceMatchResult(String matchId, String teamName) {
         if (bracket == null) {
-            return TournamentOperationResult.failure("No tournament is in progress");
+            return TournamentOperationResult.failure(Messages.text(CommonMessage.NO_TOURNAMENT_IN_PROGRESS));
         }
         Optional<Match> activeMatch = matchService.findMatchById(matchId);
         if (activeMatch.isPresent()) {
             Optional<Team> winningTeam = activeMatch.get().findTeamByName(teamName);
             if (winningTeam.isEmpty()) {
-                return TournamentOperationResult.failure(teamName + " does not take part in match " + matchId);
+                return TournamentOperationResult.failure(describeTeamNotInMatch(teamName, matchId));
             }
             forcedRunningMatchId = activeMatch.get().getMatchId();
             try {
@@ -273,39 +264,49 @@ public final class TournamentManager implements MatchCompletionHandler {
             } finally {
                 forcedRunningMatchId = null;
             }
-            return TournamentOperationResult.success("Match " + matchId + " was decided for "
-                    + winningTeam.get().getTeamName());
+            return TournamentOperationResult.success(describeMatchDecided(matchId, winningTeam.get().getTeamName()));
         }
         Optional<BracketMatch> bracketMatch = bracket.findMatch(matchId);
         if (bracketMatch.isEmpty()) {
-            return TournamentOperationResult.failure("Unknown match " + matchId);
+            return TournamentOperationResult.failure(Messages.text(TournamentMessage.UNKNOWN_MATCH,
+                    Placeholder.of("match", matchId)));
         }
         if (bracketMatch.get().isDecided()) {
-            return TournamentOperationResult.failure("Match " + matchId + " is already decided");
+            return TournamentOperationResult.failure(Messages.text(TournamentMessage.MATCH_ALREADY_DECIDED,
+                    Placeholder.of("match", matchId)));
         }
         Optional<String> resolvedTeamName = resolveBracketTeamName(bracketMatch.get(), teamName);
         if (resolvedTeamName.isEmpty()) {
-            return TournamentOperationResult.failure(teamName + " does not take part in match " + matchId);
+            return TournamentOperationResult.failure(describeTeamNotInMatch(teamName, matchId));
         }
         Optional<String> kitChoiceRejection = findKitChoiceRejection();
         if (kitChoiceRejection.isPresent()) {
             return TournamentOperationResult.failure(kitChoiceRejection.get());
         }
         if (arenaCleanup.isCleaning() && !waitingForArenaCleaning) {
-            return TournamentOperationResult.failure(ARENA_STILL_BEING_CLEANED_MESSAGE);
+            return TournamentOperationResult.failure(describeArenaBeingCleaned());
         }
         recordBracketWinner(matchId, resolvedTeamName.get(), MatchDecisionKind.FORCED);
-        return TournamentOperationResult.success("Match " + matchId + " was decided for " + resolvedTeamName.get());
+        return TournamentOperationResult.success(describeMatchDecided(matchId, resolvedTeamName.get()));
+    }
+
+    private static String describeTeamNotInMatch(String teamName, String matchId) {
+        return Messages.text(TournamentMessage.TEAM_NOT_IN_MATCH, Placeholder.of("team", teamName),
+                Placeholder.of("match", matchId));
+    }
+
+    private static String describeMatchDecided(String matchId, String teamName) {
+        return Messages.text(TournamentMessage.MATCH_DECIDED, Placeholder.of("match", matchId),
+                Placeholder.of("team", teamName));
     }
 
     public TournamentOperationResult startFinalMatch() {
         if (bracket == null || (state != TournamentState.RUNNING && state != TournamentState.PAUSED)) {
-            return TournamentOperationResult.failure("No tournament is in progress");
+            return TournamentOperationResult.failure(Messages.text(CommonMessage.NO_TOURNAMENT_IN_PROGRESS));
         }
         if (state == TournamentState.PAUSED) {
-            return TournamentOperationResult.failure("The tournament is paused"
-                    + TournamentMessages.LINE_BREAK + "Continue it with \"Continue the tournament\" in the "
-                    + "match menu of /tournament before starting the final");
+            return TournamentOperationResult.failure(Messages.text(TournamentMessage.FINAL_WHILE_PAUSED,
+                    Placeholder.of("action", MatchService.describeMatchMenuTile(MatchMenuMessage.CONTINUE_TITLE))));
         }
         Optional<String> kitChoiceRejection = findKitChoiceRejection();
         if (kitChoiceRejection.isPresent()) {
@@ -321,27 +322,24 @@ public final class TournamentManager implements MatchCompletionHandler {
             return TournamentOperationResult.failure(arenaRejection.get());
         }
         if (waitingForArenaCleaning) {
-            return TournamentOperationResult.failure("The arena is still being cleaned after the last match"
-                    + TournamentMessages.LINE_BREAK + "Start the final again in a moment, the finalists "
-                    + "are meant to fight in the arena the admin built");
+            return TournamentOperationResult.failure(Messages.text(TournamentMessage.FINAL_ARENA_BEING_CLEANED));
         }
         if (arenaCleanup.isCleaning()) {
-            return TournamentOperationResult.failure(ARENA_STILL_BEING_CLEANED_MESSAGE);
+            return TournamentOperationResult.failure(describeArenaBeingCleaned());
         }
         BracketMatch finalMatch = bracket.getFinalMatch();
         if (!resolveTeamsOrDeclareWalkover(finalMatch)) {
             if (finalMatch.isDecided()) {
-                return TournamentOperationResult.success("The final was decided by a walkover, "
-                        + bracket.getChampionTeamName().orElseThrow() + " wins the tournament");
+                return TournamentOperationResult.success(Messages.text(TournamentMessage.FINAL_WALKOVER,
+                        Placeholder.of("team", bracket.getChampionTeamName().orElseThrow())));
             }
-            return TournamentOperationResult.failure("The final cannot be started, at least one finalist is "
-                    + "no longer registered");
+            return TournamentOperationResult.failure(Messages.text(TournamentMessage.FINAL_FINALIST_MISSING));
         }
         startMatchInArena(finalMatch);
         if (isKitChoicePending()) {
-            return TournamentOperationResult.success("The kit for the final is being chosen");
+            return TournamentOperationResult.success(Messages.text(TournamentMessage.FINAL_KIT_BEING_CHOSEN));
         }
-        return TournamentOperationResult.success("The final has started");
+        return TournamentOperationResult.success(Messages.text(TournamentMessage.FINAL_STARTED));
     }
 
     public boolean restoreSavedTournament() {
@@ -352,8 +350,7 @@ public final class TournamentManager implements MatchCompletionHandler {
         return switch (lookup.outcome()) {
             case MISSING -> false;
             case BROKEN -> {
-                adminNotifier.notifyAdmins("The saved tournament in " + lookup.fileName() + " could not be read: "
-                        + lookup.failureReason().orElse("unknown reason") + ". No tournament was restored");
+                adminNotifier.notifyAdmins(describeUnreadableTournament(lookup));
                 yield false;
             }
             case FOUND -> restore(lookup.savedTournament().orElseThrow(), lookup.fileName());
@@ -365,8 +362,8 @@ public final class TournamentManager implements MatchCompletionHandler {
         try {
             restoredBracket = savedTournament.restoreBracket();
         } catch (IllegalArgumentException inconsistentTournament) {
-            adminNotifier.notifyAdmins("The saved tournament in " + fileName + " does not fit together: "
-                    + inconsistentTournament.getMessage() + ". No tournament was restored");
+            adminNotifier.notifyAdmins(Messages.text(TournamentMessage.RESTORE_INCONSISTENT,
+                    Placeholder.of("file", fileName), Placeholder.of("reason", inconsistentTournament.getMessage())));
             return false;
         }
         kitChoiceService.cancel();
@@ -383,10 +380,9 @@ public final class TournamentManager implements MatchCompletionHandler {
         state = TournamentState.PAUSED;
         matchService.pauseRoundTimer();
         finalMatchGate.reset();
-        adminNotifier.notifyAdmins("The tournament was restored from " + fileName + " (matches decided: "
-                + savedTournament.results().size() + ", rounds: " + bracket.getRoundCount() + "). It is paused, "
-                + "a match that was running before the restart starts again. Continue it with \"Continue the "
-                + "tournament\" in the match menu of /tournament");
+        adminNotifier.notifyAdmins(Messages.plural(TournamentMessage.RESTORED, savedTournament.results().size(),
+                Placeholder.of("file", fileName), Placeholder.of("rounds", bracket.getRoundCount()),
+                Placeholder.of("action", MatchService.describeMatchMenuTile(MatchMenuMessage.CONTINUE_TITLE))));
         if (!arenaCleanup.hasBaseline()) {
             adminNotifier.notifyAdmins(describeRestoredWithoutBaselineWarning());
         }
@@ -395,12 +391,23 @@ public final class TournamentManager implements MatchCompletionHandler {
         return true;
     }
 
+    private static String describeUnreadableTournament(TournamentStateLookup lookup) {
+        Placeholder file = Placeholder.of("file", lookup.fileName());
+        return lookup.failureReason()
+                .map(reason -> Messages.text(TournamentMessage.RESTORE_UNREADABLE, file,
+                        Placeholder.of("reason", reason)))
+                .orElseGet(() -> Messages.text(TournamentMessage.RESTORE_UNREADABLE_WITHOUT_REASON, file));
+    }
+
     private void notifyAboutTeamsOfAnotherSize() {
         int teamSize = teamSizeSetting.getTeamSize();
         TeamSizeSetting.describeTeamsSmallerThan(teamSize, teamRegistry).ifPresent(smallerTeams ->
-                adminNotifier.notifyAdmins(smallerTeams + ". " + SMALLER_TEAMS_NOTICE));
+                adminNotifier.notifyAdmins(Messages.text(TournamentMessage.SMALLER_TEAMS,
+                        Placeholder.of("teams", smallerTeams))));
+        int largerTeamCount = TeamSizeSetting.findTeamsLargerThan(teamSize, teamRegistry).size();
         TeamSizeSetting.describeTeamsLargerThan(teamSize, teamRegistry).ifPresent(largerTeams ->
-                adminNotifier.notifyAdmins(largerTeams + ". " + LARGER_TEAMS_NOTICE));
+                adminNotifier.notifyAdmins(Messages.plural(TournamentMessage.LARGER_TEAMS, largerTeamCount,
+                        Placeholder.of("teams", largerTeams))));
     }
 
     private void warnAboutUnregisteredTeams() {
@@ -410,9 +417,8 @@ public final class TournamentManager implements MatchCompletionHandler {
         if (unregisteredTeamNames.isEmpty()) {
             return;
         }
-        adminNotifier.notifyAdmins("Teams of the restored tournament that are no longer registered: "
-                + String.join(", ", unregisteredTeamNames) + ". Their decided matches keep the name, an open "
-                + "match of theirs goes to the opponent by walkover when the tournament continues");
+        adminNotifier.notifyAdmins(Messages.plural(TournamentMessage.UNREGISTERED_TEAMS, unregisteredTeamNames.size(),
+                Placeholder.of("teams", Messages.join(unregisteredTeamNames))));
     }
 
     @Override
@@ -443,29 +449,32 @@ public final class TournamentManager implements MatchCompletionHandler {
     }
 
     static String describeArenaNotConfigured() {
-        return "The arena is not fully configured"
-                + TournamentMessages.LINE_BREAK + "Calculate its fight area with " + Arena.describeCalculateAction()
-                + " and set the tribune spawn with " + Arena.describeTribuneSpawnAction();
+        return Messages.text(TournamentMessage.ARENA_NOT_CONFIGURED,
+                Placeholder.of("calculateAction", Arena.describeCalculateAction()),
+                Placeholder.of("tribuneSpawnAction", Arena.describeTribuneSpawnAction()));
+    }
+
+    static String describeArenaBeingCleaned() {
+        return Messages.text(TournamentMessage.ARENA_BEING_CLEANED);
     }
 
     static String describeNoBaselineWarning() {
-        return "No baseline of the fight area is stored, so the arena is not "
-                + "cleaned between the matches. A baseline is taken by " + Arena.describeCalculateAction();
+        return Messages.text(TournamentMessage.NO_BASELINE, Placeholder.of("action", Arena.describeCalculateAction()));
     }
 
     static String describeRestoredWithoutBaselineWarning() {
-        return "No baseline of the fight area is stored after the "
-                + "restart. If the server crashed, repair the arena first, then run " + Arena.describeCalculateAction()
-                + " again, that takes the arena as it is now as the new baseline, and only then continue the "
-                + "tournament";
+        return Messages.text(TournamentMessage.RESTORED_WITHOUT_BASELINE,
+                Placeholder.of("action", Arena.describeCalculateAction()));
     }
 
     static String buildSkippedCleaningWarning(String matchId, String skipReason, boolean finalMatch) {
-        String warning = "The arena was not cleaned after match " + matchId + ": " + toFirstLine(skipReason);
+        Placeholder match = Placeholder.of("match", matchId);
+        Placeholder reason = Placeholder.of("reason", toFirstLine(skipReason));
         if (finalMatch) {
-            return warning + ". Run " + Arena.describeCalculateAction() + " again before the next tournament";
+            return Messages.text(TournamentMessage.CLEANING_SKIPPED_AFTER_FINAL, match, reason,
+                    Placeholder.of("action", Arena.describeCalculateAction()));
         }
-        return warning + ". The next match starts in the arena as it is now";
+        return Messages.text(TournamentMessage.CLEANING_SKIPPED, match, reason);
     }
 
     private static String toFirstLine(String message) {
@@ -485,7 +494,7 @@ public final class TournamentManager implements MatchCompletionHandler {
     }
 
     static String buildKitChoiceRejection(String matchId) {
-        return "A kit is being chosen for match " + matchId + ", wait for it or pause the tournament";
+        return Messages.text(TournamentMessage.KIT_CHOICE_RUNNING, Placeholder.of("match", matchId));
     }
 
     private Optional<String> findKitChoiceRejection() {
@@ -496,20 +505,32 @@ public final class TournamentManager implements MatchCompletionHandler {
         if (!arenaFullyConfigured) {
             return Optional.of(describeArenaNotConfigured());
         }
-        return runningMatchId.map(matchId -> "The arena is occupied by match " + matchId);
+        return runningMatchId.map(matchId -> Messages.text(TournamentMessage.ARENA_OCCUPIED,
+                Placeholder.of("match", matchId)));
     }
 
     public String describeStatus() {
-        StringBuilder statusText = new StringBuilder("Tournament state: " + state);
+        Placeholder stateName = Placeholder.of("state", state.describe());
         if (bracket == null) {
-            return statusText.toString();
+            return Messages.text(TournamentStatusMessage.STATUS, stateName);
         }
-        statusText.append(" | rounds: ").append(bracket.getRoundCount());
-        statusText.append(" | running match: ")
-                .append(matchService.getActiveMatch().map(Match::getMatchId).orElse("none"));
-        statusText.append(" | final: ").append(finalMatchGate.getStage());
-        bracket.getChampionTeamName().ifPresent(champion -> statusText.append(" | champion: ").append(champion));
-        return statusText.toString();
+        Placeholder rounds = Placeholder.of("rounds", bracket.getRoundCount());
+        Placeholder stage = Placeholder.of("stage", finalMatchGate.getStage().describe());
+        Optional<String> champion = bracket.getChampionTeamName();
+        Optional<String> runningMatchId = matchService.getActiveMatch().map(Match::getMatchId);
+        if (runningMatchId.isPresent()) {
+            Placeholder runningMatch = Placeholder.of("match", runningMatchId.get());
+            return champion
+                    .map(championName -> Messages.text(TournamentStatusMessage.STATUS_WITH_RUNNING_MATCH_AND_CHAMPION,
+                            stateName, rounds, runningMatch, stage, Placeholder.of("champion", championName)))
+                    .orElseGet(() -> Messages.text(TournamentStatusMessage.STATUS_WITH_RUNNING_MATCH, stateName,
+                            rounds, runningMatch, stage));
+        }
+        return champion
+                .map(championName -> Messages.text(TournamentStatusMessage.STATUS_WITHOUT_RUNNING_MATCH_AND_CHAMPION,
+                        stateName, rounds, stage, Placeholder.of("champion", championName)))
+                .orElseGet(() -> Messages.text(TournamentStatusMessage.STATUS_WITHOUT_RUNNING_MATCH, stateName,
+                        rounds, stage));
     }
 
     public List<BracketMatch> findWaitingMatches() {
@@ -526,20 +547,28 @@ public final class TournamentManager implements MatchCompletionHandler {
 
     public List<String> describeBracket() {
         if (bracket == null) {
-            return List.of("No tournament is in progress");
+            return List.of(Messages.text(CommonMessage.NO_TOURNAMENT_IN_PROGRESS));
         }
         List<String> lines = new ArrayList<>();
         List<List<BracketMatch>> rounds = bracket.getRounds();
         for (int roundIndex = 0; roundIndex < rounds.size(); roundIndex++) {
-            lines.add("Round " + (roundIndex + 1) + ":");
+            lines.add(Messages.text(TournamentStatusMessage.BRACKET_ROUND, Placeholder.of("round", roundIndex + 1)));
             for (BracketMatch bracketMatch : rounds.get(roundIndex)) {
-                lines.add("  " + bracketMatch.getMatchId()
-                        + " " + bracketMatch.getFirstTeamName().orElse("open")
-                        + " vs " + bracketMatch.getSecondTeamName().orElse("open")
-                        + bracketMatch.getWinnerTeamName().map(winner -> " -> " + winner).orElse(""));
+                lines.add(describeBracketMatch(bracketMatch));
             }
         }
         return lines;
+    }
+
+    private static String describeBracketMatch(BracketMatch bracketMatch) {
+        String openSlot = Messages.text(TournamentStatusMessage.BRACKET_OPEN_SLOT);
+        Placeholder match = Placeholder.of("match", bracketMatch.getMatchId());
+        Placeholder firstTeam = Placeholder.of("firstTeam", bracketMatch.getFirstTeamName().orElse(openSlot));
+        Placeholder secondTeam = Placeholder.of("secondTeam", bracketMatch.getSecondTeamName().orElse(openSlot));
+        return bracketMatch.getWinnerTeamName()
+                .map(winner -> Messages.text(TournamentStatusMessage.BRACKET_DECIDED_MATCH, match, firstTeam,
+                        secondTeam, Placeholder.of("winner", winner)))
+                .orElseGet(() -> Messages.text(TournamentStatusMessage.BRACKET_MATCH, match, firstTeam, secondTeam));
     }
 
     private void recordBracketWinner(String matchId, String winnerTeamName, MatchDecisionKind decisionKind) {
@@ -553,8 +582,8 @@ public final class TournamentManager implements MatchCompletionHandler {
         if (bracket.isComplete()) {
             state = TournamentState.FINISHED;
             deleteSavedState();
-            broadcastSuccess("The tournament is over, the winner is "
-                    + bracket.getChampionTeamName().orElse(winnerTeamName));
+            broadcastSuccess(Messages.text(TournamentMessage.WINNER,
+                    Placeholder.of("team", bracket.getChampionTeamName().orElse(winnerTeamName))));
             return;
         }
         saveState();
@@ -569,14 +598,16 @@ public final class TournamentManager implements MatchCompletionHandler {
         Optional<BracketMatch> nextMatch = MatchSequence.findNextMatch(bracket);
         if (nextMatch.isPresent()) {
             findRegisteredTeams(nextMatch.get()).ifPresent(teams -> announceToMatchAudience(teams,
-                    "Next: " + teams.get(0).getTeamName() + " against " + teams.get(1).getTeamName()
-                            + " (" + nextMatch.get().getMatchId() + ")", true));
+                    Messages.text(TournamentMessage.NEXT_MATCH, Placeholder.of("firstTeam", teams.get(0).getTeamName()),
+                            Placeholder.of("secondTeam", teams.get(1).getTeamName()),
+                            Placeholder.of("match", nextMatch.get().getMatchId())), true));
             return;
         }
         if (finalMatchGate.getStage() == FinalMatchStage.READY) {
             findRegisteredTeams(bracket.getFinalMatch()).ifPresent(teams -> announceToMatchAudience(teams,
-                    "The final will be played by " + teams.get(0).getTeamName() + " and "
-                            + teams.get(1).getTeamName() + ", an admin starts it", true));
+                    Messages.text(TournamentMessage.FINAL_PLAYERS,
+                            Placeholder.of("firstTeam", teams.get(0).getTeamName()),
+                            Placeholder.of("secondTeam", teams.get(1).getTeamName())), true));
         }
     }
 
@@ -597,7 +628,8 @@ public final class TournamentManager implements MatchCompletionHandler {
             stateStorage.save(SavedTournament.capture(bracket, state, startedAt, Instant.now(),
                     decisionKindsByMatchId));
         } catch (IOException | RuntimeException saveFailure) {
-            adminNotifier.notifyAdmins(SAVE_FAILURE_WARNING + describeFailure(saveFailure));
+            adminNotifier.notifyAdmins(Messages.text(TournamentMessage.SAVE_FAILURE,
+                    Placeholder.of("reason", describeFailure(saveFailure))));
         }
     }
 
@@ -605,7 +637,8 @@ public final class TournamentManager implements MatchCompletionHandler {
         try {
             stateStorage.delete();
         } catch (IOException | RuntimeException deleteFailure) {
-            adminNotifier.notifyAdmins(DELETE_FAILURE_WARNING + describeFailure(deleteFailure));
+            adminNotifier.notifyAdmins(Messages.text(TournamentMessage.DELETE_FAILURE,
+                    Placeholder.of("reason", describeFailure(deleteFailure))));
         }
     }
 
@@ -648,15 +681,16 @@ public final class TournamentManager implements MatchCompletionHandler {
             plugin.getLogger().warning("Both teams of match " + bracketMatch.getMatchId()
                     + " are no longer registered, the match needs an admin decision");
             if (matchIdsWarnedAboutMissingTeams.add(bracketMatch.getMatchId())) {
-                adminNotifier.notifyAdmins("Both teams of match " + bracketMatch.getMatchId() + " are no longer "
-                        + "registered, the tournament waits for you. Decide the match in the match menu of "
-                        + "/tournament under \"Decide a waiting match\"");
+                adminNotifier.notifyAdmins(Messages.text(TournamentMessage.BOTH_TEAMS_MISSING,
+                        Placeholder.of("match", bracketMatch.getMatchId()),
+                        Placeholder.of("tile", Messages.text(MatchMenuMessage.DECIDE_WAITING_MATCH_TITLE))));
             }
             return false;
         }
         Team advancingTeam = firstTeam.orElseGet(secondTeam::orElseThrow);
-        announceToMatchAudience(List.of(advancingTeam), advancingTeam.getTeamName() + " advances in match "
-                + bracketMatch.getMatchId() + " because the opposing team is no longer registered");
+        announceToMatchAudience(List.of(advancingTeam), Messages.text(TournamentMessage.WALKOVER,
+                Placeholder.of("team", advancingTeam.getTeamName()),
+                Placeholder.of("match", bracketMatch.getMatchId())));
         recordBracketWinner(bracketMatch.getMatchId(), advancingTeam.getTeamName(), MatchDecisionKind.WALKOVER);
         return false;
     }
@@ -682,8 +716,10 @@ public final class TournamentManager implements MatchCompletionHandler {
         if (finalMatch) {
             finalMatchGate.markRunning();
         }
-        announceToMatchAudience(match.getTeams(), "Match " + match.getMatchId() + ": "
-                + match.getFirstTeam().getTeamName() + " against " + match.getSecondTeam().getTeamName());
+        announceToMatchAudience(match.getTeams(), Messages.text(TournamentMessage.MATCH_ANNOUNCEMENT,
+                Placeholder.of("match", match.getMatchId()),
+                Placeholder.of("firstTeam", match.getFirstTeam().getTeamName()),
+                Placeholder.of("secondTeam", match.getSecondTeam().getTeamName())));
         matchService.startMatch(match);
     }
 

@@ -23,7 +23,7 @@ class MatchMessageAudienceTest {
     private static final RoundTimeoutSettings TWO_SECOND_ROUND_WITH_A_WARNING =
             new RoundTimeoutSettings(2, 1, 0.0D, 0.0D);
     private static final RoundTimeoutSettings ONE_SECOND_ROUND = new RoundTimeoutSettings(1, 0, 2.0D, 1.0D);
-    private static final String SUDDEN_DEATH_WARNING = "Sudden death in 1 seconds";
+    private static final String SUDDEN_DEATH_WARNING = "Sudden death in 1 second";
     private static final String SUDDEN_DEATH_TITLE = "Sudden death / Both teams take damage until one of them falls";
     private static final String SUDDEN_DEATH_LINE = "The time limit of round 1 in match M1 is over, sudden death "
             + "has started";

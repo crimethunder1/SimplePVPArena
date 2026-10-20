@@ -119,7 +119,7 @@ class MatchAnnouncementAudienceTest {
         String byeTeamName = tournament.tournamentManager().getBracket().orElseThrow()
                 .getTeamNamesWithFirstRoundBye().iterator().next();
         assertEquals(List.of("The tournament has started with 3 teams in 2 rounds",
-                "Teams advancing without a first round opponent: " + byeTeamName), tournament.broadcasts());
+                "Team advancing without a first round opponent: " + byeTeamName), tournament.broadcasts());
     }
 
     @Test

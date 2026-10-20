@@ -7,6 +7,10 @@ import de.simplepvparena.arena.SpectatorService;
 import de.simplepvparena.gate.StartGateCountdown;
 import de.simplepvparena.gate.StartGates;
 import de.simplepvparena.kit.KitService;
+import de.simplepvparena.message.MatchMenuMessage;
+import de.simplepvparena.message.MatchMessage;
+import de.simplepvparena.message.Messages;
+import de.simplepvparena.message.Placeholder;
 import de.simplepvparena.message.TournamentMessages;
 import de.simplepvparena.team.Team;
 import net.kyori.adventure.text.Component;
@@ -53,8 +57,6 @@ public final class MatchService {
             Ticks.duration(SCORE_TITLE_FADE_IN_TICKS), Ticks.duration(SCORE_TITLE_STAY_TICKS),
             Ticks.duration(SCORE_TITLE_FADE_OUT_TICKS));
 
-    private static final String DECIDED_BY_AN_ADMIN = "decided by an admin";
-
     private final Plugin plugin;
     private final KitService kitService;
     private final SpectatorService spectatorService;
@@ -87,6 +89,10 @@ public final class MatchService {
         this.fighterColours = fighterColours;
         this.startGates = Objects.requireNonNull(startGates, "startGates");
         this.temporaryEntityRemover = Objects.requireNonNull(temporaryEntityRemover, "temporaryEntityRemover");
+    }
+
+    public static String describeMatchMenuTile(MatchMenuMessage tileTitle) {
+        return Messages.text(MatchMessage.MENU_REFERENCE, Placeholder.of("tile", Messages.text(tileTitle)));
     }
 
     public void setMatchCompletionHandler(MatchCompletionHandler matchCompletionHandler) {
@@ -277,9 +283,8 @@ public final class MatchService {
         fighterColours.colourFighters(match);
         startGates.openAtRoundStart(remainingSeconds -> announceStartGateSecond(match, remainingSeconds));
         boolean timeLimited = startRoundTimer(match);
-        announceToMatch(match, "Round " + match.getRoundNumber() + " of match " + match.getMatchId()
-                + " has started (" + match.getScore().describe() + "), "
-                + describeRoundLimit(timeLimited, roundTimeoutSettings.roundTimeoutSeconds()));
+        announceToMatch(match, describeRoundStart(match.getRoundNumber(), match.getMatchId(),
+                match.getScore().describe(), timeLimited, roundTimeoutSettings.roundTimeoutSeconds()));
 
         Optional<RoundOutcome> immediateOutcome = match.getRoundParticipants().orElseThrow().determineOutcome();
         if (immediateOutcome.isPresent()) {
@@ -306,37 +311,39 @@ public final class MatchService {
                 announceToMatch(match, drawMessage);
             }
             if (hasAnyOnlineParticipant(match)) {
-                announceRoundTitle(match, "Round " + match.getRoundNumber() + " is a draw");
+                announceRoundTitle(match, Messages.text(MatchMessage.ROUND_DRAW_TITLE,
+                        Placeholder.of("round", match.getRoundNumber())));
                 scheduleNextRound(match);
                 return;
             }
-            announceWarningToMatch(match, "Match " + match.getMatchId()
-                    + " is halted, no participant is online"
-                    + TournamentMessages.LINE_BREAK
-                    + "Use \"Force a result\" in the match menu of /tournament to resolve it");
+            announceWarningToMatch(match, Messages.text(MatchMessage.HALTED,
+                    Placeholder.of("match", match.getMatchId()),
+                    Placeholder.of("action", describeMatchMenuTile(MatchMenuMessage.FORCE_RESULT_TITLE))));
             return;
         }
         String winnerTeamName = outcome.winnerTeamName().orElseThrow();
         match.getScore().awardPoint(winnerTeamName);
-        announceSuccessToMatch(match, winnerTeamName + " scores a point (" + match.getScore().describe() + ")");
+        announceSuccessToMatch(match, Messages.text(MatchMessage.POINT_SCORED, Placeholder.of("team", winnerTeamName),
+                Placeholder.of("score", match.getScore().describe())));
         Optional<String> matchWinner = match.getScore().getWinnerTeamName();
         if (matchWinner.isPresent()) {
             finishMatch(match, matchWinner.get(), false);
             return;
         }
         match.setState(MatchState.BETWEEN_ROUNDS);
-        announceRoundTitle(match, winnerTeamName + " wins round " + match.getRoundNumber());
+        announceRoundTitle(match, Messages.text(MatchMessage.ROUND_WON_TITLE, Placeholder.of("team", winnerTeamName),
+                Placeholder.of("round", match.getRoundNumber())));
         scheduleNextRound(match);
     }
 
     static List<String> buildDrawMessages(int roundNumber, String matchId, RoundOutcome outcome) {
-        String drawMessage = "Round " + roundNumber + " of match " + matchId
-                + " ended without a surviving team, no point is awarded";
+        Placeholder round = Placeholder.of("round", roundNumber);
+        Placeholder match = Placeholder.of("match", matchId);
+        String drawMessage = Messages.text(MatchMessage.ROUND_DRAW, round, match);
         if (!outcome.isSuddenDeathDraw()) {
             return List.of(drawMessage);
         }
-        return List.of(drawMessage, "Both teams fell in the same sudden death second, round " + roundNumber
-                + " of match " + matchId + " is repeated");
+        return List.of(drawMessage, Messages.text(MatchMessage.SUDDEN_DEATH_DRAW, round, match));
     }
 
     private void scheduleNextRound(Match match) {
@@ -352,8 +359,8 @@ public final class MatchService {
         startGates.stopAndRestore();
         match.setState(MatchState.FINISHED);
         activeMatch = null;
-        announceSuccessToMatch(match, "Match " + match.getMatchId() + " is over, " + winnerTeamName + " wins ("
-                + match.getScore().describe() + ")");
+        announceSuccessToMatch(match, Messages.text(MatchMessage.OVER, Placeholder.of("match", match.getMatchId()),
+                Placeholder.of("team", winnerTeamName), Placeholder.of("score", match.getScore().describe())));
         releaseParticipants(match);
         announceMatchTitle(match, winnerTeamName, decidedByAnAdmin);
         matchCompletionHandler.onMatchCompleted(match, winnerTeamName);
@@ -374,11 +381,16 @@ public final class MatchService {
         return true;
     }
 
-    static String describeRoundLimit(boolean timeLimited, int roundTimeoutSeconds) {
+    static String describeRoundStart(int roundNumber, String matchId, String score, boolean timeLimited,
+                                     int roundTimeoutSeconds) {
+        Placeholder round = Placeholder.of("round", roundNumber);
+        Placeholder match = Placeholder.of("match", matchId);
+        Placeholder scoreValue = Placeholder.of("score", score);
         if (timeLimited) {
-            return "time limit " + roundTimeoutSeconds + " seconds";
+            return Messages.plural(MatchMessage.ROUND_STARTED_WITH_TIME_LIMIT, roundTimeoutSeconds, round, match,
+                    scoreValue);
         }
-        return "no time limit, the round runs until one of the teams falls";
+        return Messages.text(MatchMessage.ROUND_STARTED_WITHOUT_TIME_LIMIT, round, match, scoreValue);
     }
 
     private void stopRoundTimer() {
@@ -395,7 +407,7 @@ public final class MatchService {
         RoundTimer roundTimer = activeRoundTimer.timer();
         switch (roundTimer.tick()) {
             case WARNING -> announceActionBarToMatch(match,
-                    "Sudden death in " + roundTimer.getRemainingSeconds() + " seconds");
+                    Messages.plural(MatchMessage.SUDDEN_DEATH_WARNING, roundTimer.getRemainingSeconds()));
             case SUDDEN_DEATH_STARTED -> announceSuddenDeathStart(match);
             case SUDDEN_DEATH_DAMAGE -> applySuddenDeathDamage(match, roundTimer.getCurrentSuddenDeathDamage());
             case RUNNING, PAUSED -> { }
@@ -403,9 +415,10 @@ public final class MatchService {
     }
 
     private void announceSuddenDeathStart(Match match) {
-        announceTitleToMatch(match, "Sudden death", "Both teams take damage until one of them falls");
-        announceWarningToMatch(match, "The time limit of round " + match.getRoundNumber() + " in match "
-                + match.getMatchId() + " is over, sudden death has started");
+        announceTitleToMatch(match, Messages.text(MatchMessage.SUDDEN_DEATH_TITLE),
+                Messages.text(MatchMessage.SUDDEN_DEATH_SUBTITLE));
+        announceWarningToMatch(match, Messages.text(MatchMessage.SUDDEN_DEATH_STARTED,
+                Placeholder.of("round", match.getRoundNumber()), Placeholder.of("match", match.getMatchId())));
     }
 
     private void applySuddenDeathDamage(Match match, double damageAmount) {
@@ -538,10 +551,14 @@ public final class MatchService {
     }
 
     private void announceMatchTitle(Match match, String winnerTeamName, boolean decidedByAnAdmin) {
-        String headline = winnerTeamName + (match.isFinalMatch() ? " wins the final" : " wins");
-        String result = decidedByAnAdmin ? DECIDED_BY_AN_ADMIN : match.getScore().describe();
-        showScoreTitle(match, Component.text(headline, TournamentMessages.SUCCESS_COLOUR),
-                match.getMatchId() + ", " + result);
+        MatchMessage headlineKey = match.isFinalMatch() ? MatchMessage.FINAL_WON_TITLE : MatchMessage.MATCH_WON_TITLE;
+        String headline = Messages.text(headlineKey, Placeholder.of("team", winnerTeamName));
+        Placeholder matchId = Placeholder.of("match", match.getMatchId());
+        String result = decidedByAnAdmin
+                ? Messages.text(MatchMessage.DECIDED_BY_AN_ADMIN_SUBTITLE, matchId)
+                : Messages.text(MatchMessage.RESULT_SUBTITLE, matchId,
+                        Placeholder.of("score", match.getScore().describe()));
+        showScoreTitle(match, Component.text(headline, TournamentMessages.SUCCESS_COLOUR), result);
     }
 
     private void showScoreTitle(Match match, Component headline, String detail) {

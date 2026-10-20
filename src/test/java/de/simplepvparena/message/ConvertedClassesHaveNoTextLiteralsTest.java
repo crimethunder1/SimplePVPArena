@@ -91,7 +91,15 @@ class ConvertedClassesHaveNoTextLiteralsTest {
             "listener/PlayerConnectionListener.java",
             "gate/StartGateCountdown.java",
             "gate/StartGateDuration.java",
-            "gate/StartGateItemService.java");
+            "gate/StartGateItemService.java",
+            "tournament/TournamentState.java",
+            "tournament/FinalMatchStage.java",
+            "tournament/FinalMatchGate.java",
+            "tournament/TournamentOperationResult.java",
+            "match/Match.java",
+            "match/MatchScore.java",
+            "kit/KitService.java",
+            "command/TournamentCommand.java");
 
     private static final Pattern STRING_LITERAL = Pattern.compile("\"((?:[^\"\\\\]|\\\\.)*)\"");
     private static final Pattern USAGE_TOKEN = Pattern.compile("<[^<>]*>");

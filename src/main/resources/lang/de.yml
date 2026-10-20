@@ -1084,3 +1084,160 @@ start-gate:
       one: 'Das Starttor hat {count} Block'
       other: 'Das Starttor hat {count} Blöcke'
     comes-down-over: 'Es wird über {duration} abgebaut'
+tournament:
+  reply:
+    started: 'Turnier gestartet'
+    paused: 'Turnier pausiert'
+    resumed: 'Turnier fortgesetzt'
+    cancelled: 'Turnier abgebrochen'
+  start:
+    at-least-teams-required:
+      one: 'Mindestens {count} Team ist nötig'
+      other: 'Mindestens {count} Teams sind nötig'
+    uneven-team-count: 'Die Anzahl der Teams ist ungerade, nutze {action}, um trotzdem zu starten'
+  arena:
+    not-configured:
+      - 'Die Arena ist nicht vollständig eingerichtet'
+      - 'Berechne ihre Kampffläche mit {calculateAction} und setze den Tribünen-Spawn mit {tribuneSpawnAction}'
+    being-cleaned: 'Die Arena wird noch gereinigt. Versuche es gleich noch einmal.'
+    occupied: 'Die Arena ist durch Match {match} belegt'
+  result:
+    team-not-in-match: '{team} nimmt nicht an Match {match} teil'
+    decided: 'Match {match} wurde für {team} entschieden'
+    unknown-match: 'Unbekanntes Match {match}'
+    already-decided: 'Match {match} ist bereits entschieden'
+  kit-choice-running: 'Für Match {match} wird gerade ein Kit gewählt, warte darauf oder pausiere das Turnier'
+  final:
+    paused:
+      - 'Das Turnier ist pausiert'
+      - 'Setze es mit {action} fort, bevor du das Finale startest'
+    arena-being-cleaned:
+      - 'Die Arena wird nach dem letzten Match noch gereinigt'
+      - 'Starte das Finale gleich noch einmal, die Finalisten sollen in der Arena kämpfen, die der Admin gebaut hat'
+    walkover: 'Das Finale wurde durch einen kampflosen Sieg entschieden, {team} gewinnt das Turnier'
+    finalist-missing: 'Das Finale kann nicht starten, mindestens ein Finalist ist nicht mehr registriert'
+    kit-being-chosen: 'Das Kit für das Finale wird gerade gewählt'
+    started: 'Das Finale hat begonnen'
+  team:
+    rename-refusal: 'Ein Team kann nicht umbenannt werden, während ein Turnier läuft, der Turnierbaum behält seinen Namen'
+    in-match: 'Team {team} spielt in Match {match}, es kann erst nach dem Ende des Matches geändert werden'
+    waiting-for-kit-choice: 'Team {team} wartet auf die Kit-Wahl von Match {match}, es kann erst nach dem Ende des Matches geändert werden'
+  announcement:
+    started: 'Das Turnier hat mit {teams} in {rounds} begonnen'
+    team-count:
+      one: '{count} Team'
+      other: '{count} Teams'
+    round-count:
+      one: '{count} Turnierrunde'
+      other: '{count} Turnierrunden'
+    byes:
+      one: 'Team ohne Gegner in der ersten Turnierrunde, es rückt kampflos vor: {teams}'
+      other: 'Teams ohne Gegner in der ersten Turnierrunde, sie rücken kampflos vor: {teams}'
+    paused:
+      - 'Das Turnier ist pausiert, bis zur Fortsetzung startet kein weiteres Match'
+      - 'Die Rundenzeit behält ihre verbleibende Zeit'
+    continues: 'Das Turnier geht weiter'
+    cancelled: 'Das Turnier wurde abgebrochen'
+    match: 'Match {match}: {firstTeam} gegen {secondTeam}'
+    next-match: 'Als Nächstes: {firstTeam} gegen {secondTeam} ({match})'
+    final-players: 'Das Finale spielen {firstTeam} und {secondTeam}, ein Admin startet es'
+    walkover: '{team} rückt in Match {match} kampflos vor, weil das gegnerische Team nicht mehr registriert ist'
+    winner: 'Das Turnier ist vorbei, {team} gewinnt'
+  notice:
+    no-baseline: 'Es ist kein Ausgangszustand der Kampffläche gespeichert, deshalb wird die Arena zwischen den Matches nicht gereinigt. Einen Ausgangszustand nimmt {action} auf'
+    smaller-teams: '{teams}. Das Turnier startet trotzdem, ein fehlender Spieler zählt als abwesend'
+    larger-teams:
+      one: '{teams}. Das Turnier startet trotzdem, jeder Spieler dieses Teams, der online ist, kämpft'
+      other: '{teams}. Das Turnier startet trotzdem, jeder Spieler dieser Teams, der online ist, kämpft'
+    cleaning-skipped-after-final: 'Die Arena wurde nach Match {match} nicht gereinigt: {reason}. Führe {action} vor dem nächsten Turnier erneut aus'
+    cleaning-skipped: 'Die Arena wurde nach Match {match} nicht gereinigt: {reason}. Das nächste Match beginnt in der Arena, wie sie jetzt ist'
+    both-teams-missing: 'Beide Teams von Match {match} sind nicht mehr registriert, das Turnier wartet auf dich. Entscheide das Match im Match-Menü von /tournament unter "{tile}"'
+  restore:
+    unreadable: 'Das gespeicherte Turnier in {file} konnte nicht gelesen werden: {reason}. Es wurde kein Turnier wiederhergestellt'
+    unreadable-without-reason: 'Das gespeicherte Turnier in {file} konnte nicht gelesen werden, der Grund ist unbekannt. Es wurde kein Turnier wiederhergestellt'
+    inconsistent: 'Das gespeicherte Turnier in {file} passt nicht zusammen: {reason}. Es wurde kein Turnier wiederhergestellt'
+    restored:
+      one: 'Das Turnier wurde aus {file} wiederhergestellt (entschiedene Matches: {count}, Turnierrunden: {rounds}). Es ist pausiert, ein Match, das vor dem Neustart lief, beginnt von vorn. Setze es mit {action} fort'
+      other: 'Das Turnier wurde aus {file} wiederhergestellt (entschiedene Matches: {count}, Turnierrunden: {rounds}). Es ist pausiert, ein Match, das vor dem Neustart lief, beginnt von vorn. Setze es mit {action} fort'
+    without-baseline: 'Nach dem Neustart ist kein Ausgangszustand der Kampffläche gespeichert. Falls der Server abgestürzt ist, repariere zuerst die Arena, führe dann {action} erneut aus, das nimmt die Arena, wie sie jetzt ist, als neuen Ausgangszustand auf, und setze erst danach das Turnier fort'
+    unregistered-teams:
+      one: 'Team des wiederhergestellten Turniers, das nicht mehr registriert ist: {teams}. Seine entschiedenen Matches behalten den Namen, ein offenes Match von ihm geht beim Fortsetzen des Turniers kampflos an den Gegner'
+      other: 'Teams des wiederhergestellten Turniers, die nicht mehr registriert sind: {teams}. Ihre entschiedenen Matches behalten den Namen, ein offenes Match von ihnen geht beim Fortsetzen des Turniers kampflos an den Gegner'
+  storage:
+    save-failure: 'Der Turnierstand konnte nicht gespeichert werden, das Turnier läuft weiter und die nächste Entscheidung versucht es erneut: {reason}'
+    delete-failure: 'Der gespeicherte Turnierstand konnte nicht entfernt werden, der nächste Serverstart würde ihn wiederherstellen: {reason}'
+tournament-status:
+  state:
+    idle: 'ohne Turnier'
+    running: 'läuft'
+    paused: 'pausiert'
+    cancelled: 'abgebrochen'
+    finished: 'beendet'
+  final-stage:
+    pending: 'wartet auf Finalisten'
+    ready: 'bereit'
+    running: 'läuft'
+    finished: 'vorbei'
+  status:
+    without-bracket: 'Turnierstatus: {state}'
+    running-match: 'Turnierstatus: {state} | Turnierrunden: {rounds} | laufendes Match: {match} | Finale: {stage}'
+    no-running-match: 'Turnierstatus: {state} | Turnierrunden: {rounds} | laufendes Match: keins | Finale: {stage}'
+    running-match-and-champion: 'Turnierstatus: {state} | Turnierrunden: {rounds} | laufendes Match: {match} | Finale: {stage} | Sieger: {champion}'
+    no-running-match-and-champion: 'Turnierstatus: {state} | Turnierrunden: {rounds} | laufendes Match: keins | Finale: {stage} | Sieger: {champion}'
+  bracket:
+    round: 'Turnierrunde {round}:'
+    match: '  {match} {firstTeam} gegen {secondTeam}'
+    decided-match: '  {match} {firstTeam} gegen {secondTeam} -> {winner}'
+    open-slot: 'offen'
+final:
+  start-reference: '"{tile}" in /tournament'
+  refusal:
+    not-ready: 'Das Finale ist noch nicht bereit, zuerst müssen beide Finalisten feststehen'
+    already-running: 'Das Finale läuft bereits'
+    already-decided: 'Das Finale ist bereits entschieden'
+  ready: 'Das Finale {firstTeam} gegen {secondTeam} ist bereit, ein Admin startet es mit {action}'
+match:
+  menu-reference: '"{tile}" im Match-Menü von /tournament'
+  round:
+    started-with-time-limit:
+      one: 'Runde {round} von Match {match} hat begonnen ({score}), Zeitlimit {count} Sekunde'
+      other: 'Runde {round} von Match {match} hat begonnen ({score}), Zeitlimit {count} Sekunden'
+    started-without-time-limit: 'Runde {round} von Match {match} hat begonnen ({score}), ohne Zeitlimit, die Runde läuft, bis eines der Teams fällt'
+    draw: 'Runde {round} von Match {match} endete ohne überlebendes Team, es gibt keinen Punkt'
+    sudden-death-draw: 'Beide Teams sind in derselben Sekunde des Sudden Death gefallen, Runde {round} von Match {match} wird wiederholt'
+  point-scored: '{team} holt einen Punkt ({score})'
+  halted:
+    - 'Match {match} ist angehalten, kein Teilnehmer ist online'
+    - 'Nutze {action}, um es zu entscheiden'
+  over: 'Match {match} ist vorbei, {team} gewinnt ({score})'
+  sudden-death:
+    warning:
+      one: 'Sudden Death in {count} Sekunde'
+      other: 'Sudden Death in {count} Sekunden'
+    title: 'Sudden Death'
+    subtitle: 'Beide Teams nehmen Schaden, bis eines von ihnen fällt'
+    started: 'Das Zeitlimit von Runde {round} in Match {match} ist abgelaufen, der Sudden Death hat begonnen'
+  title:
+    round-draw: 'Runde {round} ist unentschieden'
+    round-won: '{team} gewinnt Runde {round}'
+    match-won: '{team} gewinnt'
+    final-won: '{team} gewinnt das Finale'
+    result: '{match}, {score}'
+    decided-by-an-admin: '{match}, von einem Admin entschieden'
+player-state:
+  not-found: 'Für {player} wurde kein gespeichertes Inventar und kein gespeicherter Zustand gefunden, das Kit wurde abgeräumt, ohne etwas wiederherzustellen'
+  unreadable-cleared: 'Das gespeicherte Inventar und der Zustand von {player} konnten nicht gelesen werden, das Kit wurde abgeräumt, ohne etwas wiederherzustellen, die Datei bleibt als {file} erhalten'
+  unreadable-kept: 'Das gespeicherte Inventar und der Zustand von {player} konnten nicht gelesen werden, es wurde nichts abgeräumt, weil kein Kit als angewendet markiert ist, die Datei bleibt als {file} erhalten'
+  not-restored: 'Das gespeicherte Inventar und der Zustand von {player} konnten nicht wiederhergestellt werden ({reason}), der gespeicherte Zustand bleibt für den nächsten Versuch erhalten'
+  not-written: 'Das Inventar und der Zustand von {player} konnten nicht auf die Festplatte geschrieben werden ({reason}), sie liegen nur im Speicher und gehen verloren, wenn der Server unerwartet stoppt'
+  file-not-deleted: 'Das gespeicherte Inventar und der Zustand von {player} wurden wiederhergestellt, aber die Datei konnte nicht gelöscht werden ({reason})'
+  set-aside: 'Das gespeicherte Inventar und der Zustand von {player} wurden wiederhergestellt, aber die Datei konnte nicht gelöscht werden ({reason}), sie wurde als .restored-Datei beiseitegelegt und wird nicht noch einmal wiederhergestellt'
+command:
+  menu-only-for-players:
+    - 'Die Turnierverwaltung ist ein Menü'
+    - 'Nur ein Spieler kann es öffnen, nicht die Konsole'
+  only-for-players: 'Diesen Befehl kann nur ein Spieler benutzen'
+  spectate:
+    while-fighting: 'Du kannst die Arena nicht verlassen, während du kämpfst'
+    no-tribune-position: 'Die Arena hat keine nutzbare Tribünenposition'
+    watching: 'Du schaust jetzt der Arena zu'

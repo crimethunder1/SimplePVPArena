@@ -1,11 +1,14 @@
 package de.simplepvparena.tournament;
 
+import de.simplepvparena.message.FinalMessage;
+import de.simplepvparena.message.MatchMenuMessage;
+import de.simplepvparena.message.Messages;
+import de.simplepvparena.message.Placeholder;
+
 import java.util.Objects;
 import java.util.Optional;
 
 public final class FinalMatchGate {
-
-    public static final String FINAL_START_ACTION = "\"Start the final\" in /tournament";
 
     private final AdminNotifier adminNotifier;
 
@@ -44,17 +47,23 @@ public final class FinalMatchGate {
 
     public Optional<String> findStartRejection() {
         return switch (stage) {
-            case PENDING -> Optional.of("The final is not ready yet, both finalists have to be determined first");
+            case PENDING -> Optional.of(Messages.text(FinalMessage.NOT_READY));
             case READY -> Optional.empty();
-            case RUNNING -> Optional.of("The final is already running");
-            case FINISHED -> Optional.of("The final is already decided");
+            case RUNNING -> Optional.of(Messages.text(FinalMessage.ALREADY_RUNNING));
+            case FINISHED -> Optional.of(Messages.text(FinalMessage.ALREADY_DECIDED));
         };
     }
 
+    public static String describeFinalStartAction() {
+        return Messages.text(FinalMessage.START_REFERENCE,
+                Placeholder.of("tile", Messages.text(MatchMenuMessage.FINAL_TITLE)));
+    }
+
     static String buildReadyMessage(BracketMatch finalMatch) {
-        return "The final " + finalMatch.getFirstTeamName().orElseThrow() + " against "
-                + finalMatch.getSecondTeamName().orElseThrow()
-                + " is ready, an admin starts it with " + FINAL_START_ACTION;
+        return Messages.text(FinalMessage.READY,
+                Placeholder.of("firstTeam", finalMatch.getFirstTeamName().orElseThrow()),
+                Placeholder.of("secondTeam", finalMatch.getSecondTeamName().orElseThrow()),
+                Placeholder.of("action", describeFinalStartAction()));
     }
 
     private FinalMatchStage determineStage(BracketMatch finalMatch) {

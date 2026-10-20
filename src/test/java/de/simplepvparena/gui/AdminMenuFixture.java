@@ -20,6 +20,7 @@ import de.simplepvparena.border.BorderSelectorModeRegistry;
 import de.simplepvparena.border.BorderVisualEffect;
 import de.simplepvparena.border.BorderWallPreview;
 import de.simplepvparena.border.SpectatorBorderService;
+import de.simplepvparena.command.TournamentCommand;
 import de.simplepvparena.config.ConfigurationReloadReport;
 import de.simplepvparena.diagnostics.PluginDryRunArena;
 import de.simplepvparena.diagnostics.TournamentDryRun;
@@ -221,6 +222,11 @@ final class AdminMenuFixture {
         });
         onlinePlayers.add(player);
         return new OnlinePlayer(player, playerMessages);
+    }
+
+    TournamentCommand createTournamentCommand() {
+        return new TournamentCommand(matchService,
+                new SpectatorService(arenaRegistry, new SpectatorItemFactory(plugin)), menuService);
     }
 
     void letTheAdminLeave() {

@@ -1084,3 +1084,160 @@ start-gate:
       one: 'The gate holds {count} block'
       other: 'The gate holds {count} blocks'
     comes-down-over: 'It comes down over {duration}'
+tournament:
+  reply:
+    started: 'Tournament started'
+    paused: 'Tournament paused'
+    resumed: 'Tournament resumed'
+    cancelled: 'Tournament cancelled'
+  start:
+    at-least-teams-required:
+      one: 'At least {count} team is required'
+      other: 'At least {count} teams are required'
+    uneven-team-count: 'The team count is uneven, use {action} to start anyway'
+  arena:
+    not-configured:
+      - 'The arena is not fully configured'
+      - 'Calculate its fight area with {calculateAction} and set the tribune spawn with {tribuneSpawnAction}'
+    being-cleaned: 'The arena is still being cleaned. Try again in a moment.'
+    occupied: 'The arena is occupied by match {match}'
+  result:
+    team-not-in-match: '{team} does not take part in match {match}'
+    decided: 'Match {match} was decided for {team}'
+    unknown-match: 'Unknown match {match}'
+    already-decided: 'Match {match} is already decided'
+  kit-choice-running: 'A kit is being chosen for match {match}, wait for it or pause the tournament'
+  final:
+    paused:
+      - 'The tournament is paused'
+      - 'Continue it with {action} before starting the final'
+    arena-being-cleaned:
+      - 'The arena is still being cleaned after the last match'
+      - 'Start the final again in a moment, the finalists are meant to fight in the arena the admin built'
+    walkover: 'The final was decided by a walkover, {team} wins the tournament'
+    finalist-missing: 'The final cannot be started, at least one finalist is no longer registered'
+    kit-being-chosen: 'The kit for the final is being chosen'
+    started: 'The final has started'
+  team:
+    rename-refusal: 'A team cannot be renamed while a tournament is in progress, the bracket keeps its name'
+    in-match: 'Team {team} is in match {match}, it cannot be changed before the match is over'
+    waiting-for-kit-choice: 'Team {team} is waiting for the kit choice of match {match}, it cannot be changed before the match is over'
+  announcement:
+    started: 'The tournament has started with {teams} in {rounds}'
+    team-count:
+      one: '{count} team'
+      other: '{count} teams'
+    round-count:
+      one: '{count} round'
+      other: '{count} rounds'
+    byes:
+      one: 'Team advancing without a first round opponent: {teams}'
+      other: 'Teams advancing without a first round opponent: {teams}'
+    paused:
+      - 'The tournament is paused, no further match is started until it is resumed'
+      - 'The round timer keeps its remaining time'
+    continues: 'The tournament continues'
+    cancelled: 'The tournament has been cancelled'
+    match: 'Match {match}: {firstTeam} against {secondTeam}'
+    next-match: 'Next: {firstTeam} against {secondTeam} ({match})'
+    final-players: 'The final will be played by {firstTeam} and {secondTeam}, an admin starts it'
+    walkover: '{team} advances in match {match} because the opposing team is no longer registered'
+    winner: 'The tournament is over, the winner is {team}'
+  notice:
+    no-baseline: 'No baseline of the fight area is stored, so the arena is not cleaned between the matches. A baseline is taken by {action}'
+    smaller-teams: '{teams}. The tournament starts anyway, a missing player counts as absent'
+    larger-teams:
+      one: '{teams}. The tournament starts anyway, every online player of this team fights'
+      other: '{teams}. The tournament starts anyway, every online player of these teams fights'
+    cleaning-skipped-after-final: 'The arena was not cleaned after match {match}: {reason}. Run {action} again before the next tournament'
+    cleaning-skipped: 'The arena was not cleaned after match {match}: {reason}. The next match starts in the arena as it is now'
+    both-teams-missing: 'Both teams of match {match} are no longer registered, the tournament waits for you. Decide the match in the match menu of /tournament under "{tile}"'
+  restore:
+    unreadable: 'The saved tournament in {file} could not be read: {reason}. No tournament was restored'
+    unreadable-without-reason: 'The saved tournament in {file} could not be read: unknown reason. No tournament was restored'
+    inconsistent: 'The saved tournament in {file} does not fit together: {reason}. No tournament was restored'
+    restored:
+      one: 'The tournament was restored from {file} (matches decided: {count}, rounds: {rounds}). It is paused, a match that was running before the restart starts again. Continue it with {action}'
+      other: 'The tournament was restored from {file} (matches decided: {count}, rounds: {rounds}). It is paused, a match that was running before the restart starts again. Continue it with {action}'
+    without-baseline: 'No baseline of the fight area is stored after the restart. If the server crashed, repair the arena first, then run {action} again, that takes the arena as it is now as the new baseline, and only then continue the tournament'
+    unregistered-teams:
+      one: 'Team of the restored tournament that is no longer registered: {teams}. Their decided matches keep the name, an open match of theirs goes to the opponent by walkover when the tournament continues'
+      other: 'Teams of the restored tournament that are no longer registered: {teams}. Their decided matches keep the name, an open match of theirs goes to the opponent by walkover when the tournament continues'
+  storage:
+    save-failure: 'The tournament state could not be saved, the tournament carries on and the next decision tries again: {reason}'
+    delete-failure: 'The saved tournament state could not be removed, the next server start would restore it: {reason}'
+tournament-status:
+  state:
+    idle: 'IDLE'
+    running: 'RUNNING'
+    paused: 'PAUSED'
+    cancelled: 'CANCELLED'
+    finished: 'FINISHED'
+  final-stage:
+    pending: 'PENDING'
+    ready: 'READY'
+    running: 'RUNNING'
+    finished: 'FINISHED'
+  status:
+    without-bracket: 'Tournament state: {state}'
+    running-match: 'Tournament state: {state} | rounds: {rounds} | running match: {match} | final: {stage}'
+    no-running-match: 'Tournament state: {state} | rounds: {rounds} | running match: none | final: {stage}'
+    running-match-and-champion: 'Tournament state: {state} | rounds: {rounds} | running match: {match} | final: {stage} | champion: {champion}'
+    no-running-match-and-champion: 'Tournament state: {state} | rounds: {rounds} | running match: none | final: {stage} | champion: {champion}'
+  bracket:
+    round: 'Round {round}:'
+    match: '  {match} {firstTeam} vs {secondTeam}'
+    decided-match: '  {match} {firstTeam} vs {secondTeam} -> {winner}'
+    open-slot: 'open'
+final:
+  start-reference: '"{tile}" in /tournament'
+  refusal:
+    not-ready: 'The final is not ready yet, both finalists have to be determined first'
+    already-running: 'The final is already running'
+    already-decided: 'The final is already decided'
+  ready: 'The final {firstTeam} against {secondTeam} is ready, an admin starts it with {action}'
+match:
+  menu-reference: '"{tile}" in the match menu of /tournament'
+  round:
+    started-with-time-limit:
+      one: 'Round {round} of match {match} has started ({score}), time limit {count} second'
+      other: 'Round {round} of match {match} has started ({score}), time limit {count} seconds'
+    started-without-time-limit: 'Round {round} of match {match} has started ({score}), no time limit, the round runs until one of the teams falls'
+    draw: 'Round {round} of match {match} ended without a surviving team, no point is awarded'
+    sudden-death-draw: 'Both teams fell in the same sudden death second, round {round} of match {match} is repeated'
+  point-scored: '{team} scores a point ({score})'
+  halted:
+    - 'Match {match} is halted, no participant is online'
+    - 'Use {action} to resolve it'
+  over: 'Match {match} is over, {team} wins ({score})'
+  sudden-death:
+    warning:
+      one: 'Sudden death in {count} second'
+      other: 'Sudden death in {count} seconds'
+    title: 'Sudden death'
+    subtitle: 'Both teams take damage until one of them falls'
+    started: 'The time limit of round {round} in match {match} is over, sudden death has started'
+  title:
+    round-draw: 'Round {round} is a draw'
+    round-won: '{team} wins round {round}'
+    match-won: '{team} wins'
+    final-won: '{team} wins the final'
+    result: '{match}, {score}'
+    decided-by-an-admin: '{match}, decided by an admin'
+player-state:
+  not-found: 'No saved inventory and state of {player} was found, the kit was cleared without restoring anything'
+  unreadable-cleared: 'The saved inventory and state of {player} could not be read, the kit was cleared without restoring anything, the file is kept as {file}'
+  unreadable-kept: 'The saved inventory and state of {player} could not be read, nothing was cleared because no kit is marked as applied, the file is kept as {file}'
+  not-restored: 'The saved inventory and state of {player} could not be restored ({reason}), the saved state is kept for the next attempt'
+  not-written: 'The inventory and state of {player} could not be written to disk ({reason}), they are kept in memory only and are lost if the server stops unexpectedly'
+  file-not-deleted: 'The saved inventory and state of {player} were restored, but the file could not be deleted ({reason})'
+  set-aside: 'The saved inventory and state of {player} were restored, but the file could not be deleted ({reason}), it was set aside as a .restored file and is not restored again'
+command:
+  menu-only-for-players:
+    - 'The tournament administration is a menu'
+    - 'It can only be opened by a player, not from the console'
+  only-for-players: 'This command can only be used as a player'
+  spectate:
+    while-fighting: 'You cannot leave the arena while you are fighting'
+    no-tribune-position: 'The arena has no usable tribune position'
+    watching: 'You are now watching the arena'

@@ -141,7 +141,8 @@ class TournamentManagerStateStorageTest {
 
         assertEquals(TournamentState.RUNNING, fixture.tournamentManager().getState());
         assertEquals(Optional.of("round1-match1"), fixture.runningMatchId(), "the failed save holds nothing back");
-        assertEquals(List.of(TournamentManager.SAVE_FAILURE_WARNING + InMemoryTournamentStateStorage.SAVE_FAILURE),
+        assertEquals(List.of("The tournament state could not be saved, the tournament carries on and the next "
+                + "decision tries again: " + InMemoryTournamentStateStorage.SAVE_FAILURE),
                 fixture.adminMessagesContaining("could not be saved"));
 
         fixture.forceRunningMatchForTheFirstTeam();

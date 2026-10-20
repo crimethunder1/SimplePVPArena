@@ -51,7 +51,7 @@ class TournamentManagerTeamSizeTest {
         fixture.startTournament();
 
         assertEquals(List.of("1 team has more than 2 players: Bravo (3). The tournament starts anyway, every "
-                + "online player of these teams fights"), fixture.adminMessages());
+                + "online player of this team fights"), fixture.adminMessages());
         assertEquals(TournamentState.RUNNING, fixture.tournamentManager().getState());
     }
 
@@ -69,7 +69,7 @@ class TournamentManagerTeamSizeTest {
                 "1 team has fewer than 2 players: Alpha (1). The tournament starts anyway, a missing player counts "
                         + "as absent",
                 "1 team has more than 2 players: Charlie (4). The tournament starts anyway, every online player of "
-                        + "these teams fights"), fixture.adminMessages());
+                        + "this team fights"), fixture.adminMessages());
     }
 
     @Test

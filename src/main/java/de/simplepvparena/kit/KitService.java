@@ -1,5 +1,8 @@
 package de.simplepvparena.kit;
 
+import de.simplepvparena.message.Messages;
+import de.simplepvparena.message.Placeholder;
+import de.simplepvparena.message.PlayerStateMessage;
 import org.bukkit.GameMode;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
@@ -95,20 +98,18 @@ public final class KitService {
             case MISSING -> {
                 if (hasAppliedKit(player)) {
                     clearWithoutSnapshot(player);
-                    warningReporter.accept("No saved inventory and state of " + player.getName()
-                            + " was found, the kit was cleared without restoring anything");
+                    warningReporter.accept(Messages.text(PlayerStateMessage.NOT_FOUND,
+                            Placeholder.of("player", player.getName())));
                 }
             }
             case BROKEN -> {
                 if (hasAppliedKit(player)) {
                     clearWithoutSnapshot(player);
-                    warningReporter.accept("The saved inventory and state of " + player.getName()
-                            + " could not be read, the kit was cleared without restoring anything,"
-                            + " the file is kept as " + lookup.fileName());
+                    warningReporter.accept(Messages.text(PlayerStateMessage.UNREADABLE_CLEARED,
+                            Placeholder.of("player", player.getName()), Placeholder.of("file", lookup.fileName())));
                 } else {
-                    warningReporter.accept("The saved inventory and state of " + player.getName()
-                            + " could not be read, nothing was cleared because no kit is marked as applied,"
-                            + " the file is kept as " + lookup.fileName());
+                    warningReporter.accept(Messages.text(PlayerStateMessage.UNREADABLE_KEPT,
+                            Placeholder.of("player", player.getName()), Placeholder.of("file", lookup.fileName())));
                 }
             }
         }
@@ -129,9 +130,8 @@ public final class KitService {
             resetPlayerState(player);
             restoreSnapshot(player, snapshot);
         } catch (RuntimeException failure) {
-            warningReporter.accept("The saved inventory and state of " + player.getName()
-                    + " could not be restored (" + failure.getMessage()
-                    + "), the saved state is kept for the next attempt");
+            warningReporter.accept(Messages.text(PlayerStateMessage.NOT_RESTORED,
+                    Placeholder.of("player", player.getName()), Placeholder.of("reason", failure.getMessage())));
             return;
         }
         removeMarker(player);
@@ -146,9 +146,8 @@ public final class KitService {
         try {
             snapshotStorage.save(player.getUniqueId(), snapshot);
         } catch (IOException failure) {
-            warningReporter.accept("The inventory and state of " + player.getName()
-                    + " could not be written to disk (" + failure.getMessage()
-                    + "), they are kept in memory only and are lost if the server stops unexpectedly");
+            warningReporter.accept(Messages.text(PlayerStateMessage.NOT_WRITTEN,
+                    Placeholder.of("player", player.getName()), Placeholder.of("reason", failure.getMessage())));
         }
     }
 
@@ -176,13 +175,12 @@ public final class KitService {
         try {
             snapshotStorage.setAsideAsRestored(player.getUniqueId());
         } catch (IOException setAsideFailure) {
-            warningReporter.accept("The saved inventory and state of " + player.getName()
-                    + " were restored, but the file could not be deleted (" + deleteFailure.getMessage() + ")");
+            warningReporter.accept(Messages.text(PlayerStateMessage.FILE_NOT_DELETED,
+                    Placeholder.of("player", player.getName()), Placeholder.of("reason", deleteFailure.getMessage())));
             return;
         }
-        warningReporter.accept("The saved inventory and state of " + player.getName()
-                + " were restored, but the file could not be deleted (" + deleteFailure.getMessage()
-                + "), it was set aside as a .restored file and is not restored again");
+        warningReporter.accept(Messages.text(PlayerStateMessage.SET_ASIDE,
+                Placeholder.of("player", player.getName()), Placeholder.of("reason", deleteFailure.getMessage())));
     }
 
     private void removeMarker(Player player) {
