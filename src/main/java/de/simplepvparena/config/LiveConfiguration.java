@@ -17,6 +17,8 @@ public interface LiveConfiguration {
 
     void setStartGateDurationSeconds(int durationSeconds);
 
+    void setCountdownSeconds(int countdownSeconds);
+
     void setReconnectSeconds(int reconnectSeconds);
 
     void setTeamColourSettings(TeamColourSettings teamColourSettings);

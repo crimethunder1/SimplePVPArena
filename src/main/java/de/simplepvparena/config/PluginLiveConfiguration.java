@@ -114,6 +114,11 @@ public final class PluginLiveConfiguration implements LiveConfiguration {
     }
 
     @Override
+    public void setCountdownSeconds(int countdownSeconds) {
+        matchService.setCountdownSeconds(countdownSeconds);
+    }
+
+    @Override
     public void setReconnectSeconds(int reconnectSeconds) {
         matchService.setReconnectSeconds(reconnectSeconds);
     }

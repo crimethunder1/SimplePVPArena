@@ -35,6 +35,7 @@ class ConfigurationReloadServiceTest {
         assertEquals(new RoundTimeoutSettings(120, 30, 3.5D, 0.5D), liveConfiguration.roundTimeoutSettings());
         assertFalse(liveConfiguration.booleanValueOf(RecordingLiveConfiguration.SUDDEN_DEATH_IN_FINAL));
         assertEquals(4, liveConfiguration.intValueOf(RecordingLiveConfiguration.START_GATE_DURATION));
+        assertEquals(7, liveConfiguration.intValueOf(RecordingLiveConfiguration.COUNTDOWN_SECONDS));
         assertEquals(25, liveConfiguration.intValueOf(RecordingLiveConfiguration.RECONNECT_SECONDS));
         assertEquals(new TeamColourSettings(NamedTextColor.GOLD, NamedTextColor.DARK_PURPLE),
                 liveConfiguration.teamColourSettings());

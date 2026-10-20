@@ -75,6 +75,7 @@ class GermanConfigTextsTest {
                 "  die Wartezeit bis zum Zurücksetzen nach einer Runde, das Rundenzeitlimit, der Schaden im Sudden "
                         + "Death und ob das Finale ohne Zeitlimit ausgetragen wird",
                 "  die Sekunden, die das Starttor zu Beginn einer Runde braucht",
+                "  die Sekunden des Countdowns direkt vor dem Kampf, ab der nächsten Runde",
                 "  die Sekunden, die ein Kämpfer nach einem Verbindungsabbruch zum Zurückkommen hat, für jeden "
                         + "Verbindungsabbruch ab jetzt",
                 "  die Teamgröße, außer ein Turnier läuft oder ein Team hat mehr Spieler als eine kleinere neue Größe",

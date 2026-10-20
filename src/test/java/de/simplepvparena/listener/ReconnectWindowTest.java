@@ -316,7 +316,7 @@ class ReconnectWindowTest {
     }
 
     @Test
-    void aFighterWhoComesBackAndLeavesAgainGetsAFullNewWindow() {
+    void aFighterWhoComesBackAndLeavesAgainInTheSameRoundIsEliminatedAtOnce() {
         start();
         disconnect(fighter);
         harness.advanceSeconds(50);
@@ -324,15 +324,14 @@ class ReconnectWindowTest {
         harness.advanceSeconds(5);
 
         disconnect(fighter);
-        harness.advanceTicks(RECONNECT_TICKS - 1);
-
-        assertTrue(matchService.isActiveFighter(fighter.uniqueId()));
-        assertEquals(2, count(opponent, FIGHTER_LOST));
-
-        harness.advanceTicks(1);
 
         assertFalse(matchService.isActiveFighter(fighter.uniqueId()));
-        assertEquals(1, count(opponent, FIGHTER_NOT_BACK));
+        assertFalse(matchService.isWaitingForReconnect(fighter.uniqueId()));
+        assertEquals(1, count(opponent, FIGHTER_LOST));
+
+        harness.advanceTicks(RECONNECT_TICKS);
+
+        assertEquals(0, count(opponent, FIGHTER_NOT_BACK));
     }
 
     @Test

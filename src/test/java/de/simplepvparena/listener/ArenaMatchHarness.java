@@ -78,6 +78,8 @@ final class ArenaMatchHarness {
     private final List<String> roundStartSteps = new ArrayList<>();
     private final List<World> temporaryEntityRemovalWorlds = new ArrayList<>();
     private final StartGateMarks gateMarks = new StartGateMarks();
+    private final StartGateDuration gateDuration = new StartGateDuration();
+    private final RecordingRoundStartEffects roundStartEffects = new RecordingRoundStartEffects();
     private final StartGateOpeningService gateOpeningService;
     private final KitService kitService;
     private final MatchService matchService;
@@ -101,7 +103,7 @@ final class ArenaMatchHarness {
         installBukkitServer();
         this.borderService = new SpectatorBorderService(borderMarks, () -> { });
         this.spectatorService = new SpectatorService(arenaRegistry, new FakeSpectatorItems());
-        this.gateOpeningService = new StartGateOpeningService(plugin, gateMarks, new StartGateDuration(),
+        this.gateOpeningService = new StartGateOpeningService(plugin, gateMarks, gateDuration,
                 StartGateVisualEffect.NONE);
         this.kitService = kitServiceFactory.apply(plugin);
         this.matchService = new MatchService(plugin, kitService, spectatorService, fighterColours,
@@ -113,6 +115,8 @@ final class ArenaMatchHarness {
                     }
                     return 0;
                 });
+        matchService.setRoundStartEffects(roundStartEffects);
+        matchService.setCountdownSeconds(0);
         buildWallAndShape();
     }
 
@@ -150,6 +154,14 @@ final class ArenaMatchHarness {
 
     StartGateMarks getGateMarks() {
         return gateMarks;
+    }
+
+    StartGateDuration getGateDuration() {
+        return gateDuration;
+    }
+
+    RecordingRoundStartEffects getRoundStartEffects() {
+        return roundStartEffects;
     }
 
     RecordingFighterColours getFighterColours() {
@@ -255,6 +267,24 @@ final class ArenaMatchHarness {
         }
     }
 
+    void advanceTicksWithRepeatingTasks(long tickCount) {
+        for (long tick = 0; tick < tickCount; tick++) {
+            currentTick++;
+            for (ScheduledTask task : new ArrayList<>(scheduledTasks)) {
+                if (task.cancelled) {
+                    scheduledTasks.remove(task);
+                    repeatingTasks.remove(task);
+                } else if (task.periodTicks > 0L && task.nextRunTick <= currentTick) {
+                    task.nextRunTick += task.periodTicks;
+                    task.runnable.run();
+                } else if (task.periodTicks == 0L && task.dueTick <= currentTick) {
+                    scheduledTasks.remove(task);
+                    task.runnable.run();
+                }
+            }
+        }
+    }
+
     int getScheduledTaskCount() {
         return scheduledTasks.size();
     }
@@ -343,7 +373,8 @@ final class ArenaMatchHarness {
 
     private Object createScheduler() {
         return proxy(BukkitScheduler.class, (method, arguments) -> switch (method.getName()) {
-            case "runTaskTimer" -> scheduleRepeating((Runnable) arguments[1]);
+            case "runTaskTimer" -> scheduleRepeating((Runnable) arguments[1], (Long) arguments[2],
+                    (Long) arguments[3]);
             case "runTask" -> schedule(new ScheduledTask((Runnable) arguments[1], currentTick + 1L));
             case "runTaskLater" -> schedule(new ScheduledTask((Runnable) arguments[1],
                     currentTick + Math.max(1L, (Long) arguments[2])));
@@ -351,8 +382,10 @@ final class ArenaMatchHarness {
         });
     }
 
-    private Object scheduleRepeating(Runnable runnable) {
+    private Object scheduleRepeating(Runnable runnable, long delayTicks, long periodTicks) {
         ScheduledTask task = new ScheduledTask(runnable, Long.MAX_VALUE);
+        task.periodTicks = Math.max(1L, periodTicks);
+        task.nextRunTick = currentTick + Math.max(1L, delayTicks);
         repeatingTasks.add(task);
         return schedule(task);
     }
@@ -432,6 +465,8 @@ final class ArenaMatchHarness {
         private final long dueTick;
 
         private boolean cancelled;
+        private long periodTicks;
+        private long nextRunTick;
 
         private ScheduledTask(Runnable runnable, long dueTick) {
             this.runnable = runnable;

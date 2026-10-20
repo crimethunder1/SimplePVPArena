@@ -58,7 +58,9 @@ public final class ArenaDamageListener implements Listener {
     private ArenaDamageVictimRole findVictimRole(Player victim) {
         UUID victimUniqueId = victim.getUniqueId();
         if (matchService.isActiveFighter(victimUniqueId)) {
-            return ArenaDamageVictimRole.FIGHTER;
+            return matchService.isStartAnimationRunning()
+                    ? ArenaDamageVictimRole.FIGHTER_IN_START_ANIMATION
+                    : ArenaDamageVictimRole.FIGHTER;
         }
         if (spectatorService.findSpectatorMode(victimUniqueId).isPresent()
                 || ArenaFightRegion.contains(arenaRegistry.getArena().getShape(), victim.getLocation())) {

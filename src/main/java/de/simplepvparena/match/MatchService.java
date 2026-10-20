@@ -23,6 +23,7 @@ import org.bukkit.scheduler.BukkitTask;
 
 import java.time.Duration;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -46,6 +47,12 @@ public final class MatchService {
     public static final int DEFAULT_RECONNECT_SECONDS = 60;
     public static final int MINIMUM_RECONNECT_SECONDS = 0;
     public static final int MAXIMUM_RECONNECT_SECONDS = 600;
+
+    public static final int DEFAULT_COUNTDOWN_SECONDS = 3;
+    public static final int MINIMUM_COUNTDOWN_SECONDS = 0;
+    public static final int MAXIMUM_COUNTDOWN_SECONDS = 10;
+
+    private static final int BLINDNESS_SECONDS_AFTER_THE_COUNTDOWN = 1;
 
     private static final Title.Times SUDDEN_DEATH_TITLE_TIMES = Title.Times.times(
             Duration.ofMillis(200L), Duration.ofSeconds(2L), Duration.ofMillis(500L));
@@ -72,16 +79,20 @@ public final class MatchService {
     private final ArenaTemporaryEntityRemover temporaryEntityRemover;
     private final SuddenDeathTick suddenDeathTick = new SuddenDeathTick(new Random());
     private final Map<UUID, ReconnectWindow> reconnectWindows = new LinkedHashMap<>();
+    private final Set<UUID> reconnectWindowsUsedThisRound = new HashSet<>();
 
     private MatchCompletionHandler matchCompletionHandler = (match, winnerTeamName) -> { };
+    private RoundStartEffects roundStartEffects = new VanillaRoundStartEffects();
     private ArenaAudience arenaAudience;
     private Match activeMatch;
     private ScheduledRoundTimer activeRoundTimer;
+    private StartAnimation activeStartAnimation;
     private boolean insideSuddenDeathTick;
     private long roundResetDelayTicks = DEFAULT_ROUND_RESET_DELAY_TICKS;
     private RoundTimeoutSettings roundTimeoutSettings = RoundTimeoutSettings.defaults();
     private boolean suddenDeathDisabledInFinal = DEFAULT_SUDDEN_DEATH_DISABLED_IN_FINAL;
     private int reconnectSeconds = DEFAULT_RECONNECT_SECONDS;
+    private int countdownSeconds = DEFAULT_COUNTDOWN_SECONDS;
     private boolean roundTimersPaused;
 
     public MatchService(Plugin plugin, KitService kitService, SpectatorService spectatorService,
@@ -112,6 +123,10 @@ public final class MatchService {
         this.arenaAudience = Objects.requireNonNull(arenaAudience, "arenaAudience");
     }
 
+    public void setRoundStartEffects(RoundStartEffects roundStartEffects) {
+        this.roundStartEffects = Objects.requireNonNull(roundStartEffects, "roundStartEffects");
+    }
+
     public void setRoundResetDelayTicks(long roundResetDelayTicks) {
         this.roundResetDelayTicks = Math.max(0L, roundResetDelayTicks);
     }
@@ -138,6 +153,14 @@ public final class MatchService {
 
     public int getReconnectSeconds() {
         return reconnectSeconds;
+    }
+
+    public void setCountdownSeconds(int countdownSeconds) {
+        this.countdownSeconds = Math.clamp(countdownSeconds, MINIMUM_COUNTDOWN_SECONDS, MAXIMUM_COUNTDOWN_SECONDS);
+    }
+
+    public int getCountdownSeconds() {
+        return countdownSeconds;
     }
 
     public void startMatch(Match match) {
@@ -217,14 +240,21 @@ public final class MatchService {
         return insideSuddenDeathTick;
     }
 
+    public boolean isStartAnimationRunning() {
+        return activeStartAnimation != null && activeStartAnimation.running;
+    }
+
     public void handlePlayerDisconnected(Player player) {
         UUID playerUniqueId = player.getUniqueId();
         Optional<Match> runningMatch = findRunningMatchOfActiveFighter(playerUniqueId);
-        if (reconnectSeconds <= 0 || runningMatch.isEmpty()) {
+        if (reconnectSeconds <= 0 || runningMatch.isEmpty() || isSuddenDeathRunning()
+                || reconnectWindowsUsedThisRound.contains(playerUniqueId)) {
             handlePlayerEliminated(playerUniqueId);
             return;
         }
+        reconnectWindowsUsedThisRound.add(playerUniqueId);
         openReconnectWindow(runningMatch.get(), playerUniqueId, player.getName());
+        removeStartAnimationBlindness(playerUniqueId);
     }
 
     public boolean handlePlayerReturned(Player player) {
@@ -238,6 +268,9 @@ public final class MatchService {
         }
         announceToMatch(runningMatch.get(), Messages.text(MatchMessage.RECONNECT_RETURNED,
                 Placeholder.of("player", player.getName())));
+        if (isStartAnimationRunning()) {
+            blindFighter(activeStartAnimation, player);
+        }
         return true;
     }
 
@@ -258,6 +291,7 @@ public final class MatchService {
         if (roundParticipants.isEmpty() || !roundParticipants.get().eliminate(playerUniqueId)) {
             return;
         }
+        removeStartAnimationBlindness(playerUniqueId);
         closeReconnectWindow(playerUniqueId);
         if (insideSuddenDeathTick) {
             return;
@@ -284,6 +318,7 @@ public final class MatchService {
         }
         Match cancelledMatch = activeMatch;
         stopRoundTimer();
+        stopStartAnimation();
         closeReconnectWindows();
         startGates.stopAndRestore();
         cancelledMatch.setState(MatchState.CANCELLED);
@@ -365,6 +400,8 @@ public final class MatchService {
 
     private void beginRound(Match match) {
         closeReconnectWindows();
+        reconnectWindowsUsedThisRound.clear();
+        stopStartAnimation();
         removeTemporaryEntities(match);
         Set<UUID> firstTeamPlayers = collectOnlineMembers(match.getFirstTeam());
         Set<UUID> secondTeamPlayers = collectOnlineMembers(match.getSecondTeam());
@@ -373,15 +410,135 @@ public final class MatchService {
         preparePlayers(match.getFirstTeam(), match.getArena().getFirstTeamSpawn());
         preparePlayers(match.getSecondTeam(), match.getArena().getSecondTeamSpawn());
         fighterColours.colourFighters(match);
+        int roundCountdownSeconds = countdownSeconds;
         startGates.openAtRoundStart(remainingSeconds -> announceStartGateSecond(match, remainingSeconds));
-        boolean timeLimited = startRoundTimer(match);
+        int gateCountdownSeconds = startGates.getCountdownSeconds();
+        if (roundCountdownSeconds == 0) {
+            startRoundTimer(match);
+        }
         announceToMatch(match, describeRoundStart(match.getRoundNumber(), match.getMatchId(),
-                match.getScore().describe(), timeLimited, roundTimeoutSettings.roundTimeoutSeconds()));
+                match.getScore().describe(), isTimeLimited(match), roundTimeoutSettings.roundTimeoutSeconds()));
 
         Optional<RoundOutcome> immediateOutcome = match.getRoundParticipants().orElseThrow().determineOutcome();
         if (immediateOutcome.isPresent()) {
             concludeRound(match, immediateOutcome.get());
+            return;
         }
+        if (roundCountdownSeconds > 0) {
+            scheduleStartAnimation(match, roundCountdownSeconds, gateCountdownSeconds);
+        }
+    }
+
+    private void scheduleStartAnimation(Match match, int roundCountdownSeconds, int gateCountdownSeconds) {
+        boolean gateCounting = gateCountdownSeconds > 0;
+        int animationSeconds = gateCounting
+                ? Math.min(roundCountdownSeconds, gateCountdownSeconds)
+                : roundCountdownSeconds;
+        StartAnimation animation = new StartAnimation(match, animationSeconds, !gateCounting);
+        activeStartAnimation = animation;
+        long delayTicks = gateCounting ? (gateCountdownSeconds - animationSeconds) * TICKS_PER_SECOND : 0L;
+        if (delayTicks == 0L) {
+            beginStartAnimation(animation);
+            return;
+        }
+        animation.tasks.add(plugin.getServer().getScheduler().runTaskLater(plugin,
+                () -> beginStartAnimation(animation), delayTicks));
+    }
+
+    private void beginStartAnimation(StartAnimation animation) {
+        if (activeStartAnimation != animation) {
+            return;
+        }
+        animation.running = true;
+        for (int elapsedSeconds = 1; elapsedSeconds <= animation.totalSeconds; elapsedSeconds++) {
+            int remainingSeconds = animation.totalSeconds - elapsedSeconds;
+            animation.tasks.add(plugin.getServer().getScheduler().runTaskLater(plugin,
+                    () -> continueStartAnimation(animation, remainingSeconds), elapsedSeconds * TICKS_PER_SECOND));
+        }
+        if (animation.showsOwnTitles) {
+            announceCountdownSecond(animation.match, animation.remainingSeconds);
+        }
+        for (Player fighter : collectOnlineActiveFighters(animation.match)) {
+            blindFighter(animation, fighter);
+        }
+    }
+
+    private void continueStartAnimation(StartAnimation animation, int remainingSeconds) {
+        if (activeStartAnimation != animation) {
+            return;
+        }
+        animation.remainingSeconds = remainingSeconds;
+        if (!StartGateCountdown.isRelease(remainingSeconds)) {
+            if (animation.showsOwnTitles) {
+                announceCountdownSecond(animation.match, remainingSeconds);
+            }
+            return;
+        }
+        releaseStartAnimation(animation);
+    }
+
+    private void releaseStartAnimation(StartAnimation animation) {
+        Match match = animation.match;
+        activeStartAnimation = null;
+        startRoundTimer(match);
+        if (animation.showsOwnTitles) {
+            announceCountdownSecond(match, StartGateCountdown.RELEASE_SECOND);
+        }
+        removeBlindness(animation);
+        for (Player fighter : collectOnlineActiveFighters(match)) {
+            roundStartEffects.playFightStartAnimation(fighter);
+        }
+    }
+
+    private void blindFighter(StartAnimation animation, Player fighter) {
+        animation.blindedFighters.add(fighter.getUniqueId());
+        int durationTicks = (int) ((animation.remainingSeconds + BLINDNESS_SECONDS_AFTER_THE_COUNTDOWN)
+                * TICKS_PER_SECOND);
+        roundStartEffects.blind(fighter, durationTicks);
+    }
+
+    private void removeStartAnimationBlindness(UUID playerUniqueId) {
+        StartAnimation animation = activeStartAnimation;
+        if (animation == null || !animation.blindedFighters.remove(playerUniqueId)) {
+            return;
+        }
+        Player player = plugin.getServer().getPlayer(playerUniqueId);
+        if (player != null && player.isOnline()) {
+            roundStartEffects.removeBlindness(player);
+        }
+    }
+
+    private void stopStartAnimation() {
+        StartAnimation animation = activeStartAnimation;
+        if (animation == null) {
+            return;
+        }
+        activeStartAnimation = null;
+        for (BukkitTask task : animation.tasks) {
+            task.cancel();
+        }
+        removeBlindness(animation);
+    }
+
+    private void removeBlindness(StartAnimation animation) {
+        for (UUID blindedFighterUniqueId : List.copyOf(animation.blindedFighters)) {
+            animation.blindedFighters.remove(blindedFighterUniqueId);
+            Player player = plugin.getServer().getPlayer(blindedFighterUniqueId);
+            if (player != null && player.isOnline()) {
+                roundStartEffects.removeBlindness(player);
+            }
+        }
+    }
+
+    private List<Player> collectOnlineActiveFighters(Match match) {
+        List<Player> fighters = new ArrayList<>();
+        for (UUID fighterUniqueId : match.getRoundParticipants().orElseThrow().getAllActivePlayers()) {
+            Player player = plugin.getServer().getPlayer(fighterUniqueId);
+            if (player != null && player.isOnline()) {
+                fighters.add(player);
+            }
+        }
+        return fighters;
     }
 
     private void removeTemporaryEntities(Match match) {
@@ -396,6 +553,7 @@ public final class MatchService {
 
     private void concludeRound(Match match, RoundOutcome outcome) {
         stopRoundTimer();
+        stopStartAnimation();
         startGates.stopAndRestore();
         if (outcome.isDraw()) {
             match.setState(MatchState.BETWEEN_ROUNDS);
@@ -448,6 +606,7 @@ public final class MatchService {
 
     private void finishMatch(Match match, String winnerTeamName, boolean decidedByAnAdmin) {
         stopRoundTimer();
+        stopStartAnimation();
         closeReconnectWindows();
         startGates.stopAndRestore();
         match.setState(MatchState.FINISHED);
@@ -459,10 +618,14 @@ public final class MatchService {
         matchCompletionHandler.onMatchCompleted(match, winnerTeamName);
     }
 
-    private boolean startRoundTimer(Match match) {
+    private boolean isTimeLimited(Match match) {
+        return !(match.isFinalMatch() && suddenDeathDisabledInFinal);
+    }
+
+    private void startRoundTimer(Match match) {
         stopRoundTimer();
-        if (match.isFinalMatch() && suddenDeathDisabledInFinal) {
-            return false;
+        if (!isTimeLimited(match)) {
+            return;
         }
         RoundTimer roundTimer = new RoundTimer(roundTimeoutSettings);
         if (roundTimersPaused) {
@@ -471,7 +634,6 @@ public final class MatchService {
         BukkitTask timerTask = plugin.getServer().getScheduler().runTaskTimer(plugin,
                 () -> handleRoundTimerTick(match), ROUND_TIMER_PERIOD_TICKS, ROUND_TIMER_PERIOD_TICKS);
         activeRoundTimer = new ScheduledRoundTimer(roundTimer, timerTask);
-        return true;
     }
 
     static String describeRoundStart(int roundNumber, String matchId, String score, boolean timeLimited,
@@ -484,6 +646,10 @@ public final class MatchService {
                     scoreValue);
         }
         return Messages.text(MatchMessage.ROUND_STARTED_WITHOUT_TIME_LIMIT, round, match, scoreValue);
+    }
+
+    private boolean isSuddenDeathRunning() {
+        return activeRoundTimer != null && activeRoundTimer.timer().isSuddenDeathActive();
     }
 
     private void stopRoundTimer() {
@@ -622,12 +788,20 @@ public final class MatchService {
     }
 
     private void announceStartGateSecond(Match match, int remainingSeconds) {
+        showCountdownTitle(match, remainingSeconds, Component.text(StartGateCountdown.describeSubtitle(remainingSeconds),
+                TournamentMessages.DETAIL_COLOUR));
+    }
+
+    private void announceCountdownSecond(Match match, int remainingSeconds) {
+        showCountdownTitle(match, remainingSeconds, Component.empty());
+    }
+
+    private void showCountdownTitle(Match match, int remainingSeconds, Component subtitle) {
         boolean release = StartGateCountdown.isRelease(remainingSeconds);
         Title title = Title.title(
                 Component.text(StartGateCountdown.describeTitle(remainingSeconds),
                         release ? TournamentMessages.SUCCESS_COLOUR : TournamentMessages.WARNING_COLOUR),
-                Component.text(StartGateCountdown.describeSubtitle(remainingSeconds),
-                        TournamentMessages.DETAIL_COLOUR),
+                subtitle,
                 release ? START_GATE_RELEASE_TITLE_TIMES : START_GATE_SECOND_TITLE_TIMES);
         forEachAreaAudience(match, player -> player.showTitle(title));
     }
@@ -683,4 +857,23 @@ public final class MatchService {
     private record ScheduledRoundTimer(RoundTimer timer, BukkitTask task) { }
 
     private record ReconnectWindow(String playerName, BukkitTask expiryTask) { }
+
+    private static final class StartAnimation {
+
+        private final Match match;
+        private final int totalSeconds;
+        private final boolean showsOwnTitles;
+        private final List<BukkitTask> tasks = new ArrayList<>();
+        private final Set<UUID> blindedFighters = new LinkedHashSet<>();
+
+        private int remainingSeconds;
+        private boolean running;
+
+        private StartAnimation(Match match, int totalSeconds, boolean showsOwnTitles) {
+            this.match = match;
+            this.totalSeconds = totalSeconds;
+            this.showsOwnTitles = showsOwnTitles;
+            this.remainingSeconds = totalSeconds;
+        }
+    }
 }

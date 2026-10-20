@@ -37,6 +37,7 @@ class PluginSettingsTest {
         assertEquals(new RoundTimeoutSettings(120, 30, 3.5D, 0.5D), settings.roundTimeoutSettings());
         assertFalse(settings.suddenDeathDisabledInFinal());
         assertEquals(4, settings.startGateDurationSeconds());
+        assertEquals(7, settings.countdownSeconds());
         assertEquals(25, settings.reconnectSeconds());
         assertEquals(new TeamColourSettings(NamedTextColor.GOLD, NamedTextColor.DARK_PURPLE),
                 settings.teamColourSettings());
@@ -70,6 +71,7 @@ class PluginSettingsTest {
         assertTrue(!shipped.roundTimeoutSettings().equals(settings.roundTimeoutSettings()));
         assertTrue(shipped.suddenDeathDisabledInFinal() != settings.suddenDeathDisabledInFinal());
         assertTrue(shipped.startGateDurationSeconds() != settings.startGateDurationSeconds());
+        assertTrue(shipped.countdownSeconds() != settings.countdownSeconds());
         assertTrue(shipped.reconnectSeconds() != settings.reconnectSeconds());
         assertTrue(!shipped.teamColourSettings().equals(settings.teamColourSettings()));
         assertTrue(shipped.teamSize() != settings.teamSize());
@@ -383,6 +385,7 @@ class PluginSettingsTest {
         configuration.set(PluginSettings.SUDDEN_DEATH_DAMAGE_INCREASE_PATH, 0.5D);
         configuration.set(PluginSettings.DISABLE_SUDDEN_DEATH_IN_FINAL_PATH, false);
         configuration.set(PluginSettings.START_GATE_DURATION_SECONDS_PATH, 4);
+        configuration.set(PluginSettings.COUNTDOWN_SECONDS_PATH, 7);
         configuration.set(PluginSettings.RECONNECT_SECONDS_PATH, 25);
         configuration.set(PluginSettings.TEAM_SIZE_PATH, 4);
         configuration.set(PluginSettings.FIRST_TEAM_COLOUR_PATH, "GOLD");

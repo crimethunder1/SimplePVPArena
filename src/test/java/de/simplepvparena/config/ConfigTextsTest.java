@@ -133,6 +133,7 @@ class ConfigTextsTest {
                 "  the round reset delay, the round timeout, the sudden death damage and whether the final is fought "
                         + "without a time limit",
                 "  the seconds the start gate takes at the beginning of a round",
+                "  the seconds of the countdown right before the fight, from the next round on",
                 "  the seconds a fighter who lost the connection has to come back, for every connection lost from "
                         + "now on",
                 "  the team size, unless a tournament is in progress or a team has more players than a smaller new "

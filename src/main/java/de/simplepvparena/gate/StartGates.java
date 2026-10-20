@@ -10,11 +10,18 @@ public interface StartGates {
         }
 
         @Override
+        public int getCountdownSeconds() {
+            return 0;
+        }
+
+        @Override
         public void stopAndRestore() {
         }
     };
 
     boolean openAtRoundStart(StartGateCountdownDisplay display);
+
+    int getCountdownSeconds();
 
     void stopAndRestore();
 }

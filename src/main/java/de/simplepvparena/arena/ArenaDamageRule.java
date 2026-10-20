@@ -28,7 +28,7 @@ public final class ArenaDamageRule {
                                             ArenaDamageCauser causer) {
         return switch (victimRole) {
             case NONE -> false;
-            case SPECTATOR -> !ALWAYS_ALLOWED_CAUSES.contains(cause);
+            case SPECTATOR, FIGHTER_IN_START_ANIMATION -> !ALWAYS_ALLOWED_CAUSES.contains(cause);
             case FIGHTER -> !isFighterDamageAllowed(cause, causer);
         };
     }

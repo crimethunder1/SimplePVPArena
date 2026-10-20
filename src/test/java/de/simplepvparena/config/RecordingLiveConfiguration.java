@@ -17,6 +17,7 @@ final class RecordingLiveConfiguration implements LiveConfiguration {
     static final String ROUND_TIMEOUT = "roundTimeoutSettings";
     static final String SUDDEN_DEATH_IN_FINAL = "suddenDeathDisabledInFinal";
     static final String START_GATE_DURATION = "startGateDurationSeconds";
+    static final String COUNTDOWN_SECONDS = "countdownSeconds";
     static final String RECONNECT_SECONDS = "reconnectSeconds";
     static final String TEAM_COLOURS = "teamColourSettings";
     static final String TEAM_SIZE = "teamSize";
@@ -37,8 +38,8 @@ final class RecordingLiveConfiguration implements LiveConfiguration {
 
     static final List<String> EVERY_APPLIED_VALUE = List.of(
             LANGUAGE,
-            ROUND_RESET_DELAY, ROUND_TIMEOUT, SUDDEN_DEATH_IN_FINAL, START_GATE_DURATION, RECONNECT_SECONDS,
-            TEAM_COLOURS, TEAM_SIZE,
+            ROUND_RESET_DELAY, ROUND_TIMEOUT, SUDDEN_DEATH_IN_FINAL, START_GATE_DURATION, COUNTDOWN_SECONDS,
+            RECONNECT_SECONDS, TEAM_COLOURS, TEAM_SIZE,
             CLEANING_BLOCKS_PER_TICK, BASELINE_BLOCKS_PER_TICK, BASELINE_DEPTH_BELOW_FLOOR,
             CLEANING_PARTICLE, MAXIMUM_CELL_COUNT, SAFETY_ZONE_RADIUS, EFFECT_MARGIN, TELEPORT_ON_JOIN,
             PARTICLE_PERIOD, PARTICLE_VIEW_RADIUS,
@@ -71,6 +72,11 @@ final class RecordingLiveConfiguration implements LiveConfiguration {
     public void setStartGateDurationSeconds(int durationSeconds) {
         appliedValues.put(START_GATE_DURATION, durationSeconds);
         startGateDuration.setSeconds(durationSeconds);
+    }
+
+    @Override
+    public void setCountdownSeconds(int countdownSeconds) {
+        appliedValues.put(COUNTDOWN_SECONDS, countdownSeconds);
     }
 
     @Override

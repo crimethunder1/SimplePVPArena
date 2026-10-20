@@ -17,6 +17,8 @@ match:
   disable-sudden-death-in-final: true
   # Seconds a placed start gate takes to open layer by layer at the start of a round. At least 1.
   start-gate-duration-seconds: 10
+  # Seconds of the countdown right before the fight of every round, 0 to 10. The fighters are blind and cannot be hurt, the time limit of the round starts after it. 0 turns it off.
+  countdown-seconds: 3
   # Seconds a fighter who loses the connection during a round has to come back before being eliminated, 0 to 600. 0 eliminates at once.
   reconnect-seconds: 60
   # Players per team, 1 to 8. A team added in the team menu of /tournament has at most this many players, the team menu changes it as well.

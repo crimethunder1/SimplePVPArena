@@ -1441,6 +1441,9 @@ config:
     effect-margin-out-of-range:
       one: '{path} must be a whole number between {minimum} and {maximum} blocks, falling back to {count} block'
       other: '{path} must be a whole number between {minimum} and {maximum} blocks, falling back to {count} blocks'
+    countdown-seconds-out-of-range:
+      one: '{path} must be a whole number between {minimum} and {maximum} seconds, falling back to {count} second'
+      other: '{path} must be a whole number between {minimum} and {maximum} seconds, falling back to {count} seconds'
     reconnect-seconds-out-of-range:
       one: '{path} must be a whole number between {minimum} and {maximum} seconds, falling back to {count} second'
       other: '{path} must be a whole number between {minimum} and {maximum} seconds, falling back to {count} seconds'
@@ -1466,6 +1469,7 @@ config:
       language: 'the language and the language files in the lang folder, for every text shown from now on'
       round: 'the round reset delay, the round timeout, the sudden death damage and whether the final is fought without a time limit'
       start-gate: 'the seconds the start gate takes at the beginning of a round'
+      countdown: 'the seconds of the countdown right before the fight, from the next round on'
       reconnect: 'the seconds a fighter who lost the connection has to come back, for every connection lost from now on'
       team-size: 'the team size, unless a tournament is in progress or a team has more players than a smaller new size'
       cleaning: 'the cleaning and baseline batch sizes and the particles of a running cleaning'

@@ -23,6 +23,7 @@ public final class StartGateOpeningService implements StartGates {
     private final StartGateVisualEffect visualEffect;
 
     private BukkitTask activeTask;
+    private int countdownSeconds;
 
     public StartGateOpeningService(Plugin plugin, StartGateMarks gateMarks, StartGateDuration duration) {
         this(plugin, gateMarks, duration, StartGateVisualEffect.NONE);
@@ -57,7 +58,13 @@ public final class StartGateOpeningService implements StartGates {
         showCountdown(run, durationSeconds);
         activeTask = plugin.getServer().getScheduler().runTaskTimer(plugin, () -> runNextTick(run),
                 OPENING_PERIOD_TICKS, OPENING_PERIOD_TICKS);
+        countdownSeconds = durationSeconds;
         return true;
+    }
+
+    @Override
+    public int getCountdownSeconds() {
+        return countdownSeconds;
     }
 
     @Override
@@ -87,6 +94,7 @@ public final class StartGateOpeningService implements StartGates {
             activeTask.cancel();
             activeTask = null;
         }
+        countdownSeconds = 0;
     }
 
     private List<GateRun> planRuns(int durationSeconds) {

@@ -33,6 +33,7 @@ public record PluginSettings(long roundResetDelayTicks,
                              RoundTimeoutSettings roundTimeoutSettings,
                              boolean suddenDeathDisabledInFinal,
                              int startGateDurationSeconds,
+                             int countdownSeconds,
                              int reconnectSeconds,
                              TeamColourSettings teamColourSettings,
                              int teamSize,
@@ -63,6 +64,7 @@ public record PluginSettings(long roundResetDelayTicks,
     public static final String SUDDEN_DEATH_DAMAGE_INCREASE_PATH = "match.sudden-death-damage-increase-per-second";
     public static final String DISABLE_SUDDEN_DEATH_IN_FINAL_PATH = "match.disable-sudden-death-in-final";
     public static final String START_GATE_DURATION_SECONDS_PATH = "match.start-gate-duration-seconds";
+    public static final String COUNTDOWN_SECONDS_PATH = "match.countdown-seconds";
     public static final String RECONNECT_SECONDS_PATH = "match.reconnect-seconds";
     public static final String TEAM_SIZE_PATH = "match.team-size";
     public static final String FIRST_TEAM_COLOUR_PATH = TeamColourSettings.FIRST_TEAM_CONFIGURATION_PATH;
@@ -94,6 +96,7 @@ public record PluginSettings(long roundResetDelayTicks,
             SUDDEN_DEATH_DAMAGE_INCREASE_PATH,
             DISABLE_SUDDEN_DEATH_IN_FINAL_PATH,
             START_GATE_DURATION_SECONDS_PATH,
+            COUNTDOWN_SECONDS_PATH,
             RECONNECT_SECONDS_PATH,
             TEAM_SIZE_PATH,
             FIRST_TEAM_COLOUR_PATH,
@@ -125,6 +128,7 @@ public record PluginSettings(long roundResetDelayTicks,
                 RoundTimeoutSettings.defaults(),
                 MatchService.DEFAULT_SUDDEN_DEATH_DISABLED_IN_FINAL,
                 StartGateDuration.DEFAULT_SECONDS,
+                MatchService.DEFAULT_COUNTDOWN_SECONDS,
                 MatchService.DEFAULT_RECONNECT_SECONDS,
                 TeamColourSettings.defaults(),
                 TeamSizeSetting.DEFAULT_TEAM_SIZE,
@@ -156,6 +160,7 @@ public record PluginSettings(long roundResetDelayTicks,
                 configuration.getBoolean(DISABLE_SUDDEN_DEATH_IN_FINAL_PATH,
                         shipped.suddenDeathDisabledInFinal()),
                 readStartGateDurationSeconds(configuration, problemReporter),
+                readCountdownSeconds(configuration, problemReporter),
                 readReconnectSeconds(configuration, problemReporter),
                 readTeamColourSettings(configuration, problemReporter),
                 readTeamSize(configuration, problemReporter),
@@ -208,6 +213,7 @@ public record PluginSettings(long roundResetDelayTicks,
         liveConfiguration.setRoundTimeoutSettings(roundTimeoutSettings);
         liveConfiguration.setSuddenDeathDisabledInFinal(suddenDeathDisabledInFinal);
         liveConfiguration.setStartGateDurationSeconds(startGateDurationSeconds);
+        liveConfiguration.setCountdownSeconds(countdownSeconds);
         liveConfiguration.setReconnectSeconds(reconnectSeconds);
         liveConfiguration.setTeamColourSettings(teamColourSettings);
         teamSizeTarget.accept(teamSize);
@@ -278,6 +284,24 @@ public record PluginSettings(long roundResetDelayTicks,
                 Placeholder.of("path", ARENA_EFFECT_MARGIN_PATH), Placeholder.of("minimum", EffectArea.MINIMUM_MARGIN),
                 Placeholder.of("maximum", EffectArea.MAXIMUM_MARGIN)));
         return EffectArea.DEFAULT_MARGIN;
+    }
+
+    private static int readCountdownSeconds(ConfigurationSection configuration, Consumer<String> problemReporter) {
+        if (!configuration.isSet(COUNTDOWN_SECONDS_PATH)) {
+            return MatchService.DEFAULT_COUNTDOWN_SECONDS;
+        }
+        if (configuration.isInt(COUNTDOWN_SECONDS_PATH)) {
+            int countdownSeconds = configuration.getInt(COUNTDOWN_SECONDS_PATH);
+            if (countdownSeconds >= MatchService.MINIMUM_COUNTDOWN_SECONDS
+                    && countdownSeconds <= MatchService.MAXIMUM_COUNTDOWN_SECONDS) {
+                return countdownSeconds;
+            }
+        }
+        problemReporter.accept(Messages.plural(ConfigMessage.COUNTDOWN_SECONDS_OUT_OF_RANGE,
+                MatchService.DEFAULT_COUNTDOWN_SECONDS, Placeholder.of("path", COUNTDOWN_SECONDS_PATH),
+                Placeholder.of("minimum", MatchService.MINIMUM_COUNTDOWN_SECONDS),
+                Placeholder.of("maximum", MatchService.MAXIMUM_COUNTDOWN_SECONDS)));
+        return MatchService.DEFAULT_COUNTDOWN_SECONDS;
     }
 
     private static int readReconnectSeconds(ConfigurationSection configuration, Consumer<String> problemReporter) {
