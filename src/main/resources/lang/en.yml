@@ -86,10 +86,7 @@ main-menu:
       lore: 'Writes the state, the rounds and the running match into the chat'
     bracket:
       title: 'Bracket'
-      lore:
-        - 'Writes every round and every match into the chat'
-        - 'A bracket is a tree, the chat shows it better than a grid'
-        - 'The menu closes so you can read it'
+      lore: 'Shows every round and match'
     dry-run:
       title: 'Dry run of the pipeline'
       lore:
@@ -141,8 +138,6 @@ main-menu:
     switched-off:
       - 'Border selector mode is off'
       - 'Right clicking works the way it always did again, every mark you set stays'
-  bracket:
-    heading: 'Bracket'
   reload:
     running-match-delay:
       - 'A match is running, the new settings arrive with the next round'
@@ -226,6 +221,27 @@ waiting-match-result-menu:
     team:
       not-registered: 'No longer registered'
       lore: 'Decides the match for this team'
+bracket-menu:
+  title: 'Bracket (round {round})'
+  round-of-rounds: 'Round {round} of {roundCount}'
+  tile:
+    info:
+      title: 'Bracket'
+      state: 'Tournament state: {state}'
+      champion: 'Champion: {team}'
+      matches-cut-off: 'Shows the first {shown} of {total} matches of this round'
+    match:
+      teams: '{firstTeam} against {secondTeam}'
+      open-team: 'open'
+      waiting-for-teams: 'Waiting for its teams'
+      ready: 'Ready to be played'
+      running: 'Running now'
+      won-by: 'Won by {team}'
+      bye: '{team} advances without an opponent'
+    previous-round:
+      title: 'Previous round'
+    next-round:
+      title: 'Next round'
 confirmation:
   tile:
     confirm:

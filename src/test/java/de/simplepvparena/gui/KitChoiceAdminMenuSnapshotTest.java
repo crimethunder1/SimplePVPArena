@@ -150,8 +150,7 @@ class KitChoiceAdminMenuSnapshotTest {
                 The menu closes so you can click the blocks / The mode is off, this tile switches it on
                 14 | NETHER_STAR | Start the final | Both finalists are known / Starts the final on the arena
                 15 | PAPER | Tournament status | Writes the state, the rounds and the running match into the chat
-                16 | WRITTEN_BOOK | Bracket | Writes every round and every match into the chat / \
-                A bracket is a tree, the chat shows it better than a grid / The menu closes so you can read it
+                16 | WRITTEN_BOOK | Bracket | Shows every round and match
                 18 | GRAY_DYE | Dry run of the pipeline | A tournament is in progress, the dry run is a check for \
                 before an event / It registers two test teams and would put them into the registry of a running \
                 bracket / Wait until the event is over or cancel it in the match menu of /tournament

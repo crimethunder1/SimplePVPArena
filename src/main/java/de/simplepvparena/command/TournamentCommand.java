@@ -8,12 +8,14 @@ import de.simplepvparena.message.CommonMessage;
 import de.simplepvparena.message.Messages;
 import de.simplepvparena.message.TournamentMessages;
 import de.simplepvparena.permission.AdminPermission;
+import de.simplepvparena.permission.ViewPermission;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.TabExecutor;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
@@ -23,7 +25,7 @@ public final class TournamentCommand implements TabExecutor {
     public static final String SPECTATE_PERMISSION = "tournament.spectate";
 
     private static final String SPECTATE_ARGUMENT = "spectate";
-    private static final List<String> ARGUMENTS = List.of(SPECTATE_ARGUMENT);
+    private static final String BRACKET_ARGUMENT = "bracket";
 
     private final MatchService matchService;
     private final SpectatorService spectatorService;
@@ -44,6 +46,10 @@ public final class TournamentCommand implements TabExecutor {
             handleSpectate(sender);
             return true;
         }
+        if (arguments.length > 0 && arguments[0].toLowerCase(Locale.ROOT).equals(BRACKET_ARGUMENT)) {
+            openBracketView(sender);
+            return true;
+        }
         openAdminMenu(sender);
         return true;
     }
@@ -58,6 +64,18 @@ public final class TournamentCommand implements TabExecutor {
             return;
         }
         adminMenuService.openMainMenu(player);
+    }
+
+    private void openBracketView(CommandSender sender) {
+        if (!(sender instanceof Player player)) {
+            TournamentMessages.sendError(sender, Messages.text(CommandMessage.ONLY_FOR_PLAYERS));
+            return;
+        }
+        if (!ViewPermission.mayView(player)) {
+            TournamentMessages.sendError(player, Messages.text(CommonMessage.COMMAND_NOT_ALLOWED));
+            return;
+        }
+        adminMenuService.openBracketView(player);
     }
 
     private void handleSpectate(CommandSender sender) {
@@ -83,10 +101,21 @@ public final class TournamentCommand implements TabExecutor {
     @Override
     public List<String> onTabComplete(@NotNull CommandSender sender, @NotNull Command command,
                                       @NotNull String label, @NotNull String[] arguments) {
-        if (arguments.length != 1 || !sender.hasPermission(SPECTATE_PERMISSION)) {
+        if (arguments.length != 1) {
             return List.of();
         }
         String prefix = arguments[0].toLowerCase(Locale.ROOT);
-        return ARGUMENTS.stream().filter(argument -> argument.startsWith(prefix)).toList();
+        return findAvailableArguments(sender).stream().filter(argument -> argument.startsWith(prefix)).toList();
+    }
+
+    private static List<String> findAvailableArguments(CommandSender sender) {
+        List<String> availableArguments = new ArrayList<>();
+        if (ViewPermission.mayView(sender)) {
+            availableArguments.add(BRACKET_ARGUMENT);
+        }
+        if (sender.hasPermission(SPECTATE_PERMISSION)) {
+            availableArguments.add(SPECTATE_ARGUMENT);
+        }
+        return availableArguments;
     }
 }

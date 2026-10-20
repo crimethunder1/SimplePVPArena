@@ -34,6 +34,9 @@ The team size sets how many players a new team has at most, 2 by default (`match
 | --- | --- | --- | --- |
 | `/tournament` (alias `/turnier`) | `tournament.admin` | op | Opens the menu that manages teams, the arena, border blocks, matches and the tournament |
 | `/tournament spectate` | `tournament.spectate` | everyone | Sends the player back to the tribune of the arena, not possible while fighting |
+| `/tournament bracket` | `tournament.view` | everyone | Opens the bracket as a menu with one page for every round, a player with `tournament.admin` may always open it |
+
+The bracket menu shows a tile for every match of a round with its two teams and whether it waits for its teams, is ready to be played, runs or was won, and it names the champion once the tournament is over. It opens on the round of the running match, "Previous round" and "Next round" turn the pages. It only shows the bracket: a click on a match does nothing and nothing can be taken out. It reads the bracket when it opens and when the round is changed, an open menu does not follow a match that is decided meanwhile. The tile "Bracket" in the main menu of `/tournament` opens it as well, with a tile back to the main menu. Every other menu needs `tournament.admin`.
 
 ## Configuration
 

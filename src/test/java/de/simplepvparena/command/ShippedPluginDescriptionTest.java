@@ -1,6 +1,7 @@
 package de.simplepvparena.command;
 
 import de.simplepvparena.permission.AdminPermission;
+import de.simplepvparena.permission.ViewPermission;
 import org.bukkit.permissions.Permission;
 import org.bukkit.permissions.PermissionDefault;
 import org.bukkit.plugin.InvalidDescriptionException;
@@ -26,6 +27,11 @@ class ShippedPluginDescriptionTest {
     @Test
     void grantsTheSpectatePermissionToEveryoneByDefault() {
         assertEquals(PermissionDefault.TRUE, findPermission(TournamentCommand.SPECTATE_PERMISSION).getDefault());
+    }
+
+    @Test
+    void grantsTheViewPermissionToEveryoneByDefault() {
+        assertEquals(PermissionDefault.TRUE, findPermission(ViewPermission.VIEW_PERMISSION_NAME).getDefault());
     }
 
     private static Permission findPermission(String permissionName) {

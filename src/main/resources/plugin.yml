@@ -10,7 +10,7 @@ softdepend:
   - ViaBackwards
 commands:
   tournament:
-    description: Opens the tournament administration menu, /tournament spectate returns to the tribune
+    description: Opens the tournament administration menu, /tournament bracket shows the bracket, /tournament spectate returns to the tribune
     usage: /tournament
     aliases:
       - turnier
@@ -20,4 +20,7 @@ permissions:
     default: op
   tournament.spectate:
     description: Allows returning to the tribune of the arena
+    default: true
+  tournament.view:
+    description: Allows opening the bracket menu with /tournament bracket, it only shows the rounds and matches and changes nothing, a player with tournament.admin may always open it
     default: true

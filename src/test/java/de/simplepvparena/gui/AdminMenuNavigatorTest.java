@@ -71,6 +71,18 @@ class AdminMenuNavigatorTest {
     }
 
     @Test
+    void namesTheBracketViewWhenItIsNotRegistered() {
+        for (AdminMenuType menuType : EnumSet.complementOf(EnumSet.of(AdminMenuType.BRACKET_VIEW))) {
+            navigator.register(menuType, new SilentMenu());
+        }
+
+        IllegalStateException failure = assertThrows(IllegalStateException.class,
+                navigator::requireEveryMenuRegistered);
+
+        assertTrue(failure.getMessage().endsWith("[BRACKET_VIEW]"), failure.getMessage());
+    }
+
+    @Test
     void namesTheTeamMembersMenuWhenItIsNotRegistered() {
         for (AdminMenuType menuType : EnumSet.complementOf(EnumSet.of(AdminMenuType.TEAM_MEMBERS))) {
             navigator.register(menuType, new SilentMenu());

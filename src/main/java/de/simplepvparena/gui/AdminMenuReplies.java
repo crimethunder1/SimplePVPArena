@@ -5,6 +5,7 @@ import de.simplepvparena.message.Messages;
 import de.simplepvparena.message.Placeholder;
 import de.simplepvparena.message.TournamentMessages;
 import de.simplepvparena.permission.AdminPermission;
+import de.simplepvparena.permission.ViewPermission;
 import de.simplepvparena.tournament.TournamentOperationResult;
 import org.bukkit.entity.Player;
 
@@ -22,6 +23,13 @@ final class AdminMenuReplies {
         }
         TournamentMessages.sendError(player, Messages.text(MenuMessage.NOT_ALLOWED));
         return false;
+    }
+
+    static boolean mayStillUse(Player player, AdminMenuType menuType) {
+        if (menuType.isReadableByPlayers() && ViewPermission.mayView(player)) {
+            return true;
+        }
+        return isStillAdmin(player);
     }
 
     static void reportOperation(Player player, TournamentOperationResult result) {

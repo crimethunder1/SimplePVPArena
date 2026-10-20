@@ -86,10 +86,7 @@ main-menu:
       lore: 'Schreibt den Stand, die Turnierrunden und das laufende Match in den Chat'
     bracket:
       title: 'Turnierbaum'
-      lore:
-        - 'Schreibt jede Turnierrunde und jedes Match in den Chat'
-        - 'Der Chat zeigt einen Turnierbaum besser als ein Raster'
-        - 'Das Menü schließt sich, damit du ihn lesen kannst'
+      lore: 'Zeigt jede Turnierrunde und jedes Match'
     dry-run:
       title: 'Probelauf des Turnierablaufs'
       lore:
@@ -141,8 +138,6 @@ main-menu:
     switched-off:
       - 'Der Wandauswahlmodus ist aus'
       - 'Rechtsklicks funktionieren wieder wie immer, jede gesetzte Markierung bleibt'
-  bracket:
-    heading: 'Turnierbaum'
   reload:
     running-match-delay:
       - 'Ein Match läuft, die neuen Einstellungen gelten ab der nächsten Runde'
@@ -226,6 +221,27 @@ waiting-match-result-menu:
     team:
       not-registered: 'Nicht mehr registriert'
       lore: 'Entscheidet das Match für dieses Team'
+bracket-menu:
+  title: 'Turnierbaum (Turnierrunde {round})'
+  round-of-rounds: 'Turnierrunde {round} von {roundCount}'
+  tile:
+    info:
+      title: 'Turnierbaum'
+      state: 'Turnierstatus: {state}'
+      champion: 'Sieger: {team}'
+      matches-cut-off: 'Zeigt die ersten {shown} von {total} Matches dieser Turnierrunde'
+    match:
+      teams: '{firstTeam} gegen {secondTeam}'
+      open-team: 'offen'
+      waiting-for-teams: 'Wartet auf seine Teams'
+      ready: 'Bereit zum Spielen'
+      running: 'Läuft gerade'
+      won-by: 'Gewonnen von {team}'
+      bye: '{team} rückt ohne Gegner vor'
+    previous-round:
+      title: 'Vorherige Turnierrunde'
+    next-round:
+      title: 'Nächste Turnierrunde'
 confirmation:
   tile:
     confirm:

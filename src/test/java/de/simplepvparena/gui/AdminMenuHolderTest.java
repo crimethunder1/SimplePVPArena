@@ -3,6 +3,7 @@ package de.simplepvparena.gui;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -102,6 +103,26 @@ class AdminMenuHolderTest {
     void carriesNoConfirmationRequestForARegularMenu() {
         assertTrue(AdminMenuHolder.main().getConfirmationRequest().isEmpty());
         assertTrue(AdminMenuHolder.arena().getConfirmationRequest().isEmpty());
+    }
+
+    @Test
+    void carriesTheRoundOfTheBracketViewAndWhetherItWasOpenedFromTheMainMenu() {
+        AdminMenuHolder holder = AdminMenuHolder.bracketView(2, true);
+
+        assertEquals(AdminMenuType.BRACKET_VIEW, holder.getMenuType());
+        assertEquals(2, holder.getPageIndex());
+        assertTrue(holder.isOpenedFromMainMenu());
+        assertTrue(holder.getSubject().isEmpty());
+        assertTrue(holder.getConfirmationRequest().isEmpty());
+        assertFalse(AdminMenuHolder.bracketView(0, false).isOpenedFromMainMenu());
+        assertEquals(0, AdminMenuHolder.bracketView(-1, false).getPageIndex());
+    }
+
+    @Test
+    void opensNoOtherMenuAsIfItCameFromTheMainMenu() {
+        assertFalse(AdminMenuHolder.main().isOpenedFromMainMenu());
+        assertFalse(AdminMenuHolder.waitingMatches(1).isOpenedFromMainMenu());
+        assertFalse(AdminMenuHolder.confirmation(ConfirmationRequest.CLEAN_ARENA, null, 0).isOpenedFromMainMenu());
     }
 
     @Test

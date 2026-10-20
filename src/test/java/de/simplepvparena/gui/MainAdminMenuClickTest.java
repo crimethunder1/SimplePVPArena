@@ -26,6 +26,7 @@ class MainAdminMenuClickTest {
     private static final int FINAL_SLOT = 14;
     private static final int STATUS_SLOT = 15;
     private static final int BRACKET_SLOT = 16;
+    private static final int BRACKET_BACK_SLOT = 48;
     private static final int DRY_RUN_SLOT = 18;
     private static final int RELOAD_SLOT = 20;
     private static final int CLOSE_SLOT = 22;
@@ -187,13 +188,33 @@ class MainAdminMenuClickTest {
     }
 
     @Test
-    void closesTheMenuAndWritesTheBracketIntoTheChat() {
+    void opensTheBracketViewWithABackTileToTheMainMenu() {
         openTheMainMenuOfAReadyEvent();
 
         fixture.click(BRACKET_SLOT);
 
-        assertTrue(fixture.isMenuClosed());
-        assertEquals(List.of("Bracket", "No tournament is in progress"), fixture.messages());
+        assertFalse(fixture.isMenuClosed());
+        assertEquals(AdminMenuType.BRACKET_VIEW, fixture.lastMenu().holder().getMenuType());
+        assertTrue(fixture.lastMenu().holder().isOpenedFromMainMenu());
+        assertEquals(List.of(), fixture.messages());
+        fixture.click(BRACKET_BACK_SLOT);
+        assertEquals(AdminMenuType.MAIN, fixture.lastMenu().holder().getMenuType());
+    }
+
+    @Test
+    void opensTheBracketViewOnTheRoundOfTheRunningMatch() {
+        fixture.configureArena();
+        fixture.registerTeams("Alpha", "Bravo", "Charlie", "Delta", "Echo", "Foxtrot", "Golf", "Hotel");
+        fixture.startTournament();
+        for (int decidedMatches = 0; decidedMatches < 4; decidedMatches++) {
+            fixture.decideRunningMatchFor(fixture.runningFirstTeamName());
+        }
+        fixture.openMainMenu();
+
+        fixture.click(BRACKET_SLOT);
+
+        assertEquals("Bracket (round 2)", fixture.lastMenu().title());
+        assertEquals(1, fixture.lastMenu().holder().getPageIndex());
     }
 
     @Test

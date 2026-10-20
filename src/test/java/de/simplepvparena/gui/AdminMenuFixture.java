@@ -41,6 +41,7 @@ import de.simplepvparena.match.Match;
 import de.simplepvparena.match.MatchService;
 import de.simplepvparena.message.TournamentMessages;
 import de.simplepvparena.permission.AdminPermission;
+import de.simplepvparena.permission.ViewPermission;
 import de.simplepvparena.support.FakeKitItemSerializer;
 import de.simplepvparena.support.FakeSerializedKits;
 import de.simplepvparena.support.InMemoryKitLibraryStorage;
@@ -208,12 +209,17 @@ final class AdminMenuFixture {
     }
 
     OnlinePlayer letAnotherPlayerJoin(String playerName, boolean adminPermission) {
+        return letAnotherPlayerJoin(playerName, adminPermission, false);
+    }
+
+    OnlinePlayer letAnotherPlayerJoin(String playerName, boolean adminPermission, boolean viewPermission) {
         List<String> playerMessages = new ArrayList<>();
         UUID playerUniqueId = UUID.randomUUID();
         Player player = SharedBukkitServer.proxy(Player.class, (method, arguments) -> switch (method.getName()) {
             case "getUniqueId" -> playerUniqueId;
             case "getName" -> playerName;
-            case "hasPermission" -> AdminPermission.ADMIN_PERMISSION_NAME.equals(arguments[0]) && adminPermission;
+            case "hasPermission" -> AdminPermission.ADMIN_PERMISSION_NAME.equals(arguments[0]) && adminPermission
+                    || ViewPermission.VIEW_PERMISSION_NAME.equals(arguments[0]) && viewPermission;
             case "sendMessage" -> {
                 playerMessages.add(TournamentMessages.toPlainBody((Component) arguments[0]));
                 yield null;
@@ -239,6 +245,14 @@ final class AdminMenuFixture {
 
     void clickAs(Player player, int slot) {
         menuService.handleClick(player, windows.lastOpenedMenu(player).holder(), slot);
+    }
+
+    void clickInAs(Player player, AdminMenuHolder holder, int slot) {
+        menuService.handleClick(player, holder, slot);
+    }
+
+    void openBracketViewFor(Player player) {
+        menuService.openBracketView(player);
     }
 
     Optional<RecordingAdminMenuWindows.RecordedMenu> findLastMenuOf(Player player) {
@@ -425,6 +439,10 @@ final class AdminMenuFixture {
 
     void openMainMenu() {
         menuService.openMainMenu(admin);
+    }
+
+    void openBracketView() {
+        menuService.openBracketView(admin);
     }
 
     void openMenuFromTheMainMenu(int mainMenuSlot) {

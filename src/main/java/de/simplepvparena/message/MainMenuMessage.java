@@ -27,7 +27,6 @@ public enum MainMenuMessage implements MessageKey {
     STATUS_LORE("main-menu.tile.status.lore"),
     BRACKET_TITLE("main-menu.tile.bracket.title"),
     BRACKET_LORE("main-menu.tile.bracket.lore"),
-    BRACKET_HEADING("main-menu.bracket.heading"),
     DRY_RUN_TITLE("main-menu.tile.dry-run.title"),
     DRY_RUN_LORE("main-menu.tile.dry-run.lore"),
     RELOAD_TITLE("main-menu.tile.reload.title"),

@@ -13,15 +13,22 @@ public final class AdminMenuHolder implements InventoryHolder {
     private final String subject;
     private final ConfirmationRequest confirmationRequest;
     private final int pageIndex;
+    private final boolean openedFromMainMenu;
 
     private Inventory inventory;
 
     private AdminMenuHolder(AdminMenuType menuType, String subject, ConfirmationRequest confirmationRequest,
                             int pageIndex) {
+        this(menuType, subject, confirmationRequest, pageIndex, false);
+    }
+
+    private AdminMenuHolder(AdminMenuType menuType, String subject, ConfirmationRequest confirmationRequest,
+                            int pageIndex, boolean openedFromMainMenu) {
         this.menuType = Objects.requireNonNull(menuType, "menuType");
         this.subject = subject;
         this.confirmationRequest = confirmationRequest;
         this.pageIndex = Math.max(0, pageIndex);
+        this.openedFromMainMenu = openedFromMainMenu;
     }
 
     public static AdminMenuHolder main() {
@@ -83,6 +90,10 @@ public final class AdminMenuHolder implements InventoryHolder {
                 Objects.requireNonNull(confirmationRequest, "confirmationRequest"), pageIndex);
     }
 
+    public static AdminMenuHolder bracketView(int pageIndex, boolean openedFromMainMenu) {
+        return new AdminMenuHolder(AdminMenuType.BRACKET_VIEW, null, null, pageIndex, openedFromMainMenu);
+    }
+
     public AdminMenuType getMenuType() {
         return menuType;
     }
@@ -97,6 +108,10 @@ public final class AdminMenuHolder implements InventoryHolder {
 
     public int getPageIndex() {
         return pageIndex;
+    }
+
+    public boolean isOpenedFromMainMenu() {
+        return openedFromMainMenu;
     }
 
     void setInventory(Inventory inventory) {

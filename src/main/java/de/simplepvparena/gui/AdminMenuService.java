@@ -25,6 +25,7 @@ import java.util.function.Supplier;
 public final class AdminMenuService {
 
     private final AdminMenuNavigator navigator;
+    private final BracketViewMenu bracketViewMenu;
 
     public AdminMenuService(Plugin plugin,
                             TournamentManager tournamentManager,
@@ -105,9 +106,10 @@ public final class AdminMenuService {
                 tournamentManager::isTournamentInProgress, teamSizeWriter);
         ArenaAdminMenu arenaAdminMenu = new ArenaAdminMenu(navigator, arenaSetupService, heightMarkerService,
                 gateItemService, chatInputService);
+        bracketViewMenu = new BracketViewMenu(navigator, tournamentManager, matchService);
         MainAdminMenu mainAdminMenu = new MainAdminMenu(navigator, tournamentManager, tournamentDryRun, teamRegistry,
                 matchService, arenaSetupService, borderSelectorModes, configurationReloader, tournamentMenuStatus,
-                kitLibrary, kitChoiceService);
+                kitLibrary, kitChoiceService, bracketViewMenu);
         ConfirmationAdminMenu confirmationAdminMenu = new ConfirmationAdminMenu(navigator);
         confirmationAdminMenu.register(ConfirmationRequest.CLEAN_ARENA, arenaAdminMenu.cleanConfirmation());
         confirmationAdminMenu.register(ConfirmationRequest.RESET_ARENA, arenaAdminMenu.resetConfirmation());
@@ -129,6 +131,7 @@ public final class AdminMenuService {
         navigator.register(AdminMenuType.WAITING_MATCHES, waitingMatchesAdminMenu);
         navigator.register(AdminMenuType.WAITING_MATCH_RESULT, waitingMatchResultAdminMenu);
         navigator.register(AdminMenuType.CONFIRMATION, confirmationAdminMenu);
+        navigator.register(AdminMenuType.BRACKET_VIEW, bracketViewMenu);
         navigator.requireEveryMenuRegistered();
     }
 
@@ -136,8 +139,12 @@ public final class AdminMenuService {
         navigator.open(player, AdminMenuHolder.main());
     }
 
+    public void openBracketView(Player player) {
+        bracketViewMenu.open(player);
+    }
+
     public void handleClick(Player player, AdminMenuHolder holder, int slot) {
-        if (!AdminMenuReplies.isStillAdmin(player)) {
+        if (!AdminMenuReplies.mayStillUse(player, holder.getMenuType())) {
             navigator.close(player);
             return;
         }

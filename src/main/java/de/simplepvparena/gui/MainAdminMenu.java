@@ -52,13 +52,14 @@ final class MainAdminMenu implements AdminMenu {
     private final TournamentMenuStatus tournamentMenuStatus;
     private final KitLibrary kitLibrary;
     private final KitChoiceService kitChoiceService;
+    private final BracketViewMenu bracketViewMenu;
 
     MainAdminMenu(AdminMenuNavigation navigation, TournamentManager tournamentManager,
                   TournamentDryRun tournamentDryRun, TeamRegistry teamRegistry, MatchService matchService,
                   ArenaSetupService arenaSetupService, BorderSelectorModeRegistry borderSelectorModes,
                   Supplier<ConfigurationReloadReport> configurationReloader,
                   TournamentMenuStatus tournamentMenuStatus, KitLibrary kitLibrary,
-                  KitChoiceService kitChoiceService) {
+                  KitChoiceService kitChoiceService, BracketViewMenu bracketViewMenu) {
         this.navigation = Objects.requireNonNull(navigation, "navigation");
         this.tournamentManager = Objects.requireNonNull(tournamentManager, "tournamentManager");
         this.tournamentDryRun = Objects.requireNonNull(tournamentDryRun, "tournamentDryRun");
@@ -70,6 +71,7 @@ final class MainAdminMenu implements AdminMenu {
         this.tournamentMenuStatus = Objects.requireNonNull(tournamentMenuStatus, "tournamentMenuStatus");
         this.kitLibrary = Objects.requireNonNull(kitLibrary, "kitLibrary");
         this.kitChoiceService = Objects.requireNonNull(kitChoiceService, "kitChoiceService");
+        this.bracketViewMenu = Objects.requireNonNull(bracketViewMenu, "bracketViewMenu");
     }
 
     @Override
@@ -124,7 +126,7 @@ final class MainAdminMenu implements AdminMenu {
             case MAIN_BORDER_SELECTOR_SLOT -> toggleBorderSelectorMode(player);
             case MAIN_FINAL_SLOT -> runOperation(player, tournamentManager::startFinalMatch);
             case MAIN_STATUS_SLOT -> TournamentMessages.sendInfo(player, tournamentManager.describeStatus());
-            case MAIN_BRACKET_SLOT -> showBracket(player);
+            case MAIN_BRACKET_SLOT -> bracketViewMenu.openFromMainMenu(player);
             case MAIN_DRY_RUN_SLOT -> runDryRun(player);
             case MAIN_RELOAD_SLOT -> reloadConfiguration(player);
             case MAIN_KIT_SLOT -> navigation.open(player, AdminMenuHolder.kit(0));
@@ -133,12 +135,6 @@ final class MainAdminMenu implements AdminMenu {
             case MAIN_CLOSE_SLOT -> navigation.close(player);
             default -> { }
         }
-    }
-
-    private void showBracket(Player player) {
-        navigation.close(player);
-        TournamentMessages.sendBlock(player, TournamentMessages.info(Messages.text(MainMenuMessage.BRACKET_HEADING)),
-                tournamentManager.describeBracket());
     }
 
     private void reloadConfiguration(Player player) {

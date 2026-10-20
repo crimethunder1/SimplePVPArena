@@ -56,9 +56,7 @@ class GermanMenuSnapshotTest {
                 Der Modus ist aus, diese Kachel schaltet ihn an
                 14 | GRAY_DYE | Finale starten | Es läuft kein Turnier
                 15 | PAPER | Turnierstatus | Schreibt den Stand, die Turnierrunden und das laufende Match in den Chat
-                16 | WRITTEN_BOOK | Turnierbaum | Schreibt jede Turnierrunde und jedes Match in den Chat / \
-                Der Chat zeigt einen Turnierbaum besser als ein Raster / \
-                Das Menü schließt sich, damit du ihn lesen kannst
+                16 | WRITTEN_BOOK | Turnierbaum | Zeigt jede Turnierrunde und jedes Match
                 18 | OBSERVER | Probelauf des Turnierablaufs | Geht den ganzen Ablauf einmal durch, ohne Event / \
                 Registriert zwei Testteams, baut ihren Turnierbaum, / \
                 entscheidet ein simuliertes Match und entfernt sie wieder / \
@@ -182,7 +180,8 @@ class GermanMenuSnapshotTest {
         assertEquals(String.join("\n", "Der Wandauswahlmodus ist aus",
                 "Rechtsklicks funktionieren wieder wie immer, jede gesetzte Markierung bleibt"),
                 fixture.messages().get(1));
-        assertEquals("Turnierbaum", fixture.messages().get(2));
+        assertEquals(2, fixture.messages().size());
+        assertEquals("Turnierbaum (Turnierrunde 1)", fixture.lastMenu().title());
     }
 
     @Test
