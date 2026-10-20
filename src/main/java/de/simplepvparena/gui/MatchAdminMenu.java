@@ -77,7 +77,7 @@ final class MatchAdminMenu implements AdminMenu {
                         Messages.text(MatchMenuMessage.CANCEL_LORE), Messages.text(CommonMessage.ASKS_FOR_CONFIRMATION))
                 : MenuItems.unavailable(Messages.text(MatchMenuMessage.CANCEL_TITLE),
                         Messages.text(CommonMessage.NO_TOURNAMENT_IN_PROGRESS)));
-        canvas.set(MATCH_DECIDE_WAITING_MATCH_SLOT, waitingMatchesAdminMenu.isTournamentInProgress()
+        canvas.set(MATCH_DECIDE_WAITING_MATCH_SLOT, tournamentManager.isTournamentInProgress()
                 ? MenuItems.create(Material.LECTERN, Messages.text(MatchMenuMessage.DECIDE_WAITING_MATCH_TITLE),
                         Messages.lines(MatchMenuMessage.DECIDE_WAITING_MATCH_LORE))
                 : MenuItems.unavailable(Messages.text(MatchMenuMessage.DECIDE_WAITING_MATCH_TITLE),

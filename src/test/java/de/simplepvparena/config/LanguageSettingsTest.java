@@ -137,6 +137,45 @@ class LanguageSettingsTest {
         assertEquals(List.of(), problems);
     }
 
+    @Test
+    void aReloadThatSwitchesToGermanWritesTheWarningsInGerman() {
+        PluginLiveConfiguration liveConfiguration = createLiveConfigurationWithShippedLanguageFiles();
+        MemoryConfiguration configuration = configurationWithLanguage("de");
+        configuration.set(PluginSettings.ARENA_SAFETY_ZONE_RADIUS_PATH, -1);
+        String germanWarning = "arena.safety-zone-radius darf nicht negativ sein, stattdessen gelten 64 Blöcke. Mit "
+                + "null schaltest du die Schutzzone ab";
+
+        List<String> lines = reloadServiceFor(configuration, liveConfiguration).reloadFromFile().describe();
+
+        assertEquals(List.of(germanWarning), problems);
+        assertEquals("config.yml wurde neu geladen und angewendet", lines.get(0));
+        assertEquals("  " + germanWarning, lines.get(lines.size() - 1));
+    }
+
+    @Test
+    void aReloadThatFallsBackFromGermanToEnglishWritesTheWarningsInEnglish() {
+        PluginLiveConfiguration liveConfiguration = createLiveConfigurationWithShippedLanguageFiles();
+        reloadServiceFor(configurationWithLanguage("de"), liveConfiguration).reloadFromFile();
+        MemoryConfiguration configuration = configurationWithLanguage("fr");
+        configuration.set(PluginSettings.ARENA_SAFETY_ZONE_RADIUS_PATH, -1);
+
+        List<String> lines = reloadServiceFor(configuration, liveConfiguration).reloadFromFile().describe();
+
+        assertEquals(List.of("arena.safety-zone-radius cannot be negative, falling back to 64 blocks. Use zero to "
+                        + "switch the safety zone off",
+                "language fr is no shipped language, falling back to en. Shipped languages: en and de"), problems);
+        assertEquals("config.yml was reloaded and applied", lines.get(0));
+        assertEquals("  language fr is no shipped language, falling back to en. Shipped languages: en and de",
+                lines.get(lines.size() - 1));
+    }
+
+    private PluginLiveConfiguration createLiveConfigurationWithShippedLanguageFiles() {
+        MessageCatalogLoader messageCatalogLoader = new MessageCatalogLoader(languageFolder, problems::add,
+                notice -> { });
+        messageCatalogLoader.installShippedFiles();
+        return createLiveConfiguration(messageCatalogLoader::useLanguage);
+    }
+
     private ConfigurationReloadService reloadServiceFor(MemoryConfiguration configuration,
                                                         LiveConfiguration liveConfiguration) {
         return new ConfigurationReloadService(() -> configuration, () -> { }, liveConfiguration, problems::add);

@@ -253,7 +253,7 @@ public final class SimplePVPArenaPlugin extends JavaPlugin {
         tournamentDryRun = new TournamentDryRun(tournamentManager::getState,
                 matchService::hasActiveMatch, teamRegistry,
                 new PluginDryRunArena(arenaRegistry.getArena(), arenaSetupService), kitService,
-                startGateMarks, startGateDuration, teamSizeSetting);
+                startGateMarks, startGateDuration, teamSizeSetting, getLogger());
 
         chatInputService = new ChatInputService(this);
         TeamMemberLookup teamMemberLookup = new TeamMemberLookup(getServer());

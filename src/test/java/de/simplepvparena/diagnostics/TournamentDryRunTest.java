@@ -17,12 +17,18 @@ import de.simplepvparena.tournament.TournamentState;
 import org.bukkit.Material;
 import org.junit.jupiter.api.Test;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.logging.Handler;
+import java.util.logging.Level;
+import java.util.logging.LogRecord;
+import java.util.logging.Logger;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class TournamentDryRunTest {
@@ -148,6 +154,36 @@ class TournamentDryRunTest {
                 .anyMatch(line -> line.contains("the arena is on fire")));
         assertTrue(findStep(report, TournamentDryRun.CLEANUP_STEP).isPassed());
         assertEquals(0, teamRegistry.getTeamCount());
+    }
+
+    @Test
+    void writesTheFailureOfAStepWithItsStackTraceIntoTheLog() {
+        makeTheServerReadyForItsEvent();
+        IllegalStateException failure = new IllegalStateException("the arena is on fire");
+        arena.failWith(failure);
+        List<LogRecord> logRecords = new ArrayList<>();
+
+        DryRunReport report = dryRunLoggingInto(logRecords).run();
+
+        assertTrue(findStep(report, TournamentDryRun.MATCH_STEP).isPassed(), "the run failed in its middle");
+        assertFalse(findStep(report, TournamentDryRun.FAILURE_STEP).isPassed());
+        assertEquals(1, logRecords.size());
+        assertEquals(Level.WARNING, logRecords.get(0).getLevel());
+        assertEquals("The dry run failed", logRecords.get(0).getMessage());
+        assertSame(failure, logRecords.get(0).getThrown());
+    }
+
+    @Test
+    void writesNothingIntoTheLogForAStepThatFailsItsCheck() {
+        makeTheServerReadyForItsEvent();
+        List<LogRecord> logRecords = new ArrayList<>();
+
+        DryRunReport report = dryRunLoggingInto(logRecords).run();
+
+        assertFalse(findStep(report, TournamentDryRun.KIT_STEP).isPassed(), "the kit is empty");
+        assertTrue(report.getSteps().stream().map(DryRunStep::name)
+                .noneMatch(Messages.text(TournamentDryRun.FAILURE_STEP)::equals), report.describe().toString());
+        assertEquals(List.of(), logRecords);
     }
 
     @Test
@@ -392,6 +428,27 @@ class TournamentDryRunTest {
     private TournamentDryRun dryRunWith(TeamSizeSetting teamSizeSetting) {
         return new TournamentDryRun(() -> tournamentState, () -> matchRunning, teamRegistry, arena,
                 kitService, gateMarks, gateDuration, teamSizeSetting);
+    }
+
+    private TournamentDryRun dryRunLoggingInto(List<LogRecord> logRecords) {
+        Logger logger = Logger.getAnonymousLogger();
+        logger.setUseParentHandlers(false);
+        logger.addHandler(new Handler() {
+            @Override
+            public void publish(LogRecord logRecord) {
+                logRecords.add(logRecord);
+            }
+
+            @Override
+            public void flush() {
+            }
+
+            @Override
+            public void close() {
+            }
+        });
+        return new TournamentDryRun(() -> tournamentState, () -> matchRunning, teamRegistry, arena,
+                kitService, gateMarks, gateDuration, new TeamSizeSetting(), logger);
     }
 
     private void makeTheServerReadyForItsEvent() {

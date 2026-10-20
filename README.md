@@ -55,7 +55,7 @@ The files can be changed to adjust the wording. Every value stands in single quo
 
 The plugin never overwrites or rewrites the files in the `lang` folder, also not after an update. When an update brings new texts, the log lists once after loading how many keys a file lacks and the first ten of them, their shipped texts are used until they are added by hand. To start over with the shipped texts, delete the file, the next start copies it again.
 
-"Reload config.yml" in the main menu reads `language` and the language files again. Texts created afterwards use them, a menu that is open keeps its texts until it is opened again, and messages already sent stay as they were.
+"Reload config.yml" in the main menu reads `language` and the language files again. Texts created afterwards use them, a menu that is open keeps its texts until it is opened again, and messages already sent stay as they were. The answer of the reload already uses the new language, its warnings about entries that cannot be used included.
 
 A chat input of the menu is cancelled with `cancel` in every language, in German also with `abbrechen`.
 

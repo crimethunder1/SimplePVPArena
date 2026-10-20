@@ -22,7 +22,7 @@ class MatchAdminMenuSnapshotTest {
                 12 | GRAY_DYE | Pause the tournament | No tournament is in progress
                 13 | GRAY_DYE | Cancel the tournament | No tournament is in progress
                 14 | GRAY_DYE | Decide a waiting match | No tournament is in progress
-                15 | GRAY_DYE | Start the final | The final is not ready, its stage is PENDING
+                15 | GRAY_DYE | Start the final | No tournament is in progress
                 16 | GRAY_DYE | Force a result | No match is running
                 22 | OAK_DOOR | Back | Returns to the main menu
                 """, fixture.describeLastMenu());
@@ -43,7 +43,7 @@ class MatchAdminMenuSnapshotTest {
                 12 | GRAY_DYE | Pause the tournament | No tournament is in progress
                 13 | GRAY_DYE | Cancel the tournament | No tournament is in progress
                 14 | GRAY_DYE | Decide a waiting match | No tournament is in progress
-                15 | GRAY_DYE | Start the final | The final is not ready, its stage is PENDING
+                15 | GRAY_DYE | Start the final | No tournament is in progress
                 16 | GRAY_DYE | Force a result | No match is running
                 22 | OAK_DOOR | Back | Returns to the main menu
                 """, fixture.describeLastMenu());
@@ -68,7 +68,7 @@ class MatchAdminMenuSnapshotTest {
                 13 | RED_WOOL | Cancel the tournament | Stops the running match and the bracket / \
                 Asks for a confirmation first
                 14 | LECTERN | Decide a waiting match | Decides a match that is not running for one of its two teams
-                15 | GRAY_DYE | Start the final | The final is not ready, its stage is PENDING
+                15 | GRAY_DYE | Start the final | The final is not ready, its finalists are not decided yet
                 16 | ANVIL | Force a result | Decides the running match for one of its two teams
                 22 | OAK_DOOR | Back | Returns to the main menu
                 """.formatted(fixture.runningFirstTeamName(), fixture.runningSecondTeamName()),
@@ -94,7 +94,7 @@ class MatchAdminMenuSnapshotTest {
                 13 | RED_WOOL | Cancel the tournament | Stops the running match and the bracket / \
                 Asks for a confirmation first
                 14 | LECTERN | Decide a waiting match | Decides a match that is not running for one of its two teams
-                15 | GRAY_DYE | Start the final | The final is not ready, its stage is PENDING
+                15 | GRAY_DYE | Start the final | The final is not ready, its finalists are not decided yet
                 16 | ANVIL | Force a result | Decides the running match for one of its two teams
                 22 | OAK_DOOR | Back | Returns to the main menu
                 """.formatted(fixture.runningFirstTeamName(), fixture.runningSecondTeamName()),

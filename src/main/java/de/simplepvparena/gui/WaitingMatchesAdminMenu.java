@@ -9,7 +9,6 @@ import de.simplepvparena.message.WaitingMatchMessage;
 import de.simplepvparena.team.TeamRegistry;
 import de.simplepvparena.tournament.BracketMatch;
 import de.simplepvparena.tournament.TournamentManager;
-import de.simplepvparena.tournament.TournamentState;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 
@@ -98,13 +97,8 @@ final class WaitingMatchesAdminMenu implements AdminMenu {
         }
     }
 
-    boolean isTournamentInProgress() {
-        TournamentState state = tournamentManager.getState();
-        return state == TournamentState.RUNNING || state == TournamentState.PAUSED;
-    }
-
     void openWaitingMatchesMenu(Player player) {
-        if (!isTournamentInProgress()) {
+        if (!tournamentManager.isTournamentInProgress()) {
             TournamentMessages.sendError(player, Messages.text(CommonMessage.NO_TOURNAMENT_IN_PROGRESS));
             return;
         }

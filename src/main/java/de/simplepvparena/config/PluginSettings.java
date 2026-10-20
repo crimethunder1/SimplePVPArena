@@ -191,7 +191,6 @@ public record PluginSettings(long roundResetDelayTicks,
     }
 
     public void applyTo(LiveConfiguration liveConfiguration) {
-        liveConfiguration.setLanguage(language);
         applyTo(liveConfiguration, liveConfiguration::setTeamSize);
     }
 

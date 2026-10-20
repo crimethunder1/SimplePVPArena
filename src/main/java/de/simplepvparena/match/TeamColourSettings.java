@@ -47,6 +47,6 @@ public record TeamColourSettings(NamedTextColor firstTeamColour, NamedTextColor 
     }
 
     public static List<String> knownColourNames() {
-        return List.copyOf(NamedTextColor.NAMES.keys());
+        return NamedTextColor.NAMES.keys().stream().sorted().toList();
     }
 }

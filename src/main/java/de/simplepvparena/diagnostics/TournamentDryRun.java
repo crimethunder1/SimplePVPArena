@@ -35,6 +35,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.function.BooleanSupplier;
 import java.util.function.Supplier;
+import java.util.logging.Logger;
 
 public final class TournamentDryRun {
 
@@ -57,6 +58,7 @@ public final class TournamentDryRun {
     private final StartGateMarks gateMarks;
     private final StartGateDuration gateDuration;
     private final TeamSizeSetting teamSizeSetting;
+    private final DryRunFailureLog failureLog;
 
     public TournamentDryRun(Supplier<TournamentState> tournamentState,
                             BooleanSupplier runningMatchLookup,
@@ -77,6 +79,19 @@ public final class TournamentDryRun {
                             StartGateMarks gateMarks,
                             StartGateDuration gateDuration,
                             TeamSizeSetting teamSizeSetting) {
+        this(tournamentState, runningMatchLookup, teamRegistry, arena, kitService, gateMarks, gateDuration,
+                teamSizeSetting, Logger.getLogger(TournamentDryRun.class.getName()));
+    }
+
+    public TournamentDryRun(Supplier<TournamentState> tournamentState,
+                            BooleanSupplier runningMatchLookup,
+                            TeamRegistry teamRegistry,
+                            DryRunArena arena,
+                            KitService kitService,
+                            StartGateMarks gateMarks,
+                            StartGateDuration gateDuration,
+                            TeamSizeSetting teamSizeSetting,
+                            Logger logger) {
         this.tournamentState = Objects.requireNonNull(tournamentState, "tournamentState");
         this.runningMatchLookup = Objects.requireNonNull(runningMatchLookup, "runningMatchLookup");
         this.teamRegistry = Objects.requireNonNull(teamRegistry, "teamRegistry");
@@ -85,6 +100,7 @@ public final class TournamentDryRun {
         this.gateMarks = Objects.requireNonNull(gateMarks, "gateMarks");
         this.gateDuration = Objects.requireNonNull(gateDuration, "gateDuration");
         this.teamSizeSetting = Objects.requireNonNull(teamSizeSetting, "teamSizeSetting");
+        this.failureLog = new DryRunFailureLog(logger);
     }
 
     public Optional<String> findRejection() {
@@ -111,6 +127,7 @@ public final class TournamentDryRun {
         try {
             walkPipeline(testTeams, registeredTeams, steps);
         } catch (RuntimeException failure) {
+            failureLog.write(failure);
             steps.add(DryRunStep.failed(stepName(FAILURE_STEP), Messages.lines(DryRunMessage.FAILURE,
                     Placeholder.of("failure", describeFailure(failure)))));
         } finally {

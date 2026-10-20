@@ -186,8 +186,8 @@ match-menu:
       lore:
         - 'Beide Finalisten stehen fest'
         - 'Startet das Finale in der Arena'
-      pending: 'Das Finale ist nicht bereit, sein Stand ist PENDING'
-      ready: 'Das Finale ist nicht bereit, sein Stand ist READY'
+      finalists-not-decided: 'Das Finale ist nicht bereit, seine Finalisten stehen noch nicht fest'
+      ready-while-paused: 'Das Finale ist bereit, setze das Turnier fort, um es zu starten'
       running: 'Das Finale läuft'
       over: 'Das Finale ist vorbei'
 force-result-menu:

@@ -113,6 +113,23 @@ class TournamentManagerWaitingMatchesTest {
     }
 
     @Test
+    void writesTheWarningAboutBothTeamsGoneIntoTheLogOnlyWithTheNoticeToTheAdmins() {
+        TournamentManagerFixture fixture = TournamentManagerFixture.withoutStorage(EIGHT_TEAMS);
+        fixture.startTournament();
+        removeBothTeamsOf(fixture, "round1-match2");
+
+        fixture.forceRunningMatchForTheFirstTeam();
+        assertTrue(fixture.tournamentManager().togglePause().successful());
+        assertTrue(fixture.tournamentManager().togglePause().successful());
+        decideForTheFirstTeam(fixture, "round1-match3");
+
+        assertEquals(List.of("Both teams of match round1-match2 are no longer registered, the match needs an admin "
+                + "decision"), fixture.logMessagesContaining(BOTH_TEAMS_GONE_TEXT));
+        assertEquals(List.of(bothTeamsGoneWarning("round1-match2")),
+                fixture.adminMessagesContaining(BOTH_TEAMS_GONE_TEXT));
+    }
+
+    @Test
     void warnsForEveryMatchWhoseTeamsAreBothGone() {
         TournamentManagerFixture fixture = TournamentManagerFixture.withoutStorage(EIGHT_TEAMS);
         fixture.startTournament();

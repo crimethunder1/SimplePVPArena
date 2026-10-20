@@ -54,7 +54,7 @@ class GermanMenuSnapshotTest {
                 Truhen, Türen und alles andere bleiben zu, solange er an ist / \
                 Das Menü schließt sich, damit du die Blöcke anklicken kannst / \
                 Der Modus ist aus, diese Kachel schaltet ihn an
-                14 | GRAY_DYE | Finale starten | Das Finale ist nicht bereit, sein Stand ist PENDING
+                14 | GRAY_DYE | Finale starten | Es läuft kein Turnier
                 15 | PAPER | Turnierstatus | Schreibt den Stand, die Turnierrunden und das laufende Match in den Chat
                 16 | WRITTEN_BOOK | Turnierbaum | Schreibt jede Turnierrunde und jedes Match in den Chat / \
                 Der Chat zeigt einen Turnierbaum besser als ein Raster / \
@@ -138,11 +138,11 @@ class GermanMenuSnapshotTest {
         finalTiles.put("over", finalTileOfTheMainMenu());
 
         assertEquals(Map.of(
-                "pending", List.of("GRAY_DYE", "Finale starten", "Das Finale ist nicht bereit, sein Stand ist PENDING"),
+                "pending", List.of("GRAY_DYE", "Finale starten", "Es läuft kein Turnier"),
                 "ready", List.of("NETHER_STAR", "Finale starten", "Beide Finalisten stehen fest",
                         "Startet das Finale in der Arena"),
                 "ready while paused", List.of("GRAY_DYE", "Finale starten",
-                        "Das Finale ist nicht bereit, sein Stand ist READY"),
+                        "Das Finale ist bereit, setze das Turnier fort, um es zu starten"),
                 "running", List.of("GRAY_DYE", "Finale starten", "Das Finale läuft"),
                 "over", List.of("GRAY_DYE", "Finale starten", "Das Finale ist vorbei")), finalTiles);
     }
@@ -155,7 +155,7 @@ class GermanMenuSnapshotTest {
         fixture.startTournament();
         fixture.pauseTournament();
 
-        assertEquals(List.of("GRAY_DYE", "Start the final", "The final is not ready, its stage is READY"),
+        assertEquals(List.of("GRAY_DYE", "Start the final", "The final is ready, continue the tournament to start it"),
                 finalTileOfTheMainMenu());
     }
 
@@ -212,7 +212,7 @@ class GermanMenuSnapshotTest {
                 12 | GRAY_DYE | Turnier pausieren | Es läuft kein Turnier
                 13 | GRAY_DYE | Turnier abbrechen | Es läuft kein Turnier
                 14 | GRAY_DYE | Wartendes Match entscheiden | Es läuft kein Turnier
-                15 | GRAY_DYE | Finale starten | Das Finale ist nicht bereit, sein Stand ist PENDING
+                15 | GRAY_DYE | Finale starten | Es läuft kein Turnier
                 16 | GRAY_DYE | Ergebnis erzwingen | Es läuft kein Match
                 22 | OAK_DOOR | Zurück | Zurück zum Hauptmenü
                 """, fixture.describeLastMenu());
@@ -236,7 +236,7 @@ class GermanMenuSnapshotTest {
                 Fragt vorher nach einer Bestätigung
                 14 | LECTERN | Wartendes Match entscheiden | \
                 Entscheidet ein Match, das nicht läuft, für eines seiner zwei Teams
-                15 | GRAY_DYE | Finale starten | Das Finale ist nicht bereit, sein Stand ist PENDING
+                15 | GRAY_DYE | Finale starten | Das Finale ist nicht bereit, seine Finalisten stehen noch nicht fest
                 16 | ANVIL | Ergebnis erzwingen | Entscheidet das laufende Match für eines seiner zwei Teams
                 22 | OAK_DOOR | Zurück | Zurück zum Hauptmenü
                 """.formatted(fixture.runningFirstTeamName(), fixture.runningSecondTeamName()),

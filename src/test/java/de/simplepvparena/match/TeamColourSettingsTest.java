@@ -7,6 +7,7 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class TeamColourSettingsTest {
@@ -56,5 +57,15 @@ class TeamColourSettingsTest {
         assertEquals(16, TeamColourSettings.knownColourNames().size());
         assertTrue(TeamColourSettings.knownColourNames()
                 .containsAll(List.of("red", "aqua", "dark_red", "blue", "light_purple")));
+    }
+
+    @Test
+    void namesTheColoursInAlphabeticalOrderInAListThatCannotBeChanged() {
+        List<String> colourNames = TeamColourSettings.knownColourNames();
+
+        assertEquals(List.of("aqua", "black", "blue", "dark_aqua", "dark_blue", "dark_gray", "dark_green",
+                "dark_purple", "dark_red", "gold", "gray", "green", "light_purple", "red", "white", "yellow"),
+                colourNames);
+        assertThrows(UnsupportedOperationException.class, () -> colourNames.add("pink"));
     }
 }

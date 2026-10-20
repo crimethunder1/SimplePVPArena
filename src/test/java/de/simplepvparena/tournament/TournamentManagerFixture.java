@@ -32,7 +32,8 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.function.Consumer;
-import java.util.logging.Level;
+import java.util.logging.Handler;
+import java.util.logging.LogRecord;
 import java.util.logging.Logger;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -49,6 +50,7 @@ final class TournamentManagerFixture {
 
     private final List<Object> scheduledTasks = new ArrayList<>();
     private final List<String> adminMessages = new ArrayList<>();
+    private final List<String> logMessages = new ArrayList<>();
     private final TeamRegistry teamRegistry = new TeamRegistry();
     private final ArenaRegistry arenaRegistry = new ArenaRegistry();
     private final KitService kitService = new KitService();
@@ -179,6 +181,10 @@ final class TournamentManagerFixture {
         return adminMessages.stream().filter(message -> message.contains(text)).toList();
     }
 
+    List<String> logMessagesContaining(String text) {
+        return logMessages.stream().filter(message -> message.contains(text)).toList();
+    }
+
     void setTeamSize(int teamSize) {
         tournamentManager.getTeamSizeSetting().setTeamSize(teamSize);
     }
@@ -259,7 +265,20 @@ final class TournamentManagerFixture {
         Object server = createServer();
         Logger logger = Logger.getLogger("TournamentManagerFixture." + UUID.randomUUID());
         logger.setUseParentHandlers(false);
-        logger.setLevel(Level.OFF);
+        logger.addHandler(new Handler() {
+            @Override
+            public void publish(LogRecord logRecord) {
+                logMessages.add(logRecord.getMessage());
+            }
+
+            @Override
+            public void flush() {
+            }
+
+            @Override
+            public void close() {
+            }
+        });
         return SharedBukkitServer.proxy(Plugin.class, (method, arguments) -> switch (method.getName()) {
             case "getServer" -> server;
             case "getLogger" -> logger;

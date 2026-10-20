@@ -1,6 +1,7 @@
 package de.simplepvparena.gui;
 
 import de.simplepvparena.match.MatchService;
+import de.simplepvparena.message.CommonMessage;
 import de.simplepvparena.message.MatchMenuMessage;
 import de.simplepvparena.message.MessageKey;
 import de.simplepvparena.message.Messages;
@@ -30,8 +31,12 @@ final class TournamentMenuStatus {
 
     private String describeUnavailableFinal() {
         MessageKey reason = switch (tournamentManager.getFinalMatchStage()) {
-            case PENDING -> MatchMenuMessage.FINAL_PENDING;
-            case READY -> MatchMenuMessage.FINAL_READY;
+            case PENDING -> tournamentManager.isTournamentInProgress()
+                    ? MatchMenuMessage.FINAL_FINALISTS_NOT_DECIDED
+                    : CommonMessage.NO_TOURNAMENT_IN_PROGRESS;
+            case READY -> tournamentManager.isTournamentInProgress()
+                    ? MatchMenuMessage.FINAL_READY_WHILE_PAUSED
+                    : CommonMessage.NO_TOURNAMENT_IN_PROGRESS;
             case RUNNING -> MatchMenuMessage.FINAL_RUNNING;
             case FINISHED -> MatchMenuMessage.FINAL_OVER;
         };

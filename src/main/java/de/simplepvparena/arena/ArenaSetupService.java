@@ -47,15 +47,15 @@ public final class ArenaSetupService {
                              ArenaBaselineService arenaBaselineService,
                              ArenaBorderConfirmation borderConfirmation,
                              Runnable arenaConfigurationSaver) {
-        this.activeArena = activeArena;
-        this.matchService = matchService;
-        this.spectatorBorderService = spectatorBorderService;
-        this.borderWallPreview = borderWallPreview;
-        this.arenaGapGuide = arenaGapGuide;
-        this.arenaCleaningService = arenaCleaningService;
-        this.arenaBaselineService = arenaBaselineService;
-        this.borderConfirmation = borderConfirmation;
-        this.arenaConfigurationSaver = arenaConfigurationSaver;
+        this.activeArena = Objects.requireNonNull(activeArena, "activeArena");
+        this.matchService = Objects.requireNonNull(matchService, "matchService");
+        this.spectatorBorderService = Objects.requireNonNull(spectatorBorderService, "spectatorBorderService");
+        this.borderWallPreview = Objects.requireNonNull(borderWallPreview, "borderWallPreview");
+        this.arenaGapGuide = Objects.requireNonNull(arenaGapGuide, "arenaGapGuide");
+        this.arenaCleaningService = Objects.requireNonNull(arenaCleaningService, "arenaCleaningService");
+        this.arenaBaselineService = Objects.requireNonNull(arenaBaselineService, "arenaBaselineService");
+        this.borderConfirmation = Objects.requireNonNull(borderConfirmation, "borderConfirmation");
+        this.arenaConfigurationSaver = Objects.requireNonNull(arenaConfigurationSaver, "arenaConfigurationSaver");
     }
 
     public void setMaximumArenaCellCount(int maximumArenaCellCount) {

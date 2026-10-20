@@ -58,6 +58,18 @@ class ConfigTextsTest {
     }
 
     @Test
+    void listsTheUsableColoursInAlphabeticalOrder() {
+        MemoryConfiguration configuration = new MemoryConfiguration();
+        configuration.set(PluginSettings.SECOND_TEAM_COLOUR_PATH, "pink");
+
+        PluginSettings.read(configuration, problems::add);
+
+        assertEquals(List.of("match.team-colours.second-team is no colour a name can be shown in, falling back to "
+                + "aqua. Usable colours: aqua, black, blue, dark_aqua, dark_blue, dark_gray, dark_green, dark_purple, "
+                + "dark_red, gold, gray, green, light_purple, red, white and yellow"), problems);
+    }
+
+    @Test
     void reportsTwoTeamsInTheSameColourWithTheWordingOfBefore() {
         MemoryConfiguration configuration = new MemoryConfiguration();
         configuration.set(PluginSettings.FIRST_TEAM_COLOUR_PATH, "gold");

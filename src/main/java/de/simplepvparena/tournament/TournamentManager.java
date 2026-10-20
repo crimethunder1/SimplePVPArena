@@ -678,9 +678,9 @@ public final class TournamentManager implements MatchCompletionHandler {
             return true;
         }
         if (firstTeam.isEmpty() && secondTeam.isEmpty()) {
-            plugin.getLogger().warning("Both teams of match " + bracketMatch.getMatchId()
-                    + " are no longer registered, the match needs an admin decision");
             if (matchIdsWarnedAboutMissingTeams.add(bracketMatch.getMatchId())) {
+                plugin.getLogger().warning("Both teams of match " + bracketMatch.getMatchId()
+                        + " are no longer registered, the match needs an admin decision");
                 adminNotifier.notifyAdmins(Messages.text(TournamentMessage.BOTH_TEAMS_MISSING,
                         Placeholder.of("match", bracketMatch.getMatchId()),
                         Placeholder.of("tile", Messages.text(MatchMenuMessage.DECIDE_WAITING_MATCH_TITLE))));

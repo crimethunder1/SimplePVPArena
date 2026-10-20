@@ -28,7 +28,7 @@ class MainAdminMenuSnapshotTest {
                 other block that already stands there can be marked / \
                 Chests, doors and everything else stay shut while it is on / \
                 The menu closes so you can click the blocks / The mode is off, this tile switches it on
-                14 | GRAY_DYE | Start the final | The final is not ready, its stage is PENDING
+                14 | GRAY_DYE | Start the final | No tournament is in progress
                 15 | PAPER | Tournament status | Writes the state, the rounds and the running match into the chat
                 16 | WRITTEN_BOOK | Bracket | Writes every round and every match into the chat / \
                 A bracket is a tree, the chat shows it better than a grid / The menu closes so you can read it
@@ -69,7 +69,7 @@ class MainAdminMenuSnapshotTest {
                 other block that already stands there can be marked / \
                 Chests, doors and everything else stay shut while it is on / \
                 The menu closes so you can click the blocks / The mode is off, this tile switches it on
-                14 | GRAY_DYE | Start the final | The final is not ready, its stage is PENDING
+                14 | GRAY_DYE | Start the final | No tournament is in progress
                 15 | PAPER | Tournament status | Writes the state, the rounds and the running match into the chat
                 16 | WRITTEN_BOOK | Bracket | Writes every round and every match into the chat / \
                 A bracket is a tree, the chat shows it better than a grid / The menu closes so you can read it
@@ -111,7 +111,7 @@ class MainAdminMenuSnapshotTest {
                 other block that already stands there can be marked / \
                 Chests, doors and everything else stay shut while it is on / \
                 The menu closes so you can click the blocks / The mode is off, this tile switches it on
-                14 | GRAY_DYE | Start the final | The final is not ready, its stage is PENDING
+                14 | GRAY_DYE | Start the final | The final is not ready, its finalists are not decided yet
                 15 | PAPER | Tournament status | Writes the state, the rounds and the running match into the chat
                 16 | WRITTEN_BOOK | Bracket | Writes every round and every match into the chat / \
                 A bracket is a tree, the chat shows it better than a grid / The menu closes so you can read it
@@ -153,7 +153,7 @@ class MainAdminMenuSnapshotTest {
                 other block that already stands there can be marked / \
                 Chests, doors and everything else stay shut while it is on / \
                 The menu closes so you can click the blocks / The mode is off, this tile switches it on
-                14 | GRAY_DYE | Start the final | The final is not ready, its stage is PENDING
+                14 | GRAY_DYE | Start the final | The final is not ready, its finalists are not decided yet
                 15 | PAPER | Tournament status | Writes the state, the rounds and the running match into the chat
                 16 | WRITTEN_BOOK | Bracket | Writes every round and every match into the chat / \
                 A bracket is a tree, the chat shows it better than a grid / The menu closes so you can read it
@@ -318,7 +318,7 @@ class MainAdminMenuSnapshotTest {
                 other block that already stands there can be marked / \
                 Chests, doors and everything else stay shut while it is on / \
                 The menu closes so you can click the blocks / The mode is on, this tile switches it off
-                14 | GRAY_DYE | Start the final | The final is not ready, its stage is PENDING
+                14 | GRAY_DYE | Start the final | No tournament is in progress
                 15 | PAPER | Tournament status | Writes the state, the rounds and the running match into the chat
                 16 | WRITTEN_BOOK | Bracket | Writes every round and every match into the chat / \
                 A bracket is a tree, the chat shows it better than a grid / The menu closes so you can read it

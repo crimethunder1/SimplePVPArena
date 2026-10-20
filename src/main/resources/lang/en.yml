@@ -186,8 +186,8 @@ match-menu:
       lore:
         - 'Both finalists are known'
         - 'Starts the final on the arena'
-      pending: 'The final is not ready, its stage is PENDING'
-      ready: 'The final is not ready, its stage is READY'
+      finalists-not-decided: 'The final is not ready, its finalists are not decided yet'
+      ready-while-paused: 'The final is ready, continue the tournament to start it'
       running: 'The final is running'
       over: 'The final is over'
 force-result-menu:
