@@ -38,7 +38,7 @@ class GermanMenuSnapshotTest {
 
         assertEquals("""
                 Turnierverwaltung | 27
-                4 | BOOK | Turnier | Turnierstatus: ohne Turnier / Registrierte Teams: 0 / Arena: unvollständig / \
+                4 | BOOK | Turnier | Turnierstatus: kein Turnier / Registrierte Teams: 0 / Arena: unvollständig / \
                 Laufendes Match: keins
                 10 | GRASS_BLOCK | Arena | Kampffläche, Spawns, Reinigung und Zurücksetzen / Arena unvollständig
                 11 | PLAYER_HEAD | Teams | Registrierte Teams: 0 / \
@@ -89,7 +89,7 @@ class GermanMenuSnapshotTest {
         fixture.openMainMenu();
 
         String runningMatch = "Laufendes Match: " + fixture.runningMatch().describe();
-        assertEquals(List.of("Turnierstatus: ohne Turnier", "Registrierte Teams: 2", "Arena: bereit", runningMatch),
+        assertEquals(List.of("Turnierstatus: kein Turnier", "Registrierte Teams: 2", "Arena: bereit", runningMatch),
                 fixture.lastMenu().findTile(AdminMenuLayout.INFO_SLOT).orElseThrow().loreLines());
         assertEquals(List.of("Starten, pausieren, abbrechen und ein Ergebnis erzwingen", runningMatch),
                 fixture.lastMenu().findTile(MAIN_MATCH_SLOT).orElseThrow().loreLines());
@@ -206,7 +206,7 @@ class GermanMenuSnapshotTest {
 
         assertEquals("""
                 Match und Turnier | 27
-                4 | BOOK | Turnier | Turnierstatus: ohne Turnier / Laufendes Match: keins / Rundenzeit: läuft
+                4 | BOOK | Turnier | Turnierstatus: kein Turnier / Laufendes Match: keins / Rundenzeit: läuft
                 10 | LIME_WOOL | Turnier starten | Braucht eine gerade Anzahl Teams
                 11 | YELLOW_WOOL | Start erzwingen | Startet das Turnier mit einer ungeraden Anzahl Teams
                 12 | GRAY_DYE | Turnier pausieren | Es läuft kein Turnier

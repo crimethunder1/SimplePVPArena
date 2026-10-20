@@ -1241,3 +1241,237 @@ command:
     while-fighting: 'You cannot leave the arena while you are fighting'
     no-tribune-position: 'The arena has no usable tribune position'
     watching: 'You are now watching the arena'
+dry-run:
+  report:
+    rejected: 'The dry run was not started'
+    summary:
+      plain:
+        one: 'Dry run of the tournament pipeline: {passed} of {count} step passed'
+        other: 'Dry run of the tournament pipeline: {passed} of {count} steps passed'
+      with-failed:
+        one: 'Dry run of the tournament pipeline: {passed} of {count} step passed, {failed} failed'
+        other: 'Dry run of the tournament pipeline: {passed} of {count} steps passed, {failed} failed'
+      with-skipped:
+        one: 'Dry run of the tournament pipeline: {passed} of {count} step passed, {skipped} skipped'
+        other: 'Dry run of the tournament pipeline: {passed} of {count} steps passed, {skipped} skipped'
+      with-failed-and-skipped:
+        one: 'Dry run of the tournament pipeline: {passed} of {count} step passed, {failed} failed, {skipped} skipped'
+        other: 'Dry run of the tournament pipeline: {passed} of {count} steps passed, {failed} failed, {skipped} skipped'
+    real-player-note:
+      - 'A real test player is still needed for the parts that act on a body:'
+      - '  the kit really landing in an inventory and the old one being cleared'
+      - '  the teleport onto the two team spawns behind the gate'
+      - '  who counts as an active fighter, which follows from who is online'
+      - '  the gate countdown and the titles really running over the arena'
+      - 'The dry run checks that all of them are configured, never that they arrived'
+  status:
+    passed: 'ok'
+    skipped: 'skipped'
+    failed: 'FAILED'
+  step:
+    teams: 'Two test teams registered'
+    arena: 'Arena, fight area and spawns'
+    kit: 'The kit a round start hands out'
+    gate: 'Start gate countdown'
+    match: 'Bracket and a simulated match'
+    cleaning: 'The cleaning after the match'
+    cleanup: 'Test teams removed again'
+    failure: 'The dry run itself'
+  rejection:
+    tournament-in-progress:
+      - 'A tournament is in progress, the dry run is a check for before an event'
+      - 'It registers two test teams and would put them into the registry of a running bracket'
+      - 'Wait until the event is over or cancel it in the match menu of /tournament'
+    match-on-the-arena:
+      - 'A match stands on the arena, the dry run is a check for before an event'
+      - 'Decide it with {action}, or wait for it'
+  failure:
+    - 'The dry run ran into {failure}'
+    - 'Every step it got through is above, the server log holds the stack trace'
+  teams:
+    names-taken:
+      one:
+        - 'A registered team is already called {teams}'
+        - 'The dry run registers exactly those names and never replaces a team of yours'
+        - 'Rename or remove that team in the team menu of /tournament and click again'
+      other:
+        - 'Registered teams are already called {teams}'
+        - 'The dry run registers exactly those names and never replaces a team of yours'
+        - 'Rename or remove those teams in the team menu of /tournament and click again'
+    registered: '{team} with {members}'
+    refused: 'The registry refused {team}: {reason}'
+    not-found-by-name: '{team} was registered but cannot be found by name'
+    member-not-found: '{player} is not found in {team} by their unique id'
+    both-placeholder-players-found: 'Both are found by name and both placeholder players are found by their unique id'
+    every-placeholder-player-found: 'Both are found by name and every placeholder player is found by their unique id'
+    placeholder-members: 'The members are placeholders and no account of this server, and nothing was written to teams.yml'
+  cleanup:
+    nothing-to-remove:
+      one:
+        - 'No test team was registered, so there is nothing to remove'
+        - 'The registry still holds its own {count} team'
+      other:
+        - 'No test team was registered, so there is nothing to remove'
+        - 'The registry still holds its own {count} teams'
+    left-behind:
+      one:
+        - 'This test team could not be removed: {teams}'
+        - 'Remove it by hand in the team menu of /tournament before the event starts'
+      other:
+        - 'These test teams could not be removed: {teams}'
+        - 'Remove them by hand in the team menu of /tournament before the event starts'
+    count-changed:
+      one:
+        - 'The registry held {count} team before the dry run and holds {after} now'
+        - 'Check the team menu of /tournament before the event starts'
+      other:
+        - 'The registry held {count} teams before the dry run and holds {after} now'
+        - 'Check the team menu of /tournament before the event starts'
+    removed:
+      one:
+        - 'Both test teams are gone, the registry holds its {count} own team again'
+        - 'teams.yml was never written, so a restart could not bring them back either'
+      other:
+        - 'Both test teams are gone, the registry holds its {count} own teams again'
+        - 'teams.yml was never written, so a restart could not bring them back either'
+  arena:
+    not-ready: 'The arena cannot host a match, it still misses:'
+    never-calculated: 'The dry run never calculates the fight area itself: a calculation replaces the shape, the baseline and the marked heights'
+    first-team-spawn-missing:
+      - 'The arena is ready but the first team spawn is not set'
+      - 'An unset team spawn falls back to the middle of the fight area, so both teams would start on the same block'
+      - 'Set it in the arena menu of /tournament while standing on it'
+    second-team-spawn-missing:
+      - 'The arena is ready but the second team spawn is not set'
+      - 'An unset team spawn falls back to the middle of the fight area, so both teams would start on the same block'
+      - 'Set it in the arena menu of /tournament while standing on it'
+    both-team-spawns-missing:
+      - 'The arena is ready but the first team spawn and the second team spawn are not set'
+      - 'An unset team spawn falls back to the middle of the fight area, so both teams would start on the same block'
+      - 'Set them in the arena menu of /tournament, each while standing on it'
+    fight-area: 'Fight area: {area}'
+    cleaning-writes-blocks:
+      one: 'A cleaning writes {count} block between y {floorY} and y {topY}'
+      other: 'A cleaning writes {count} blocks between y {floorY} and y {topY}'
+    spawns-set: 'Both team spawns and the tribune spawn are set'
+  kit:
+    empty:
+      - 'The kit is empty, every fighter would start the round with bare hands'
+      - 'Put the kit into your own inventory, create it with "{tile}" in the kit menu of /tournament and use it as the default kit'
+    items:
+      one: 'Every fighter is given this {count} item at every round start, as a copy of its own'
+      other: 'Every fighter is given these {count} items at every round start, each as a copy of its own'
+  gate:
+    no-block:
+      - 'No gate block is marked, the rounds start without a gate'
+      - 'That is a working setup and nothing is refused because of it'
+      - 'Hand yourself gate blocks with {action} to build one'
+    countdown: 'The countdown reads {seconds} down to 1 and then "{release}", checked without waiting a tick'
+    layer-too-early: 'Layer {layer} of the gate in {world} would be taken away on tick {tick}, not after the layer above it'
+    gone-too-early: 'The gate in {world} would be gone on tick {tick}, before the countdown ends on tick {countdown}'
+    world: '{world}: {blocks} in {layers}, the last one falls on tick {tick} of {countdown}'
+    block-count:
+      one: '{count} block'
+      other: '{count} blocks'
+    layer-count:
+      one: '{count} layer'
+      other: '{count} layers'
+    taller-than-countdown:
+      one: '  That gate is taller than the countdown has ticks, so it keeps coming down for {count} tick after "{release}"'
+      other: '  That gate is taller than the countdown has ticks, so it keeps coming down for {count} ticks after "{release}"'
+    second-reads: 'Second {second} of the countdown would read "{title}" over the arena'
+    end-reads: 'The end of the countdown would read "{title}" instead of "{release}"'
+  match:
+    test-teams-not-registered: 'The two test teams are not registered, so there is no bracket to walk'
+    bracket-built: 'Bracket built over {teams}: {rounds}, {matches} in it'
+    team-count:
+      one: '{count} team'
+      other: '{count} teams'
+    round-count:
+      one: '{count} round'
+      other: '{count} rounds'
+    match-count:
+      one: '{count} match'
+      other: '{count} matches'
+    final-without-both-test-teams: 'The single match of the bracket did not get both test teams'
+    team-only-in-bracket: 'The bracket holds {team}, but the registry does not. A real match would declare a walkover'
+    resolved: 'Match {match}: {firstTeam} against {secondTeam}, both teams resolve in the registry'
+    sequence-starts-final: 'The match sequence would start the final by itself instead of leaving it to an admin'
+    sequence-leaves-final: 'The match sequence leaves it alone: the single match of a two team bracket is the final, and the final is the one match an admin starts'
+    nothing-reached-the-arena: 'Nothing of this reached the arena: no round was begun, no gate was opened and no fighter was teleported or equipped'
+  final:
+    stage-not-ready: 'Both finalists are known, but the final gate stands at {stage} instead of {expected}'
+    refused: 'The final is ready but would be refused: {reason}'
+    announced-times:
+      one: 'The ready final announced itself {count} time to the admins instead of exactly once'
+      other: 'The ready final announced itself {count} times to the admins instead of exactly once'
+    turns-ready: 'The final gate turns {stage} and announces once: {announcement}'
+    bracket-incomplete: 'The decided final left the bracket incomplete'
+    wrong-champion: 'The champion is {champion} instead of {winner}'
+    no-champion: 'The champion is nobody instead of {winner}'
+    stage-not-finished: 'The decided final left the gate at {stage} instead of {expected}'
+    simulated-result: 'Simulated result for {winner}: the bracket is complete, the champion is {winner} and the final gate is {stage}'
+  cleaning:
+    arena-left-behind: 'The match after it would be fought in the arena the match before it left behind'
+    no-baseline:
+      - 'No baseline of the fight area is stored, so nothing is cleaned between two matches'
+      - 'A cleaning nobody asked for never empties the arena, it is skipped instead'
+      - 'The baseline lives in memory only: run {action} once'
+    would-start: 'A cleaning would start right away and restore the baseline of the last calculation'
+    blocks:
+      one: '{count} block between y {floorY} and y {topY}'
+      other: '{count} blocks between y {floorY} and y {topY}'
+    nothing-cleaned: 'Nothing was written: the dry run checks the trigger, it never cleans the arena'
+config:
+  problem:
+    language-not-shipped: '{path} {language} is no shipped language, falling back to {fallback}. Shipped languages: {languages}'
+    cell-limit-too-low: '{path} must be at least one cell, falling back to {fallback}'
+    baseline-depth-out-of-range:
+      one: '{path} must lie between 0 and {maximum} blocks, falling back to {count} block'
+      other: '{path} must lie between 0 and {maximum} blocks, falling back to {count} blocks'
+    safety-zone-radius-negative:
+      one: '{path} cannot be negative, falling back to {count} block. Use zero to switch the safety zone off'
+      other: '{path} cannot be negative, falling back to {count} blocks. Use zero to switch the safety zone off'
+    effect-margin-out-of-range:
+      one: '{path} must be a whole number between {minimum} and {maximum} blocks, falling back to {count} block'
+      other: '{path} must be a whole number between {minimum} and {maximum} blocks, falling back to {count} blocks'
+    team-size-out-of-range:
+      one: '{path} must be a whole number between {minimum} and {maximum} players, falling back to {count} player'
+      other: '{path} must be a whole number between {minimum} and {maximum} players, falling back to {count} players'
+    cleaning-duration-negative: '{path} cannot be negative, falling back to {seconds} seconds. Use zero to clean without the two coloured phases'
+    cleaning-columns-negative:
+      one: '{path} cannot be negative, falling back to {count} column per tick. Use zero to draw none'
+      other: '{path} cannot be negative, falling back to {count} columns per tick. Use zero to draw none'
+    start-gate-duration-too-short:
+      one: '{path} must be at least {minimum} second, falling back to {count} second'
+      other: '{path} must be at least {minimum} second, falling back to {count} seconds'
+    round-timeout-too-short:
+      one: '{path} must be at least one second, falling back to {count} second'
+      other: '{path} must be at least one second, falling back to {count} seconds'
+    same-team-colours: '{path} gives both teams the colour {colour}, which would be no colouring at all, falling back to {firstColour} and {secondColour}'
+    unknown-team-colour: '{path} is no colour a name can be shown in, falling back to {fallback}. Usable colours: {colours}'
+    marker-height-negative: '{path} cannot be negative, falling back to {height} blocks. Use zero for the shortest possible marker'
+  reload:
+    reloaded: 'config.yml was reloaded and applied'
+    category:
+      language: 'the language and the language files in the lang folder, for every text shown from now on'
+      round: 'the round reset delay, the round timeout, the sudden death damage and whether the final is fought without a time limit'
+      start-gate: 'the seconds the start gate takes at the beginning of a round'
+      team-size: 'the team size, unless a tournament is in progress or a team has more players than a smaller new size'
+      cleaning: 'the cleaning and baseline batch sizes and the particles of a running cleaning'
+      baseline-depth: 'the depth below the floor the next baseline is taken to'
+      cell-limit: 'the cell limit of the arena calculation'
+      safety-zone: 'the radius of the safety zone'
+      effect-margin: 'the margin of the area of effect around the fight area'
+      teleport-on-join: 'whether joining players are sent to the tribune'
+      border: 'the border particles, their limits and the confirmed border marker'
+    untouched: 'The calculated fight area, the spawns, the border blocks, the teams and a running match stay untouched'
+    unusable-entries: 'Entries that could not be used and fell back to their default:'
+  notice:
+    team-size-not-taken-over: '{rejection}. The team size {teamSize} of {path} in config.yml was not taken over, the team size stays {matchUp}'
+    larger-teams-at-start:
+      one: '{teams}. The team size {teamSize} of {path} in config.yml applies anyway since the start, this team keeps its players and every online player of it fights'
+      other: '{teams}. The team size {teamSize} of {path} in config.yml applies anyway since the start, these teams keep their players and every online player of them fights'
+    tribune-outside-of-the-effect-area: '{warning}. Nothing was dropped, set the tribune spawn again closer to the fight area or raise {path} in config.yml'
+plugin:
+  kits-not-loaded: 'The kits could not be loaded ({reason}), there is no kit until one is created in the kit menu of /tournament'

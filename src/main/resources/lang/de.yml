@@ -1168,7 +1168,7 @@ tournament:
     delete-failure: 'Der gespeicherte Turnierstand konnte nicht entfernt werden, der nächste Serverstart würde ihn wiederherstellen: {reason}'
 tournament-status:
   state:
-    idle: 'ohne Turnier'
+    idle: 'kein Turnier'
     running: 'läuft'
     paused: 'pausiert'
     cancelled: 'abgebrochen'
@@ -1241,3 +1241,237 @@ command:
     while-fighting: 'Du kannst die Arena nicht verlassen, während du kämpfst'
     no-tribune-position: 'Die Arena hat keine nutzbare Tribünenposition'
     watching: 'Du schaust jetzt der Arena zu'
+dry-run:
+  report:
+    rejected: 'Der Probelauf wurde nicht gestartet'
+    summary:
+      plain:
+        one: 'Probelauf des Turnierablaufs: {passed} von {count} Schritt bestanden'
+        other: 'Probelauf des Turnierablaufs: {passed} von {count} Schritten bestanden'
+      with-failed:
+        one: 'Probelauf des Turnierablaufs: {passed} von {count} Schritt bestanden, {failed} gescheitert'
+        other: 'Probelauf des Turnierablaufs: {passed} von {count} Schritten bestanden, {failed} gescheitert'
+      with-skipped:
+        one: 'Probelauf des Turnierablaufs: {passed} von {count} Schritt bestanden, {skipped} übersprungen'
+        other: 'Probelauf des Turnierablaufs: {passed} von {count} Schritten bestanden, {skipped} übersprungen'
+      with-failed-and-skipped:
+        one: 'Probelauf des Turnierablaufs: {passed} von {count} Schritt bestanden, {failed} gescheitert, {skipped} übersprungen'
+        other: 'Probelauf des Turnierablaufs: {passed} von {count} Schritten bestanden, {failed} gescheitert, {skipped} übersprungen'
+    real-player-note:
+      - 'Für die Teile, die an einem Körper wirken, bleibt ein echter Testspieler nötig:'
+      - '  das Kit, das wirklich in einem Inventar landet, und das alte, das abgeräumt wird'
+      - '  der Teleport auf die beiden Team-Spawns hinter dem Starttor'
+      - '  wer als aktiver Kämpfer zählt, was davon abhängt, wer online ist'
+      - '  der Countdown des Starttors und die Titel, die wirklich über der Arena laufen'
+      - 'Der Probelauf prüft, dass all das eingerichtet ist, aber nie, dass es angekommen ist'
+  status:
+    passed: 'ok'
+    skipped: 'übersprungen'
+    failed: 'GESCHEITERT'
+  step:
+    teams: 'Zwei Testteams registriert'
+    arena: 'Arena, Kampffläche und Spawns'
+    kit: 'Das Kit, das ein Rundenstart ausgibt'
+    gate: 'Countdown des Starttors'
+    match: 'Turnierbaum und ein simuliertes Match'
+    cleaning: 'Die Reinigung nach dem Match'
+    cleanup: 'Testteams wieder entfernt'
+    failure: 'Der Probelauf selbst'
+  rejection:
+    tournament-in-progress:
+      - 'Ein Turnier läuft, der Probelauf ist eine Prüfung für die Zeit vor einem Event'
+      - 'Er registriert zwei Testteams und würde sie in die Teamliste eines laufenden Turnierbaums setzen'
+      - 'Warte, bis das Event vorbei ist, oder brich es im Match-Menü von /tournament ab'
+    match-on-the-arena:
+      - 'Auf der Arena läuft ein Match, der Probelauf ist eine Prüfung für die Zeit vor einem Event'
+      - 'Entscheide es mit {action} oder warte darauf'
+  failure:
+    - 'Der Probelauf ist auf einen Fehler gestoßen: {failure}'
+    - 'Jeder Schritt, den er geschafft hat, steht oben, das Serverlog enthält den Stacktrace'
+  teams:
+    names-taken:
+      one:
+        - 'Ein registriertes Team heißt bereits {teams}'
+        - 'Der Probelauf registriert genau diese Namen und ersetzt nie eines deiner Teams'
+        - 'Benenne dieses Team im Team-Menü von /tournament um oder entferne es und klicke noch einmal'
+      other:
+        - 'Registrierte Teams heißen bereits {teams}'
+        - 'Der Probelauf registriert genau diese Namen und ersetzt nie eines deiner Teams'
+        - 'Benenne diese Teams im Team-Menü von /tournament um oder entferne sie und klicke noch einmal'
+    registered: '{team} mit {members}'
+    refused: 'Die Teamliste hat {team} abgelehnt: {reason}'
+    not-found-by-name: '{team} wurde registriert, ist über den Namen aber nicht zu finden'
+    member-not-found: '{player} ist über die eindeutige ID nicht in {team} zu finden'
+    both-placeholder-players-found: 'Beide sind über den Namen zu finden und beide Platzhalter-Spieler über ihre eindeutige ID'
+    every-placeholder-player-found: 'Beide sind über den Namen zu finden und jeder Platzhalter-Spieler über seine eindeutige ID'
+    placeholder-members: 'Die Mitglieder sind Platzhalter und kein Konto dieses Servers, und in teams.yml wurde nichts geschrieben'
+  cleanup:
+    nothing-to-remove:
+      one:
+        - 'Es wurde kein Testteam registriert, also gibt es nichts zu entfernen'
+        - 'Die Teamliste enthält weiterhin {count} eigenes Team'
+      other:
+        - 'Es wurde kein Testteam registriert, also gibt es nichts zu entfernen'
+        - 'Die Teamliste enthält weiterhin {count} eigene Teams'
+    left-behind:
+      one:
+        - 'Dieses Testteam konnte nicht entfernt werden: {teams}'
+        - 'Entferne es von Hand im Team-Menü von /tournament, bevor das Event beginnt'
+      other:
+        - 'Diese Testteams konnten nicht entfernt werden: {teams}'
+        - 'Entferne sie von Hand im Team-Menü von /tournament, bevor das Event beginnt'
+    count-changed:
+      one:
+        - 'Die Teamliste enthielt vor dem Probelauf {count} Team und enthält jetzt {after}'
+        - 'Prüfe das Team-Menü von /tournament, bevor das Event beginnt'
+      other:
+        - 'Die Teamliste enthielt vor dem Probelauf {count} Teams und enthält jetzt {after}'
+        - 'Prüfe das Team-Menü von /tournament, bevor das Event beginnt'
+    removed:
+      one:
+        - 'Beide Testteams sind weg, die Teamliste enthält wieder {count} eigenes Team'
+        - 'teams.yml wurde nie geschrieben, also könnte auch ein Neustart sie nicht zurückbringen'
+      other:
+        - 'Beide Testteams sind weg, die Teamliste enthält wieder {count} eigene Teams'
+        - 'teams.yml wurde nie geschrieben, also könnte auch ein Neustart sie nicht zurückbringen'
+  arena:
+    not-ready: 'Die Arena kann noch kein Match austragen, ihr fehlt noch:'
+    never-calculated: 'Der Probelauf berechnet die Kampffläche nie selbst: eine Berechnung ersetzt die Form, den Ausgangszustand und die markierten Höhen'
+    first-team-spawn-missing:
+      - 'Die Arena ist bereit, aber der Spawn des ersten Teams ist nicht gesetzt'
+      - 'Ein nicht gesetzter Team-Spawn fällt auf die Mitte der Kampffläche zurück, dann würden beide Teams auf demselben Block starten'
+      - 'Setze ihn im Arena-Menü von /tournament, während du darauf stehst'
+    second-team-spawn-missing:
+      - 'Die Arena ist bereit, aber der Spawn des zweiten Teams ist nicht gesetzt'
+      - 'Ein nicht gesetzter Team-Spawn fällt auf die Mitte der Kampffläche zurück, dann würden beide Teams auf demselben Block starten'
+      - 'Setze ihn im Arena-Menü von /tournament, während du darauf stehst'
+    both-team-spawns-missing:
+      - 'Die Arena ist bereit, aber der Spawn des ersten Teams und der Spawn des zweiten Teams sind nicht gesetzt'
+      - 'Ein nicht gesetzter Team-Spawn fällt auf die Mitte der Kampffläche zurück, dann würden beide Teams auf demselben Block starten'
+      - 'Setze sie im Arena-Menü von /tournament, jeweils während du darauf stehst'
+    fight-area: 'Kampffläche: {area}'
+    cleaning-writes-blocks:
+      one: 'Eine Reinigung schreibt {count} Block zwischen y {floorY} und y {topY}'
+      other: 'Eine Reinigung schreibt {count} Blöcke zwischen y {floorY} und y {topY}'
+    spawns-set: 'Beide Team-Spawns und der Tribünen-Spawn sind gesetzt'
+  kit:
+    empty:
+      - 'Das Kit ist leer, jeder Kämpfer würde die Runde mit bloßen Händen beginnen'
+      - 'Pack das Kit in dein eigenes Inventar, lege es mit "{tile}" im Kit-Menü von /tournament an und mach es zum Standard-Kit'
+    items:
+      one: 'Jeder Kämpfer bekommt bei jedem Rundenstart dieses {count} Item als eigene Kopie'
+      other: 'Jeder Kämpfer bekommt bei jedem Rundenstart diese {count} Items, jedes als eigene Kopie'
+  gate:
+    no-block:
+      - 'Kein Starttor-Block ist markiert, die Runden beginnen ohne Starttor'
+      - 'Das ist eine funktionierende Einrichtung, deshalb wird nichts abgelehnt'
+      - 'Gib dir mit {action} Starttor-Blöcke, um eines zu bauen'
+    countdown: 'Der Countdown zählt von {seconds} bis 1 und zeigt dann "{release}", geprüft, ohne einen Tick zu warten'
+    layer-too-early: 'Schicht {layer} des Starttors in {world} würde in Tick {tick} abgebaut, nicht nach der Schicht darüber'
+    gone-too-early: 'Das Starttor in {world} wäre in Tick {tick} weg, bevor der Countdown in Tick {countdown} endet'
+    world: '{world}: {blocks} in {layers}, die letzte fällt in Tick {tick} von {countdown}'
+    block-count:
+      one: '{count} Block'
+      other: '{count} Blöcke'
+    layer-count:
+      one: '{count} Schicht'
+      other: '{count} Schichten'
+    taller-than-countdown:
+      one: '  Dieses Starttor ist höher, als der Countdown Ticks hat, deshalb wird es noch {count} Tick nach "{release}" abgebaut'
+      other: '  Dieses Starttor ist höher, als der Countdown Ticks hat, deshalb wird es noch {count} Ticks nach "{release}" abgebaut'
+    second-reads: 'Sekunde {second} des Countdowns würde über der Arena "{title}" zeigen'
+    end-reads: 'Das Ende des Countdowns würde "{title}" statt "{release}" zeigen'
+  match:
+    test-teams-not-registered: 'Die beiden Testteams sind nicht registriert, also gibt es keinen Turnierbaum zum Durchgehen'
+    bracket-built: 'Turnierbaum über {teams} gebaut: {rounds}, {matches} darin'
+    team-count:
+      one: '{count} Team'
+      other: '{count} Teams'
+    round-count:
+      one: '{count} Turnierrunde'
+      other: '{count} Turnierrunden'
+    match-count:
+      one: '{count} Match'
+      other: '{count} Matches'
+    final-without-both-test-teams: 'Das einzige Match des Turnierbaums hat nicht beide Testteams bekommen'
+    team-only-in-bracket: 'Der Turnierbaum enthält {team}, die Teamliste aber nicht. Ein echtes Match würde einen kampflosen Sieg erklären'
+    resolved: 'Match {match}: {firstTeam} gegen {secondTeam}, beide Teams sind in der Teamliste zu finden'
+    sequence-starts-final: 'Die Reihenfolge der Matches würde das Finale selbst starten, statt es einem Admin zu überlassen'
+    sequence-leaves-final: 'Die Reihenfolge der Matches lässt es aus: das einzige Match eines Turnierbaums mit zwei Teams ist das Finale, und das Finale ist das eine Match, das ein Admin startet'
+    nothing-reached-the-arena: 'Nichts davon hat die Arena erreicht: keine Runde wurde begonnen, kein Starttor geöffnet und kein Kämpfer teleportiert oder ausgerüstet'
+  final:
+    stage-not-ready: 'Beide Finalisten stehen fest, aber das Finale steht auf "{stage}" statt auf "{expected}"'
+    refused: 'Das Finale ist bereit, würde aber abgelehnt: {reason}'
+    announced-times:
+      one: 'Das bereite Finale hat sich {count}-mal statt genau einmal bei den Admins gemeldet'
+      other: 'Das bereite Finale hat sich {count}-mal statt genau einmal bei den Admins gemeldet'
+    turns-ready: 'Das Finale wechselt auf "{stage}" und meldet sich einmal: {announcement}'
+    bracket-incomplete: 'Das entschiedene Finale hat den Turnierbaum unvollständig gelassen'
+    wrong-champion: 'Sieger ist {champion} statt {winner}'
+    no-champion: 'Es gibt keinen Sieger, erwartet war {winner}'
+    stage-not-finished: 'Das entschiedene Finale steht auf "{stage}" statt auf "{expected}"'
+    simulated-result: 'Simuliertes Ergebnis für {winner}: der Turnierbaum ist vollständig, Sieger ist {winner} und das Finale steht auf "{stage}"'
+  cleaning:
+    arena-left-behind: 'Das Match danach würde in der Arena ausgetragen, wie das Match davor sie hinterlassen hat'
+    no-baseline:
+      - 'Es ist kein Ausgangszustand der Kampffläche gespeichert, deshalb wird zwischen zwei Matches nichts gereinigt'
+      - 'Eine Reinigung, um die niemand gebeten hat, leert nie die Arena, sie wird stattdessen übersprungen'
+      - 'Der Ausgangszustand liegt nur im Speicher: führe {action} einmal aus'
+    would-start: 'Eine Reinigung würde sofort beginnen und den Ausgangszustand der letzten Berechnung wiederherstellen'
+    blocks:
+      one: '{count} Block zwischen y {floorY} und y {topY}'
+      other: '{count} Blöcke zwischen y {floorY} und y {topY}'
+    nothing-cleaned: 'Nichts wurde geschrieben: der Probelauf prüft den Auslöser, er reinigt die Arena nie'
+config:
+  problem:
+    language-not-shipped: '{path} {language} ist keine mitgelieferte Sprache, stattdessen gilt {fallback}. Mitgelieferte Sprachen: {languages}'
+    cell-limit-too-low: '{path} muss mindestens eine Zelle sein, stattdessen gilt {fallback}'
+    baseline-depth-out-of-range:
+      one: '{path} muss zwischen 0 und {maximum} Blöcken liegen, stattdessen gilt {count} Block'
+      other: '{path} muss zwischen 0 und {maximum} Blöcken liegen, stattdessen gelten {count} Blöcke'
+    safety-zone-radius-negative:
+      one: '{path} darf nicht negativ sein, stattdessen gilt {count} Block. Mit null schaltest du die Schutzzone ab'
+      other: '{path} darf nicht negativ sein, stattdessen gelten {count} Blöcke. Mit null schaltest du die Schutzzone ab'
+    effect-margin-out-of-range:
+      one: '{path} muss eine ganze Zahl zwischen {minimum} und {maximum} Blöcken sein, stattdessen gilt {count} Block'
+      other: '{path} muss eine ganze Zahl zwischen {minimum} und {maximum} Blöcken sein, stattdessen gelten {count} Blöcke'
+    team-size-out-of-range:
+      one: '{path} muss eine ganze Zahl zwischen {minimum} und {maximum} Spielern sein, stattdessen gilt {count} Spieler'
+      other: '{path} muss eine ganze Zahl zwischen {minimum} und {maximum} Spielern sein, stattdessen gelten {count} Spieler'
+    cleaning-duration-negative: '{path} darf nicht negativ sein, stattdessen gelten {seconds} Sekunden. Mit null reinigst du ohne die beiden farbigen Phasen'
+    cleaning-columns-negative:
+      one: '{path} darf nicht negativ sein, stattdessen gilt {count} Spalte pro Tick. Mit null wird keine gezeichnet'
+      other: '{path} darf nicht negativ sein, stattdessen gelten {count} Spalten pro Tick. Mit null wird keine gezeichnet'
+    start-gate-duration-too-short:
+      one: '{path} muss mindestens {minimum} Sekunde sein, stattdessen gilt {count} Sekunde'
+      other: '{path} muss mindestens {minimum} Sekunde sein, stattdessen gelten {count} Sekunden'
+    round-timeout-too-short:
+      one: '{path} muss mindestens eine Sekunde sein, stattdessen gilt {count} Sekunde'
+      other: '{path} muss mindestens eine Sekunde sein, stattdessen gelten {count} Sekunden'
+    same-team-colours: '{path} gibt beiden Teams die Farbe {colour}, das wäre gar keine Färbung, stattdessen gelten {firstColour} und {secondColour}'
+    unknown-team-colour: '{path} ist keine Farbe, in der ein Name gezeigt werden kann, stattdessen gilt {fallback}. Nutzbare Farben: {colours}'
+    marker-height-negative: '{path} darf nicht negativ sein, stattdessen gelten {height} Blöcke. Mit null wird die Markierung so kurz wie möglich'
+  reload:
+    reloaded: 'config.yml wurde neu geladen und angewendet'
+    category:
+      language: 'die Sprache und die Sprachdateien im Ordner lang, für jeden Text, der ab jetzt gezeigt wird'
+      round: 'die Wartezeit bis zum Zurücksetzen nach einer Runde, das Rundenzeitlimit, der Schaden im Sudden Death und ob das Finale ohne Zeitlimit ausgetragen wird'
+      start-gate: 'die Sekunden, die das Starttor zu Beginn einer Runde braucht'
+      team-size: 'die Teamgröße, außer ein Turnier läuft oder ein Team hat mehr Spieler als eine kleinere neue Größe'
+      cleaning: 'die Blockmengen der Reinigung und des Ausgangszustands und die Partikel einer laufenden Reinigung'
+      baseline-depth: 'die Tiefe unter dem Boden, bis zu der der nächste Ausgangszustand aufgenommen wird'
+      cell-limit: 'die Zellgrenze der Arena-Berechnung'
+      safety-zone: 'der Radius der Schutzzone'
+      effect-margin: 'der Rand des Wirkungsbereichs um die Kampffläche'
+      teleport-on-join: 'ob Spieler, die dem Server beitreten, auf die Tribüne geschickt werden'
+      border: 'die Wandpartikel, ihre Grenzen und die Markierung der bestätigten Arenawand'
+    untouched: 'Die berechnete Kampffläche, die Spawns, die Wandblöcke, die Teams und ein laufendes Match bleiben unberührt'
+    unusable-entries: 'Einträge, die nicht genutzt werden konnten und auf ihren Standardwert zurückgefallen sind:'
+  notice:
+    team-size-not-taken-over: '{rejection}. Die Teamgröße {teamSize} aus {path} in config.yml wurde nicht übernommen, die Teamgröße bleibt {matchUp}'
+    larger-teams-at-start:
+      one: '{teams}. Die Teamgröße {teamSize} aus {path} in config.yml gilt seit dem Start trotzdem, dieses Team behält seine Spieler und jeder Spieler davon, der online ist, kämpft'
+      other: '{teams}. Die Teamgröße {teamSize} aus {path} in config.yml gilt seit dem Start trotzdem, diese Teams behalten ihre Spieler und jeder Spieler davon, der online ist, kämpft'
+    tribune-outside-of-the-effect-area: '{warning}. Es wurde nichts verworfen, setze den Tribünen-Spawn näher an der Kampffläche neu oder erhöhe {path} in config.yml'
+plugin:
+  kits-not-loaded: 'Die Kits konnten nicht geladen werden ({reason}), es gibt kein Kit, bis im Kit-Menü von /tournament eines angelegt wird'

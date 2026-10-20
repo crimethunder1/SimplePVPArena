@@ -1,18 +1,21 @@
 package de.simplepvparena.diagnostics;
 
+import de.simplepvparena.message.DryRunMessage;
+import de.simplepvparena.message.Messages;
+
 public enum DryRunStatus {
 
-    PASSED("ok"),
-    SKIPPED("skipped"),
-    FAILED("FAILED");
+    PASSED(DryRunMessage.STATUS_PASSED),
+    SKIPPED(DryRunMessage.STATUS_SKIPPED),
+    FAILED(DryRunMessage.STATUS_FAILED);
 
-    private final String marker;
+    private final DryRunMessage marker;
 
-    DryRunStatus(String marker) {
+    DryRunStatus(DryRunMessage marker) {
         this.marker = marker;
     }
 
     public String getMarker() {
-        return marker;
+        return Messages.text(marker);
     }
 }

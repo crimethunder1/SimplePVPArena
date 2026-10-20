@@ -185,7 +185,7 @@ class ConfigurationReloadServiceTest {
         List<String> lines = reloadServiceFor(new MemoryConfiguration()).reloadFromFile().describe();
 
         assertEquals("config.yml was reloaded and applied", lines.get(0));
-        for (String category : ConfigurationReloadReport.RELOADED_CATEGORIES) {
+        for (String category : ConfigurationReloadReport.describeReloadedCategories()) {
             assertTrue(lines.stream().anyMatch(line -> line.contains(category)),
                     "the answer has to name the category " + category);
         }

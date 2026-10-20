@@ -279,7 +279,7 @@ class GermanTournamentTextsTest {
     void describesTheStatusAndTheBracketBeforeTheTournament() {
         TournamentManagerFixture fixture = TournamentManagerFixture.withoutStorage(FOUR_TEAMS);
 
-        assertEquals("Turnierstatus: ohne Turnier", fixture.tournamentManager().describeStatus());
+        assertEquals("Turnierstatus: kein Turnier", fixture.tournamentManager().describeStatus());
         assertEquals(List.of("Es läuft kein Turnier"), fixture.tournamentManager().describeBracket());
     }
 

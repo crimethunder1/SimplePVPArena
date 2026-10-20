@@ -18,7 +18,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 class TournamentStageTextsTest {
 
     private static final Map<TournamentState, String> GERMAN_STATES = Map.of(
-            TournamentState.IDLE, "ohne Turnier",
+            TournamentState.IDLE, "kein Turnier",
             TournamentState.RUNNING, "läuft",
             TournamentState.PAUSED, "pausiert",
             TournamentState.CANCELLED, "abgebrochen",

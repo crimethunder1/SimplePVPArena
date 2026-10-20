@@ -19,8 +19,12 @@ public record DryRunStep(String name, DryRunStatus status, List<String> details)
         return passed(name, List.of(details));
     }
 
+    public static DryRunStep skipped(String name, List<String> details) {
+        return new DryRunStep(name, DryRunStatus.SKIPPED, details);
+    }
+
     public static DryRunStep skipped(String name, String... details) {
-        return new DryRunStep(name, DryRunStatus.SKIPPED, List.of(details));
+        return skipped(name, List.of(details));
     }
 
     public static DryRunStep failed(String name, List<String> details) {

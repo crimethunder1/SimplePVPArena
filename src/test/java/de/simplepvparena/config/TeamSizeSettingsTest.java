@@ -214,7 +214,7 @@ class TeamSizeSettingsTest {
         assertEquals(List.of("Bravo"), teamRegistry.getTeamNames(), "the start never drops a team");
         assertEquals(1, teamSizeSetting.getTeamSize());
         String warning = "1 team has more than 1 player: Bravo (3). The team size 1 of match.team-size in config.yml "
-                + "applies anyway since the start, these teams keep their players and every online player of them "
+                + "applies anyway since the start, this team keeps its players and every online player of it "
                 + "fights";
         assertEquals(List.of(warning), logLines);
         assertEquals(List.of(warning), adminNotices);
@@ -248,7 +248,7 @@ class TeamSizeSettingsTest {
 
         assertEquals(3, teamSizeSetting.getTeamSize());
         String warning = "1 team has more than 3 players: Alpha (4). The team size 3 of match.team-size in config.yml "
-                + "applies anyway since the start, these teams keep their players and every online player of them "
+                + "applies anyway since the start, this team keeps its players and every online player of it "
                 + "fights";
         assertEquals(List.of(warning), logLines);
         assertEquals(List.of(warning), adminNotices);

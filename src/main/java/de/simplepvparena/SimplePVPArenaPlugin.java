@@ -81,6 +81,8 @@ import de.simplepvparena.match.MatchService;
 import de.simplepvparena.match.ScoreboardFighterColours;
 import de.simplepvparena.message.MessageCatalogLoader;
 import de.simplepvparena.message.Messages;
+import de.simplepvparena.message.Placeholder;
+import de.simplepvparena.message.PluginMessage;
 import de.simplepvparena.team.TeamMemberLookup;
 import de.simplepvparena.team.TeamRegistry;
 import de.simplepvparena.team.TeamSizeSetting;
@@ -348,8 +350,7 @@ public final class SimplePVPArenaPlugin extends JavaPlugin {
         try {
             kitLibraryLoader.load(legacyKitSection);
         } catch (RuntimeException failure) {
-            String notice = "The kits could not be loaded (" + describe(failure) + "), there is no kit until one "
-                    + "is created in the kit menu of /" + COMMAND_NAME;
+            String notice = Messages.text(PluginMessage.KITS_NOT_LOADED, Placeholder.of("reason", describe(failure)));
             logger.log(Level.WARNING, notice, failure);
             adminNotifier.accept(notice);
         }

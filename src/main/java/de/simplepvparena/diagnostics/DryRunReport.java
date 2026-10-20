@@ -1,5 +1,8 @@
 package de.simplepvparena.diagnostics;
 
+import de.simplepvparena.message.DryRunMessage;
+import de.simplepvparena.message.Messages;
+import de.simplepvparena.message.Placeholder;
 import de.simplepvparena.message.TournamentMessages;
 
 import java.util.ArrayList;
@@ -9,15 +12,10 @@ import java.util.Optional;
 
 public final class DryRunReport {
 
-    private static final String REJECTED_HEAD_LINE = "The dry run was not started";
-
-    public static final List<String> REAL_PLAYER_NOTE = List.of(
-            "A real test player is still needed for the parts that act on a body:",
-            "  the kit really landing in an inventory and the old one being cleared",
-            "  the teleport onto the two team spawns behind the gate",
-            "  who counts as an active fighter, which follows from who is online",
-            "  the gate countdown and the titles really running over the arena",
-            "The dry run checks that all of them are configured, never that they arrived");
+    private static final String STEP_INDENT = "  ";
+    private static final String DETAIL_INDENT = "    ";
+    private static final String MARKER_OPENING = "[";
+    private static final String MARKER_CLOSING = "] ";
 
     private final String rejectionReason;
     private final List<DryRunStep> steps;
@@ -55,6 +53,10 @@ public final class DryRunReport {
         return steps.stream().filter(step -> step.status() == status).count();
     }
 
+    public static List<String> describeRealPlayerNote() {
+        return Messages.lines(DryRunMessage.REAL_PLAYER_NOTE);
+    }
+
     public List<String> describe() {
         if (isRejected()) {
             return describeRejection();
@@ -62,33 +64,37 @@ public final class DryRunReport {
         List<String> lines = new ArrayList<>();
         lines.add(describeSummary());
         for (DryRunStep step : steps) {
-            lines.add("  [" + step.status().getMarker() + "] " + step.name());
+            lines.add(STEP_INDENT + MARKER_OPENING + step.status().getMarker() + MARKER_CLOSING + step.name());
             for (String detail : step.details()) {
-                lines.add("    " + detail);
+                lines.add(DETAIL_INDENT + detail);
             }
         }
-        lines.addAll(REAL_PLAYER_NOTE);
+        lines.addAll(describeRealPlayerNote());
         return List.copyOf(lines);
     }
 
     private String describeSummary() {
-        StringBuilder summary = new StringBuilder("Dry run of the tournament pipeline: ")
-                .append(countByStatus(DryRunStatus.PASSED)).append(" of ").append(steps.size())
-                .append(steps.size() == 1 ? " step passed" : " steps passed");
+        Placeholder passed = Placeholder.of("passed", countByStatus(DryRunStatus.PASSED));
         long failedCount = countByStatus(DryRunStatus.FAILED);
-        if (failedCount > 0L) {
-            summary.append(", ").append(failedCount).append(" failed");
-        }
         long skippedCount = countByStatus(DryRunStatus.SKIPPED);
-        if (skippedCount > 0L) {
-            summary.append(", ").append(skippedCount).append(" skipped");
+        Placeholder failed = Placeholder.of("failed", failedCount);
+        Placeholder skipped = Placeholder.of("skipped", skippedCount);
+        if (failedCount > 0L && skippedCount > 0L) {
+            return Messages.plural(DryRunMessage.SUMMARY_WITH_FAILED_AND_SKIPPED, steps.size(), passed, failed,
+                    skipped);
         }
-        return summary.toString();
+        if (failedCount > 0L) {
+            return Messages.plural(DryRunMessage.SUMMARY_WITH_FAILED, steps.size(), passed, failed);
+        }
+        if (skippedCount > 0L) {
+            return Messages.plural(DryRunMessage.SUMMARY_WITH_SKIPPED, steps.size(), passed, skipped);
+        }
+        return Messages.plural(DryRunMessage.SUMMARY, steps.size(), passed);
     }
 
     private List<String> describeRejection() {
         List<String> lines = new ArrayList<>();
-        lines.add(REJECTED_HEAD_LINE);
+        lines.add(Messages.text(DryRunMessage.REJECTED));
         lines.addAll(List.of(rejectionReason.split(TournamentMessages.LINE_BREAK, -1)));
         return List.copyOf(lines);
     }

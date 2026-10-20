@@ -131,7 +131,7 @@ public final class KitService {
             restoreSnapshot(player, snapshot);
         } catch (RuntimeException failure) {
             warningReporter.accept(Messages.text(PlayerStateMessage.NOT_RESTORED,
-                    Placeholder.of("player", player.getName()), Placeholder.of("reason", failure.getMessage())));
+                    Placeholder.of("player", player.getName()), Placeholder.of("reason", describeFailure(failure))));
             return;
         }
         removeMarker(player);
@@ -147,7 +147,7 @@ public final class KitService {
             snapshotStorage.save(player.getUniqueId(), snapshot);
         } catch (IOException failure) {
             warningReporter.accept(Messages.text(PlayerStateMessage.NOT_WRITTEN,
-                    Placeholder.of("player", player.getName()), Placeholder.of("reason", failure.getMessage())));
+                    Placeholder.of("player", player.getName()), Placeholder.of("reason", describeFailure(failure))));
         }
     }
 
@@ -176,11 +176,16 @@ public final class KitService {
             snapshotStorage.setAsideAsRestored(player.getUniqueId());
         } catch (IOException setAsideFailure) {
             warningReporter.accept(Messages.text(PlayerStateMessage.FILE_NOT_DELETED,
-                    Placeholder.of("player", player.getName()), Placeholder.of("reason", deleteFailure.getMessage())));
+                    Placeholder.of("player", player.getName()),
+                    Placeholder.of("reason", describeFailure(deleteFailure))));
             return;
         }
         warningReporter.accept(Messages.text(PlayerStateMessage.SET_ASIDE,
-                Placeholder.of("player", player.getName()), Placeholder.of("reason", deleteFailure.getMessage())));
+                Placeholder.of("player", player.getName()), Placeholder.of("reason", describeFailure(deleteFailure))));
+    }
+
+    static String describeFailure(Exception failure) {
+        return failure.getMessage() == null ? failure.getClass().getSimpleName() : failure.getMessage();
     }
 
     private void removeMarker(Player player) {

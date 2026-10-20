@@ -7,6 +7,16 @@ import de.simplepvparena.gate.StartGateMarks;
 import de.simplepvparena.gate.StartGateOpeningSchedule;
 import de.simplepvparena.kit.KitDefinition;
 import de.simplepvparena.kit.KitService;
+import de.simplepvparena.match.MatchService;
+import de.simplepvparena.message.ArenaMenuMessage;
+import de.simplepvparena.message.ArenaSetupMessage;
+import de.simplepvparena.message.DryRunCheckMessage;
+import de.simplepvparena.message.DryRunMessage;
+import de.simplepvparena.message.KitMenuMessage;
+import de.simplepvparena.message.MatchMenuMessage;
+import de.simplepvparena.message.MessageKey;
+import de.simplepvparena.message.Messages;
+import de.simplepvparena.message.Placeholder;
 import de.simplepvparena.message.TournamentMessages;
 import de.simplepvparena.team.Team;
 import de.simplepvparena.team.TeamMember;
@@ -28,14 +38,16 @@ import java.util.function.Supplier;
 
 public final class TournamentDryRun {
 
-    static final String TEAM_STEP = "Two test teams registered";
-    static final String ARENA_STEP = "Arena, fight area and spawns";
-    static final String KIT_STEP = "The kit a round start hands out";
-    static final String GATE_STEP = "Start gate countdown";
-    static final String MATCH_STEP = "Bracket and a simulated match";
-    static final String CLEANING_STEP = "The cleaning after the match";
-    static final String CLEANUP_STEP = "Test teams removed again";
-    static final String FAILURE_STEP = "The dry run itself";
+    static final DryRunMessage TEAM_STEP = DryRunMessage.TEAM_STEP;
+    static final DryRunMessage ARENA_STEP = DryRunMessage.ARENA_STEP;
+    static final DryRunMessage KIT_STEP = DryRunMessage.KIT_STEP;
+    static final DryRunMessage GATE_STEP = DryRunMessage.GATE_STEP;
+    static final DryRunMessage MATCH_STEP = DryRunMessage.MATCH_STEP;
+    static final DryRunMessage CLEANING_STEP = DryRunMessage.CLEANING_STEP;
+    static final DryRunMessage CLEANUP_STEP = DryRunMessage.CLEANUP_STEP;
+    static final DryRunMessage FAILURE_STEP = DryRunMessage.FAILURE_STEP;
+
+    private static final String MISSING_PART_INDENT = "  ";
 
     private final Supplier<TournamentState> tournamentState;
     private final BooleanSupplier runningMatchLookup;
@@ -78,17 +90,11 @@ public final class TournamentDryRun {
     public Optional<String> findRejection() {
         TournamentState state = tournamentState.get();
         if (state == TournamentState.RUNNING || state == TournamentState.PAUSED) {
-            return Optional.of("A tournament is in progress, the dry run is a check for before an event"
-                    + TournamentMessages.LINE_BREAK
-                    + "It registers two test teams and would put them into the registry of a running "
-                    + "bracket"
-                    + TournamentMessages.LINE_BREAK
-                    + "Wait until the event is over or cancel it in the match menu of /tournament");
+            return Optional.of(Messages.text(DryRunMessage.TOURNAMENT_IN_PROGRESS));
         }
         if (runningMatchLookup.getAsBoolean()) {
-            return Optional.of("A match stands on the arena, the dry run is a check for before an event"
-                    + TournamentMessages.LINE_BREAK
-                    + "Decide it with \"Force a result\" in the match menu of /tournament, or wait for it");
+            return Optional.of(Messages.text(DryRunMessage.MATCH_ON_THE_ARENA, Placeholder.of("action",
+                    MatchService.describeMatchMenuTile(MatchMenuMessage.FORCE_RESULT_TITLE))));
         }
         return Optional.empty();
     }
@@ -105,9 +111,8 @@ public final class TournamentDryRun {
         try {
             walkPipeline(testTeams, registeredTeams, steps);
         } catch (RuntimeException failure) {
-            steps.add(DryRunStep.failed(FAILURE_STEP,
-                    "The dry run ran into " + describeFailure(failure),
-                    "Every step it got through is above, the server log holds the stack trace"));
+            steps.add(DryRunStep.failed(stepName(FAILURE_STEP), Messages.lines(DryRunMessage.FAILURE,
+                    Placeholder.of("failure", describeFailure(failure)))));
         } finally {
             steps.add(removeTestTeams(registeredTeams, teamCountBefore));
         }
@@ -123,8 +128,8 @@ public final class TournamentDryRun {
         steps.add(checkStartGate());
         steps.add(registration.isPassed()
                 ? walkThroughTheSimulatedMatch(testTeams)
-                : DryRunStep.skipped(MATCH_STEP,
-                        "The two test teams are not registered, so there is no bracket to walk"));
+                : DryRunStep.skipped(stepName(MATCH_STEP),
+                        Messages.text(DryRunCheckMessage.TEST_TEAMS_NOT_REGISTERED)));
         steps.add(checkAutomaticCleaning());
     }
 
@@ -134,49 +139,50 @@ public final class TournamentDryRun {
                 .filter(teamName -> teamRegistry.findTeam(teamName).isPresent())
                 .toList();
         if (!takenNames.isEmpty()) {
-            return DryRunStep.failed(TEAM_STEP,
-                    "A registered team is already called " + String.join(" and ", takenNames),
-                    "The dry run registers exactly those names and never replaces a team of yours",
-                    "Rename or remove that team in the team menu of /tournament and click again");
+            return DryRunStep.failed(stepName(TEAM_STEP), pluralLines(DryRunMessage.TEAM_NAMES_TAKEN,
+                    takenNames.size(), Placeholder.of("teams", Messages.join(takenNames))));
         }
         List<String> details = new ArrayList<>();
         for (DryRunTeam testTeam : testTeams) {
             try {
                 Team team = teamRegistry.registerTeam(testTeam.teamName(), testTeam.members());
                 registeredTeams.add(testTeam);
-                details.add(team.getTeamName() + " with " + team.getMemberNamesJoined());
+                details.add(Messages.text(DryRunMessage.TEAM_REGISTERED, Placeholder.of("team", team.getTeamName()),
+                        Placeholder.of("members", team.getMemberNamesJoined())));
             } catch (IllegalArgumentException | IllegalStateException refusal) {
-                return DryRunStep.failed(TEAM_STEP,
-                        "The registry refused " + testTeam.teamName() + ": " + refusal.getMessage());
+                return DryRunStep.failed(stepName(TEAM_STEP), Messages.text(DryRunMessage.TEAM_REFUSED,
+                        Placeholder.of("team", testTeam.teamName()), Placeholder.of("reason", refusal.getMessage())));
             }
         }
         Optional<String> lookupFailure = findTeamLookupFailure(testTeams);
         if (lookupFailure.isPresent()) {
-            return DryRunStep.failed(TEAM_STEP, lookupFailure.get());
+            return DryRunStep.failed(stepName(TEAM_STEP), lookupFailure.get());
         }
-        details.add("Both are found by name and " + describePlaceholderPlayers(testTeams)
-                + " found by their unique id");
-        details.add("The members are placeholders and no account of this server, and nothing was "
-                + "written to teams.yml");
-        return DryRunStep.passed(TEAM_STEP, details);
+        details.add(Messages.text(describePlaceholderPlayers(testTeams)));
+        details.add(Messages.text(DryRunMessage.PLACEHOLDER_MEMBERS));
+        return DryRunStep.passed(stepName(TEAM_STEP), details);
     }
 
-    private static String describePlaceholderPlayers(List<DryRunTeam> testTeams) {
+    private static DryRunMessage describePlaceholderPlayers(List<DryRunTeam> testTeams) {
         boolean everyTeamHasTwoPlayers = testTeams.stream().allMatch(testTeam -> testTeam.members().size() == 2);
-        return everyTeamHasTwoPlayers ? "both placeholder players are" : "every placeholder player is";
+        return everyTeamHasTwoPlayers
+                ? DryRunMessage.BOTH_PLACEHOLDER_PLAYERS_FOUND
+                : DryRunMessage.EVERY_PLACEHOLDER_PLAYER_FOUND;
     }
 
     private Optional<String> findTeamLookupFailure(List<DryRunTeam> testTeams) {
         for (DryRunTeam testTeam : testTeams) {
             if (teamRegistry.findTeam(testTeam.teamName()).isEmpty()) {
-                return Optional.of(testTeam.teamName() + " was registered but cannot be found by name");
+                return Optional.of(Messages.text(DryRunMessage.TEAM_NOT_FOUND_BY_NAME,
+                        Placeholder.of("team", testTeam.teamName())));
             }
             for (TeamMember member : testTeam.members()) {
                 Optional<Team> teamOfPlayer = teamRegistry.findTeamByPlayer(member.uniqueId());
                 if (teamOfPlayer.isEmpty()
                         || !teamOfPlayer.get().getTeamName().equals(testTeam.teamName())) {
-                    return Optional.of(member.playerName() + " is not found in " + testTeam.teamName()
-                            + " by their unique id");
+                    return Optional.of(Messages.text(DryRunMessage.MEMBER_NOT_FOUND,
+                            Placeholder.of("player", member.playerName()),
+                            Placeholder.of("team", testTeam.teamName())));
                 }
             }
         }
@@ -185,9 +191,8 @@ public final class TournamentDryRun {
 
     private DryRunStep removeTestTeams(List<DryRunTeam> registeredTeams, int teamCountBefore) {
         if (registeredTeams.isEmpty()) {
-            return DryRunStep.skipped(CLEANUP_STEP,
-                    "No test team was registered, so there is nothing to remove",
-                    "The registry still holds its own " + teamRegistry.getTeamCount() + " teams");
+            return DryRunStep.skipped(stepName(CLEANUP_STEP),
+                    pluralLines(DryRunMessage.NOTHING_TO_REMOVE, teamRegistry.getTeamCount()));
         }
         List<String> leftBehind = new ArrayList<>();
         for (DryRunTeam testTeam : registeredTeams) {
@@ -197,92 +202,88 @@ public final class TournamentDryRun {
             }
         }
         if (!leftBehind.isEmpty()) {
-            return DryRunStep.failed(CLEANUP_STEP,
-                    "These test teams could not be removed: " + String.join(", ", leftBehind),
-                    "Remove them by hand in the team menu of /tournament before the event starts");
+            return DryRunStep.failed(stepName(CLEANUP_STEP), pluralLines(DryRunMessage.TEAMS_LEFT_BEHIND,
+                    leftBehind.size(), Placeholder.of("teams", Messages.join(leftBehind))));
         }
         int teamCountAfter = teamRegistry.getTeamCount();
         if (teamCountAfter != teamCountBefore) {
-            return DryRunStep.failed(CLEANUP_STEP,
-                    "The registry held " + teamCountBefore + " teams before the dry run and holds "
-                            + teamCountAfter + " now",
-                    "Check the team menu of /tournament before the event starts");
+            return DryRunStep.failed(stepName(CLEANUP_STEP), pluralLines(DryRunMessage.TEAM_COUNT_CHANGED,
+                    teamCountBefore, Placeholder.of("after", teamCountAfter)));
         }
-        return DryRunStep.passed(CLEANUP_STEP,
-                "Both test teams are gone, the registry holds its " + teamCountAfter
-                        + " own teams again",
-                "teams.yml was never written, so a restart could not bring them back either");
+        return DryRunStep.passed(stepName(CLEANUP_STEP),
+                pluralLines(DryRunMessage.TEST_TEAMS_REMOVED, teamCountAfter));
     }
 
     private DryRunStep checkArena() {
         if (!arena.isReady()) {
             List<String> details = new ArrayList<>();
-            details.add("The arena cannot host a match, it still misses:");
-            arena.getMissingConfiguration().forEach(missingPart -> details.add("  " + missingPart));
-            details.add("The dry run never calculates the fight area itself: a calculation replaces "
-                    + "the shape, the baseline and the marked heights");
-            return DryRunStep.failed(ARENA_STEP, details);
+            details.add(Messages.text(DryRunCheckMessage.ARENA_NOT_READY));
+            arena.getMissingConfiguration().forEach(missingPart -> details.add(MISSING_PART_INDENT + missingPart));
+            details.add(Messages.text(DryRunCheckMessage.ARENA_NEVER_CALCULATED));
+            return DryRunStep.failed(stepName(ARENA_STEP), details);
         }
-        List<String> missingSpawns = new ArrayList<>();
-        if (!arena.hasFirstTeamSpawn()) {
-            missingSpawns.add("the first team spawn");
-        }
-        if (!arena.hasSecondTeamSpawn()) {
-            missingSpawns.add("the second team spawn");
-        }
-        if (!missingSpawns.isEmpty()) {
-            return DryRunStep.failed(ARENA_STEP,
-                    "The arena is ready but " + String.join(" and ", missingSpawns) + " is not set",
-                    "An unset team spawn falls back to the middle of the fight area, so both teams "
-                            + "would start on the same block",
-                    "Set it in the arena menu of /tournament while standing on it");
+        Optional<DryRunCheckMessage> missingSpawns = findMissingSpawns();
+        if (missingSpawns.isPresent()) {
+            return DryRunStep.failed(stepName(ARENA_STEP), Messages.lines(missingSpawns.get()));
         }
         List<String> details = new ArrayList<>();
-        arena.getVolume().ifPresent(volume -> details.add("Fight area: " + volume.describe()));
-        arena.findCleanedVolume().ifPresent(cleanedVolume -> details.add("A cleaning writes "
-                + arena.countCleaningBlocks() + " blocks between y " + cleanedVolume.getFloorY()
-                + " and y " + cleanedVolume.getWallTopY()));
-        details.add("Both team spawns and the tribune spawn are set");
-        return DryRunStep.passed(ARENA_STEP, details);
+        arena.getVolume().ifPresent(volume -> details.add(Messages.text(DryRunCheckMessage.FIGHT_AREA,
+                Placeholder.of("area", volume.describe()))));
+        arena.findCleanedVolume().ifPresent(cleanedVolume -> details.add(Messages.plural(
+                DryRunCheckMessage.CLEANING_WRITES_BLOCKS, arena.countCleaningBlocks(),
+                Placeholder.of("floorY", cleanedVolume.getFloorY()),
+                Placeholder.of("topY", cleanedVolume.getWallTopY()))));
+        details.add(Messages.text(DryRunCheckMessage.SPAWNS_SET));
+        return DryRunStep.passed(stepName(ARENA_STEP), details);
+    }
+
+    private Optional<DryRunCheckMessage> findMissingSpawns() {
+        boolean firstTeamSpawnMissing = !arena.hasFirstTeamSpawn();
+        boolean secondTeamSpawnMissing = !arena.hasSecondTeamSpawn();
+        if (firstTeamSpawnMissing && secondTeamSpawnMissing) {
+            return Optional.of(DryRunCheckMessage.BOTH_TEAM_SPAWNS_MISSING);
+        }
+        if (firstTeamSpawnMissing) {
+            return Optional.of(DryRunCheckMessage.FIRST_TEAM_SPAWN_MISSING);
+        }
+        if (secondTeamSpawnMissing) {
+            return Optional.of(DryRunCheckMessage.SECOND_TEAM_SPAWN_MISSING);
+        }
+        return Optional.empty();
     }
 
     private DryRunStep checkKit() {
         KitDefinition kit = kitService.getKitDefinition();
         if (kit.isEmpty()) {
-            return DryRunStep.failed(KIT_STEP,
-                    "The kit is empty, every fighter would start the round with bare hands",
-                    "Put the kit into your own inventory, create it with \"Create a kit from your "
-                            + "inventory\" in the kit menu of /tournament and use it as the default kit");
+            return DryRunStep.failed(stepName(KIT_STEP), Messages.lines(DryRunCheckMessage.KIT_EMPTY,
+                    Placeholder.of("tile", Messages.text(KitMenuMessage.CREATE_TITLE))));
         }
         List<String> details = new ArrayList<>(kit.describe());
-        details.add("Every fighter is given these " + kit.itemCount()
-                + " items at every round start, each as a copy of its own");
-        return DryRunStep.passed(KIT_STEP, details);
+        details.add(Messages.plural(DryRunCheckMessage.KIT_ITEMS, kit.itemCount()));
+        return DryRunStep.passed(stepName(KIT_STEP), details);
     }
 
     private DryRunStep checkStartGate() {
         int durationSeconds = gateDuration.getSeconds();
         if (gateMarks.isEmpty()) {
-            return DryRunStep.skipped(GATE_STEP,
-                    "No gate block is marked, the rounds start without a gate",
-                    "That is a working setup and nothing is refused because of it",
-                    "Hand yourself gate blocks with \"Give start gate blocks\" in the arena menu of "
-                            + "/tournament to build one");
+            return DryRunStep.skipped(stepName(GATE_STEP), Messages.lines(DryRunCheckMessage.NO_GATE_BLOCK,
+                    Placeholder.of("action", Messages.text(ArenaSetupMessage.ARENA_MENU_REFERENCE,
+                            Placeholder.of("tile", Messages.text(ArenaMenuMessage.START_GATE_TITLE))))));
         }
         Optional<String> countdownFailure = findCountdownFailure(durationSeconds);
         if (countdownFailure.isPresent()) {
-            return DryRunStep.failed(GATE_STEP, countdownFailure.get());
+            return DryRunStep.failed(stepName(GATE_STEP), countdownFailure.get());
         }
         List<String> details = new ArrayList<>();
-        details.add("The countdown reads " + durationSeconds + " down to 1 and then \""
-                + StartGateCountdown.describeReleaseTitle() + "\", checked without waiting a tick");
+        details.add(Messages.text(DryRunCheckMessage.COUNTDOWN, Placeholder.of("seconds", durationSeconds),
+                Placeholder.of("release", StartGateCountdown.describeReleaseTitle())));
         for (String worldName : gateMarks.getWorldNames()) {
             Optional<String> gateFailure = describeGateOfWorld(worldName, durationSeconds, details);
             if (gateFailure.isPresent()) {
-                return DryRunStep.failed(GATE_STEP, gateFailure.get());
+                return DryRunStep.failed(stepName(GATE_STEP), gateFailure.get());
             }
         }
-        return DryRunStep.passed(GATE_STEP, details);
+        return DryRunStep.passed(stepName(GATE_STEP), details);
     }
 
     private Optional<String> describeGateOfWorld(String worldName, int durationSeconds, List<String> details) {
@@ -292,24 +293,28 @@ public final class TournamentDryRun {
         for (int layerIndex = 0; layerIndex < layers.length; layerIndex++) {
             long removalTick = schedule.getRemovalTickOfLayer(layerIndex);
             if (removalTick <= previousRemovalTick) {
-                return Optional.of("Layer " + (layerIndex + 1) + " of the gate in " + worldName
-                        + " would be taken away on tick " + removalTick + ", not after the layer above it");
+                return Optional.of(Messages.text(DryRunCheckMessage.LAYER_TOO_EARLY,
+                        Placeholder.of("layer", layerIndex + 1), Placeholder.of("world", worldName),
+                        Placeholder.of("tick", removalTick)));
             }
             previousRemovalTick = removalTick;
         }
         long totalTickCount = schedule.getTotalTickCount();
         long countdownTicks = schedule.getTotalDurationTicks();
         if (totalTickCount < countdownTicks) {
-            return Optional.of("The gate in " + worldName + " would be gone on tick " + totalTickCount
-                    + ", before the countdown ends on tick " + countdownTicks);
+            return Optional.of(Messages.text(DryRunCheckMessage.GATE_GONE_TOO_EARLY,
+                    Placeholder.of("world", worldName), Placeholder.of("tick", totalTickCount),
+                    Placeholder.of("countdown", countdownTicks)));
         }
-        details.add(worldName + ": " + gateMarks.getMarkedBlockCount(worldName) + " blocks in "
-                + layers.length + (layers.length == 1 ? " layer" : " layers")
-                + ", the last one falls on tick " + totalTickCount + " of " + countdownTicks);
+        details.add(Messages.text(DryRunCheckMessage.GATE_OF_WORLD, Placeholder.of("world", worldName),
+                Placeholder.of("blocks", Messages.plural(DryRunCheckMessage.GATE_BLOCK_COUNT,
+                        gateMarks.getMarkedBlockCount(worldName))),
+                Placeholder.of("layers", Messages.plural(DryRunCheckMessage.GATE_LAYER_COUNT, layers.length)),
+                Placeholder.of("tick", totalTickCount), Placeholder.of("countdown", countdownTicks)));
         if (totalTickCount > countdownTicks) {
-            details.add("  That gate is taller than the countdown has ticks, so it keeps coming down "
-                    + "for " + (totalTickCount - countdownTicks) + " ticks after \""
-                    + StartGateCountdown.describeReleaseTitle() + "\"");
+            details.add(Messages.plural(DryRunCheckMessage.GATE_TALLER_THAN_COUNTDOWN,
+                    totalTickCount - countdownTicks,
+                    Placeholder.of("release", StartGateCountdown.describeReleaseTitle())));
         }
         return Optional.empty();
     }
@@ -319,16 +324,17 @@ public final class TournamentDryRun {
             if (StartGateCountdown.isRelease(remainingSeconds)
                     || !String.valueOf(remainingSeconds).equals(
                             StartGateCountdown.describeTitle(remainingSeconds))) {
-                return Optional.of("Second " + remainingSeconds + " of the countdown would read \""
-                        + StartGateCountdown.describeTitle(remainingSeconds) + "\" over the arena");
+                return Optional.of(Messages.text(DryRunCheckMessage.SECOND_READS,
+                        Placeholder.of("second", remainingSeconds),
+                        Placeholder.of("title", StartGateCountdown.describeTitle(remainingSeconds))));
             }
         }
         if (!StartGateCountdown.isRelease(StartGateCountdown.RELEASE_SECOND)
                 || !StartGateCountdown.describeReleaseTitle().equals(
                         StartGateCountdown.describeTitle(StartGateCountdown.RELEASE_SECOND))) {
-            return Optional.of("The end of the countdown would read \""
-                    + StartGateCountdown.describeTitle(StartGateCountdown.RELEASE_SECOND)
-                    + "\" instead of \"" + StartGateCountdown.describeReleaseTitle() + "\"");
+            return Optional.of(Messages.text(DryRunCheckMessage.END_READS,
+                    Placeholder.of("title", StartGateCountdown.describeTitle(StartGateCountdown.RELEASE_SECOND)),
+                    Placeholder.of("release", StartGateCountdown.describeReleaseTitle())));
         }
         return Optional.empty();
     }
@@ -337,36 +343,36 @@ public final class TournamentDryRun {
         List<String> teamNames = testTeams.stream().map(DryRunTeam::teamName).toList();
         List<String> details = new ArrayList<>();
         Bracket bracket = Bracket.createSingleElimination(teamNames);
-        details.add("Bracket built over " + teamNames.size() + " teams: " + bracket.getRoundCount()
-                + (bracket.getRoundCount() == 1 ? " round, " : " rounds, ")
-                + bracket.getAllMatches().size() + " match in it");
+        details.add(Messages.text(DryRunCheckMessage.BRACKET_BUILT,
+                Placeholder.of("teams", Messages.plural(DryRunCheckMessage.BRACKET_TEAM_COUNT, teamNames.size())),
+                Placeholder.of("rounds", Messages.plural(DryRunCheckMessage.BRACKET_ROUND_COUNT,
+                        bracket.getRoundCount())),
+                Placeholder.of("matches", Messages.plural(DryRunCheckMessage.BRACKET_MATCH_COUNT,
+                        bracket.getAllMatches().size()))));
         BracketMatch finalMatch = bracket.getFinalMatch();
         if (!finalMatch.hasBothParticipants()) {
-            return DryRunStep.failed(MATCH_STEP,
-                    "The single match of the bracket did not get both test teams");
+            return DryRunStep.failed(stepName(MATCH_STEP),
+                    Messages.text(DryRunCheckMessage.FINAL_WITHOUT_BOTH_TEST_TEAMS));
         }
         for (String teamName : teamNames) {
             if (teamRegistry.findTeam(teamName).isEmpty()) {
-                return DryRunStep.failed(MATCH_STEP, "The bracket holds " + teamName
-                        + ", but the registry does not. A real match would declare a walkover");
+                return DryRunStep.failed(stepName(MATCH_STEP), Messages.text(DryRunCheckMessage.TEAM_ONLY_IN_BRACKET,
+                        Placeholder.of("team", teamName)));
             }
         }
-        details.add("Match " + finalMatch.getMatchId() + ": " + finalMatch.getFirstTeamName().orElseThrow()
-                + " against " + finalMatch.getSecondTeamName().orElseThrow()
-                + ", both teams resolve in the registry");
+        details.add(Messages.text(DryRunCheckMessage.MATCH_RESOLVED, Placeholder.of("match", finalMatch.getMatchId()),
+                Placeholder.of("firstTeam", finalMatch.getFirstTeamName().orElseThrow()),
+                Placeholder.of("secondTeam", finalMatch.getSecondTeamName().orElseThrow())));
         if (MatchSequence.findNextMatch(bracket).isPresent()) {
-            return DryRunStep.failed(MATCH_STEP,
-                    "The match sequence would start the final by itself instead of leaving it to an admin");
+            return DryRunStep.failed(stepName(MATCH_STEP), Messages.text(DryRunCheckMessage.SEQUENCE_STARTS_FINAL));
         }
-        details.add("The match sequence leaves it alone: the single match of a two team bracket is the "
-                + "final, and the final is the one match an admin starts");
+        details.add(Messages.text(DryRunCheckMessage.SEQUENCE_LEAVES_FINAL));
         Optional<String> gateFailure = walkThroughTheFinalGate(finalMatch, bracket, details);
         if (gateFailure.isPresent()) {
-            return DryRunStep.failed(MATCH_STEP, gateFailure.get());
+            return DryRunStep.failed(stepName(MATCH_STEP), gateFailure.get());
         }
-        details.add("Nothing of this reached the arena: no round was begun, no gate was opened and no "
-                + "fighter was teleported or equipped");
-        return DryRunStep.passed(MATCH_STEP, details);
+        details.add(Messages.text(DryRunCheckMessage.NOTHING_REACHED_THE_ARENA));
+        return DryRunStep.passed(stepName(MATCH_STEP), details);
     }
 
     private Optional<String> walkThroughTheFinalGate(BracketMatch finalMatch, Bracket bracket,
@@ -375,37 +381,46 @@ public final class TournamentDryRun {
         FinalMatchGate finalGate = new FinalMatchGate(adminMessages::add);
         finalGate.synchronizeWith(finalMatch);
         if (finalGate.getStage() != FinalMatchStage.READY) {
-            return Optional.of("Both finalists are known, but the final gate stands at "
-                    + finalGate.getStage() + " instead of " + FinalMatchStage.READY);
+            return Optional.of(Messages.text(DryRunCheckMessage.FINAL_STAGE_NOT_READY,
+                    Placeholder.of("stage", finalGate.getStage().describe()),
+                    Placeholder.of("expected", FinalMatchStage.READY.describe())));
         }
         if (finalGate.findStartRejection().isPresent()) {
-            return Optional.of("The final is ready but would be refused: "
-                    + finalGate.findStartRejection().orElseThrow());
+            return Optional.of(Messages.text(DryRunCheckMessage.FINAL_REFUSED,
+                    Placeholder.of("reason", finalGate.findStartRejection().orElseThrow())));
         }
         if (adminMessages.size() != 1) {
-            return Optional.of("The ready final announced itself " + adminMessages.size()
-                    + " times to the admins instead of exactly once");
+            return Optional.of(Messages.plural(DryRunCheckMessage.FINAL_ANNOUNCED_TIMES, adminMessages.size()));
         }
-        details.add("The final gate turns " + FinalMatchStage.READY + " and announces once: "
-                + adminMessages.get(0));
+        details.add(Messages.text(DryRunCheckMessage.FINAL_TURNS_READY,
+                Placeholder.of("stage", FinalMatchStage.READY.describe()),
+                Placeholder.of("announcement", adminMessages.get(0))));
         finalGate.markRunning();
         String winnerTeamName = finalMatch.getFirstTeamName().orElseThrow();
         bracket.recordWinner(finalMatch.getMatchId(), winnerTeamName);
         finalGate.synchronizeWith(finalMatch);
         if (!bracket.isComplete()) {
-            return Optional.of("The decided final left the bracket incomplete");
+            return Optional.of(Messages.text(DryRunCheckMessage.BRACKET_INCOMPLETE));
         }
         if (!bracket.getChampionTeamName().equals(Optional.of(winnerTeamName))) {
-            return Optional.of("The champion is " + bracket.getChampionTeamName().orElse("nobody")
-                    + " instead of " + winnerTeamName);
+            return Optional.of(describeWrongChampion(bracket.getChampionTeamName(), winnerTeamName));
         }
         if (finalGate.getStage() != FinalMatchStage.FINISHED) {
-            return Optional.of("The decided final left the gate at " + finalGate.getStage()
-                    + " instead of " + FinalMatchStage.FINISHED);
+            return Optional.of(Messages.text(DryRunCheckMessage.FINAL_STAGE_NOT_FINISHED,
+                    Placeholder.of("stage", finalGate.getStage().describe()),
+                    Placeholder.of("expected", FinalMatchStage.FINISHED.describe())));
         }
-        details.add("Simulated result for " + winnerTeamName + ": the bracket is complete, the champion "
-                + "is " + winnerTeamName + " and the final gate is " + FinalMatchStage.FINISHED);
+        details.add(Messages.text(DryRunCheckMessage.SIMULATED_RESULT, Placeholder.of("winner", winnerTeamName),
+                Placeholder.of("stage", FinalMatchStage.FINISHED.describe())));
         return Optional.empty();
+    }
+
+    private static String describeWrongChampion(Optional<String> championTeamName, String winnerTeamName) {
+        Placeholder winner = Placeholder.of("winner", winnerTeamName);
+        return championTeamName
+                .map(champion -> Messages.text(DryRunCheckMessage.WRONG_CHAMPION,
+                        Placeholder.of("champion", champion), winner))
+                .orElseGet(() -> Messages.text(DryRunCheckMessage.NO_CHAMPION, winner));
     }
 
     private DryRunStep checkAutomaticCleaning() {
@@ -413,21 +428,29 @@ public final class TournamentDryRun {
         if (rejection.isPresent()) {
             List<String> details = new ArrayList<>(
                     List.of(rejection.get().split(TournamentMessages.LINE_BREAK, -1)));
-            details.add("The match after it would be fought in the arena the match before it left behind");
-            return DryRunStep.failed(CLEANING_STEP, details);
+            details.add(Messages.text(DryRunCheckMessage.CLEANING_REFUSED_ARENA_LEFT_BEHIND));
+            return DryRunStep.failed(stepName(CLEANING_STEP), details);
         }
         if (!arena.hasBaseline()) {
-            return DryRunStep.failed(CLEANING_STEP,
-                    "No baseline of the fight area is stored, so nothing is cleaned between two matches",
-                    "A cleaning nobody asked for never empties the arena, it is skipped instead",
-                    "The baseline lives in memory only: run " + Arena.describeCalculateAction() + " once");
+            return DryRunStep.failed(stepName(CLEANING_STEP), Messages.lines(DryRunCheckMessage.NO_BASELINE,
+                    Placeholder.of("action", Arena.describeCalculateAction())));
         }
         List<String> details = new ArrayList<>();
-        details.add("A cleaning would start right away and restore the baseline of the last calculation");
-        arena.findCleanedVolume().ifPresent(cleanedVolume -> details.add(arena.countCleaningBlocks()
-                + " blocks between y " + cleanedVolume.getFloorY() + " and y " + cleanedVolume.getWallTopY()));
-        details.add("Nothing was written: the dry run checks the trigger, it never cleans the arena");
-        return DryRunStep.passed(CLEANING_STEP, details);
+        details.add(Messages.text(DryRunCheckMessage.CLEANING_WOULD_START));
+        arena.findCleanedVolume().ifPresent(cleanedVolume -> details.add(Messages.plural(
+                DryRunCheckMessage.CLEANED_BLOCKS, arena.countCleaningBlocks(),
+                Placeholder.of("floorY", cleanedVolume.getFloorY()),
+                Placeholder.of("topY", cleanedVolume.getWallTopY()))));
+        details.add(Messages.text(DryRunCheckMessage.NOTHING_CLEANED));
+        return DryRunStep.passed(stepName(CLEANING_STEP), details);
+    }
+
+    private static String stepName(DryRunMessage step) {
+        return Messages.text(step);
+    }
+
+    private static List<String> pluralLines(MessageKey key, long count, Placeholder... placeholders) {
+        return List.of(Messages.plural(key, count, placeholders).split(TournamentMessages.LINE_BREAK, -1));
     }
 
     private static String describeFailure(RuntimeException failure) {

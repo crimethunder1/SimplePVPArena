@@ -76,7 +76,7 @@ class LanguageSettingsTest {
         PluginSettings settings = PluginSettings.read(configurationWithLanguage("fr"), problems::add);
 
         assertEquals("en", settings.language());
-        assertEquals(List.of("language fr is no shipped language, falling back to en. Shipped languages: en, de"),
+        assertEquals(List.of("language fr is no shipped language, falling back to en. Shipped languages: en and de"),
                 problems);
     }
 
@@ -86,7 +86,7 @@ class LanguageSettingsTest {
         configuration.set(PluginSettings.LANGUAGE_PATH, 7);
 
         assertEquals("en", PluginSettings.readLanguage(configuration, problems::add));
-        assertEquals(List.of("language 7 is no shipped language, falling back to en. Shipped languages: en, de"),
+        assertEquals(List.of("language 7 is no shipped language, falling back to en. Shipped languages: en and de"),
                 problems);
     }
 
@@ -117,7 +117,7 @@ class LanguageSettingsTest {
         assertTrue(lines.contains("  the language and the language files in the lang folder, for every text shown "
                 + "from now on"), lines.toString());
         assertTrue(lines.contains("  language fr is no shipped language, falling back to en. Shipped languages: "
-                + "en, de"), lines.toString());
+                + "en and de"), lines.toString());
     }
 
     @Test

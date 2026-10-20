@@ -99,7 +99,19 @@ class ConvertedClassesHaveNoTextLiteralsTest {
             "match/Match.java",
             "match/MatchScore.java",
             "kit/KitService.java",
-            "command/TournamentCommand.java");
+            "command/TournamentCommand.java",
+            "diagnostics/TournamentDryRun.java",
+            "diagnostics/DryRunReport.java",
+            "diagnostics/DryRunStatus.java",
+            "diagnostics/DryRunStep.java",
+            "diagnostics/DryRunTeam.java",
+            "diagnostics/DryRunArena.java",
+            "diagnostics/PluginDryRunArena.java",
+            "config/PluginSettings.java",
+            "config/ConfigurationReloadReport.java",
+            "config/ConfigurationReloadService.java",
+            "config/PluginLiveConfiguration.java",
+            "config/LiveConfiguration.java");
 
     private static final Pattern STRING_LITERAL = Pattern.compile("\"((?:[^\"\\\\]|\\\\.)*)\"");
     private static final Pattern USAGE_TOKEN = Pattern.compile("<[^<>]*>");

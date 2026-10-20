@@ -7,6 +7,8 @@ import de.simplepvparena.arena.HorizontalCellCodec;
 import de.simplepvparena.kit.KitService;
 import de.simplepvparena.gate.StartGateDuration;
 import de.simplepvparena.gate.StartGateMarks;
+import de.simplepvparena.message.MessageKey;
+import de.simplepvparena.message.Messages;
 import de.simplepvparena.team.Team;
 import de.simplepvparena.team.TeamMember;
 import de.simplepvparena.team.TeamRegistry;
@@ -313,11 +315,11 @@ class TournamentDryRunTest {
         assertEquals(List.of(TournamentDryRun.TEAM_STEP, TournamentDryRun.ARENA_STEP,
                         TournamentDryRun.KIT_STEP, TournamentDryRun.GATE_STEP,
                         TournamentDryRun.MATCH_STEP, TournamentDryRun.CLEANING_STEP,
-                        TournamentDryRun.CLEANUP_STEP),
+                        TournamentDryRun.CLEANUP_STEP).stream().map(Messages::text).toList(),
                 report.getSteps().stream().map(DryRunStep::name).toList());
         assertEquals(1L, report.countByStatus(DryRunStatus.FAILED), report.describe().toString());
         assertTrue(findStep(report, TournamentDryRun.KIT_STEP).isFailed(), "and it is the kit");
-        assertTrue(report.describe().containsAll(DryRunReport.REAL_PLAYER_NOTE),
+        assertTrue(report.describe().containsAll(DryRunReport.describeRealPlayerNote()),
                 "the report always says what it could not check");
     }
 
@@ -422,7 +424,8 @@ class TournamentDryRunTest {
                 new TeamMember(UUID.randomUUID(), teamName + "-second")));
     }
 
-    private static DryRunStep findStep(DryRunReport report, String stepName) {
+    private static DryRunStep findStep(DryRunReport report, MessageKey stepKey) {
+        String stepName = Messages.text(stepKey);
         return report.getSteps().stream()
                 .filter(step -> step.name().equals(stepName))
                 .findFirst()

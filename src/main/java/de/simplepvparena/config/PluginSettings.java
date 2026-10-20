@@ -14,7 +14,10 @@ import de.simplepvparena.gate.StartGateDuration;
 import de.simplepvparena.match.MatchService;
 import de.simplepvparena.match.RoundTimeoutSettings;
 import de.simplepvparena.match.TeamColourSettings;
+import de.simplepvparena.message.ConfigMessage;
 import de.simplepvparena.message.MessageCatalogLoader;
+import de.simplepvparena.message.Messages;
+import de.simplepvparena.message.Placeholder;
 import de.simplepvparena.team.Team;
 import de.simplepvparena.team.TeamSizeSetting;
 import net.kyori.adventure.text.format.NamedTextColor;
@@ -180,9 +183,10 @@ public record PluginSettings(long roundResetDelayTicks,
         if (MessageCatalogLoader.isShipped(language)) {
             return language;
         }
-        problemReporter.accept(LANGUAGE_PATH + " " + writtenLanguage + " is no shipped language, falling back to "
-                + MessageCatalogLoader.DEFAULT_LANGUAGE + ". Shipped languages: "
-                + String.join(", ", MessageCatalogLoader.SHIPPED_LANGUAGES));
+        problemReporter.accept(Messages.text(ConfigMessage.LANGUAGE_NOT_SHIPPED,
+                Placeholder.of("path", LANGUAGE_PATH), Placeholder.of("language", writtenLanguage),
+                Placeholder.of("fallback", MessageCatalogLoader.DEFAULT_LANGUAGE),
+                Placeholder.of("languages", Messages.join(MessageCatalogLoader.SHIPPED_LANGUAGES))));
         return MessageCatalogLoader.DEFAULT_LANGUAGE;
     }
 
@@ -225,8 +229,9 @@ public record PluginSettings(long roundResetDelayTicks,
         if (maximumCellCount >= 1) {
             return maximumCellCount;
         }
-        problemReporter.accept(ARENA_MAXIMUM_CELLS_PATH + " must be at least one cell, falling back to "
-                + ArenaShapeFloodFill.DEFAULT_MAXIMUM_CELL_COUNT);
+        problemReporter.accept(Messages.text(ConfigMessage.CELL_LIMIT_TOO_LOW,
+                Placeholder.of("path", ARENA_MAXIMUM_CELLS_PATH),
+                Placeholder.of("fallback", ArenaShapeFloodFill.DEFAULT_MAXIMUM_CELL_COUNT)));
         return ArenaShapeFloodFill.DEFAULT_MAXIMUM_CELL_COUNT;
     }
 
@@ -237,9 +242,10 @@ public record PluginSettings(long roundResetDelayTicks,
         if (depthBelowFloor >= 0 && depthBelowFloor <= ArenaBaselineService.MAXIMUM_DEPTH_BELOW_FLOOR) {
             return depthBelowFloor;
         }
-        problemReporter.accept(ARENA_BASELINE_DEPTH_BELOW_FLOOR_PATH + " must lie between 0 and "
-                + ArenaBaselineService.MAXIMUM_DEPTH_BELOW_FLOOR + " blocks, falling back to "
-                + ArenaBaselineService.DEFAULT_DEPTH_BELOW_FLOOR + " blocks");
+        problemReporter.accept(Messages.plural(ConfigMessage.BASELINE_DEPTH_OUT_OF_RANGE,
+                ArenaBaselineService.DEFAULT_DEPTH_BELOW_FLOOR,
+                Placeholder.of("path", ARENA_BASELINE_DEPTH_BELOW_FLOOR_PATH),
+                Placeholder.of("maximum", ArenaBaselineService.MAXIMUM_DEPTH_BELOW_FLOOR)));
         return ArenaBaselineService.DEFAULT_DEPTH_BELOW_FLOOR;
     }
 
@@ -248,8 +254,8 @@ public record PluginSettings(long roundResetDelayTicks,
         if (radius >= 0) {
             return radius;
         }
-        problemReporter.accept(ARENA_SAFETY_ZONE_RADIUS_PATH + " cannot be negative, falling back to "
-                + ArenaSafetyZone.DEFAULT_RADIUS + " blocks. Use zero to switch the safety zone off");
+        problemReporter.accept(Messages.plural(ConfigMessage.SAFETY_ZONE_RADIUS_NEGATIVE,
+                ArenaSafetyZone.DEFAULT_RADIUS, Placeholder.of("path", ARENA_SAFETY_ZONE_RADIUS_PATH)));
         return ArenaSafetyZone.DEFAULT_RADIUS;
     }
 
@@ -263,9 +269,9 @@ public record PluginSettings(long roundResetDelayTicks,
                 return margin;
             }
         }
-        problemReporter.accept(ARENA_EFFECT_MARGIN_PATH + " must be a whole number between "
-                + EffectArea.MINIMUM_MARGIN + " and " + EffectArea.MAXIMUM_MARGIN + " blocks, falling back to "
-                + EffectArea.DEFAULT_MARGIN + " blocks");
+        problemReporter.accept(Messages.plural(ConfigMessage.EFFECT_MARGIN_OUT_OF_RANGE, EffectArea.DEFAULT_MARGIN,
+                Placeholder.of("path", ARENA_EFFECT_MARGIN_PATH), Placeholder.of("minimum", EffectArea.MINIMUM_MARGIN),
+                Placeholder.of("maximum", EffectArea.MAXIMUM_MARGIN)));
         return EffectArea.DEFAULT_MARGIN;
     }
 
@@ -279,9 +285,9 @@ public record PluginSettings(long roundResetDelayTicks,
                 return teamSize;
             }
         }
-        problemReporter.accept(TEAM_SIZE_PATH + " must be a whole number between " + Team.MINIMUM_MEMBER_COUNT
-                + " and " + Team.MAXIMUM_MEMBER_COUNT + " players, falling back to "
-                + TeamSizeSetting.DEFAULT_TEAM_SIZE + " players");
+        problemReporter.accept(Messages.plural(ConfigMessage.TEAM_SIZE_OUT_OF_RANGE, TeamSizeSetting.DEFAULT_TEAM_SIZE,
+                Placeholder.of("path", TEAM_SIZE_PATH), Placeholder.of("minimum", Team.MINIMUM_MEMBER_COUNT),
+                Placeholder.of("maximum", Team.MAXIMUM_MEMBER_COUNT)));
         return TeamSizeSetting.DEFAULT_TEAM_SIZE;
     }
 
@@ -292,17 +298,16 @@ public record PluginSettings(long roundResetDelayTicks,
                 ArenaCleaningParticleSettings.TOTAL_DURATION_CONFIGURATION_PATH,
                 defaults.totalDurationSeconds());
         if (totalDurationSeconds < 0.0D) {
-            problemReporter.accept(ArenaCleaningParticleSettings.TOTAL_DURATION_CONFIGURATION_PATH
-                    + " cannot be negative, falling back to " + defaults.totalDurationSeconds()
-                    + " seconds. Use zero to clean without the two coloured phases");
+            problemReporter.accept(Messages.text(ConfigMessage.CLEANING_DURATION_NEGATIVE,
+                    Placeholder.of("path", ArenaCleaningParticleSettings.TOTAL_DURATION_CONFIGURATION_PATH),
+                    Placeholder.of("seconds", defaults.totalDurationSeconds())));
             totalDurationSeconds = defaults.totalDurationSeconds();
         }
         int columnsPerTick = configuration.getInt(
                 ArenaCleaningParticleSettings.COLUMNS_PER_TICK_CONFIGURATION_PATH, defaults.columnsPerTick());
         if (columnsPerTick < 0) {
-            problemReporter.accept(ArenaCleaningParticleSettings.COLUMNS_PER_TICK_CONFIGURATION_PATH
-                    + " cannot be negative, falling back to " + defaults.columnsPerTick()
-                    + " columns per tick. Use zero to draw none");
+            problemReporter.accept(Messages.plural(ConfigMessage.CLEANING_COLUMNS_NEGATIVE, defaults.columnsPerTick(),
+                    Placeholder.of("path", ArenaCleaningParticleSettings.COLUMNS_PER_TICK_CONFIGURATION_PATH)));
             columnsPerTick = defaults.columnsPerTick();
         }
         return new ArenaCleaningParticleSettings(
@@ -320,9 +325,9 @@ public record PluginSettings(long roundResetDelayTicks,
         if (durationSeconds >= StartGateDuration.MINIMUM_SECONDS) {
             return durationSeconds;
         }
-        problemReporter.accept(START_GATE_DURATION_SECONDS_PATH + " must be at least "
-                + StartGateDuration.MINIMUM_SECONDS + " second, falling back to "
-                + StartGateDuration.DEFAULT_SECONDS + " seconds");
+        problemReporter.accept(Messages.plural(ConfigMessage.START_GATE_DURATION_TOO_SHORT,
+                StartGateDuration.DEFAULT_SECONDS, Placeholder.of("path", START_GATE_DURATION_SECONDS_PATH),
+                Placeholder.of("minimum", StartGateDuration.MINIMUM_SECONDS)));
         return StartGateDuration.DEFAULT_SECONDS;
     }
 
@@ -332,8 +337,8 @@ public record PluginSettings(long roundResetDelayTicks,
         int roundTimeoutSeconds = configuration.getInt(ROUND_TIMEOUT_SECONDS_PATH,
                 defaultSettings.roundTimeoutSeconds());
         if (roundTimeoutSeconds < 1) {
-            problemReporter.accept(ROUND_TIMEOUT_SECONDS_PATH + " must be at least one second, falling back to "
-                    + defaultSettings.roundTimeoutSeconds() + " seconds");
+            problemReporter.accept(Messages.plural(ConfigMessage.ROUND_TIMEOUT_TOO_SHORT,
+                    defaultSettings.roundTimeoutSeconds(), Placeholder.of("path", ROUND_TIMEOUT_SECONDS_PATH)));
             roundTimeoutSeconds = defaultSettings.roundTimeoutSeconds();
         }
         return new RoundTimeoutSettings(roundTimeoutSeconds,
@@ -351,10 +356,11 @@ public record PluginSettings(long roundResetDelayTicks,
         NamedTextColor secondTeamColour = readTeamColour(configuration, SECOND_TEAM_COLOUR_PATH,
                 defaults.secondTeamColour(), problemReporter);
         if (firstTeamColour.equals(secondTeamColour)) {
-            problemReporter.accept(TeamColourSettings.SECTION_CONFIGURATION_PATH + " gives both teams the colour "
-                    + TeamColourSettings.nameOf(firstTeamColour) + ", which would be no colouring at all, falling "
-                    + "back to " + TeamColourSettings.nameOf(defaults.firstTeamColour()) + " and "
-                    + TeamColourSettings.nameOf(defaults.secondTeamColour()));
+            problemReporter.accept(Messages.text(ConfigMessage.SAME_TEAM_COLOURS,
+                    Placeholder.of("path", TeamColourSettings.SECTION_CONFIGURATION_PATH),
+                    Placeholder.of("colour", TeamColourSettings.nameOf(firstTeamColour)),
+                    Placeholder.of("firstColour", TeamColourSettings.nameOf(defaults.firstTeamColour())),
+                    Placeholder.of("secondColour", TeamColourSettings.nameOf(defaults.secondTeamColour()))));
             return defaults;
         }
         return new TeamColourSettings(firstTeamColour, secondTeamColour);
@@ -370,9 +376,9 @@ public record PluginSettings(long roundResetDelayTicks,
         if (colour.isPresent()) {
             return colour.get();
         }
-        problemReporter.accept(path + " is no colour a name can be shown in, falling back to "
-                + TeamColourSettings.nameOf(fallbackColour) + ". Usable colours: "
-                + String.join(", ", TeamColourSettings.knownColourNames()));
+        problemReporter.accept(Messages.text(ConfigMessage.UNKNOWN_TEAM_COLOUR, Placeholder.of("path", path),
+                Placeholder.of("fallback", TeamColourSettings.nameOf(fallbackColour)),
+                Placeholder.of("colours", Messages.join(TeamColourSettings.knownColourNames()))));
         return fallbackColour;
     }
 
@@ -382,9 +388,9 @@ public record PluginSettings(long roundResetDelayTicks,
         double height = configuration.getDouble(ConfirmedBorderParticleSettings.HEIGHT_CONFIGURATION_PATH,
                 defaults.height());
         if (height < 0.0D) {
-            problemReporter.accept(ConfirmedBorderParticleSettings.HEIGHT_CONFIGURATION_PATH
-                    + " cannot be negative, falling back to " + defaults.height()
-                    + " blocks. Use zero for the shortest possible marker");
+            problemReporter.accept(Messages.text(ConfigMessage.MARKER_HEIGHT_NEGATIVE,
+                    Placeholder.of("path", ConfirmedBorderParticleSettings.HEIGHT_CONFIGURATION_PATH),
+                    Placeholder.of("height", defaults.height())));
             height = defaults.height();
         }
         return new ConfirmedBorderParticleSettings(

@@ -1,27 +1,27 @@
 package de.simplepvparena.config;
 
+import de.simplepvparena.message.ConfigMessage;
+import de.simplepvparena.message.Messages;
+
 import java.util.ArrayList;
 import java.util.List;
 
 public record ConfigurationReloadReport(List<String> problems) {
 
-    public static final List<String> RELOADED_CATEGORIES = List.of(
-            "the language and the language files in the lang folder, for every text shown from now on",
-            "the round reset delay, the round timeout, the sudden death damage and whether the "
-                    + "final is fought without a time limit",
-            "the seconds the start gate takes at the beginning of a round",
-            "the team size, unless a tournament is in progress or a team has more players than a smaller new size",
-            "the cleaning and baseline batch sizes and the particles of a running cleaning",
-            "the depth below the floor the next baseline is taken to",
-            "the cell limit of the arena calculation",
-            "the radius of the safety zone",
-            "the margin of the area of effect around the fight area",
-            "whether joining players are sent to the tribune",
-            "the border particles, their limits and the confirmed border marker");
+    private static final List<ConfigMessage> RELOADED_CATEGORIES = List.of(
+            ConfigMessage.LANGUAGE_CATEGORY,
+            ConfigMessage.ROUND_CATEGORY,
+            ConfigMessage.START_GATE_CATEGORY,
+            ConfigMessage.TEAM_SIZE_CATEGORY,
+            ConfigMessage.CLEANING_CATEGORY,
+            ConfigMessage.BASELINE_DEPTH_CATEGORY,
+            ConfigMessage.CELL_LIMIT_CATEGORY,
+            ConfigMessage.SAFETY_ZONE_CATEGORY,
+            ConfigMessage.EFFECT_MARGIN_CATEGORY,
+            ConfigMessage.TELEPORT_ON_JOIN_CATEGORY,
+            ConfigMessage.BORDER_CATEGORY);
 
-    private static final String UNTOUCHED_PARTS =
-            "The calculated fight area, the spawns, the border blocks, the teams and a running match "
-                    + "stay untouched";
+    private static final String ENTRY_INDENT = "  ";
 
     public ConfigurationReloadReport {
         problems = List.copyOf(problems);
@@ -35,19 +35,23 @@ public record ConfigurationReloadReport(List<String> problems) {
         return problems.isEmpty();
     }
 
+    public static List<String> describeReloadedCategories() {
+        return RELOADED_CATEGORIES.stream().map(Messages::text).toList();
+    }
+
     public List<String> describe() {
         List<String> lines = new ArrayList<>();
-        lines.add("config.yml was reloaded and applied");
-        for (String category : RELOADED_CATEGORIES) {
-            lines.add("  " + category);
+        lines.add(Messages.text(ConfigMessage.RELOADED));
+        for (String category : describeReloadedCategories()) {
+            lines.add(ENTRY_INDENT + category);
         }
-        lines.add(UNTOUCHED_PARTS);
+        lines.add(Messages.text(ConfigMessage.UNTOUCHED));
         if (isClean()) {
             return List.copyOf(lines);
         }
-        lines.add("Entries that could not be used and fell back to their default:");
+        lines.add(Messages.text(ConfigMessage.UNUSABLE_ENTRIES));
         for (String problem : problems) {
-            lines.add("  " + problem);
+            lines.add(ENTRY_INDENT + problem);
         }
         return List.copyOf(lines);
     }

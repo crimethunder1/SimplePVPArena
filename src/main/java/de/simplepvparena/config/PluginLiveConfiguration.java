@@ -17,6 +17,9 @@ import de.simplepvparena.match.FighterColours;
 import de.simplepvparena.match.MatchService;
 import de.simplepvparena.match.RoundTimeoutSettings;
 import de.simplepvparena.match.TeamColourSettings;
+import de.simplepvparena.message.ConfigMessage;
+import de.simplepvparena.message.Messages;
+import de.simplepvparena.message.Placeholder;
 import de.simplepvparena.team.TeamRegistry;
 import de.simplepvparena.team.TeamSizeSetting;
 
@@ -124,9 +127,10 @@ public final class PluginLiveConfiguration implements LiveConfiguration {
         Optional<String> rejection = TeamSizeSetting.findChangeRejection(currentTeamSize, teamSize,
                 tournamentInProgress.getAsBoolean(), teamRegistry);
         if (rejection.isPresent()) {
-            String warning = rejection.get() + ". The team size " + teamSize + " of " + PluginSettings.TEAM_SIZE_PATH
-                    + " in config.yml was not taken over, the team size stays "
-                    + TeamSizeSetting.describeMatchUp(currentTeamSize);
+            String warning = Messages.text(ConfigMessage.TEAM_SIZE_NOT_TAKEN_OVER,
+                    Placeholder.of("rejection", rejection.get()), Placeholder.of("teamSize", teamSize),
+                    Placeholder.of("path", PluginSettings.TEAM_SIZE_PATH),
+                    Placeholder.of("matchUp", TeamSizeSetting.describeMatchUp(currentTeamSize)));
             problemReporter.accept(warning);
             adminNotifier.accept(warning);
             return;
@@ -141,9 +145,10 @@ public final class PluginLiveConfiguration implements LiveConfiguration {
         }
         int appliedTeamSize = teamSizeSetting.getTeamSize();
         TeamSizeSetting.describeTeamsLargerThan(appliedTeamSize, teamRegistry).ifPresent(largerTeams -> {
-            String warning = largerTeams + ". The team size " + appliedTeamSize + " of "
-                    + PluginSettings.TEAM_SIZE_PATH + " in config.yml applies anyway since the start, these teams "
-                    + "keep their players and every online player of them fights";
+            String warning = Messages.plural(ConfigMessage.LARGER_TEAMS_AT_START,
+                    TeamSizeSetting.findTeamsLargerThan(appliedTeamSize, teamRegistry).size(),
+                    Placeholder.of("teams", largerTeams), Placeholder.of("teamSize", appliedTeamSize),
+                    Placeholder.of("path", PluginSettings.TEAM_SIZE_PATH));
             problemReporter.accept(warning);
             adminNotifier.accept(warning);
         });
@@ -183,9 +188,9 @@ public final class PluginLiveConfiguration implements LiveConfiguration {
     @Override
     public void setArenaEffectMargin(int margin) {
         arenaRegistry.setEffectMargin(margin);
-        arenaRegistry.findTribuneOutsideOfTheEffectArea().ifPresent(warning -> problemReporter.accept(warning
-                + ". Nothing was dropped, set the tribune spawn again closer to the fight area or raise "
-                + EffectArea.MARGIN_CONFIGURATION_PATH + " in config.yml"));
+        arenaRegistry.findTribuneOutsideOfTheEffectArea().ifPresent(warning -> problemReporter.accept(Messages.text(
+                ConfigMessage.TRIBUNE_OUTSIDE_OF_THE_EFFECT_AREA, Placeholder.of("warning", warning),
+                Placeholder.of("path", EffectArea.MARGIN_CONFIGURATION_PATH))));
     }
 
     @Override

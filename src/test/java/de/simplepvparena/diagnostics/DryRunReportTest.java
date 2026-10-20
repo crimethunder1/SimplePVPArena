@@ -65,8 +65,8 @@ class DryRunReportTest {
     void alwaysEndsWithWhatOnlyARealTestPlayerCanShow() {
         List<String> lines = DryRunReport.of(List.of(DryRunStep.passed("First", "one"))).describe();
 
-        assertEquals(DryRunReport.REAL_PLAYER_NOTE,
-                lines.subList(lines.size() - DryRunReport.REAL_PLAYER_NOTE.size(), lines.size()));
+        assertEquals(DryRunReport.describeRealPlayerNote(),
+                lines.subList(lines.size() - DryRunReport.describeRealPlayerNote().size(), lines.size()));
     }
 
     @Test
