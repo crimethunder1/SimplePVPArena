@@ -14,14 +14,6 @@ import java.util.Optional;
 
 public final class Arena {
 
-    public static final String CALCULATE_ACTION = "\"Calculate the fight area\" in the arena menu of /tournament";
-    public static final String DIAGNOSE_ACTION = "\"Diagnose with a higher cell limit\" in the arena menu "
-            + "of /tournament";
-    public static final String TRIBUNE_SPAWN_ACTION = "\"Set the tribune spawn\" in the arena menu of /tournament";
-    public static final String MARK_HEIGHT_ACTION = "\"Mark the height of the fight area\" in the arena menu "
-            + "of /tournament";
-    public static final String CLEAN_ACTION = "\"Clean the arena\" in the arena menu of /tournament";
-
     private ArenaShape shape;
     private PositionSnapshot firstTeamSpawn;
     private PositionSnapshot secondTeamSpawn;
@@ -51,13 +43,33 @@ public final class Arena {
         List<String> missingParts = new ArrayList<>();
         if (shape == null) {
             missingParts.add(Messages.text(ArenaSetupMessage.MISSING_FIGHT_AREA,
-                    Placeholder.of("action", describeArenaMenuTile(ArenaMenuMessage.CALCULATE_TITLE))));
+                    Placeholder.of("action", describeCalculateAction())));
         }
         if (tribuneSpawn == null) {
             missingParts.add(Messages.text(ArenaSetupMessage.MISSING_TRIBUNE_SPAWN,
-                    Placeholder.of("action", describeArenaMenuTile(ArenaMenuMessage.TRIBUNE_SPAWN_TITLE))));
+                    Placeholder.of("action", describeTribuneSpawnAction())));
         }
         return missingParts;
+    }
+
+    public static String describeCalculateAction() {
+        return describeArenaMenuTile(ArenaMenuMessage.CALCULATE_TITLE);
+    }
+
+    public static String describeDiagnoseAction() {
+        return describeArenaMenuTile(ArenaMenuMessage.DIAGNOSE_TITLE);
+    }
+
+    public static String describeTribuneSpawnAction() {
+        return describeArenaMenuTile(ArenaMenuMessage.TRIBUNE_SPAWN_TITLE);
+    }
+
+    public static String describeMarkHeightAction() {
+        return describeArenaMenuTile(ArenaMenuMessage.HEIGHT_MARKER_TITLE);
+    }
+
+    public static String describeCleanAction() {
+        return describeArenaMenuTile(ArenaMenuMessage.CLEAN_TITLE);
     }
 
     static String describeArenaMenuTile(MessageKey tileTitle) {

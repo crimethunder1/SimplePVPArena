@@ -1,24 +1,26 @@
 package de.simplepvparena.arena;
 
+import de.simplepvparena.message.ArenaHeightMessage;
+import de.simplepvparena.message.MessageKey;
+import de.simplepvparena.message.Messages;
+
 public enum ArenaHeightMarkerMode {
 
-    LOWEST("lowest point", "the floor of the fight area"),
-    HIGHEST("highest point", "the ceiling of the fight area");
+    LOWEST(ArenaHeightMessage.LOWEST_POINT),
+    HIGHEST(ArenaHeightMessage.HIGHEST_POINT);
 
-    private final String displayName;
-    private final String meaning;
+    private final MessageKey displayName;
 
-    ArenaHeightMarkerMode(String displayName, String meaning) {
+    ArenaHeightMarkerMode(MessageKey displayName) {
         this.displayName = displayName;
-        this.meaning = meaning;
     }
 
     public String getDisplayName() {
-        return displayName;
+        return Messages.text(displayName);
     }
 
-    public String getMeaning() {
-        return meaning;
+    public MessageKey select(MessageKey lowestText, MessageKey highestText) {
+        return this == LOWEST ? lowestText : highestText;
     }
 
     public ArenaHeightMarkerMode toggle() {

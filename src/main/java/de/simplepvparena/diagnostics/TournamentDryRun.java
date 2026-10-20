@@ -275,7 +275,7 @@ public final class TournamentDryRun {
         }
         List<String> details = new ArrayList<>();
         details.add("The countdown reads " + durationSeconds + " down to 1 and then \""
-                + StartGateCountdown.RELEASE_TITLE + "\", checked without waiting a tick");
+                + StartGateCountdown.describeReleaseTitle() + "\", checked without waiting a tick");
         for (String worldName : gateMarks.getWorldNames()) {
             Optional<String> gateFailure = describeGateOfWorld(worldName, durationSeconds, details);
             if (gateFailure.isPresent()) {
@@ -309,7 +309,7 @@ public final class TournamentDryRun {
         if (totalTickCount > countdownTicks) {
             details.add("  That gate is taller than the countdown has ticks, so it keeps coming down "
                     + "for " + (totalTickCount - countdownTicks) + " ticks after \""
-                    + StartGateCountdown.RELEASE_TITLE + "\"");
+                    + StartGateCountdown.describeReleaseTitle() + "\"");
         }
         return Optional.empty();
     }
@@ -324,11 +324,11 @@ public final class TournamentDryRun {
             }
         }
         if (!StartGateCountdown.isRelease(StartGateCountdown.RELEASE_SECOND)
-                || !StartGateCountdown.RELEASE_TITLE.equals(
+                || !StartGateCountdown.describeReleaseTitle().equals(
                         StartGateCountdown.describeTitle(StartGateCountdown.RELEASE_SECOND))) {
             return Optional.of("The end of the countdown would read \""
                     + StartGateCountdown.describeTitle(StartGateCountdown.RELEASE_SECOND)
-                    + "\" instead of \"" + StartGateCountdown.RELEASE_TITLE + "\"");
+                    + "\" instead of \"" + StartGateCountdown.describeReleaseTitle() + "\"");
         }
         return Optional.empty();
     }
@@ -420,7 +420,7 @@ public final class TournamentDryRun {
             return DryRunStep.failed(CLEANING_STEP,
                     "No baseline of the fight area is stored, so nothing is cleaned between two matches",
                     "A cleaning nobody asked for never empties the arena, it is skipped instead",
-                    "The baseline lives in memory only: run " + Arena.CALCULATE_ACTION + " once");
+                    "The baseline lives in memory only: run " + Arena.describeCalculateAction() + " once");
         }
         List<String> details = new ArrayList<>();
         details.add("A cleaning would start right away and restore the baseline of the last calculation");

@@ -43,6 +43,7 @@ input:
     one: 'Expected {count} value separated by spaces ({usage}), but got {givenCount}: {values}'
     other: 'Expected {count} values separated by spaces ({usage}), but got {givenCount}: {values}'
   expected-value-range: 'Expected {minimum} to {maximum} values separated by spaces ({usage}), but got {givenCount}: {values}'
+  block-item-usage: '<material> <amount>'
   unknown-material: 'Unknown material {material}'
   not-a-block: '{material} cannot be placed as a block'
   amount-not-a-number: 'The amount {amount} is not a number'
@@ -433,7 +434,7 @@ kit:
     default-kit-written: 'It is written into {file} and is handed out from the next round on, a running round keeps the kit its fighters were given'
     other-kit-written: 'It is written into {file} and is handed out once it is used as the default kit'
     unreadable-items:
-      one: '{count} item could not be read back and are no part of the kit, the log names them'
+      one: '{count} item could not be read back and is no part of the kit, the log names it'
       other: '{count} items could not be read back and are no part of the kit, the log names them'
     empty-inventory-creation: 'Your inventory is empty, no kit was created'
     empty-inventory-replacement: 'Your inventory is empty, the kit was not changed'
@@ -452,7 +453,7 @@ kit-choice-menu:
       match: 'Match {match}: {firstTeam} against {secondTeam}'
       default-kit: 'Default kit: {kit}'
       time-left:
-        one: 'Time left: {count} seconds'
+        one: 'Time left: {count} second'
         other: 'Time left: {count} seconds'
       hint: 'The default kit is used when nobody chooses in time'
       over-match: 'Match {match}'
@@ -712,6 +713,9 @@ arena:
     no-effect-area: '  Area of effect: none until the fight area is calculated'
     running-match: '  running match: {match}'
     no-running-match: '  running match: none'
+  shape-description:
+    one: '{world} with {count} cell between {minimumX}/{minimumZ} and {maximumX}/{maximumZ}, from y {floorY} to y {topY}, calculated at y {referenceY}'
+    other: '{world} with {count} cells between {minimumX}/{minimumZ} and {maximumX}/{maximumZ}, from y {floorY} to y {topY}, calculated at y {referenceY}'
 arena-menu:
   title: 'Arena'
   tile:
@@ -815,3 +819,268 @@ arena-menu:
       - 'A number between {minimum} and {maximum}'
       - 'Stand inside the border wall, the calculation runs from where you stand'
       - 'config.yml is not changed by it'
+arena-cleaning:
+  baseline:
+    taken:
+      - 'The baseline of the fight area was taken'
+      - '{baseline}'
+      - '{cleanAction} restores exactly this state instead of emptying the area'
+    not-taken:
+      - 'The baseline of the fight area could not be taken: {reason}'
+      - '{cleanAction} sets every block to air until {calculateAction} takes one'
+    world-not-loaded: 'the world {world} is not loaded'
+    blocks-unreadable: 'its blocks could not be read ({cause})'
+    too-many-block-states: 'the fight area holds more than {maximum} different block states, more than a baseline can tell apart'
+  baseline-description:
+    summary: '{blocks}, {materials}, {notAir}, {contents}'
+    blocks:
+      one: '{count} block reaching {depth}'
+      other: '{count} blocks reaching {depth}'
+    depth:
+      one: '{count} block below the floor'
+      other: '{count} blocks below the floor'
+    materials:
+      one: '{count} material in {blockStates}'
+      other: '{count} different materials in {blockStates}'
+    block-states:
+      one: '{count} block state'
+      other: '{count} different block states'
+    not-air:
+      one: '{count} of them is not air'
+      other: '{count} of them are not air'
+    contents:
+      one: '{count} holds contents such as text, patterns or items'
+      other: '{count} hold contents such as text, patterns or items'
+  baseline-mismatch:
+    - 'The stored baseline does not belong to the fight area that would be cleaned, so nothing was written'
+    - 'It was read of {baselineArea}'
+    - 'The area is {area}'
+    - 'Run {action} again, that takes a baseline of the area as it is now'
+  animation:
+    switched-off: 'The two coloured phases are switched off, the layers are cleared as fast as the batches allow'
+    running: 'Layer by layer from the floor up: the red flood announces the volume, the green clearing writes it, {seconds} seconds for both together'
+  world-not-loaded: 'the world {world} is not loaded'
+  report:
+    clean:
+      - 'The arena is clean'
+      - '{report}'
+    stopped:
+      - 'The arena cleaning was stopped: {reason}'
+      - '{report}'
+      - 'Run {action} again once the reason is gone, the blocks that were already written stay as they are'
+    unchanged:
+      one: 'not a single block had to be changed, the {count} checked block already held what the cleaning writes. {borderMarks}'
+      other: 'not a single block had to be changed, all {count} checked blocks already held what the cleaning writes. {borderMarks}'
+    changed: '{blocks}, {borderMarks}'
+    set-to-air:
+      one: '{count} of {checkedCount} checked blocks was set to air'
+      other: '{count} of {checkedCount} checked blocks were set to air'
+    restored:
+      one: '{count} of {checkedCount} checked blocks was restored to the baseline the last calculation took'
+      other: '{count} of {checkedCount} checked blocks were restored to the baseline the last calculation took'
+    border-marks-removed:
+      one: '{count} border mark was removed'
+      other: '{count} border marks were removed'
+arena-height:
+  end:
+    lowest: 'lowest point'
+    highest: 'highest point'
+  description:
+    nothing-marked: 'No height is marked'
+    both-marked: 'Lowest point: y {lowestY}, highest point: y {highestY}'
+    only-lowest-marked: 'Lowest point: y {lowestY}, highest point: not marked'
+    only-highest-marked: 'Lowest point: not marked, highest point: y {highestY}'
+  incomplete:
+    only-lowest:
+      - 'Only the lowest point of the fight area is marked, at y {markedY}'
+      - 'A single mark is not used, the area keeps the height of the border wall. Mark the highest point as well and calculate again'
+    only-highest:
+      - 'Only the highest point of the fight area is marked, at y {markedY}'
+      - 'A single mark is not used, the area keeps the height of the border wall. Mark the lowest point as well and calculate again'
+  refusal:
+    lowest:
+      - 'The lowest point has to lie below the highest point, which is marked at y {otherY}, and y {blockY} does not'
+      - 'Nothing was stored. Mark this end below y {otherY}, or switch to the highest point and mark that one again first'
+    highest:
+      - 'The highest point has to lie above the lowest point, which is marked at y {otherY}, and y {blockY} does not'
+      - 'Nothing was stored. Mark this end above y {otherY}, or switch to the lowest point and mark that one again first'
+  marked:
+    lowest:
+      - 'The lowest point of the fight area is marked at y {blockY}'
+      - '{markers}'
+    highest:
+      - 'The highest point of the fight area is marked at y {blockY}'
+      - '{markers}'
+  moved-on:
+    lowest:
+      - 'The marker now marks the lowest point, it moved on by itself. Place a block with it at that height as well'
+      - 'A single mark changes nothing about a calculation'
+    highest:
+      - 'The marker now marks the highest point, it moved on by itself. Place a block with it at that height as well'
+      - 'A single mark changes nothing about a calculation'
+  complete-pair:
+    - 'Both heights are set. The next {action} takes y {lowestY} and y {highestY} over as the floor and the ceiling of the fight area instead of the height of the border wall'
+    - 'They are used up by that calculation and are gone when the server restarts'
+  switched:
+    lowest:
+      - 'The marker now marks the lowest point of the fight area'
+      - 'Place a block with it at that height, it becomes the floor of the fight area and disappears again'
+      - '{markers}'
+    highest:
+      - 'The marker now marks the highest point of the fight area'
+      - 'Place a block with it at that height, it becomes the ceiling of the fight area and disappears again'
+      - '{markers}'
+  tile:
+    next-block-lowest: 'The next placed block marks the lowest point'
+    next-block-highest: 'The next placed block marks the highest point'
+    complete: 'The next calculation takes them as floor and ceiling'
+    incomplete: 'Both ends have to be marked, a single mark is not used'
+  item:
+    name: 'Height marker: {end}'
+    lore-lowest:
+      - 'Marks the floor of the fight area'
+      - 'Place it at that height, the block disappears again'
+      - 'It moves on to the highest point by itself once this end is marked'
+      - 'Right click in the air marks an end again'
+      - 'Which end is marked is kept by the plugin, this'
+      - 'name only shows it. Both ends are taken over by'
+      - 'the next calculation'
+    lore-highest:
+      - 'Marks the ceiling of the fight area'
+      - 'Place it at that height, the block disappears again'
+      - 'It moves on to the lowest point by itself once this end is marked'
+      - 'Right click in the air marks an end again'
+      - 'Which end is marked is kept by the plugin, this'
+      - 'name only shows it. Both ends are taken over by'
+      - 'the next calculation'
+arena-gap:
+  seed-inside-border:
+    - 'You are standing in a border block column'
+    - 'Step inside the area the border wall encloses and calculate again'
+  cell-limit:
+    stopped:
+      one: 'The fight area could not be calculated, the flood fill was stopped at {count} cell, the limit of {path}'
+      other: 'The fight area could not be calculated, the flood fill was stopped at {count} cells, the limit of {path}'
+    gap-or-too-large: 'Either your border wall has a gap the fill ran through, or the area you enclosed is larger than that limit. The calculation cannot tell the two apart, it would have to keep filling to do so.'
+    spread: 'The fill spread furthest {direction}, it covers {boundingBox}, and the last columns it reached are {front}.'
+    not-spread: 'The fill spread furthest nowhere, it never left the column you are standing in, it covers {boundingBox}, and the last columns it reached are {front}.'
+    walk-along-towards: 'Walk along your wall towards {direction} and look for a missing green connection line between two border blocks, and if the wall is closed everywhere raise {path} in config.yml and use {action} again.'
+    walk-along: 'Walk along your wall and look for a missing green connection line between two border blocks, and if the wall is closed everywhere raise {path} in config.yml and use {action} again.'
+    diagnose-hint:
+      one: '{action} runs a single calculation with a higher limit, up to {count} cell, without changing config.yml, so you can see how far the fill really gets'
+      other: '{action} runs a single calculation with a higher limit, up to {count} cells, without changing config.yml, so you can see how far the fill really gets'
+  height-mismatch:
+    all-listed:
+      one:
+        - 'One of the columns the fill walked through does hold a border block, and it sits above the height you ran the calculation at, so it never barred its column.'
+        - 'It is at {columns}.'
+      other:
+        - '{count} of the columns the fill walked through do hold a border block, and every one of those blocks sits above the height you ran the calculation at, so none of them barred its column.'
+        - 'They are at {columns}.'
+    nearest-listed:
+      - '{count} of the columns the fill walked through do hold a border block, and every one of those blocks sits above the height you ran the calculation at, so none of them barred its column.'
+      - 'The {listedCount} nearest of them are at {columns}.'
+    explanation:
+      - 'A border block only bars its column from its own height upwards, so the wall is built there and the fill still walked underneath it. That is what it looks like when you run the calculation standing in a dip while that part of the wall stands on a rise.'
+      - 'Build the wall down to your own height there, or use {action} again while standing at least as high as the wall does.'
+    column: 'x/z {blockX}/{blockZ} (lowest border block at y {lowestBorderY}, {heightAboveSeed} above you)'
+  direction:
+    east: 'east'
+    west: 'west'
+    south: 'south'
+    north: 'north'
+    north-east: 'north-east'
+    north-west: 'north-west'
+    south-east: 'south-east'
+    south-west: 'south-west'
+    nowhere: 'nowhere'
+  escape:
+    nowhere: 'nowhere, it never left the column you are standing in'
+    direction: '{direction}, {horizontal} and {vertical} of you, up to x/z {farthestX}/{farthestZ}'
+  columns:
+    east:
+      one: '{count} column east'
+      other: '{count} columns east'
+    west:
+      one: '{count} column west'
+      other: '{count} columns west'
+    south:
+      one: '{count} column south'
+      other: '{count} columns south'
+    north:
+      one: '{count} column north'
+      other: '{count} columns north'
+  bounding-box: 'x {minimumX}..{maximumX}, z {minimumZ}..{maximumZ}, {width} by {length} columns'
+  reason:
+    fill-front:
+      lore: 'The flood fill got that far before it was stopped'
+      hand-out-hint: 'That is the column the fill reached first of the ones it was stopped on, not a hole anybody found. Start looking around there'
+      arrival-hint: 'This is where the flood fill was when it was stopped, look for a missing green connection line between two border blocks around you'
+    border-too-high:
+      lore: 'A border block stands there, above your calculation height'
+      hand-out-hint: 'A border block stands in that column, but above the height you ran the calculation at, so it never barred the fill. This is not a guess, it is a piece of wall that does not close'
+      arrival-hint: 'This is a column where you built the wall, above the height you calculated at, so the fill walked underneath it. Build it down to your own height here, or run the calculation again from a position at least as high as these blocks'
+  target: 'x/y/z {blockX}/{blockY}/{blockZ} in {world}'
+  reached:
+    - 'You reached {target}, the trail ends here'
+    - '{hint}.'
+    - 'Your compass keeps pointing at the same column'
+  compass:
+    name: 'Border gap compass'
+    lore:
+      - 'Points to a possible gap in your border wall'
+      - 'Target {target}'
+      - '{reason}'
+      - 'Close the wall there and calculate the fight area again'
+spectator:
+  item:
+    name: 'Spectator mode'
+  switch-while-fighting: 'You cannot switch to spectator mode while you are fighting'
+  not-watching: 'You are not watching the arena, use /tournament spectate'
+  tribune-spawn-not-set: 'The tribune spawn is not set, use the spectator item to stop flying'
+border:
+  mark:
+    marked: 'Marked as a border block'
+    removed: 'Border mark removed'
+    report: '{state}: {blockX} {blockY} {blockZ}'
+  selector:
+    no-longer-allowed: 'You are not allowed to mark border blocks any more, the border selector mode was switched off'
+  outline:
+    blocks:
+      one: '{count} border block connected by {lines}'
+      other: '{count} border blocks connected by {lines}'
+    lines:
+      one: '{count} line'
+      other: '{count} lines'
+    truncated: '{outline}, the line limit was reached and only a part of the wall is shown'
+listener:
+  break:
+    outside-the-arena: 'Only admins change blocks outside the arena'
+    original-arena: 'The arena stays as it is, only what was placed during the match comes down again'
+    not-a-fighter: 'Only the fighters of the running round change blocks inside the arena'
+  build:
+    outside-the-arena: 'Only admins change blocks outside the arena'
+    not-a-fighter: 'Only the fighters of the running round build inside the arena'
+  rejoined-during-match: 'You rejoined during match {match}, you take part again from the next round on'
+start-gate:
+  countdown:
+    release-title: 'Fight!'
+    counting: 'The gate comes down layer by layer'
+    open: 'The gate is open'
+  duration:
+    one: '{count} second'
+    other: '{count} seconds'
+  item:
+    name: 'Start gate block'
+    lore:
+      - 'Place these blocks as the wall piece that closes'
+      - 'the box around a team spawn'
+      - 'Every round start puts them back and takes them'
+      - 'apart again from the top, in {duration}'
+      - 'Breaking a placed one takes it out of the gate again'
+  tile:
+    no-block: 'The gate holds no block yet'
+    blocks:
+      one: 'The gate holds {count} block'
+      other: 'The gate holds {count} blocks'
+    comes-down-over: 'It comes down over {duration}'

@@ -1,5 +1,7 @@
 package de.simplepvparena.arena;
 
+import de.simplepvparena.message.ListenerMessage;
+import de.simplepvparena.message.Messages;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -30,7 +32,10 @@ class ArenaWorldBuildRuleTest {
 
     @Test
     void namesTheAdminAsTheOnlyOneWhoChangesTheWorldAroundTheArena() {
-        assertTrue(ArenaWorldBuildRule.REFUSAL.contains("admins"));
-        assertTrue(ArenaWorldBuildRule.REFUSAL.contains("outside the arena"));
+        for (ListenerMessage refusal : new ListenerMessage[] {ListenerMessage.BREAK_OUTSIDE_THE_ARENA,
+                ListenerMessage.BUILD_OUTSIDE_THE_ARENA}) {
+            assertTrue(Messages.text(refusal).contains("admins"));
+            assertTrue(Messages.text(refusal).contains("outside the arena"));
+        }
     }
 }

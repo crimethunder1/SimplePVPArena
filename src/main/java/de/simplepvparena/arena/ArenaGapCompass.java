@@ -1,5 +1,8 @@
 package de.simplepvparena.arena;
 
+import de.simplepvparena.message.ArenaGapMessage;
+import de.simplepvparena.message.Messages;
+import de.simplepvparena.message.Placeholder;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.format.TextDecoration;
@@ -10,7 +13,6 @@ import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.CompassMeta;
 
-import java.util.List;
 import java.util.Map;
 
 public final class ArenaGapCompass {
@@ -23,15 +25,17 @@ public final class ArenaGapCompass {
     }
 
     public static ItemStack create(World world, ArenaGapTarget target) {
-        ItemStack compass = new ItemStack(MATERIAL);
+        return labelled(new ItemStack(MATERIAL), world, target);
+    }
+
+    static ItemStack labelled(ItemStack compass, World world, ArenaGapTarget target) {
         CompassMeta compassMeta = (CompassMeta) compass.getItemMeta();
-        compassMeta.displayName(Component.text("Border gap compass", NamedTextColor.GOLD)
+        compassMeta.displayName(Component.text(Messages.text(ArenaGapMessage.COMPASS_NAME), NamedTextColor.GOLD)
                 .decoration(TextDecoration.ITALIC, false));
-        compassMeta.lore(List.of(
-                lore("Points to a possible gap in your border wall"),
-                lore("Target " + target.describe()),
-                lore(target.reason().getLoreLine()),
-                lore("Close the wall there and calculate the fight area again")));
+        compassMeta.lore(Messages.lines(ArenaGapMessage.COMPASS_LORE, Placeholder.of("target", target.describe()),
+                        Placeholder.of("reason", target.reason().getLoreLine())).stream()
+                .map(ArenaGapCompass::lore)
+                .toList());
         compassMeta.setLodestone(new Location(world, target.blockX() + BLOCK_CENTER_OFFSET, target.blockY(),
                 target.blockZ() + BLOCK_CENTER_OFFSET));
         compassMeta.setLodestoneTracked(false);

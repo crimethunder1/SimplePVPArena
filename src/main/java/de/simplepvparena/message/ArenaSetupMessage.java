@@ -65,7 +65,9 @@ public enum ArenaSetupMessage implements MessageKey {
     DESCRIPTION_NO_EFFECT_AREA("arena.description.no-effect-area"),
     DESCRIPTION_RUNNING_MATCH("arena.description.running-match", "match"),
     DESCRIPTION_NO_RUNNING_MATCH("arena.description.no-running-match"),
-    STILL_MISSING("arena.still-missing");
+    STILL_MISSING("arena.still-missing"),
+    SHAPE_DESCRIPTION("arena.shape-description", "count", "world", "minimumX", "minimumZ", "maximumX", "maximumZ",
+            "floorY", "topY", "referenceY");
 
     private final String path;
     private final Set<String> placeholderNames;

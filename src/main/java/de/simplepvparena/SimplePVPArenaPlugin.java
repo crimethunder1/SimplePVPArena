@@ -366,7 +366,7 @@ public final class SimplePVPArenaPlugin extends JavaPlugin {
         getLogger().warning("The configuration still holds the entries " + ArenaRegistry.LEGACY_ARENAS_SECTION
                 + " and " + ArenaRegistry.LEGACY_FINAL_ARENA_KEY + " of the former multi arena setup. They are "
                 + "ignored and dropped with the next arena change, configure the single arena in the section "
-                + ArenaRegistry.ARENA_SECTION + " again with " + Arena.CALCULATE_ACTION);
+                + ArenaRegistry.ARENA_SECTION + " again with " + Arena.describeCalculateAction());
     }
 
     private void warnAboutLegacyRegionConfiguration() {
@@ -376,7 +376,7 @@ public final class SimplePVPArenaPlugin extends JavaPlugin {
         getLogger().warning("The configuration still holds the rectangle regions of the former arena setup in "
                 + ArenaRegistry.ARENA_SECTION + "." + ArenaRegistry.LEGACY_REGIONS_SECTION + ". They are ignored "
                 + "and dropped with the next arena change, calculate the fight area again with "
-                + Arena.CALCULATE_ACTION);
+                + Arena.describeCalculateAction());
     }
 
     private void warnAboutUnreadableArenaShape() {

@@ -1,5 +1,9 @@
 package de.simplepvparena.arena;
 
+import de.simplepvparena.message.ArenaCleaningMessage;
+import de.simplepvparena.message.MessageKey;
+import de.simplepvparena.message.Messages;
+import de.simplepvparena.message.Placeholder;
 import org.bukkit.Material;
 import org.bukkit.block.BlockState;
 import org.bukkit.block.data.BlockData;
@@ -143,14 +147,22 @@ public final class ArenaBaselineSnapshot implements ArenaCleaningTarget {
     }
 
     @Override
-    public String describeChange() {
-        return "were restored to the baseline the last calculation took";
+    public MessageKey describeChange() {
+        return ArenaCleaningMessage.REPORT_RESTORED;
     }
 
     public String describe() {
-        return getBlockCount() + " blocks reaching " + depthBelowFloor + " blocks below the floor, "
-                + distinctMaterialCount + " different materials in " + distinctBlockStateCount
-                + " different block states, " + nonAirBlockCount + " of them are not air, "
-                + blockEntitiesByBlockIndex.size() + " hold contents such as text, patterns or items";
+        String depth = Messages.plural(ArenaCleaningMessage.BASELINE_DESCRIPTION_DEPTH, depthBelowFloor);
+        String blockStates = Messages.plural(ArenaCleaningMessage.BASELINE_DESCRIPTION_BLOCK_STATES,
+                distinctBlockStateCount);
+        return Messages.text(ArenaCleaningMessage.BASELINE_DESCRIPTION,
+                Placeholder.of("blocks", Messages.plural(ArenaCleaningMessage.BASELINE_DESCRIPTION_BLOCKS,
+                        getBlockCount(), Placeholder.of("depth", depth))),
+                Placeholder.of("materials", Messages.plural(ArenaCleaningMessage.BASELINE_DESCRIPTION_MATERIALS,
+                        distinctMaterialCount, Placeholder.of("blockStates", blockStates))),
+                Placeholder.of("notAir", Messages.plural(ArenaCleaningMessage.BASELINE_DESCRIPTION_NOT_AIR,
+                        nonAirBlockCount)),
+                Placeholder.of("contents", Messages.plural(ArenaCleaningMessage.BASELINE_DESCRIPTION_CONTENTS,
+                        blockEntitiesByBlockIndex.size())));
     }
 }

@@ -1,5 +1,8 @@
 package de.simplepvparena.arena;
 
+import de.simplepvparena.message.ArenaCleaningMessage;
+import de.simplepvparena.message.Messages;
+import de.simplepvparena.message.Placeholder;
 import org.bukkit.block.BlockState;
 import org.bukkit.block.TileState;
 import org.bukkit.block.data.BlockData;
@@ -104,8 +107,8 @@ public final class ArenaBaselineSnapshotBuilder {
             return knownPaletteIndex;
         }
         if (palette.size() >= MAXIMUM_PALETTE_SIZE) {
-            throw new IllegalStateException("the fight area holds more than " + MAXIMUM_PALETTE_SIZE
-                    + " different block states, more than a baseline can tell apart");
+            throw new IllegalStateException(Messages.text(ArenaCleaningMessage.BASELINE_TOO_MANY_BLOCK_STATES,
+                    Placeholder.of("maximum", MAXIMUM_PALETTE_SIZE)));
         }
         int paletteIndex = palette.size();
         palette.add(blockData);

@@ -91,7 +91,7 @@ class ArenaBaselineRestoreTest {
         assertTrue(restored.startsWith("2 of 4 checked blocks "));
         assertTrue(restored.contains("baseline"), restored);
         assertTrue(emptied.contains("were set to air"), emptied);
-        assertTrue(emptied.endsWith("1 border marks were removed"));
+        assertTrue(emptied.endsWith("1 border mark was removed"));
     }
 
     private long clean(Map<Long, Material> world, ArenaShape shape, Optional<ArenaBaselineSnapshot> baseline) {

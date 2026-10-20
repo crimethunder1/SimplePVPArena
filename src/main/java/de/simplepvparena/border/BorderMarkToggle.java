@@ -1,5 +1,8 @@
 package de.simplepvparena.border;
 
+import de.simplepvparena.message.BorderMessage;
+import de.simplepvparena.message.Messages;
+
 public enum BorderMarkToggle {
 
     MARKED,
@@ -15,6 +18,6 @@ public enum BorderMarkToggle {
     }
 
     public String describe() {
-        return this == MARKED ? "Marked as a border block" : "Border mark removed";
+        return Messages.text(this == MARKED ? BorderMessage.MARKED : BorderMessage.MARK_REMOVED);
     }
 }

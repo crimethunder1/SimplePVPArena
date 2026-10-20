@@ -6,6 +6,9 @@ import de.simplepvparena.border.BorderSelectorModeRegistry;
 import de.simplepvparena.kit.KitService;
 import de.simplepvparena.match.Match;
 import de.simplepvparena.match.MatchService;
+import de.simplepvparena.message.ListenerMessage;
+import de.simplepvparena.message.Messages;
+import de.simplepvparena.message.Placeholder;
 import de.simplepvparena.message.TournamentMessages;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -40,8 +43,8 @@ public final class PlayerConnectionListener implements Listener {
         Optional<Match> matchOfPlayer = matchService.findMatchOfPlayer(player.getUniqueId());
         if (matchOfPlayer.isPresent()) {
             spectatorService.sendToTribune(player);
-            TournamentMessages.sendInfo(player, "You rejoined during match "
-                    + matchOfPlayer.get().getMatchId() + ", you take part again from the next round on");
+            TournamentMessages.sendInfo(player, Messages.text(ListenerMessage.REJOINED_DURING_MATCH,
+                    Placeholder.of("match", matchOfPlayer.get().getMatchId())));
             return;
         }
         if (arenaRegistry.isTeleportOnJoin() && arenaRegistry.isArenaFullyConfigured()) {

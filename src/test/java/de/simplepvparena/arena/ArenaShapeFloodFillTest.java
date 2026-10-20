@@ -208,7 +208,7 @@ class ArenaShapeFloodFillTest {
         assertTrue(rejection.contains("x/z 4/2 (lowest border block at y " + (SEED_HEIGHT + 6) + ", 6 above you)"),
                 "the column and its height are named: " + rejection);
         assertTrue(rejection.contains("Build the wall down to your own height there"), rejection);
-        assertTrue(rejection.contains("use " + Arena.CALCULATE_ACTION + " again"),
+        assertTrue(rejection.contains("use " + Arena.describeCalculateAction() + " again"),
                 "the second way out is named: " + rejection);
         assertTrue(rejection.indexOf("border block") < rejection.indexOf("The fill spread furthest"),
                 "the wall part comes before the box and the direction: " + rejection);

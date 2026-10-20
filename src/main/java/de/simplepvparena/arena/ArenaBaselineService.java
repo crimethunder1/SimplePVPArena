@@ -1,5 +1,8 @@
 package de.simplepvparena.arena;
 
+import de.simplepvparena.message.ArenaCleaningMessage;
+import de.simplepvparena.message.Messages;
+import de.simplepvparena.message.Placeholder;
 import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.plugin.Plugin;
@@ -92,8 +95,8 @@ public final class ArenaBaselineService {
             plugin.getLogger().warning("The world " + shape.getWorldName()
                     + " is not loaded, no baseline of the fight area is taken");
             stopCapture();
-            completionHandler.accept(ArenaBaselineReport.failed("the world " + shape.getWorldName()
-                    + " is not loaded"));
+            completionHandler.accept(ArenaBaselineReport.failed(Messages.text(
+                    ArenaCleaningMessage.BASELINE_WORLD_NOT_LOADED, Placeholder.of("world", shape.getWorldName()))));
             return;
         }
         ArenaBaselineSnapshot snapshot;
@@ -122,8 +125,8 @@ public final class ArenaBaselineService {
 
     private static String describeFailure(RuntimeException failure) {
         String message = failure.getMessage();
-        return "its blocks could not be read ("
-                + (message == null || message.isBlank() ? failure.getClass().getSimpleName() : message) + ")";
+        return Messages.text(ArenaCleaningMessage.BASELINE_BLOCKS_UNREADABLE, Placeholder.of("cause",
+                message == null || message.isBlank() ? failure.getClass().getSimpleName() : message));
     }
 
     private void readBatch(World world, long[] batch, ArenaBaselineSnapshotBuilder builder) {

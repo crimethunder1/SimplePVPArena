@@ -1,5 +1,8 @@
 package de.simplepvparena.arena;
 
+import de.simplepvparena.message.ArenaCleaningMessage;
+import de.simplepvparena.message.Messages;
+import de.simplepvparena.message.Placeholder;
 import de.simplepvparena.message.TournamentMessages;
 
 import java.util.Objects;
@@ -27,12 +30,10 @@ public final class ArenaCleaningPlan {
                                                         Optional<ArenaBaselineSnapshot> storedBaseline) {
         return storedBaseline
                 .filter(snapshot -> !snapshot.covers(volume))
-                .map(snapshot -> "The stored baseline does not belong to the fight area that would be "
-                        + "cleaned, so nothing was written"
-                        + TournamentMessages.LINE_BREAK + "It was read of " + snapshot.getShape().describe()
-                        + TournamentMessages.LINE_BREAK + "The area is " + volume.describe()
-                        + TournamentMessages.LINE_BREAK + "Run " + Arena.CALCULATE_ACTION
-                        + " again, that takes a baseline of the area as it is now");
+                .map(snapshot -> Messages.text(ArenaCleaningMessage.BASELINE_MISMATCH,
+                        Placeholder.of("baselineArea", snapshot.getShape().describe()),
+                        Placeholder.of("area", volume.describe()),
+                        Placeholder.of("action", Arena.describeCalculateAction())));
     }
 
     public ArenaShape getVolume() {

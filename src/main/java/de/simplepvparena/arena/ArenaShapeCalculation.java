@@ -1,7 +1,12 @@
 package de.simplepvparena.arena;
 
+import de.simplepvparena.message.ArenaGapMessage;
+import de.simplepvparena.message.Messages;
+import de.simplepvparena.message.Placeholder;
 import de.simplepvparena.message.TournamentMessages;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 
 public final class ArenaShapeCalculation {
@@ -31,64 +36,48 @@ public final class ArenaShapeCalculation {
 
     public static ArenaShapeCalculation seedInsideBorder() {
         return new ArenaShapeCalculation(Status.SEED_INSIDE_BORDER, null,
-                "You are standing in a border block column"
-                        + TournamentMessages.LINE_BREAK
-                        + "Step inside the area the border wall encloses and calculate again", null);
+                Messages.text(ArenaGapMessage.SEED_INSIDE_BORDER), null);
     }
 
     public static ArenaShapeCalculation stoppedAtCellLimit(int maximumCellCount,
                                                            ArenaFillDiagnostics diagnostics) {
-        String searchDirection = diagnostics.hasSpread()
-                ? " towards " + diagnostics.getEscapeDirectionName()
-                : "";
+        Placeholder path = Placeholder.of("path", ArenaShapeFloodFill.MAXIMUM_CELL_COUNT_CONFIGURATION_PATH);
+        Placeholder calculateAction = Placeholder.of("action", Arena.describeCalculateAction());
+        Placeholder boundingBox = Placeholder.of("boundingBox", diagnostics.describeBoundingBox());
+        Placeholder front = Placeholder.of("front", diagnostics.describeFront());
+        List<String> lines = new ArrayList<>();
+        lines.add(Messages.plural(ArenaGapMessage.STOPPED_AT_CELL_LIMIT, maximumCellCount, path));
+        describeHeightMismatch(diagnostics, calculateAction).ifPresent(lines::add);
+        lines.add(Messages.text(ArenaGapMessage.GAP_OR_TOO_LARGE));
+        if (diagnostics.hasSpread()) {
+            lines.add(Messages.text(ArenaGapMessage.SPREAD,
+                    Placeholder.of("direction", diagnostics.describeEscapeDirection()), boundingBox, front));
+            lines.add(Messages.text(ArenaGapMessage.WALK_ALONG_TOWARDS,
+                    Placeholder.of("direction", diagnostics.getEscapeDirectionName()), path, calculateAction));
+        } else {
+            lines.add(Messages.text(ArenaGapMessage.NOT_SPREAD, boundingBox, front));
+            lines.add(Messages.text(ArenaGapMessage.WALK_ALONG, path, calculateAction));
+        }
+        lines.add(Messages.plural(ArenaGapMessage.DIAGNOSE_HINT, ArenaShapeFloodFill.MAXIMUM_DEBUG_CELL_COUNT,
+                Placeholder.of("action", Arena.describeDiagnoseAction())));
         return new ArenaShapeCalculation(Status.CELL_LIMIT_REACHED, null,
-                "The fight area could not be calculated, the flood fill was stopped at " + maximumCellCount
-                        + " cells, the limit of " + ArenaShapeFloodFill.MAXIMUM_CELL_COUNT_CONFIGURATION_PATH
-                        + TournamentMessages.LINE_BREAK + describeHeightMismatch(diagnostics)
-                        + "Either your border wall has a gap the fill ran through, or the area you "
-                        + "enclosed is larger than that limit. The calculation cannot tell the two apart, "
-                        + "it would have to keep filling to do so."
-                        + TournamentMessages.LINE_BREAK + "The fill spread furthest "
-                        + diagnostics.describeEscapeDirection() + ", it covers "
-                        + diagnostics.describeBoundingBox() + ", and the last columns it reached are "
-                        + diagnostics.describeFront() + "."
-                        + TournamentMessages.LINE_BREAK + "Walk along your wall" + searchDirection
-                        + " and look for a missing green connection line between two border blocks, and if "
-                        + "the wall is closed everywhere raise "
-                        + ArenaShapeFloodFill.MAXIMUM_CELL_COUNT_CONFIGURATION_PATH + " in config.yml and use "
-                        + Arena.CALCULATE_ACTION + " again."
-                        + TournamentMessages.LINE_BREAK + Arena.DIAGNOSE_ACTION
-                        + " runs a single calculation with a higher limit, up to "
-                        + ArenaShapeFloodFill.MAXIMUM_DEBUG_CELL_COUNT
-                        + " cells, without changing config.yml, so you can see how far the fill really gets",
-                diagnostics);
+                String.join(TournamentMessages.LINE_BREAK, lines), diagnostics);
     }
 
-    private static String describeHeightMismatch(ArenaFillDiagnostics diagnostics) {
+    private static Optional<String> describeHeightMismatch(ArenaFillDiagnostics diagnostics,
+                                                           Placeholder calculateAction) {
         if (!diagnostics.hasHeightMismatch()) {
-            return "";
+            return Optional.empty();
         }
         int mismatchCount = diagnostics.getHeightMismatchColumnCount();
         int listedCount = Math.min(ArenaFillDiagnostics.REPORTED_HEIGHT_MISMATCH_COUNT, mismatchCount);
-        String finding = mismatchCount == 1
-                ? "One of the columns the fill walked through does hold a border block, and it sits above "
-                        + "the height you ran the calculation at, so it never barred its column."
-                        + TournamentMessages.LINE_BREAK + "It is at "
-                : mismatchCount + " of the columns the fill walked through do hold a border block, and every "
-                        + "one of those blocks sits above the height you ran the calculation at, so none of "
-                        + "them barred its column." + TournamentMessages.LINE_BREAK
-                        + (listedCount == mismatchCount
-                                ? "They are at "
-                                : "The " + listedCount + " nearest of them are at ");
-        return finding + diagnostics.describeHeightMismatchColumns() + "."
-                + TournamentMessages.LINE_BREAK
-                + "A border block only bars its column from its own height upwards, so the wall is built "
-                + "there and the fill still walked underneath it. That is what it looks like when you run "
-                + "the calculation standing in a dip while that part of the wall stands on a rise."
-                + TournamentMessages.LINE_BREAK
-                + "Build the wall down to your own height there, or use " + Arena.CALCULATE_ACTION
-                + " again while standing at least as high as the wall does."
-                + TournamentMessages.LINE_BREAK;
+        Placeholder columns = Placeholder.of("columns", diagnostics.describeHeightMismatchColumns());
+        String finding = listedCount == mismatchCount
+                ? Messages.plural(ArenaGapMessage.HEIGHT_MISMATCH_ALL_LISTED, mismatchCount, columns)
+                : Messages.text(ArenaGapMessage.HEIGHT_MISMATCH_NEAREST_LISTED, Placeholder.of("count", mismatchCount),
+                        Placeholder.of("listedCount", listedCount), columns);
+        return Optional.of(finding + TournamentMessages.LINE_BREAK
+                + Messages.text(ArenaGapMessage.HEIGHT_MISMATCH_EXPLANATION, calculateAction));
     }
 
     public Status getStatus() {

@@ -1,5 +1,8 @@
 package de.simplepvparena.arena;
 
+import de.simplepvparena.message.ArenaSetupMessage;
+import de.simplepvparena.message.Messages;
+import de.simplepvparena.message.Placeholder;
 import org.bukkit.Location;
 
 import java.util.Arrays;
@@ -186,11 +189,12 @@ public final class ArenaShape {
 
     public String describe() {
         RegionBoundary boundingBox = getBoundingBox();
-        return worldName + " with " + cells.length + " cells between "
-                + boundingBox.getMinimumX() + "/" + boundingBox.getMinimumZ() + " and "
-                + boundingBox.getMaximumX() + "/" + boundingBox.getMaximumZ()
-                + ", from y " + floorY + " to y " + wallTopY
-                + ", calculated at y " + referenceY;
+        return Messages.plural(ArenaSetupMessage.SHAPE_DESCRIPTION, cells.length, Placeholder.of("world", worldName),
+                Placeholder.of("minimumX", boundingBox.getMinimumX()),
+                Placeholder.of("minimumZ", boundingBox.getMinimumZ()),
+                Placeholder.of("maximumX", boundingBox.getMaximumX()),
+                Placeholder.of("maximumZ", boundingBox.getMaximumZ()), Placeholder.of("floorY", floorY),
+                Placeholder.of("topY", wallTopY), Placeholder.of("referenceY", referenceY));
     }
 
     private static long[] sortedDistinct(long[] cells) {

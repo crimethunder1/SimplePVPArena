@@ -153,7 +153,7 @@ class ArenaMarkCalculateCleanRunTest {
 
         String rejection = fixture.setupService.findCleaningRejection().orElseThrow();
         assertTrue(rejection.contains("does not belong to the fight area"), rejection);
-        assertTrue(rejection.contains(Arena.CALCULATE_ACTION),
+        assertTrue(rejection.contains(Arena.describeCalculateAction()),
                 "the admin reads the one thing that fixes it: " + rejection);
         assertFalse(fixture.setupService.startCleaning(fakePlayer(fixture.messages, fixture.harness.world(),
                 WALL_BOTTOM_Y)));

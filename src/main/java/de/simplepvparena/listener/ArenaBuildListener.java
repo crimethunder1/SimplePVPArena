@@ -5,6 +5,8 @@ import de.simplepvparena.arena.ArenaRegistry;
 import de.simplepvparena.arena.ArenaShape;
 import de.simplepvparena.arena.ArenaWorldBuildRule;
 import de.simplepvparena.match.MatchService;
+import de.simplepvparena.message.ListenerMessage;
+import de.simplepvparena.message.Messages;
 import de.simplepvparena.message.TournamentMessages;
 import de.simplepvparena.permission.AdminPermission;
 import org.bukkit.block.Block;
@@ -44,14 +46,14 @@ public final class ArenaBuildListener implements Listener {
         boolean insideFightArea = arenaShape.get().containsCell(placedBlock.getX(), placedBlock.getZ());
         if (!ArenaWorldBuildRule.isChangeAllowed(arenaAdmin, insideFightArea,
                 isInsideTheEffectArea(arenaRegistry, placedBlock))) {
-            TournamentMessages.sendError(player, ArenaWorldBuildRule.REFUSAL);
+            TournamentMessages.sendError(player, Messages.text(ListenerMessage.BUILD_OUTSIDE_THE_ARENA));
             return true;
         }
         if (ArenaBuildRule.isPlacementAllowed(matchService.isActiveFighter(player.getUniqueId()), arenaAdmin,
                 insideFightArea)) {
             return false;
         }
-        TournamentMessages.sendError(player, "Only the fighters of the running round build inside the arena");
+        TournamentMessages.sendError(player, Messages.text(ListenerMessage.BUILD_NOT_A_FIGHTER));
         return true;
     }
 

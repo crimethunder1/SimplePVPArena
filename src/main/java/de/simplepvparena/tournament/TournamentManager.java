@@ -30,18 +30,7 @@ import java.util.Set;
 
 public final class TournamentManager implements MatchCompletionHandler {
 
-    static final String ARENA_NOT_CONFIGURED_MESSAGE = "The arena is not fully configured"
-            + TournamentMessages.LINE_BREAK + "Calculate its fight area with " + Arena.CALCULATE_ACTION
-            + " and set the tribune spawn with " + Arena.TRIBUNE_SPAWN_ACTION;
-
     static final String ARENA_STILL_BEING_CLEANED_MESSAGE = "The arena is still being cleaned. Try again in a moment.";
-
-    static final String NO_BASELINE_WARNING = "No baseline of the fight area is stored, so the arena is not "
-            + "cleaned between the matches. A baseline is taken by " + Arena.CALCULATE_ACTION;
-
-    static final String RESTORED_WITHOUT_BASELINE_WARNING = "No baseline of the fight area is stored after the "
-            + "restart. If the server crashed, repair the arena first, then run " + Arena.CALCULATE_ACTION
-            + " again, that takes the arena as it is now as the new baseline, and only then continue the tournament";
 
     static final String SMALLER_TEAMS_NOTICE = "The tournament starts anyway, a missing player counts as absent";
 
@@ -193,7 +182,7 @@ public final class TournamentManager implements MatchCompletionHandler {
                     + "match menu of /tournament to start anyway");
         }
         if (!arenaRegistry.isArenaFullyConfigured()) {
-            return TournamentOperationResult.failure(ARENA_NOT_CONFIGURED_MESSAGE);
+            return TournamentOperationResult.failure(describeArenaNotConfigured());
         }
         if (arenaCleanup.isCleaning()) {
             return TournamentOperationResult.failure(ARENA_STILL_BEING_CLEANED_MESSAGE);
@@ -217,7 +206,7 @@ public final class TournamentManager implements MatchCompletionHandler {
                     + String.join(", ", bracket.getTeamNamesWithFirstRoundBye()));
         }
         if (!arenaCleanup.hasBaseline()) {
-            adminNotifier.notifyAdmins(NO_BASELINE_WARNING);
+            adminNotifier.notifyAdmins(describeNoBaselineWarning());
         }
         notifyAboutTeamsOfAnotherSize();
         startNextMatch();
@@ -399,7 +388,7 @@ public final class TournamentManager implements MatchCompletionHandler {
                 + "a match that was running before the restart starts again. Continue it with \"Continue the "
                 + "tournament\" in the match menu of /tournament");
         if (!arenaCleanup.hasBaseline()) {
-            adminNotifier.notifyAdmins(RESTORED_WITHOUT_BASELINE_WARNING);
+            adminNotifier.notifyAdmins(describeRestoredWithoutBaselineWarning());
         }
         warnAboutUnregisteredTeams();
         synchronizeFinalMatchStage();
@@ -453,10 +442,28 @@ public final class TournamentManager implements MatchCompletionHandler {
                 match.isFinalMatch()));
     }
 
+    static String describeArenaNotConfigured() {
+        return "The arena is not fully configured"
+                + TournamentMessages.LINE_BREAK + "Calculate its fight area with " + Arena.describeCalculateAction()
+                + " and set the tribune spawn with " + Arena.describeTribuneSpawnAction();
+    }
+
+    static String describeNoBaselineWarning() {
+        return "No baseline of the fight area is stored, so the arena is not "
+                + "cleaned between the matches. A baseline is taken by " + Arena.describeCalculateAction();
+    }
+
+    static String describeRestoredWithoutBaselineWarning() {
+        return "No baseline of the fight area is stored after the "
+                + "restart. If the server crashed, repair the arena first, then run " + Arena.describeCalculateAction()
+                + " again, that takes the arena as it is now as the new baseline, and only then continue the "
+                + "tournament";
+    }
+
     static String buildSkippedCleaningWarning(String matchId, String skipReason, boolean finalMatch) {
         String warning = "The arena was not cleaned after match " + matchId + ": " + toFirstLine(skipReason);
         if (finalMatch) {
-            return warning + ". Run " + Arena.CALCULATE_ACTION + " again before the next tournament";
+            return warning + ". Run " + Arena.describeCalculateAction() + " again before the next tournament";
         }
         return warning + ". The next match starts in the arena as it is now";
     }
@@ -487,7 +494,7 @@ public final class TournamentManager implements MatchCompletionHandler {
 
     static Optional<String> findArenaRejection(boolean arenaFullyConfigured, Optional<String> runningMatchId) {
         if (!arenaFullyConfigured) {
-            return Optional.of(ARENA_NOT_CONFIGURED_MESSAGE);
+            return Optional.of(describeArenaNotConfigured());
         }
         return runningMatchId.map(matchId -> "The arena is occupied by match " + matchId);
     }

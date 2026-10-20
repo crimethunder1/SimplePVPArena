@@ -1,5 +1,7 @@
 package de.simplepvparena.arena;
 
+import de.simplepvparena.message.Messages;
+import de.simplepvparena.message.SpectatorMessage;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.TextDecoration;
 import org.bukkit.Material;
@@ -22,9 +24,13 @@ public final class SpectatorItemFactory implements SpectatorItems {
 
     @Override
     public ItemStack createSpectatorToggleItem() {
-        ItemStack itemStack = new ItemStack(SPECTATOR_TOGGLE_MATERIAL);
+        return labelled(new ItemStack(SPECTATOR_TOGGLE_MATERIAL));
+    }
+
+    ItemStack labelled(ItemStack itemStack) {
         ItemMeta itemMeta = itemStack.getItemMeta();
-        itemMeta.displayName(Component.text("Spectator mode").decoration(TextDecoration.ITALIC, false));
+        itemMeta.displayName(Component.text(Messages.text(SpectatorMessage.ITEM_NAME))
+                .decoration(TextDecoration.ITALIC, false));
         itemMeta.getPersistentDataContainer().set(markerKey, PersistentDataType.STRING, MARKER_VALUE);
         itemStack.setItemMeta(itemMeta);
         return itemStack;

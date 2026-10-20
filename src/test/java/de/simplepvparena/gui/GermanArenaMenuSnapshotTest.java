@@ -41,19 +41,19 @@ class GermanArenaMenuSnapshotTest {
             höchsten Punkt der Kampffläche markiert / Setze damit einen Block, nur seine Höhe wird gemerkt / \
             und der Block verschwindet wieder / Die nächste Berechnung übernimmt sie als Boden / \
             und Decke der Kampffläche, auch unterhalb der / Arenawand, und verbraucht beide Markierungen / \
-            No height is marked / The next placed block marks the lowest point / \
-            Both ends have to be marked, a single mark is not used
+            Es ist keine Höhe markiert / Der nächste gesetzte Block markiert den tiefsten Punkt / \
+            Beide Enden müssen markiert sein, eine einzelne Markierung wird nicht verwendet
             20 | IRON_BARS | Starttor-Blöcke geben | Fragt im Chat nach einem Material und einer Menge und / \
             gibt dir so viele Starttor-Blöcke / Baue um jeden Team-Spawn eine Box und schließe sie / \
             mit ihnen: Jeder gesetzte gehört zum Starttor, / ein abgebauter ist wieder draußen / \
             Jeder Rundenstart stellt das ganze Starttor wieder her / \
             und baut es mit einem Countdown von oben wieder ab / \
             Ein nicht gebautes Starttor wird übersprungen, die Runde startet trotzdem / \
-            The gate holds no block yet / It comes down over 10 seconds
+            Das Starttor hat noch keinen Block / Es wird über 10 Sekunden abgebaut
             22 | OAK_DOOR | Zurück | Zurück zum Hauptmenü
             """;
     private static final String INFO_OF_A_READY_ARENA = "4 | BOOK | Arena | Arena bereit / "
-            + "  Kampffläche: admin-menu with 25 cells between 1/1 and 5/5, from y 64 to y 67, calculated at y 64 / "
+            + "  Kampffläche: admin-menu mit 25 Zellen zwischen 1/1 und 5/5, von y 64 bis y 67, berechnet auf y 64 / "
             + "  Spawn des ersten Teams: nicht gesetzt /   Spawn des zweiten Teams: nicht gesetzt / "
             + "  Tribünen-Spawn: admin-menu 11.5/64.0/11.5 /   Wirkungsbereich: Mitte 3.5/3.5, Radius 99.5 Blöcke / ";
 

@@ -1,6 +1,11 @@
 package de.simplepvparena.arena;
 
+import de.simplepvparena.message.ArenaGapMessage;
+import de.simplepvparena.message.Messages;
+import de.simplepvparena.message.Placeholder;
+
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.List;
@@ -13,8 +18,6 @@ public final class ArenaFillDiagnostics {
     public static final int HEIGHT_MISMATCH_SAMPLE_SIZE = 8;
 
     public static final int REPORTED_HEIGHT_MISMATCH_COUNT = 3;
-
-    private static final String NO_DIRECTION_NAME = "nowhere";
 
     private final int seedX;
     private final int seedZ;
@@ -128,14 +131,9 @@ public final class ArenaFillDiagnostics {
     }
 
     public String describeHeightMismatchColumns() {
-        StringBuilder description = new StringBuilder();
-        for (ArenaHeightMismatchColumn column : findNearestHeightMismatchColumns(REPORTED_HEIGHT_MISMATCH_COUNT)) {
-            if (description.length() > 0) {
-                description.append(", ");
-            }
-            description.append(column.describe());
-        }
-        return description.toString();
+        return Messages.join(findNearestHeightMismatchColumns(REPORTED_HEIGHT_MISMATCH_COUNT).stream()
+                .map(ArenaHeightMismatchColumn::describe)
+                .toList());
     }
 
     public boolean hasSpread() {
@@ -150,16 +148,26 @@ public final class ArenaFillDiagnostics {
         int horizontalReach = Math.max(eastwardReach, westwardReach);
         int verticalReach = Math.max(northwardReach, southwardReach);
         if (horizontalReach == 0 && verticalReach == 0) {
-            return NO_DIRECTION_NAME;
+            return Messages.text(ArenaGapMessage.DIRECTION_NOWHERE);
         }
-        String horizontalName = eastwardReach >= westwardReach ? "east" : "west";
-        String verticalName = southwardReach >= northwardReach ? "south" : "north";
+        boolean eastward = eastwardReach >= westwardReach;
+        boolean southward = southwardReach >= northwardReach;
         int strongerReach = Math.max(horizontalReach, verticalReach);
         int weakerReach = Math.min(horizontalReach, verticalReach);
         if (weakerReach > 0 && weakerReach * 2 >= strongerReach) {
-            return verticalName + "-" + horizontalName;
+            if (southward) {
+                return Messages.text(eastward
+                        ? ArenaGapMessage.DIRECTION_SOUTH_EAST
+                        : ArenaGapMessage.DIRECTION_SOUTH_WEST);
+            }
+            return Messages.text(eastward
+                    ? ArenaGapMessage.DIRECTION_NORTH_EAST
+                    : ArenaGapMessage.DIRECTION_NORTH_WEST);
         }
-        return horizontalReach >= verticalReach ? horizontalName : verticalName;
+        if (horizontalReach >= verticalReach) {
+            return Messages.text(eastward ? ArenaGapMessage.DIRECTION_EAST : ArenaGapMessage.DIRECTION_WEST);
+        }
+        return Messages.text(southward ? ArenaGapMessage.DIRECTION_SOUTH : ArenaGapMessage.DIRECTION_NORTH);
     }
 
     public int getFarthestX() {
@@ -172,17 +180,22 @@ public final class ArenaFillDiagnostics {
 
     public String describeEscapeDirection() {
         if (!hasSpread()) {
-            return NO_DIRECTION_NAME + ", it never left the column you are standing in";
+            return Messages.text(ArenaGapMessage.ESCAPE_NOWHERE);
         }
-        return getEscapeDirectionName() + ", " + Math.abs(getFarthestX() - seedX) + " columns "
-                + (getFarthestX() >= seedX ? "east" : "west") + " and " + Math.abs(getFarthestZ() - seedZ)
-                + " columns " + (getFarthestZ() >= seedZ ? "south" : "north") + " of you, up to x/z "
-                + getFarthestX() + "/" + getFarthestZ();
+        String horizontal = Messages.plural(getFarthestX() >= seedX ? ArenaGapMessage.COLUMNS_EAST
+                : ArenaGapMessage.COLUMNS_WEST, Math.abs(getFarthestX() - seedX));
+        String vertical = Messages.plural(getFarthestZ() >= seedZ ? ArenaGapMessage.COLUMNS_SOUTH
+                : ArenaGapMessage.COLUMNS_NORTH, Math.abs(getFarthestZ() - seedZ));
+        return Messages.text(ArenaGapMessage.ESCAPE_DIRECTION, Placeholder.of("direction", getEscapeDirectionName()),
+                Placeholder.of("horizontal", horizontal), Placeholder.of("vertical", vertical),
+                Placeholder.of("farthestX", getFarthestX()), Placeholder.of("farthestZ", getFarthestZ()));
     }
 
     public String describeBoundingBox() {
-        return "x " + minimumX + ".." + maximumX + ", z " + minimumZ + ".." + maximumZ + ", "
-                + (maximumX - minimumX + 1) + " by " + (maximumZ - minimumZ + 1) + " columns";
+        return Messages.text(ArenaGapMessage.BOUNDING_BOX, Placeholder.of("minimumX", minimumX),
+                Placeholder.of("maximumX", maximumX), Placeholder.of("minimumZ", minimumZ),
+                Placeholder.of("maximumZ", maximumZ), Placeholder.of("width", maximumX - minimumX + 1),
+                Placeholder.of("length", maximumZ - minimumZ + 1));
     }
 
     public long getNearestFrontCell() {
@@ -221,13 +234,8 @@ public final class ArenaFillDiagnostics {
     }
 
     public String describeFront() {
-        StringBuilder description = new StringBuilder();
-        for (long frontCell : frontCells) {
-            if (description.length() > 0) {
-                description.append(", ");
-            }
-            description.append(HorizontalCellCodec.describe(frontCell));
-        }
-        return description.toString();
+        return Messages.join(Arrays.stream(frontCells)
+                .mapToObj(HorizontalCellCodec::describe)
+                .toList());
     }
 }

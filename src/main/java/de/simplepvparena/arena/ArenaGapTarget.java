@@ -1,45 +1,42 @@
 package de.simplepvparena.arena;
 
+import de.simplepvparena.message.ArenaGapMessage;
+import de.simplepvparena.message.MessageKey;
+import de.simplepvparena.message.Messages;
+import de.simplepvparena.message.Placeholder;
+
 import java.util.Objects;
 
 public record ArenaGapTarget(String worldName, int blockX, int blockY, int blockZ, Reason reason) {
 
     public enum Reason {
 
-        FILL_FRONT("The flood fill got that far before it was stopped",
-                "That is the column the fill reached first of the ones it was stopped on, not a hole "
-                        + "anybody found. Start looking around there",
-                "This is where the flood fill was when it was stopped, look for a missing green connection "
-                        + "line between two border blocks around you"),
+        FILL_FRONT(ArenaGapMessage.FILL_FRONT_LORE, ArenaGapMessage.FILL_FRONT_HAND_OUT_HINT,
+                ArenaGapMessage.FILL_FRONT_ARRIVAL_HINT),
 
-        BORDER_TOO_HIGH("A border block stands there, above your calculation height",
-                "A border block stands in that column, but above the height you ran the calculation at, "
-                        + "so it never barred the fill. This is not a guess, it is a piece of wall that "
-                        + "does not close",
-                "This is a column where you built the wall, above the height you calculated at, so the "
-                        + "fill walked underneath it. Build it down to your own height here, or run the "
-                        + "calculation again from a position at least as high as these blocks");
+        BORDER_TOO_HIGH(ArenaGapMessage.BORDER_TOO_HIGH_LORE, ArenaGapMessage.BORDER_TOO_HIGH_HAND_OUT_HINT,
+                ArenaGapMessage.BORDER_TOO_HIGH_ARRIVAL_HINT);
 
-        private final String loreLine;
-        private final String handOutHint;
-        private final String arrivalHint;
+        private final MessageKey loreLine;
+        private final MessageKey handOutHint;
+        private final MessageKey arrivalHint;
 
-        Reason(String loreLine, String handOutHint, String arrivalHint) {
+        Reason(MessageKey loreLine, MessageKey handOutHint, MessageKey arrivalHint) {
             this.loreLine = loreLine;
             this.handOutHint = handOutHint;
             this.arrivalHint = arrivalHint;
         }
 
         public String getLoreLine() {
-            return loreLine;
+            return Messages.text(loreLine);
         }
 
         public String getHandOutHint() {
-            return handOutHint;
+            return Messages.text(handOutHint);
         }
 
         public String getArrivalHint() {
-            return arrivalHint;
+            return Messages.text(arrivalHint);
         }
     }
 
@@ -61,6 +58,7 @@ public record ArenaGapTarget(String worldName, int blockX, int blockY, int block
     }
 
     public String describe() {
-        return "x/y/z " + blockX + "/" + blockY + "/" + blockZ + " in " + worldName;
+        return Messages.text(ArenaGapMessage.TARGET, Placeholder.of("blockX", blockX),
+                Placeholder.of("blockY", blockY), Placeholder.of("blockZ", blockZ), Placeholder.of("world", worldName));
     }
 }

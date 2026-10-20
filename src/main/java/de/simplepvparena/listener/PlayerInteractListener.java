@@ -3,6 +3,8 @@ package de.simplepvparena.listener;
 import de.simplepvparena.arena.SpectatorService;
 import de.simplepvparena.border.BorderSelectorModeRegistry;
 import de.simplepvparena.match.MatchService;
+import de.simplepvparena.message.Messages;
+import de.simplepvparena.message.SpectatorMessage;
 import de.simplepvparena.message.TournamentMessages;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -42,11 +44,11 @@ public final class PlayerInteractListener implements Listener {
         event.setCancelled(true);
         Player player = event.getPlayer();
         if (matchService.isActiveFighter(player.getUniqueId())) {
-            TournamentMessages.sendError(player, "You cannot switch to spectator mode while you are fighting");
+            TournamentMessages.sendError(player, Messages.text(SpectatorMessage.SWITCH_WHILE_FIGHTING));
             return;
         }
         if (!spectatorService.toggleSpectatorMode(player)) {
-            TournamentMessages.sendError(player, "You are not watching the arena, use /tournament spectate");
+            TournamentMessages.sendError(player, Messages.text(SpectatorMessage.NOT_WATCHING));
         }
     }
 }

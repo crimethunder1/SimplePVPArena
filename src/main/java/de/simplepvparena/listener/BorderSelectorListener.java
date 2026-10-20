@@ -3,6 +3,9 @@ package de.simplepvparena.listener;
 import de.simplepvparena.border.BorderMarkToggle;
 import de.simplepvparena.border.BorderSelectorModeRegistry;
 import de.simplepvparena.border.SpectatorBorderService;
+import de.simplepvparena.message.BorderMessage;
+import de.simplepvparena.message.Messages;
+import de.simplepvparena.message.Placeholder;
 import de.simplepvparena.message.TournamentMessages;
 import de.simplepvparena.permission.AdminPermission;
 import org.bukkit.block.Block;
@@ -55,13 +58,14 @@ public final class BorderSelectorListener implements Listener {
             return true;
         }
         selectorModes.deactivate(player.getUniqueId());
-        TournamentMessages.sendError(player, "You are not allowed to mark border blocks any more, "
-                + "the border selector mode was switched off");
+        TournamentMessages.sendError(player, Messages.text(BorderMessage.SELECTOR_NO_LONGER_ALLOWED));
         return false;
     }
 
     private static void report(Player player, BorderMarkToggle toggle, Block block) {
-        String message = toggle.describe() + ": " + block.getX() + " " + block.getY() + " " + block.getZ();
+        String message = Messages.text(BorderMessage.MARK_REPORT, Placeholder.of("state", toggle.describe()),
+                Placeholder.of("blockX", block.getX()), Placeholder.of("blockY", block.getY()),
+                Placeholder.of("blockZ", block.getZ()));
         if (toggle.marks()) {
             TournamentMessages.sendActionBarSuccess(player, message);
             return;

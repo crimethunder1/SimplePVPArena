@@ -101,7 +101,7 @@ class GermanTeamMessagesTest {
         typeAndRunTheNextTick("Bravo");
 
         assertEquals(List.of("Erwartet werden 2 bis 3 durch Leerzeichen getrennte Werte "
-                + "(<Teamname> <Spieler> [<Spieler> ...]), eingegeben wurden 1: Bravo"), fixture.messages());
+                + "(<Teamname> <Spieler> [<Spieler> ...]), eingegeben: 1 (Bravo)"), fixture.messages());
     }
 
     @Test

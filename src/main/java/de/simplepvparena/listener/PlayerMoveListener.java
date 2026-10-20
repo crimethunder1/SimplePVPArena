@@ -6,6 +6,8 @@ import de.simplepvparena.arena.ArenaRegistry;
 import de.simplepvparena.arena.ArenaShape;
 import de.simplepvparena.arena.SpectatorService;
 import de.simplepvparena.match.MatchService;
+import de.simplepvparena.message.Messages;
+import de.simplepvparena.message.SpectatorMessage;
 import de.simplepvparena.message.TournamentMessages;
 import de.simplepvparena.permission.AdminPermission;
 import org.bukkit.Location;
@@ -70,8 +72,7 @@ public final class PlayerMoveListener implements Listener {
 
     private void endArenaFlight(Player player) {
         if (!spectatorService.sendToTribune(player)) {
-            TournamentMessages.sendWarning(player,
-                    "The tribune spawn is not set, use the spectator item to stop flying");
+            TournamentMessages.sendWarning(player, Messages.text(SpectatorMessage.TRIBUNE_SPAWN_NOT_SET));
             return;
         }
         player.setFallDistance(0.0F);

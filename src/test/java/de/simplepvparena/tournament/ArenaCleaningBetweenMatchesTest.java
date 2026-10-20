@@ -159,7 +159,7 @@ class ArenaCleaningBetweenMatchesTest {
         assertEquals(1, skippedCleaningWarnings.size(), "exactly one warning: " + fixture.adminMessages);
         String warning = skippedCleaningWarnings.get(0);
         assertEquals("The arena was not cleaned after match round2-match1: no baseline of the fight area is "
-                + "stored. Run " + Arena.CALCULATE_ACTION + " again before the next tournament", warning);
+                + "stored. Run " + Arena.describeCalculateAction() + " again before the next tournament", warning);
         assertFalse(warning.contains("The next match starts"), warning);
         assertTrue(fixture.logMessages.contains("The arena is not cleaned automatically after the final: "
                         + "no baseline of the fight area is stored Run the calculation once, that takes one"),
@@ -189,8 +189,8 @@ class ArenaCleaningBetweenMatchesTest {
 
         assertTrue(start.successful(), start.message());
         assertEquals("Tournament started", start.message());
-        assertEquals(List.of(TournamentManager.NO_BASELINE_WARNING), fixture.adminMessages);
-        assertTrue(fixture.adminMessages.get(0).contains(Arena.CALCULATE_ACTION));
+        assertEquals(List.of(TournamentManager.describeNoBaselineWarning()), fixture.adminMessages);
+        assertTrue(fixture.adminMessages.get(0).contains(Arena.describeCalculateAction()));
         assertEquals("round1-match1", fixture.runningMatchId());
     }
 

@@ -1,5 +1,8 @@
 package de.simplepvparena.border;
 
+import de.simplepvparena.message.BorderMessage;
+import de.simplepvparena.message.Messages;
+import de.simplepvparena.message.Placeholder;
 import de.simplepvparena.arena.ArenaShape;
 import de.simplepvparena.arena.BlockPositionCodec;
 import de.simplepvparena.arena.BorderColumnReader;
@@ -123,8 +126,10 @@ public final class BorderWallOutline {
     }
 
     public String describe() {
-        String description = wallBlocks.length + " border blocks connected by " + connections.size() + " lines";
-        return truncated ? description + ", the line limit was reached and only a part of the wall is shown"
+        String description = Messages.plural(BorderMessage.OUTLINE_BLOCKS, wallBlocks.length,
+                Placeholder.of("lines", Messages.plural(BorderMessage.OUTLINE_LINES, connections.size())));
+        return truncated
+                ? Messages.text(BorderMessage.OUTLINE_TRUNCATED, Placeholder.of("outline", description))
                 : description;
     }
 

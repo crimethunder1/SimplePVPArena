@@ -173,7 +173,7 @@ class KitSaveServiceTest {
                         Map.of(0, FakeSerializedKits.encode("sword"), 1, FakeSerializedKits.encode(UNDECODABLE_LABEL))),
                 storage.lastSavedLibrary().kits().get(0).serializedKit());
         assertEquals(List.of("Kit Knight saved: 2 items, 1 worn and 1 in the inventory", SAVED_KIT_NOTICE,
-                "1 item could not be read back and are no part of the kit, the log names them"),
+                "1 item could not be read back and is no part of the kit, the log names it"),
                 result.describe());
         assertEquals(List.of("Kit Knight: The stored kit item of the inventory slot 1 could not be read and is left "
                 + "out of the kit"), problems);

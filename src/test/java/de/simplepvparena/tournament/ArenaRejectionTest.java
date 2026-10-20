@@ -11,7 +11,7 @@ class ArenaRejectionTest {
 
     @Test
     void rejectsAnArenaThatIsNotFullyConfigured() {
-        assertEquals(TournamentManager.ARENA_NOT_CONFIGURED_MESSAGE,
+        assertEquals(TournamentManager.describeArenaNotConfigured(),
                 TournamentManager.findArenaRejection(false, Optional.empty()).orElseThrow());
     }
 
@@ -23,7 +23,7 @@ class ArenaRejectionTest {
 
     @Test
     void namesTheMissingConfigurationBeforeTheRunningMatch() {
-        assertEquals(TournamentManager.ARENA_NOT_CONFIGURED_MESSAGE,
+        assertEquals(TournamentManager.describeArenaNotConfigured(),
                 TournamentManager.findArenaRejection(false, Optional.of("round2-match1")).orElseThrow());
     }
 

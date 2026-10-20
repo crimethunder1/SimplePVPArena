@@ -1,7 +1,6 @@
 package de.simplepvparena.arena;
 
 import de.simplepvparena.input.ChatInputValues;
-import de.simplepvparena.message.ArenaMenuMessage;
 import de.simplepvparena.message.MessageCatalogLoader;
 import de.simplepvparena.message.Messages;
 import de.simplepvparena.support.UseLanguage;
@@ -36,12 +35,36 @@ class ArenaTextsTest {
 
     @Test
     @UseLanguage("en")
-    void namesTheTilesOfTheArenaMenuLikeTheConstantsOfTheOtherClasses() {
-        assertEquals(Arena.CALCULATE_ACTION, Arena.describeArenaMenuTile(ArenaMenuMessage.CALCULATE_TITLE));
-        assertEquals(Arena.DIAGNOSE_ACTION, Arena.describeArenaMenuTile(ArenaMenuMessage.DIAGNOSE_TITLE));
-        assertEquals(Arena.TRIBUNE_SPAWN_ACTION, Arena.describeArenaMenuTile(ArenaMenuMessage.TRIBUNE_SPAWN_TITLE));
-        assertEquals(Arena.MARK_HEIGHT_ACTION, Arena.describeArenaMenuTile(ArenaMenuMessage.HEIGHT_MARKER_TITLE));
-        assertEquals(Arena.CLEAN_ACTION, Arena.describeArenaMenuTile(ArenaMenuMessage.CLEAN_TITLE));
+    void namesTheTilesOfTheArenaMenuInEnglish() {
+        assertEquals("\"Calculate the fight area\" in the arena menu of /tournament", Arena.describeCalculateAction());
+        assertEquals("\"Diagnose with a higher cell limit\" in the arena menu of /tournament",
+                Arena.describeDiagnoseAction());
+        assertEquals("\"Set the tribune spawn\" in the arena menu of /tournament", Arena.describeTribuneSpawnAction());
+        assertEquals("\"Mark the height of the fight area\" in the arena menu of /tournament",
+                Arena.describeMarkHeightAction());
+        assertEquals("\"Clean the arena\" in the arena menu of /tournament", Arena.describeCleanAction());
+    }
+
+    @Test
+    @UseLanguage("de")
+    void namesTheTilesOfTheArenaMenuInGermanWhenTheReferenceIsBuilt() {
+        assertEquals("\"Kampffläche berechnen\" im Arena-Menü von /tournament", Arena.describeCalculateAction());
+        assertEquals("\"Diagnose mit höherem Zellenlimit\" im Arena-Menü von /tournament",
+                Arena.describeDiagnoseAction());
+        assertEquals("\"Tribünen-Spawn setzen\" im Arena-Menü von /tournament", Arena.describeTribuneSpawnAction());
+        assertEquals("\"Höhe der Kampffläche markieren\" im Arena-Menü von /tournament",
+                Arena.describeMarkHeightAction());
+        assertEquals("\"Arena reinigen\" im Arena-Menü von /tournament", Arena.describeCleanAction());
+    }
+
+    @Test
+    void buildsTheReferenceInTheLanguageThatIsSetWhenItIsAskedFor() {
+        Messages.use(MessageCatalogLoader.shippedCatalog("de"));
+        String german = Arena.describeCleanAction();
+        Messages.reset();
+
+        assertEquals("\"Arena reinigen\" im Arena-Menü von /tournament", german);
+        assertEquals("\"Clean the arena\" in the arena menu of /tournament", Arena.describeCleanAction());
     }
 
     @Test
@@ -200,8 +223,8 @@ class ArenaTextsTest {
     void countsTheExpectedValuesWithTheRightNumberInGerman() {
         assertEquals("Erwartet wird 1 Wert (<Name>), eingegeben wurden 2: a b",
                 ChatInputValues.of("a b").findCountRejection(1, "<Name>").orElseThrow());
-        assertEquals("Erwartet werden 2 durch Leerzeichen getrennte Werte (<Name> <Menge>), eingegeben wurden 3: "
-                + "a b c", ChatInputValues.of("a b c").findCountRejection(2, "<Name> <Menge>").orElseThrow());
+        assertEquals("Erwartet werden 2 durch Leerzeichen getrennte Werte (<Name> <Menge>), eingegeben: 3 "
+                + "(a b c)", ChatInputValues.of("a b c").findCountRejection(2, "<Name> <Menge>").orElseThrow());
     }
 
     private static List<String> displayNames() {

@@ -127,7 +127,7 @@ class ArenaBaselineSnapshotTest {
     void namesTheRestorationInTheReportOfTheCleaning() {
         ArenaBaselineSnapshot snapshot = capture(shape(64, 64, 0, 0), Map.of(), 1);
 
-        assertTrue(snapshot.describeChange().contains("baseline"));
+        assertTrue(new ArenaCleaningReport(4L, 2L, 0, snapshot.describeChange()).describe().contains("baseline"));
         assertFalse(snapshot.describeChange().equals(ArenaCleaningTarget.EMPTY_ARENA.describeChange()));
     }
 

@@ -23,16 +23,17 @@ class TournamentManagerRestoreBaselineTest {
         assertTrue(after.tournamentManager().restoreSavedTournament());
 
         List<String> messages = after.adminMessages();
-        assertEquals(List.of(TournamentManager.RESTORED_WITHOUT_BASELINE_WARNING),
+        assertEquals(List.of(TournamentManager.describeRestoredWithoutBaselineWarning()),
                 after.adminMessagesContaining(NO_BASELINE_TEXT));
         int restoreMessageIndex = messages.indexOf(after.adminMessagesContaining("was restored").get(0));
-        assertEquals(TournamentManager.RESTORED_WITHOUT_BASELINE_WARNING, messages.get(restoreMessageIndex + 1),
+        assertEquals(TournamentManager.describeRestoredWithoutBaselineWarning(), messages.get(restoreMessageIndex + 1),
                 messages.toString());
         assertEquals("No baseline of the fight area is stored after the restart. If the server crashed, repair "
                 + "the arena first, then run \"Calculate the fight area\" in the arena menu of /tournament again, "
                 + "that takes the arena as it is now as the new baseline, and only then continue the tournament",
-                TournamentManager.RESTORED_WITHOUT_BASELINE_WARNING);
-        assertTrue(TournamentManager.RESTORED_WITHOUT_BASELINE_WARNING.contains(Arena.CALCULATE_ACTION));
+                TournamentManager.describeRestoredWithoutBaselineWarning());
+        assertTrue(TournamentManager.describeRestoredWithoutBaselineWarning()
+                .contains(Arena.describeCalculateAction()));
     }
 
     @Test
@@ -64,7 +65,7 @@ class TournamentManagerRestoreBaselineTest {
 
         assertTrue(after.tournamentManager().togglePause().successful());
 
-        assertEquals(List.of(TournamentManager.RESTORED_WITHOUT_BASELINE_WARNING),
+        assertEquals(List.of(TournamentManager.describeRestoredWithoutBaselineWarning()),
                 after.adminMessagesContaining(NO_BASELINE_TEXT));
     }
 

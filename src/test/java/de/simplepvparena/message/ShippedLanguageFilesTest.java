@@ -26,7 +26,9 @@ class ShippedLanguageFilesTest {
             WaitingMatchMessage.class, ConfirmationMessage.class, TeamMessage.class,
             TeamMenuMessage.class, TeamActionsMessage.class, KitMessage.class, KitChoiceMessage.class,
             KitMenuMessage.class, KitActionsMessage.class, ArenaSpawnMessage.class, ArenaSetupMessage.class,
-            ArenaMenuMessage.class);
+            ArenaMenuMessage.class, ArenaCleaningMessage.class, ArenaHeightMessage.class,
+            ArenaGapMessage.class, SpectatorMessage.class, BorderMessage.class, ListenerMessage.class,
+            StartGateMessage.class);
 
     private static final Pattern PLACEHOLDER = Pattern.compile("\\{([A-Za-z0-9_-]+)}");
     private static final Pattern VALUE_LINE = Pattern.compile("^\\s*(- |[a-z0-9-]+: )(.*)$");

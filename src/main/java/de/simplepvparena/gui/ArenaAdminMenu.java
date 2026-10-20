@@ -184,7 +184,7 @@ final class ArenaAdminMenu implements AdminMenu {
         navigation.close(player);
         chatInputService.await(player, Messages.text(ArenaMenuMessage.START_GATE_INPUT_DESCRIPTION),
                 Messages.lines(ArenaMenuMessage.START_GATE_INPUT_PROMPT,
-                        Placeholder.of("usage", BlockItemRequest.USAGE),
+                        Placeholder.of("usage", BlockItemRequest.describeUsage()),
                         Placeholder.of("minimum", BlockItemRequest.MINIMUM_AMOUNT),
                         Placeholder.of("maximum", BlockItemRequest.MAXIMUM_AMOUNT)),
                 line -> handleStartGateItemLine(player, line));

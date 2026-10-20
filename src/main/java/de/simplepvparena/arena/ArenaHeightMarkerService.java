@@ -1,5 +1,8 @@
 package de.simplepvparena.arena;
 
+import de.simplepvparena.message.ArenaHeightMessage;
+import de.simplepvparena.message.Messages;
+import de.simplepvparena.message.Placeholder;
 import de.simplepvparena.message.TournamentMessages;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.TextDecoration;
@@ -64,35 +67,30 @@ public final class ArenaHeightMarkerService {
             TournamentMessages.sendError(admin, result.getRejectionMessage().get());
             return result;
         }
-        TournamentMessages.sendSuccess(admin, "The " + result.markedEnd().getDisplayName()
-                + " of the fight area is marked at y " + blockY
-                + TournamentMessages.LINE_BREAK + heightMarkers.describe());
+        TournamentMessages.sendSuccess(admin, Messages.text(
+                result.markedEnd().select(ArenaHeightMessage.MARKED_LOWEST, ArenaHeightMessage.MARKED_HIGHEST),
+                Placeholder.of("blockY", blockY), Placeholder.of("markers", heightMarkers.describe())));
         TournamentMessages.sendInfo(admin, result.hasMovedOn()
-                ? "The marker now marks the " + result.nextEnd().getDisplayName()
-                        + ", it moved on by itself. Place a block with it at that height as well"
-                        + TournamentMessages.LINE_BREAK + "A single mark changes nothing about a calculation"
+                ? Messages.text(result.nextEnd().select(ArenaHeightMessage.MOVED_ON_TO_LOWEST,
+                        ArenaHeightMessage.MOVED_ON_TO_HIGHEST))
                 : describeCompletePair());
         return result;
     }
 
     public ItemStack switchMarkedEnd(Player admin, ItemStack itemStack) {
         ArenaHeightMarkerMode nextEnd = heightMarkers.switchNextEnd();
-        TournamentMessages.sendInfo(admin, "The marker now marks the " + nextEnd.getDisplayName()
-                + " of the fight area"
-                + TournamentMessages.LINE_BREAK + "Place a block with it at that height, it becomes "
-                + nextEnd.getMeaning() + " and disappears again"
-                + TournamentMessages.LINE_BREAK + heightMarkers.describe());
+        TournamentMessages.sendInfo(admin, Messages.text(
+                nextEnd.select(ArenaHeightMessage.SWITCHED_TO_LOWEST, ArenaHeightMessage.SWITCHED_TO_HIGHEST),
+                Placeholder.of("markers", heightMarkers.describe())));
         relabelAfterThePlacement(admin, EquipmentSlot.HAND);
         return labelled(itemStack);
     }
 
     private String describeCompletePair() {
-        return "Both heights are set. The next " + Arena.CALCULATE_ACTION + " takes y "
-                + heightMarkers.getLowestY().orElseThrow() + " and y "
-                + heightMarkers.getHighestY().orElseThrow() + " over as the floor and the ceiling of the "
-                + "fight area instead of the height of the border wall"
-                + TournamentMessages.LINE_BREAK + "They are used up by that calculation and are gone "
-                + "when the server restarts";
+        return Messages.text(ArenaHeightMessage.COMPLETE_PAIR,
+                Placeholder.of("action", Arena.describeCalculateAction()),
+                Placeholder.of("lowestY", heightMarkers.getLowestY().orElseThrow()),
+                Placeholder.of("highestY", heightMarkers.getHighestY().orElseThrow()));
     }
 
     private void relabelAfterThePlacement(Player admin, EquipmentSlot hand) {
@@ -118,11 +116,11 @@ public final class ArenaHeightMarkerService {
     public List<String> describeMarkers() {
         List<String> lines = new ArrayList<>();
         lines.add(heightMarkers.describe());
-        lines.add("The next placed block marks the "
-                + heightMarkers.getNextEnd().getDisplayName());
-        lines.add(heightMarkers.isComplete()
-                ? "The next calculation takes them as floor and ceiling"
-                : "Both ends have to be marked, a single mark is not used");
+        lines.add(Messages.text(heightMarkers.getNextEnd().select(ArenaHeightMessage.TILE_NEXT_BLOCK_LOWEST,
+                ArenaHeightMessage.TILE_NEXT_BLOCK_HIGHEST)));
+        lines.add(Messages.text(heightMarkers.isComplete()
+                ? ArenaHeightMessage.TILE_COMPLETE
+                : ArenaHeightMessage.TILE_INCOMPLETE));
         return lines;
     }
 
@@ -130,17 +128,13 @@ public final class ArenaHeightMarkerService {
         ArenaHeightMarkerMode nextEnd = heightMarkers.getNextEnd();
         ItemStack markerItem = itemStack.clone();
         ItemMeta itemMeta = markerItem.getItemMeta();
-        itemMeta.displayName(Component.text("Height marker: " + nextEnd.getDisplayName())
+        itemMeta.displayName(Component.text(Messages.text(ArenaHeightMessage.ITEM_NAME,
+                        Placeholder.of("end", nextEnd.getDisplayName())))
                 .decoration(TextDecoration.ITALIC, false));
-        itemMeta.lore(List.of(
-                lore("Marks " + nextEnd.getMeaning()),
-                lore("Place it at that height, the block disappears again"),
-                lore("It moves on to the " + nextEnd.toggle().getDisplayName()
-                        + " by itself once this end is marked"),
-                lore("Right click in the air marks an end again"),
-                lore("Which end is marked is kept by the plugin, this"),
-                lore("name only shows it. Both ends are taken over by"),
-                lore("the next calculation")));
+        itemMeta.lore(Messages.lines(nextEnd.select(ArenaHeightMessage.ITEM_LORE_LOWEST,
+                        ArenaHeightMessage.ITEM_LORE_HIGHEST)).stream()
+                .map(ArenaHeightMarkerService::lore)
+                .toList());
         itemMeta.getPersistentDataContainer().set(markerKey, PersistentDataType.STRING, MARKER_KEY_VALUE);
         markerItem.setItemMeta(itemMeta);
         return markerItem;

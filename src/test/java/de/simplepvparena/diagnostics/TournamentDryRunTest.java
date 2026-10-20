@@ -171,7 +171,7 @@ class TournamentDryRunTest {
         DryRunStep step = findStep(dryRun().run(), TournamentDryRun.ARENA_STEP);
 
         assertTrue(step.isFailed());
-        assertTrue(step.details().stream().anyMatch(line -> line.contains(Arena.CALCULATE_ACTION)),
+        assertTrue(step.details().stream().anyMatch(line -> line.contains(Arena.describeCalculateAction())),
                 step.details().toString());
         assertTrue(step.details().stream().anyMatch(line -> line.contains("never calculates")),
                 step.details().toString());
@@ -276,7 +276,7 @@ class TournamentDryRunTest {
         DryRunStep step = findStep(dryRun().run(), TournamentDryRun.CLEANING_STEP);
 
         assertTrue(step.isFailed());
-        assertTrue(step.details().stream().anyMatch(line -> line.contains(Arena.CALCULATE_ACTION)),
+        assertTrue(step.details().stream().anyMatch(line -> line.contains(Arena.describeCalculateAction())),
                 step.details().toString());
     }
 
@@ -458,7 +458,7 @@ class TournamentDryRunTest {
         @Override
         public List<String> getMissingConfiguration() {
             return isReady() ? List.of()
-                    : List.of("the calculated fight area (" + Arena.CALCULATE_ACTION + ")");
+                    : List.of("the calculated fight area (" + Arena.describeCalculateAction() + ")");
         }
 
         @Override

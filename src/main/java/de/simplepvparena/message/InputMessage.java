@@ -11,6 +11,7 @@ public enum InputMessage implements MessageKey {
     NOTHING_TYPED("input.nothing-typed", "usage"),
     EXPECTED_VALUES("input.expected-values", "count", "usage", "givenCount", "values"),
     EXPECTED_VALUE_RANGE("input.expected-value-range", "minimum", "maximum", "usage", "givenCount", "values"),
+    BLOCK_ITEM_USAGE("input.block-item-usage"),
     UNKNOWN_MATERIAL("input.unknown-material", "material"),
     NOT_A_BLOCK("input.not-a-block", "material"),
     AMOUNT_NOT_A_NUMBER("input.amount-not-a-number", "amount"),

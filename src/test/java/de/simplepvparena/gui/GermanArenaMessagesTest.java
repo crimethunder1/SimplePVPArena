@@ -32,14 +32,14 @@ class GermanArenaMessagesTest {
     private static final String RESERVED = "Das Kit für das nächste Match wird gerade gewählt, die Arena ist bis zu "
             + "dessen Start für dieses Match reserviert";
     private static final String CALCULATED = "Die Kampffläche wurde aus den Wandblöcken berechnet\n"
-            + "admin-menu with 25 cells between 1/1 and 5/5, from y 64 to y 67, calculated at y 64";
+            + "admin-menu mit 25 Zellen zwischen 1/1 und 5/5, von y 64 bis y 67, berechnet auf y 64";
     private static final String BASELINE_READING = "Die 375 Blöcke von y 53 bis y 67, die Kampffläche und die "
             + "Schichten unter ihrem Boden, werden als der Ausgangszustand eingelesen, den \"Arena reinigen\" im "
             + "Arena-Menü von /tournament wiederherstellt\n"
             + "In Portionen von 16384 pro Tick, bis dahin lässt sich die Arena nicht reinigen.\n"
             + "Der Ausgangszustand ist weg, wenn der Server neu startet";
     private static final String RECOGNIZED_WALL = "Die erkannte Wand wird ein paar Sekunden lang angezeigt\n"
-            + "96 border blocks connected by 184 lines";
+            + "96 Wandblöcke, verbunden durch 184 Linien";
 
     private final AdminMenuFixture fixture = AdminMenuFixture.withKitChoice();
 
@@ -174,8 +174,8 @@ class GermanArenaMessagesTest {
                         + "er übersteht keinen Neustart des Servers",
                 "Die Arena wird gereinigt, 100 Blöcke zwischen y 64 und y 67\n"
                         + "Verarbeitet in Portionen von 4096 pro Tick\n"
-                        + "Layer by layer from the floor up: the red flood announces the volume, the green clearing "
-                        + "writes it, 6.0 seconds for both together"), fixture.messages());
+                        + "Schicht für Schicht vom Boden aufwärts: Die rote Flut kündigt das Volumen an, die grüne "
+                        + "Räumung schreibt es, 6.0 Sekunden für beide zusammen"), fixture.messages());
         assertEquals(Optional.of("Die Arena wird bereits gereinigt"),
                 fixture.arenaSetupService().findCleaningRejection());
     }
@@ -240,7 +240,7 @@ class GermanArenaMessagesTest {
         askForTheStartGateBlocks();
 
         assertEquals(List.of(
-                "Gib im Chat ein: <material> <amount>",
+                "Gib im Chat ein: <Material> <Menge>",
                 "Beispiel: barrier 32",
                 "Die Menge muss zwischen 1 und 64 liegen",
                 "Gib abbrechen ein, um abzubrechen, die Anfrage läuft in 60 Sekunden ab"), fixture.messages());

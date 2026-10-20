@@ -65,7 +65,7 @@ class ArenaCleanAfterMatchTest {
         Optional<String> skipReason = fixture.startAutomaticCleaning();
 
         assertTrue(skipReason.orElseThrow().contains("no baseline of the fight area is stored"), skipReason.get());
-        assertTrue(skipReason.get().contains(Arena.CALCULATE_ACTION),
+        assertTrue(skipReason.get().contains(Arena.describeCalculateAction()),
                 "the reason names the one click that takes a baseline: " + skipReason.get());
         assertFalse(fixture.cleaningService.isCleaning(), "nothing was started");
         assertEquals(Material.COBWEB, fixture.harness.getBlock(0, WALL_BOTTOM_Y, 0),

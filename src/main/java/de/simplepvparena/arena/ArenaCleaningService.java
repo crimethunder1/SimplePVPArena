@@ -1,5 +1,8 @@
 package de.simplepvparena.arena;
 
+import de.simplepvparena.message.ArenaCleaningMessage;
+import de.simplepvparena.message.Messages;
+import de.simplepvparena.message.Placeholder;
 import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.block.Block;
@@ -83,12 +86,10 @@ public final class ArenaCleaningService {
 
     public String describeAnimation() {
         if (animationDurationTicks <= 0L) {
-            return "The two coloured phases are switched off, the layers are cleared as fast as the "
-                    + "batches allow";
+            return Messages.text(ArenaCleaningMessage.ANIMATION_SWITCHED_OFF);
         }
-        return "Layer by layer from the floor up: " + ArenaCleaningPhase.FLOOD.describe()
-                + " announces the volume, " + ArenaCleaningPhase.CLEAR.describe() + " writes it, "
-                + (animationDurationTicks / (double) TICKS_PER_SECOND) + " seconds for both together";
+        return Messages.text(ArenaCleaningMessage.ANIMATION_RUNNING,
+                Placeholder.of("seconds", animationDurationTicks / (double) TICKS_PER_SECOND));
     }
 
     public boolean startCleaning(ArenaCleaningPlan plan,
@@ -113,8 +114,8 @@ public final class ArenaCleaningService {
         if (world == null) {
             plugin.getLogger().warning("The world " + shape.getWorldName()
                     + " is not loaded, the arena cleaning is stopped");
-            finish(cleaningTarget, run, "the world " + shape.getWorldName() + " is not loaded",
-                    completionHandler);
+            finish(cleaningTarget, run, Messages.text(ArenaCleaningMessage.CLEANING_WORLD_NOT_LOADED,
+                    Placeholder.of("world", shape.getWorldName())), completionHandler);
             return;
         }
         try {

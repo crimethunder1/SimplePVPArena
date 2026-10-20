@@ -1,6 +1,8 @@
 package de.simplepvparena.arena;
 
-import de.simplepvparena.message.TournamentMessages;
+import de.simplepvparena.message.ArenaCleaningMessage;
+import de.simplepvparena.message.Messages;
+import de.simplepvparena.message.Placeholder;
 
 public final class ArenaBaselineReport {
 
@@ -26,13 +28,11 @@ public final class ArenaBaselineReport {
 
     public String describe() {
         if (!isCaptured()) {
-            return "The baseline of the fight area could not be taken: " + failureReason
-                    + TournamentMessages.LINE_BREAK + Arena.CLEAN_ACTION + " sets every block to air until "
-                    + Arena.CALCULATE_ACTION + " takes one";
+            return Messages.text(ArenaCleaningMessage.BASELINE_NOT_TAKEN, Placeholder.of("reason", failureReason),
+                    Placeholder.of("cleanAction", Arena.describeCleanAction()),
+                    Placeholder.of("calculateAction", Arena.describeCalculateAction()));
         }
-        return "The baseline of the fight area was taken"
-                + TournamentMessages.LINE_BREAK + snapshot.describe()
-                + TournamentMessages.LINE_BREAK + Arena.CLEAN_ACTION
-                + " restores exactly this state instead of emptying the area";
+        return Messages.text(ArenaCleaningMessage.BASELINE_TAKEN, Placeholder.of("baseline", snapshot.describe()),
+                Placeholder.of("cleanAction", Arena.describeCleanAction()));
     }
 }

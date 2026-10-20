@@ -15,15 +15,18 @@ public record BlockItemRequest(Material material, int amount) {
     public static final int MINIMUM_AMOUNT = 1;
     public static final int MAXIMUM_AMOUNT = 64;
     public static final int REQUIRED_VALUE_COUNT = 2;
-    public static final String USAGE = "<material> <amount>";
 
     public BlockItemRequest {
         Objects.requireNonNull(material, "material");
     }
 
+    public static String describeUsage() {
+        return Messages.text(InputMessage.BLOCK_ITEM_USAGE);
+    }
+
     public static BlockItemRequestResult parseLine(String line, Predicate<Material> placeableBlockCheck) {
         ChatInputValues values = ChatInputValues.of(line);
-        Optional<String> countRejection = values.findCountRejection(REQUIRED_VALUE_COUNT, USAGE);
+        Optional<String> countRejection = values.findCountRejection(REQUIRED_VALUE_COUNT, describeUsage());
         if (countRejection.isPresent()) {
             return BlockItemRequestResult.rejected(countRejection.get());
         }

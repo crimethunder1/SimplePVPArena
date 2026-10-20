@@ -1,5 +1,8 @@
 package de.simplepvparena.gate;
 
+import de.simplepvparena.message.Messages;
+import de.simplepvparena.message.StartGateMessage;
+
 public final class StartGateDuration {
 
     public static final int DEFAULT_SECONDS = 10;
@@ -28,6 +31,6 @@ public final class StartGateDuration {
     }
 
     public String describe() {
-        return seconds + (seconds == 1 ? " second" : " seconds");
+        return Messages.plural(StartGateMessage.DURATION, seconds);
     }
 }

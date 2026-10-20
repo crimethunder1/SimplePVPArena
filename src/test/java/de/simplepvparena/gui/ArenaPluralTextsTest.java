@@ -208,7 +208,7 @@ class ArenaPluralTextsTest {
                         + "diesen Blöcken\n"
                         + "Jeder davon, den du setzt, gehört sofort zum Starttor, ein abgebauter ist wieder draußen\n"
                         + "Jeder Rundenstart stellt das ganze Starttor wieder her und baut es von oben wieder ab",
-                "Erwartet werden 2 durch Leerzeichen getrennte Werte (<x>), eingegeben wurden 3: a b c"),
+                "Erwartet werden 2 durch Leerzeichen getrennte Werte (<x>), eingegeben: 3 (a b c)"),
                 renderEveryPluralText(2));
     }
 

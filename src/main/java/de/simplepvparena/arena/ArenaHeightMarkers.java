@@ -1,6 +1,8 @@
 package de.simplepvparena.arena;
 
-import de.simplepvparena.message.TournamentMessages;
+import de.simplepvparena.message.ArenaHeightMessage;
+import de.simplepvparena.message.Messages;
+import de.simplepvparena.message.Placeholder;
 
 import java.util.Optional;
 import java.util.OptionalInt;
@@ -36,7 +38,7 @@ public final class ArenaHeightMarkers {
 
     private Optional<String> storeLowest(int blockY) {
         if (highestY != null && blockY >= highestY) {
-            return Optional.of(refusal(ArenaHeightMarkerMode.LOWEST, blockY, "below", highestY));
+            return Optional.of(refusal(ArenaHeightMarkerMode.LOWEST, blockY, highestY));
         }
         lowestY = blockY;
         return Optional.empty();
@@ -44,7 +46,7 @@ public final class ArenaHeightMarkers {
 
     private Optional<String> storeHighest(int blockY) {
         if (lowestY != null && blockY <= lowestY) {
-            return Optional.of(refusal(ArenaHeightMarkerMode.HIGHEST, blockY, "above", lowestY));
+            return Optional.of(refusal(ArenaHeightMarkerMode.HIGHEST, blockY, lowestY));
         }
         highestY = blockY;
         return Optional.empty();
@@ -85,9 +87,16 @@ public final class ArenaHeightMarkers {
 
     public String describe() {
         if (isEmpty()) {
-            return "No height is marked";
+            return Messages.text(ArenaHeightMessage.NOTHING_MARKED);
         }
-        return "Lowest point: " + describePoint(lowestY) + ", highest point: " + describePoint(highestY);
+        if (highestY == null) {
+            return Messages.text(ArenaHeightMessage.ONLY_LOWEST_MARKED, Placeholder.of("lowestY", lowestY));
+        }
+        if (lowestY == null) {
+            return Messages.text(ArenaHeightMessage.ONLY_HIGHEST_MARKED, Placeholder.of("highestY", highestY));
+        }
+        return Messages.text(ArenaHeightMessage.BOTH_MARKED, Placeholder.of("lowestY", lowestY),
+                Placeholder.of("highestY", highestY));
     }
 
     public Optional<String> findIncompleteHint() {
@@ -96,21 +105,13 @@ public final class ArenaHeightMarkers {
         }
         ArenaHeightMarkerMode markedMode = lowestY == null
                 ? ArenaHeightMarkerMode.HIGHEST : ArenaHeightMarkerMode.LOWEST;
-        return Optional.of("Only the " + markedMode.getDisplayName() + " of the fight area is marked, at y "
-                + (lowestY == null ? highestY : lowestY)
-                + TournamentMessages.LINE_BREAK + "A single mark is not used, the area keeps the height of the "
-                + "border wall. Mark the " + markedMode.toggle().getDisplayName() + " as well and calculate again");
+        return Optional.of(Messages.text(markedMode.select(ArenaHeightMessage.INCOMPLETE_ONLY_LOWEST,
+                        ArenaHeightMessage.INCOMPLETE_ONLY_HIGHEST),
+                Placeholder.of("markedY", lowestY == null ? highestY : lowestY)));
     }
 
-    private String refusal(ArenaHeightMarkerMode mode, int blockY, String side, int otherY) {
-        return "The " + mode.getDisplayName() + " has to lie " + side + " the "
-                + mode.toggle().getDisplayName() + ", which is marked at y " + otherY + ", and y " + blockY
-                + " does not"
-                + TournamentMessages.LINE_BREAK + "Nothing was stored. Mark this end " + side + " y " + otherY
-                + ", or switch to the " + mode.toggle().getDisplayName() + " and mark that one again first";
-    }
-
-    private static String describePoint(Integer blockY) {
-        return blockY == null ? "not marked" : "y " + blockY;
+    private String refusal(ArenaHeightMarkerMode mode, int blockY, int otherY) {
+        return Messages.text(mode.select(ArenaHeightMessage.REFUSAL_LOWEST, ArenaHeightMessage.REFUSAL_HIGHEST),
+                Placeholder.of("otherY", otherY), Placeholder.of("blockY", blockY));
     }
 }

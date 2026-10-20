@@ -65,7 +65,7 @@ class ArenaFillDiagnosticsTest {
         ArenaFillDiagnostics diagnostics = fromCells(0, 0, 0, 0, 1, 0, 1, 1);
 
         assertEquals(3, diagnostics.getFrontCells().length);
-        assertEquals("0/0, 1/0, 1/1", diagnostics.describeFront());
+        assertEquals("0/0, 1/0 and 1/1", diagnostics.describeFront());
     }
 
     @Test
@@ -229,7 +229,7 @@ class ArenaFillDiagnosticsTest {
                 new ArenaHeightMismatchColumn(10, 30, 90, 64));
 
         assertEquals("x/z 10/5 (lowest border block at y 70, 6 above you), "
-                        + "x/z 10/6 (lowest border block at y 71, 7 above you), "
+                        + "x/z 10/6 (lowest border block at y 71, 7 above you) and "
                         + "x/z 10/7 (lowest border block at y 66, 2 above you)",
                 diagnostics.describeHeightMismatchColumns());
     }

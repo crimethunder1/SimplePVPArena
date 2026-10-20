@@ -6,6 +6,8 @@ import de.simplepvparena.arena.ArenaRegistry;
 import de.simplepvparena.arena.ArenaShape;
 import de.simplepvparena.arena.ArenaWorldBuildRule;
 import de.simplepvparena.match.MatchService;
+import de.simplepvparena.message.ListenerMessage;
+import de.simplepvparena.message.Messages;
 import de.simplepvparena.message.TournamentMessages;
 import de.simplepvparena.permission.AdminPermission;
 import org.bukkit.block.Block;
@@ -65,7 +67,7 @@ public final class ArenaBreakListener implements Listener {
         boolean insideFightArea = shape.containsCell(block.getX(), block.getZ());
         if (!ArenaWorldBuildRule.isChangeAllowed(arenaAdmin, insideFightArea,
                 ArenaBuildListener.isInsideTheEffectArea(arenaRegistry, block))) {
-            TournamentMessages.sendActionBarError(player, ArenaWorldBuildRule.REFUSAL);
+            TournamentMessages.sendActionBarError(player, Messages.text(ListenerMessage.BREAK_OUTSIDE_THE_ARENA));
             return true;
         }
         boolean activeFighter = matchService.isActiveFighter(player.getUniqueId());
@@ -75,9 +77,9 @@ public final class ArenaBreakListener implements Listener {
                 partOfTheOriginalArena)) {
             return false;
         }
-        TournamentMessages.sendActionBarError(player, activeFighter
-                ? "The arena stays as it is, only what was placed during the match comes down again"
-                : "Only the fighters of the running round change blocks inside the arena");
+        TournamentMessages.sendActionBarError(player, Messages.text(activeFighter
+                ? ListenerMessage.BREAK_ORIGINAL_ARENA
+                : ListenerMessage.BREAK_NOT_A_FIGHTER));
         return true;
     }
 }

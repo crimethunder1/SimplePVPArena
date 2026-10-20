@@ -1,6 +1,9 @@
 package de.simplepvparena.gate;
 
 import de.simplepvparena.input.BlockItemRequest;
+import de.simplepvparena.message.Messages;
+import de.simplepvparena.message.Placeholder;
+import de.simplepvparena.message.StartGateMessage;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.TextDecoration;
 import org.bukkit.Material;
@@ -38,15 +41,17 @@ public final class StartGateItemService {
     }
 
     public ItemStack createGateItem(BlockItemRequest request) {
-        ItemStack itemStack = new ItemStack(request.material(), request.amount());
+        return labelled(new ItemStack(request.material(), request.amount()));
+    }
+
+    ItemStack labelled(ItemStack itemStack) {
         ItemMeta itemMeta = itemStack.getItemMeta();
-        itemMeta.displayName(Component.text("Start gate block").decoration(TextDecoration.ITALIC, false));
-        itemMeta.lore(List.of(
-                lore("Place these blocks as the wall piece that closes"),
-                lore("the box around a team spawn"),
-                lore("Every round start puts them back and takes them"),
-                lore("apart again from the top, in " + duration.describe()),
-                lore("Breaking a placed one takes it out of the gate again")));
+        itemMeta.displayName(Component.text(Messages.text(StartGateMessage.ITEM_NAME))
+                .decoration(TextDecoration.ITALIC, false));
+        itemMeta.lore(Messages.lines(StartGateMessage.ITEM_LORE, Placeholder.of("duration", duration.describe()))
+                .stream()
+                .map(StartGateItemService::lore)
+                .toList());
         itemMeta.getPersistentDataContainer().set(gateKey, PersistentDataType.STRING, ITEM_MARKER_VALUE);
         itemStack.setItemMeta(itemMeta);
         return itemStack;
@@ -90,17 +95,16 @@ public final class StartGateItemService {
     }
 
     public List<String> describeGate() {
-        return List.of(
-                "The gate holds " + describeBlockCount(),
-                "It comes down over " + duration.describe());
+        return List.of(describeBlockCount(),
+                Messages.text(StartGateMessage.TILE_COMES_DOWN_OVER, Placeholder.of("duration", duration.describe())));
     }
 
     private String describeBlockCount() {
         int markedBlockCount = getMarkedBlockCount();
         if (markedBlockCount == 0) {
-            return "no block yet";
+            return Messages.text(StartGateMessage.TILE_NO_BLOCK);
         }
-        return markedBlockCount + (markedBlockCount == 1 ? " block" : " blocks");
+        return Messages.plural(StartGateMessage.TILE_BLOCKS, markedBlockCount);
     }
 
     private static boolean isAir(Material material) {

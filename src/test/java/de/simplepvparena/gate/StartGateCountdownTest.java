@@ -21,7 +21,7 @@ class StartGateCountdownTest {
     void countsAConfiguredDurationDownTheSameWay() {
         assertEquals("5", StartGateCountdown.describeTitle(5));
         assertEquals("1", StartGateCountdown.describeTitle(1));
-        assertEquals(StartGateCountdown.RELEASE_TITLE, StartGateCountdown.describeTitle(0));
+        assertEquals(StartGateCountdown.describeReleaseTitle(), StartGateCountdown.describeTitle(0));
         assertEquals(StartGateCountdown.describeSubtitle(10), StartGateCountdown.describeSubtitle(5),
                 "every counted second of every length says the same");
     }
@@ -29,14 +29,14 @@ class StartGateCountdownTest {
     @Test
     void showsTheLastSecondAsTheRelease() {
         assertTrue(StartGateCountdown.isRelease(StartGateCountdown.RELEASE_SECOND));
-        assertEquals(StartGateCountdown.RELEASE_TITLE,
+        assertEquals(StartGateCountdown.describeReleaseTitle(),
                 StartGateCountdown.describeTitle(StartGateCountdown.RELEASE_SECOND));
     }
 
     @Test
     void neverCountsPastTheRelease() {
         assertTrue(StartGateCountdown.isRelease(-3));
-        assertEquals(StartGateCountdown.RELEASE_TITLE, StartGateCountdown.describeTitle(-3));
+        assertEquals(StartGateCountdown.describeReleaseTitle(), StartGateCountdown.describeTitle(-3));
     }
 
     @Test

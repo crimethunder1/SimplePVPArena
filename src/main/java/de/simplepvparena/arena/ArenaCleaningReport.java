@@ -1,17 +1,20 @@
 package de.simplepvparena.arena;
 
-import de.simplepvparena.message.TournamentMessages;
+import de.simplepvparena.message.ArenaCleaningMessage;
+import de.simplepvparena.message.MessageKey;
+import de.simplepvparena.message.Messages;
+import de.simplepvparena.message.Placeholder;
 
 public record ArenaCleaningReport(long checkedBlockCount, long changedBlockCount, int clearedBorderMarkCount,
-                                  String changeDescription, String failureReason) {
+                                  MessageKey changeDescription, String failureReason) {
 
     public ArenaCleaningReport(long checkedBlockCount, long changedBlockCount, int clearedBorderMarkCount,
-                               String changeDescription) {
+                               MessageKey changeDescription) {
         this(checkedBlockCount, changedBlockCount, clearedBorderMarkCount, changeDescription, null);
     }
 
     public static ArenaCleaningReport failed(long checkedBlockCount, long changedBlockCount,
-                                             int clearedBorderMarkCount, String changeDescription,
+                                             int clearedBorderMarkCount, MessageKey changeDescription,
                                              String failureReason) {
         return new ArenaCleaningReport(checkedBlockCount, changedBlockCount, clearedBorderMarkCount,
                 changeDescription, failureReason);
@@ -23,21 +26,21 @@ public record ArenaCleaningReport(long checkedBlockCount, long changedBlockCount
 
     public String describeOutcome() {
         if (isSuccessful()) {
-            return "The arena is clean" + TournamentMessages.LINE_BREAK + describe();
+            return Messages.text(ArenaCleaningMessage.REPORT_CLEAN, Placeholder.of("report", describe()));
         }
-        return "The arena cleaning was stopped: " + failureReason
-                + TournamentMessages.LINE_BREAK + describe()
-                + TournamentMessages.LINE_BREAK + "Run " + Arena.CLEAN_ACTION + " again once the reason is "
-                + "gone, the blocks that were already written stay as they are";
+        return Messages.text(ArenaCleaningMessage.REPORT_STOPPED, Placeholder.of("reason", failureReason),
+                Placeholder.of("report", describe()), Placeholder.of("action", Arena.describeCleanAction()));
     }
 
     public String describe() {
+        Placeholder borderMarks = Placeholder.of("borderMarks",
+                Messages.plural(ArenaCleaningMessage.REPORT_BORDER_MARKS_REMOVED, clearedBorderMarkCount));
         if (changedBlockCount == 0L) {
-            return "not a single block had to be changed, all " + checkedBlockCount
-                    + " checked blocks already held what the cleaning writes. " + clearedBorderMarkCount
-                    + " border marks were removed";
+            return Messages.plural(ArenaCleaningMessage.REPORT_UNCHANGED, checkedBlockCount, borderMarks);
         }
-        return changedBlockCount + " of " + checkedBlockCount + " checked blocks " + changeDescription + ", "
-                + clearedBorderMarkCount + " border marks were removed";
+        String changedBlocks = Messages.plural(changeDescription, changedBlockCount,
+                Placeholder.of("checkedCount", checkedBlockCount));
+        return Messages.text(ArenaCleaningMessage.REPORT_CHANGED, Placeholder.of("blocks", changedBlocks),
+                borderMarks);
     }
 }

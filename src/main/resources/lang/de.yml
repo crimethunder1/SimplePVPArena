@@ -41,8 +41,9 @@ input:
   nothing-typed: 'Es wurde nichts eingegeben, erwartet wird {usage}'
   expected-values:
     one: 'Erwartet wird {count} Wert ({usage}), eingegeben wurden {givenCount}: {values}'
-    other: 'Erwartet werden {count} durch Leerzeichen getrennte Werte ({usage}), eingegeben wurden {givenCount}: {values}'
-  expected-value-range: 'Erwartet werden {minimum} bis {maximum} durch Leerzeichen getrennte Werte ({usage}), eingegeben wurden {givenCount}: {values}'
+    other: 'Erwartet werden {count} durch Leerzeichen getrennte Werte ({usage}), eingegeben: {givenCount} ({values})'
+  expected-value-range: 'Erwartet werden {minimum} bis {maximum} durch Leerzeichen getrennte Werte ({usage}), eingegeben: {givenCount} ({values})'
+  block-item-usage: '<Material> <Menge>'
   unknown-material: 'Unbekanntes Material {material}'
   not-a-block: '{material} lässt sich nicht als Block setzen'
   amount-not-a-number: 'Die Menge {amount} ist keine Zahl'
@@ -712,6 +713,9 @@ arena:
     no-effect-area: '  Wirkungsbereich: keiner, bis die Kampffläche berechnet ist'
     running-match: '  Laufendes Match: {match}'
     no-running-match: '  Laufendes Match: keins'
+  shape-description:
+    one: '{world} mit {count} Zelle zwischen {minimumX}/{minimumZ} und {maximumX}/{maximumZ}, von y {floorY} bis y {topY}, berechnet auf y {referenceY}'
+    other: '{world} mit {count} Zellen zwischen {minimumX}/{minimumZ} und {maximumX}/{maximumZ}, von y {floorY} bis y {topY}, berechnet auf y {referenceY}'
 arena-menu:
   title: 'Arena'
   tile:
@@ -815,3 +819,268 @@ arena-menu:
       - 'Eine Zahl zwischen {minimum} und {maximum}'
       - 'Steh innerhalb der Arenawand, die Berechnung läuft ab der Stelle, an der du stehst'
       - 'config.yml wird dadurch nicht geändert'
+arena-cleaning:
+  baseline:
+    taken:
+      - 'Der Ausgangszustand der Kampffläche wurde aufgenommen'
+      - '{baseline}'
+      - '{cleanAction} stellt genau diesen Zustand wieder her, statt die Fläche zu leeren'
+    not-taken:
+      - 'Der Ausgangszustand der Kampffläche konnte nicht aufgenommen werden: {reason}'
+      - '{cleanAction} setzt jeden Block auf Luft, bis {calculateAction} einen aufnimmt'
+    world-not-loaded: 'die Welt {world} ist nicht geladen'
+    blocks-unreadable: 'ihre Blöcke ließen sich nicht lesen ({cause})'
+    too-many-block-states: 'die Kampffläche enthält mehr als {maximum} verschiedene Blockzustände, mehr als ein Ausgangszustand unterscheiden kann'
+  baseline-description:
+    summary: '{blocks}, {materials}, {notAir}, {contents}'
+    blocks:
+      one: '{count} Block, der bis {depth} reicht'
+      other: '{count} Blöcke, die bis {depth} reichen'
+    depth:
+      one: '{count} Block unter den Boden'
+      other: '{count} Blöcke unter den Boden'
+    materials:
+      one: '{count} Material in {blockStates}'
+      other: '{count} verschiedene Materialien in {blockStates}'
+    block-states:
+      one: '{count} Blockzustand'
+      other: '{count} verschiedenen Blockzuständen'
+    not-air:
+      one: '{count} davon ist keine Luft'
+      other: '{count} davon sind keine Luft'
+    contents:
+      one: '{count} enthält Inhalte wie Text, Muster oder Items'
+      other: '{count} enthalten Inhalte wie Text, Muster oder Items'
+  baseline-mismatch:
+    - 'Der gespeicherte Ausgangszustand gehört nicht zu der Kampffläche, die gereinigt würde, deshalb wurde nichts geschrieben'
+    - 'Er wurde von {baselineArea} eingelesen'
+    - 'Die Fläche ist {area}'
+    - 'Führe {action} erneut aus, das nimmt einen Ausgangszustand der Fläche auf, wie sie jetzt ist'
+  animation:
+    switched-off: 'Die zwei farbigen Phasen sind ausgeschaltet, die Schichten werden so schnell geleert, wie die Portionen es erlauben'
+    running: 'Schicht für Schicht vom Boden aufwärts: Die rote Flut kündigt das Volumen an, die grüne Räumung schreibt es, {seconds} Sekunden für beide zusammen'
+  world-not-loaded: 'die Welt {world} ist nicht geladen'
+  report:
+    clean:
+      - 'Die Arena ist gereinigt'
+      - '{report}'
+    stopped:
+      - 'Die Reinigung der Arena wurde abgebrochen: {reason}'
+      - '{report}'
+      - 'Führe {action} erneut aus, sobald der Grund behoben ist, die schon geschriebenen Blöcke bleiben, wie sie sind'
+    unchanged:
+      one: 'kein einziger Block musste geändert werden, der {count} geprüfte Block enthielt schon, was die Reinigung schreibt. {borderMarks}'
+      other: 'kein einziger Block musste geändert werden, alle {count} geprüften Blöcke enthielten schon, was die Reinigung schreibt. {borderMarks}'
+    changed: '{blocks}, {borderMarks}'
+    set-to-air:
+      one: '{count} von {checkedCount} geprüften Blöcken wurde auf Luft gesetzt'
+      other: '{count} von {checkedCount} geprüften Blöcken wurden auf Luft gesetzt'
+    restored:
+      one: '{count} von {checkedCount} geprüften Blöcken wurde auf den Ausgangszustand der letzten Berechnung zurückgesetzt'
+      other: '{count} von {checkedCount} geprüften Blöcken wurden auf den Ausgangszustand der letzten Berechnung zurückgesetzt'
+    border-marks-removed:
+      one: '{count} Wandmarkierung wurde entfernt'
+      other: '{count} Wandmarkierungen wurden entfernt'
+arena-height:
+  end:
+    lowest: 'tiefster Punkt'
+    highest: 'höchster Punkt'
+  description:
+    nothing-marked: 'Es ist keine Höhe markiert'
+    both-marked: 'Tiefster Punkt: y {lowestY}, höchster Punkt: y {highestY}'
+    only-lowest-marked: 'Tiefster Punkt: y {lowestY}, höchster Punkt: nicht markiert'
+    only-highest-marked: 'Tiefster Punkt: nicht markiert, höchster Punkt: y {highestY}'
+  incomplete:
+    only-lowest:
+      - 'Nur der tiefste Punkt der Kampffläche ist markiert, auf y {markedY}'
+      - 'Eine einzelne Markierung wird nicht verwendet, die Fläche behält die Höhe der Arenawand. Markiere auch den höchsten Punkt und berechne erneut'
+    only-highest:
+      - 'Nur der höchste Punkt der Kampffläche ist markiert, auf y {markedY}'
+      - 'Eine einzelne Markierung wird nicht verwendet, die Fläche behält die Höhe der Arenawand. Markiere auch den tiefsten Punkt und berechne erneut'
+  refusal:
+    lowest:
+      - 'Der tiefste Punkt muss unter dem höchsten Punkt liegen, der auf y {otherY} markiert ist, und y {blockY} tut das nicht'
+      - 'Es wurde nichts gespeichert. Markiere dieses Ende unter y {otherY}, oder wechsle zum höchsten Punkt und markiere zuerst diesen erneut'
+    highest:
+      - 'Der höchste Punkt muss über dem tiefsten Punkt liegen, der auf y {otherY} markiert ist, und y {blockY} tut das nicht'
+      - 'Es wurde nichts gespeichert. Markiere dieses Ende über y {otherY}, oder wechsle zum tiefsten Punkt und markiere zuerst diesen erneut'
+  marked:
+    lowest:
+      - 'Der tiefste Punkt der Kampffläche ist auf y {blockY} markiert'
+      - '{markers}'
+    highest:
+      - 'Der höchste Punkt der Kampffläche ist auf y {blockY} markiert'
+      - '{markers}'
+  moved-on:
+    lowest:
+      - 'Die Höhenmarke markiert jetzt den tiefsten Punkt, sie ist von selbst weitergewechselt. Setze damit auch auf dieser Höhe einen Block'
+      - 'Eine einzelne Markierung ändert nichts an einer Berechnung'
+    highest:
+      - 'Die Höhenmarke markiert jetzt den höchsten Punkt, sie ist von selbst weitergewechselt. Setze damit auch auf dieser Höhe einen Block'
+      - 'Eine einzelne Markierung ändert nichts an einer Berechnung'
+  complete-pair:
+    - 'Beide Höhen sind gesetzt. Die nächste Berechnung mit {action} übernimmt y {lowestY} und y {highestY} als Boden und Decke der Kampffläche statt der Höhe der Arenawand'
+    - 'Diese Berechnung verbraucht sie, und sie sind weg, wenn der Server neu startet'
+  switched:
+    lowest:
+      - 'Die Höhenmarke markiert jetzt den tiefsten Punkt der Kampffläche'
+      - 'Setze damit auf dieser Höhe einen Block, er wird zum Boden der Kampffläche und verschwindet wieder'
+      - '{markers}'
+    highest:
+      - 'Die Höhenmarke markiert jetzt den höchsten Punkt der Kampffläche'
+      - 'Setze damit auf dieser Höhe einen Block, er wird zur Decke der Kampffläche und verschwindet wieder'
+      - '{markers}'
+  tile:
+    next-block-lowest: 'Der nächste gesetzte Block markiert den tiefsten Punkt'
+    next-block-highest: 'Der nächste gesetzte Block markiert den höchsten Punkt'
+    complete: 'Die nächste Berechnung übernimmt sie als Boden und Decke'
+    incomplete: 'Beide Enden müssen markiert sein, eine einzelne Markierung wird nicht verwendet'
+  item:
+    name: 'Höhenmarke: {end}'
+    lore-lowest:
+      - 'Markiert den Boden der Kampffläche'
+      - 'Setze sie auf dieser Höhe, der Block verschwindet wieder'
+      - 'Sie wechselt von selbst zum höchsten Punkt, sobald dieses Ende markiert ist'
+      - 'Ein Rechtsklick in die Luft wechselt das Ende, das du markierst'
+      - 'Welches Ende markiert wird, merkt sich das Plugin,'
+      - 'der Name zeigt es nur an. Beide Enden übernimmt'
+      - 'die nächste Berechnung'
+    lore-highest:
+      - 'Markiert die Decke der Kampffläche'
+      - 'Setze sie auf dieser Höhe, der Block verschwindet wieder'
+      - 'Sie wechselt von selbst zum tiefsten Punkt, sobald dieses Ende markiert ist'
+      - 'Ein Rechtsklick in die Luft wechselt das Ende, das du markierst'
+      - 'Welches Ende markiert wird, merkt sich das Plugin,'
+      - 'der Name zeigt es nur an. Beide Enden übernimmt'
+      - 'die nächste Berechnung'
+arena-gap:
+  seed-inside-border:
+    - 'Du stehst in einer Spalte mit Wandblöcken'
+    - 'Geh in die Fläche, die die Arenawand umschließt, und berechne erneut'
+  cell-limit:
+    stopped:
+      one: 'Die Kampffläche konnte nicht berechnet werden, die Füllung wurde bei {count} Zelle gestoppt, dem Limit aus {path}'
+      other: 'Die Kampffläche konnte nicht berechnet werden, die Füllung wurde bei {count} Zellen gestoppt, dem Limit aus {path}'
+    gap-or-too-large: 'Entweder hat deine Arenawand eine Lücke, durch die die Füllung gelaufen ist, oder die Fläche, die du umschlossen hast, ist größer als dieses Limit. Die Berechnung kann beides nicht unterscheiden, dafür müsste sie weiterfüllen.'
+    spread: 'Die Füllung kam am weitesten nach {direction}, sie umfasst {boundingBox}, und die letzten Spalten, die sie erreicht hat, sind {front}.'
+    not-spread: 'Die Füllung kam nirgendwohin, sie hat die Spalte, in der du stehst, nie verlassen, sie umfasst {boundingBox}, und die letzten Spalten, die sie erreicht hat, sind {front}.'
+    walk-along-towards: 'Geh an deiner Wand entlang Richtung {direction} und such nach einer fehlenden grünen Verbindungslinie zwischen zwei Wandblöcken, und wenn die Wand überall geschlossen ist, erhöhe {path} in config.yml und nutze {action} erneut.'
+    walk-along: 'Geh an deiner Wand entlang und such nach einer fehlenden grünen Verbindungslinie zwischen zwei Wandblöcken, und wenn die Wand überall geschlossen ist, erhöhe {path} in config.yml und nutze {action} erneut.'
+    diagnose-hint:
+      one: '{action} führt eine einzelne Berechnung mit einem höheren Limit aus, bis zu {count} Zelle, ohne config.yml zu ändern, damit du siehst, wie weit die Füllung wirklich kommt'
+      other: '{action} führt eine einzelne Berechnung mit einem höheren Limit aus, bis zu {count} Zellen, ohne config.yml zu ändern, damit du siehst, wie weit die Füllung wirklich kommt'
+  height-mismatch:
+    all-listed:
+      one:
+        - 'Eine der Spalten, durch die die Füllung gelaufen ist, enthält einen Wandblock, und er sitzt über der Höhe, auf der du die Berechnung ausgeführt hast, deshalb hat er seine Spalte nie gesperrt.'
+        - 'Sie liegt bei {columns}.'
+      other:
+        - '{count} der Spalten, durch die die Füllung gelaufen ist, enthalten einen Wandblock, und jeder dieser Blöcke sitzt über der Höhe, auf der du die Berechnung ausgeführt hast, deshalb hat keiner davon seine Spalte gesperrt.'
+        - 'Sie liegen bei {columns}.'
+    nearest-listed:
+      - '{count} der Spalten, durch die die Füllung gelaufen ist, enthalten einen Wandblock, und jeder dieser Blöcke sitzt über der Höhe, auf der du die Berechnung ausgeführt hast, deshalb hat keiner davon seine Spalte gesperrt.'
+      - 'Die {listedCount} nächsten davon liegen bei {columns}.'
+    explanation:
+      - 'Ein Wandblock sperrt seine Spalte nur ab seiner eigenen Höhe aufwärts, die Wand steht dort also, und die Füllung ist trotzdem darunter durchgelaufen. So sieht es aus, wenn du die Berechnung in einer Senke stehend ausführst, während dieser Teil der Wand auf einer Erhebung steht.'
+      - 'Baue die Wand dort bis auf deine eigene Höhe herunter, oder nutze {action} erneut, während du mindestens so hoch stehst wie die Wand.'
+    column: 'x/z {blockX}/{blockZ} (unterster Wandblock auf y {lowestBorderY}, {heightAboveSeed} über dir)'
+  direction:
+    east: 'Osten'
+    west: 'Westen'
+    south: 'Süden'
+    north: 'Norden'
+    north-east: 'Nordosten'
+    north-west: 'Nordwesten'
+    south-east: 'Südosten'
+    south-west: 'Südwesten'
+    nowhere: 'nirgendwohin'
+  escape:
+    nowhere: 'nirgendwohin, sie hat die Spalte, in der du stehst, nie verlassen'
+    direction: '{direction}, {horizontal} und {vertical} von dir, bis x/z {farthestX}/{farthestZ}'
+  columns:
+    east:
+      one: '{count} Spalte östlich'
+      other: '{count} Spalten östlich'
+    west:
+      one: '{count} Spalte westlich'
+      other: '{count} Spalten westlich'
+    south:
+      one: '{count} Spalte südlich'
+      other: '{count} Spalten südlich'
+    north:
+      one: '{count} Spalte nördlich'
+      other: '{count} Spalten nördlich'
+  bounding-box: 'x {minimumX}..{maximumX}, z {minimumZ}..{maximumZ}, {width} mal {length} Spalten'
+  reason:
+    fill-front:
+      lore: 'So weit kam die Füllung, bevor sie gestoppt wurde'
+      hand-out-hint: 'Das ist die Spalte, die die Füllung als erste der Spalten erreicht hat, an denen sie gestoppt wurde, kein Loch, das jemand gefunden hat. Fang dort an zu suchen'
+      arrival-hint: 'Hier war die Füllung, als sie gestoppt wurde, such um dich herum nach einer fehlenden grünen Verbindungslinie zwischen zwei Wandblöcken'
+    border-too-high:
+      lore: 'Dort steht ein Wandblock, über deiner Berechnungshöhe'
+      hand-out-hint: 'In dieser Spalte steht ein Wandblock, aber über der Höhe, auf der du die Berechnung ausgeführt hast, deshalb hat er die Füllung nie gesperrt. Das ist keine Vermutung, es ist ein Stück Wand, das nicht schließt'
+      arrival-hint: 'Das ist eine Spalte, in der du die Wand gebaut hast, über der Höhe, auf der du berechnet hast, deshalb ist die Füllung darunter durchgelaufen. Baue sie hier bis auf deine eigene Höhe herunter, oder führe die Berechnung erneut von einer Stelle aus, die mindestens so hoch liegt wie diese Blöcke'
+  target: 'x/y/z {blockX}/{blockY}/{blockZ} in {world}'
+  reached:
+    - 'Du hast {target} erreicht, die Spur endet hier'
+    - '{hint}.'
+    - 'Dein Kompass zeigt weiter auf dieselbe Spalte'
+  compass:
+    name: 'Kompass zur Wandlücke'
+    lore:
+      - 'Zeigt auf eine mögliche Lücke in deiner Arenawand'
+      - 'Ziel {target}'
+      - '{reason}'
+      - 'Schließe die Wand dort und berechne die Kampffläche erneut'
+spectator:
+  item:
+    name: 'Zuschauermodus'
+  switch-while-fighting: 'Du kannst nicht in den Zuschauermodus wechseln, während du kämpfst'
+  not-watching: 'Du schaust der Arena nicht zu, nutze /tournament spectate'
+  tribune-spawn-not-set: 'Der Tribünen-Spawn ist nicht gesetzt, nutze das Zuschauer-Item, um mit dem Fliegen aufzuhören'
+border:
+  mark:
+    marked: 'Als Wandblock markiert'
+    removed: 'Wandmarkierung entfernt'
+    report: '{state}: {blockX} {blockY} {blockZ}'
+  selector:
+    no-longer-allowed: 'Du darfst keine Wandblöcke mehr markieren, der Wandauswahlmodus wurde ausgeschaltet'
+  outline:
+    blocks:
+      one: '{count} Wandblock, verbunden durch {lines}'
+      other: '{count} Wandblöcke, verbunden durch {lines}'
+    lines:
+      one: '{count} Linie'
+      other: '{count} Linien'
+    truncated: '{outline}, das Linienlimit wurde erreicht und nur ein Teil der Wand wird angezeigt'
+listener:
+  break:
+    outside-the-arena: 'Nur Admins verändern Blöcke außerhalb der Arena'
+    original-arena: 'Die Arena bleibt, wie sie ist, nur was während des Matches gesetzt wurde, lässt sich wieder abbauen'
+    not-a-fighter: 'Nur die Kämpfer der laufenden Runde verändern Blöcke in der Arena'
+  build:
+    outside-the-arena: 'Nur Admins verändern Blöcke außerhalb der Arena'
+    not-a-fighter: 'Nur die Kämpfer der laufenden Runde bauen in der Arena'
+  rejoined-during-match: 'Du bist während des Matches {match} zurückgekehrt, du machst ab der nächsten Runde wieder mit'
+start-gate:
+  countdown:
+    release-title: 'Kämpft!'
+    counting: 'Das Starttor wird Schicht für Schicht abgebaut'
+    open: 'Das Starttor ist offen'
+  duration:
+    one: '{count} Sekunde'
+    other: '{count} Sekunden'
+  item:
+    name: 'Starttor-Block'
+    lore:
+      - 'Setze diese Blöcke als das Wandstück, das die'
+      - 'Box um einen Team-Spawn schließt'
+      - 'Jeder Rundenstart stellt sie wieder her und baut'
+      - 'sie in {duration} von oben wieder ab'
+      - 'Baust du einen gesetzten ab, gehört er nicht mehr zum Starttor'
+  tile:
+    no-block: 'Das Starttor hat noch keinen Block'
+    blocks:
+      one: 'Das Starttor hat {count} Block'
+      other: 'Das Starttor hat {count} Blöcke'
+    comes-down-over: 'Es wird über {duration} abgebaut'

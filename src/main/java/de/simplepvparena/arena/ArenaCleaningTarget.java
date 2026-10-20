@@ -1,5 +1,7 @@
 package de.simplepvparena.arena;
 
+import de.simplepvparena.message.ArenaCleaningMessage;
+import de.simplepvparena.message.MessageKey;
 import org.bukkit.Material;
 import org.bukkit.block.BlockState;
 import org.bukkit.block.data.BlockData;
@@ -26,8 +28,8 @@ public interface ArenaCleaningTarget {
         }
 
         @Override
-        public String describeChange() {
-            return "were set to air";
+        public MessageKey describeChange() {
+            return ArenaCleaningMessage.REPORT_SET_TO_AIR;
         }
     };
 
@@ -37,5 +39,5 @@ public interface ArenaCleaningTarget {
 
     Optional<BlockState> findBlockEntity(int blockX, int blockY, int blockZ);
 
-    String describeChange();
+    MessageKey describeChange();
 }

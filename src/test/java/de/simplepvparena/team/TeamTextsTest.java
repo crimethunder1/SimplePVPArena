@@ -78,7 +78,7 @@ class TeamTextsTest {
         assertEquals(List.of(
                 "Es wurde nichts eingegeben, erwartet wird <Teamname> <Spieler> [<Spieler> ...]",
                 "Erwartet werden 2 bis 3 durch Leerzeichen getrennte Werte (<Teamname> <Spieler> [<Spieler> ...]), "
-                        + "eingegeben wurden 1: Alpha",
+                        + "eingegeben: 1 (Alpha)",
                 "Ein Team braucht 1 bis 2 verschiedene Spieler, Steve wurde zweimal genannt"),
                 collectTeamLineRefusals());
         assertEquals("<Teamname> <Spieler> [<Spieler> ...]", TeamCreationRequest.describeUsage());

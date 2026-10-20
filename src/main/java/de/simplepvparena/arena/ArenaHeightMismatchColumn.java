@@ -1,5 +1,9 @@
 package de.simplepvparena.arena;
 
+import de.simplepvparena.message.ArenaGapMessage;
+import de.simplepvparena.message.Messages;
+import de.simplepvparena.message.Placeholder;
+
 public record ArenaHeightMismatchColumn(int blockX, int blockZ, int lowestBorderY, int seedY) {
 
     public ArenaHeightMismatchColumn {
@@ -14,7 +18,8 @@ public record ArenaHeightMismatchColumn(int blockX, int blockZ, int lowestBorder
     }
 
     public String describe() {
-        return "x/z " + blockX + "/" + blockZ + " (lowest border block at y " + lowestBorderY + ", "
-                + heightAboveSeed() + " above you)";
+        return Messages.text(ArenaGapMessage.HEIGHT_MISMATCH_COLUMN, Placeholder.of("blockX", blockX),
+                Placeholder.of("blockZ", blockZ), Placeholder.of("lowestBorderY", lowestBorderY),
+                Placeholder.of("heightAboveSeed", heightAboveSeed()));
     }
 }

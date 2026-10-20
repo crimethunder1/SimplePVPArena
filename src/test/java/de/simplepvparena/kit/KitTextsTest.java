@@ -139,7 +139,7 @@ class KitTextsTest {
                 "Kit Knight saved: 1 item, 0 worn and 1 in the inventory",
                 "It is written into kits.yml and is handed out from the next round on, a running round keeps the kit "
                         + "its fighters were given",
-                "1 item could not be read back and are no part of the kit, the log names them",
+                "1 item could not be read back and is no part of the kit, the log names it",
                 "Kit Knight saved: 2 items, 1 worn and 1 in the inventory",
                 "It is written into kits.yml and is handed out once it is used as the default kit",
                 "2 items could not be read back and are no part of the kit, the log names them"),
