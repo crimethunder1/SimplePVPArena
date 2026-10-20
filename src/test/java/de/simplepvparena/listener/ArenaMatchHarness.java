@@ -60,6 +60,7 @@ final class ArenaMatchHarness {
     static final int WALL_HEIGHT = 4;
     static final int WALL_TOP_Y = GROUND_Y + WALL_HEIGHT - 1;
     static final int INVENTORY_SLOT_COUNT = 43;
+    static final long TICKS_PER_SECOND = 20L;
 
     private static final Logger LOGGER = Logger.getLogger("ArenaMatchHarness");
 
@@ -84,6 +85,7 @@ final class ArenaMatchHarness {
     private final World world;
 
     private RuntimeException temporaryEntityRemovalFailure;
+    private long currentTick;
 
     ArenaMatchHarness() {
         this(plugin -> new KitService());
@@ -235,8 +237,30 @@ final class ArenaMatchHarness {
         }
     }
 
+    void advanceSeconds(long seconds) {
+        advanceTicks(seconds * TICKS_PER_SECOND);
+    }
+
+    void advanceTicks(long tickCount) {
+        for (long tick = 0; tick < tickCount; tick++) {
+            currentTick++;
+            for (ScheduledTask task : new ArrayList<>(scheduledTasks)) {
+                if (task.dueTick <= currentTick) {
+                    scheduledTasks.remove(task);
+                    if (!task.cancelled) {
+                        task.runnable.run();
+                    }
+                }
+            }
+        }
+    }
+
     int getScheduledTaskCount() {
         return scheduledTasks.size();
+    }
+
+    int getPendingTaskCount() {
+        return (int) scheduledTasks.stream().filter(task -> !task.cancelled).count();
     }
 
     private void buildWallAndShape() {
@@ -320,13 +344,15 @@ final class ArenaMatchHarness {
     private Object createScheduler() {
         return proxy(BukkitScheduler.class, (method, arguments) -> switch (method.getName()) {
             case "runTaskTimer" -> scheduleRepeating((Runnable) arguments[1]);
-            case "runTask", "runTaskLater" -> schedule(new ScheduledTask((Runnable) arguments[1]));
+            case "runTask" -> schedule(new ScheduledTask((Runnable) arguments[1], currentTick + 1L));
+            case "runTaskLater" -> schedule(new ScheduledTask((Runnable) arguments[1],
+                    currentTick + Math.max(1L, (Long) arguments[2])));
             default -> throw new UnsupportedOperationException("BukkitScheduler." + method.getName());
         });
     }
 
     private Object scheduleRepeating(Runnable runnable) {
-        ScheduledTask task = new ScheduledTask(runnable);
+        ScheduledTask task = new ScheduledTask(runnable, Long.MAX_VALUE);
         repeatingTasks.add(task);
         return schedule(task);
     }
@@ -403,11 +429,13 @@ final class ArenaMatchHarness {
     private static final class ScheduledTask {
 
         private final Runnable runnable;
+        private final long dueTick;
 
         private boolean cancelled;
 
-        private ScheduledTask(Runnable runnable) {
+        private ScheduledTask(Runnable runnable, long dueTick) {
             this.runnable = runnable;
+            this.dueTick = dueTick;
         }
     }
 

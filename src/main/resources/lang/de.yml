@@ -1210,6 +1210,12 @@ match:
     - 'Match {match} ist angehalten, kein Teilnehmer ist online'
     - 'Nutze {action}, um es zu entscheiden'
   over: 'Match {match} ist vorbei, {team} gewinnt ({score})'
+  reconnect:
+    connection-lost:
+      one: '{player} hat die Verbindung verloren, {count} Sekunde zum Zurückkommen'
+      other: '{player} hat die Verbindung verloren, {count} Sekunden zum Zurückkommen'
+    returned: '{player} ist zurück'
+    not-returned: '{player} ist nicht zurückgekommen und scheidet aus'
   sudden-death:
     warning:
       one: 'Sudden Death in {count} Sekunde'
@@ -1435,6 +1441,9 @@ config:
     effect-margin-out-of-range:
       one: '{path} muss eine ganze Zahl zwischen {minimum} und {maximum} Blöcken sein, stattdessen gilt {count} Block'
       other: '{path} muss eine ganze Zahl zwischen {minimum} und {maximum} Blöcken sein, stattdessen gelten {count} Blöcke'
+    reconnect-seconds-out-of-range:
+      one: '{path} muss eine ganze Zahl zwischen {minimum} und {maximum} Sekunden sein, stattdessen gilt {count} Sekunde'
+      other: '{path} muss eine ganze Zahl zwischen {minimum} und {maximum} Sekunden sein, stattdessen gelten {count} Sekunden'
     team-size-out-of-range:
       one: '{path} muss eine ganze Zahl zwischen {minimum} und {maximum} Spielern sein, stattdessen gilt {count} Spieler'
       other: '{path} muss eine ganze Zahl zwischen {minimum} und {maximum} Spielern sein, stattdessen gelten {count} Spieler'
@@ -1457,6 +1466,7 @@ config:
       language: 'die Sprache und die Sprachdateien im Ordner lang, für jeden Text, der ab jetzt gezeigt wird'
       round: 'die Wartezeit bis zum Zurücksetzen nach einer Runde, das Rundenzeitlimit, der Schaden im Sudden Death und ob das Finale ohne Zeitlimit ausgetragen wird'
       start-gate: 'die Sekunden, die das Starttor zu Beginn einer Runde braucht'
+      reconnect: 'die Sekunden, die ein Kämpfer nach einem Verbindungsabbruch zum Zurückkommen hat, für jeden Verbindungsabbruch ab jetzt'
       team-size: 'die Teamgröße, außer ein Turnier läuft oder ein Team hat mehr Spieler als eine kleinere neue Größe'
       cleaning: 'die Blockmengen der Reinigung und des Ausgangszustands und die Partikel einer laufenden Reinigung'
       baseline-depth: 'die Tiefe unter dem Boden, bis zu der der nächste Ausgangszustand aufgenommen wird'

@@ -114,6 +114,11 @@ public final class PluginLiveConfiguration implements LiveConfiguration {
     }
 
     @Override
+    public void setReconnectSeconds(int reconnectSeconds) {
+        matchService.setReconnectSeconds(reconnectSeconds);
+    }
+
+    @Override
     public void setTeamColourSettings(TeamColourSettings teamColourSettings) {
         fighterColours.applySettings(teamColourSettings);
     }

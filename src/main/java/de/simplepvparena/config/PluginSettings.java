@@ -33,6 +33,7 @@ public record PluginSettings(long roundResetDelayTicks,
                              RoundTimeoutSettings roundTimeoutSettings,
                              boolean suddenDeathDisabledInFinal,
                              int startGateDurationSeconds,
+                             int reconnectSeconds,
                              TeamColourSettings teamColourSettings,
                              int teamSize,
                              int arenaCleaningBlocksPerTick,
@@ -62,6 +63,7 @@ public record PluginSettings(long roundResetDelayTicks,
     public static final String SUDDEN_DEATH_DAMAGE_INCREASE_PATH = "match.sudden-death-damage-increase-per-second";
     public static final String DISABLE_SUDDEN_DEATH_IN_FINAL_PATH = "match.disable-sudden-death-in-final";
     public static final String START_GATE_DURATION_SECONDS_PATH = "match.start-gate-duration-seconds";
+    public static final String RECONNECT_SECONDS_PATH = "match.reconnect-seconds";
     public static final String TEAM_SIZE_PATH = "match.team-size";
     public static final String FIRST_TEAM_COLOUR_PATH = TeamColourSettings.FIRST_TEAM_CONFIGURATION_PATH;
     public static final String SECOND_TEAM_COLOUR_PATH = TeamColourSettings.SECOND_TEAM_CONFIGURATION_PATH;
@@ -92,6 +94,7 @@ public record PluginSettings(long roundResetDelayTicks,
             SUDDEN_DEATH_DAMAGE_INCREASE_PATH,
             DISABLE_SUDDEN_DEATH_IN_FINAL_PATH,
             START_GATE_DURATION_SECONDS_PATH,
+            RECONNECT_SECONDS_PATH,
             TEAM_SIZE_PATH,
             FIRST_TEAM_COLOUR_PATH,
             SECOND_TEAM_COLOUR_PATH,
@@ -122,6 +125,7 @@ public record PluginSettings(long roundResetDelayTicks,
                 RoundTimeoutSettings.defaults(),
                 MatchService.DEFAULT_SUDDEN_DEATH_DISABLED_IN_FINAL,
                 StartGateDuration.DEFAULT_SECONDS,
+                MatchService.DEFAULT_RECONNECT_SECONDS,
                 TeamColourSettings.defaults(),
                 TeamSizeSetting.DEFAULT_TEAM_SIZE,
                 ArenaCleaningService.DEFAULT_BLOCKS_PER_TICK,
@@ -152,6 +156,7 @@ public record PluginSettings(long roundResetDelayTicks,
                 configuration.getBoolean(DISABLE_SUDDEN_DEATH_IN_FINAL_PATH,
                         shipped.suddenDeathDisabledInFinal()),
                 readStartGateDurationSeconds(configuration, problemReporter),
+                readReconnectSeconds(configuration, problemReporter),
                 readTeamColourSettings(configuration, problemReporter),
                 readTeamSize(configuration, problemReporter),
                 configuration.getInt(ARENA_CLEAN_BLOCKS_PER_TICK_PATH, shipped.arenaCleaningBlocksPerTick()),
@@ -203,6 +208,7 @@ public record PluginSettings(long roundResetDelayTicks,
         liveConfiguration.setRoundTimeoutSettings(roundTimeoutSettings);
         liveConfiguration.setSuddenDeathDisabledInFinal(suddenDeathDisabledInFinal);
         liveConfiguration.setStartGateDurationSeconds(startGateDurationSeconds);
+        liveConfiguration.setReconnectSeconds(reconnectSeconds);
         liveConfiguration.setTeamColourSettings(teamColourSettings);
         teamSizeTarget.accept(teamSize);
         liveConfiguration.setArenaCleaningBlocksPerTick(arenaCleaningBlocksPerTick);
@@ -272,6 +278,24 @@ public record PluginSettings(long roundResetDelayTicks,
                 Placeholder.of("path", ARENA_EFFECT_MARGIN_PATH), Placeholder.of("minimum", EffectArea.MINIMUM_MARGIN),
                 Placeholder.of("maximum", EffectArea.MAXIMUM_MARGIN)));
         return EffectArea.DEFAULT_MARGIN;
+    }
+
+    private static int readReconnectSeconds(ConfigurationSection configuration, Consumer<String> problemReporter) {
+        if (!configuration.isSet(RECONNECT_SECONDS_PATH)) {
+            return MatchService.DEFAULT_RECONNECT_SECONDS;
+        }
+        if (configuration.isInt(RECONNECT_SECONDS_PATH)) {
+            int reconnectSeconds = configuration.getInt(RECONNECT_SECONDS_PATH);
+            if (reconnectSeconds >= MatchService.MINIMUM_RECONNECT_SECONDS
+                    && reconnectSeconds <= MatchService.MAXIMUM_RECONNECT_SECONDS) {
+                return reconnectSeconds;
+            }
+        }
+        problemReporter.accept(Messages.plural(ConfigMessage.RECONNECT_SECONDS_OUT_OF_RANGE,
+                MatchService.DEFAULT_RECONNECT_SECONDS, Placeholder.of("path", RECONNECT_SECONDS_PATH),
+                Placeholder.of("minimum", MatchService.MINIMUM_RECONNECT_SECONDS),
+                Placeholder.of("maximum", MatchService.MAXIMUM_RECONNECT_SECONDS)));
+        return MatchService.DEFAULT_RECONNECT_SECONDS;
     }
 
     private static int readTeamSize(ConfigurationSection configuration, Consumer<String> problemReporter) {

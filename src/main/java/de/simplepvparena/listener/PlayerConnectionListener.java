@@ -39,6 +39,9 @@ public final class PlayerConnectionListener implements Listener {
     @EventHandler
     public void onPlayerJoin(PlayerJoinEvent event) {
         Player player = event.getPlayer();
+        if (matchService.handlePlayerReturned(player)) {
+            return;
+        }
         restoreLeftoverState(player);
         Optional<Match> matchOfPlayer = matchService.findMatchOfPlayer(player.getUniqueId());
         if (matchOfPlayer.isPresent()) {
@@ -60,7 +63,7 @@ public final class PlayerConnectionListener implements Listener {
 
     @EventHandler
     public void onPlayerQuit(PlayerQuitEvent event) {
-        matchService.handlePlayerEliminated(event.getPlayer().getUniqueId());
+        matchService.handlePlayerDisconnected(event.getPlayer());
         spectatorService.clearAssignment(event.getPlayer().getUniqueId());
         selectorModes.deactivate(event.getPlayer().getUniqueId());
     }

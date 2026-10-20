@@ -39,7 +39,7 @@ The team size sets how many players a new team has at most, 2 by default (`match
 
 `config.yml` has three sections, each value is described by a comment in the file:
 
-- `match`: delay between rounds, round time limit, sudden death damage, whether the final runs without sudden death, start gate duration, the team size (`team-size`, 2 players) and team colours
+- `match`: delay between rounds, round time limit, sudden death damage, whether the final runs without sudden death, start gate duration, the seconds a fighter who loses the connection during a round has to come back before being eliminated (`reconnect-seconds`, 60, 0 to 600, 0 eliminates at once as before), the team size (`team-size`, 2 players) and team colours
 - `arena`: cleaning speed and particles, flood fill limit, safety zone radius, the margin of the area of effect (`effect-margin`, 96 blocks), whether joining players are sent to the tribune (`teleport-on-join`, true), plus the fight area and spawns the plugin writes itself
 - `border`: particle display of border blocks and the marker of a confirmed wall
 

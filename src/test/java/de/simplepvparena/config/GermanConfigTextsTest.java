@@ -75,6 +75,8 @@ class GermanConfigTextsTest {
                 "  die Wartezeit bis zum Zurücksetzen nach einer Runde, das Rundenzeitlimit, der Schaden im Sudden "
                         + "Death und ob das Finale ohne Zeitlimit ausgetragen wird",
                 "  die Sekunden, die das Starttor zu Beginn einer Runde braucht",
+                "  die Sekunden, die ein Kämpfer nach einem Verbindungsabbruch zum Zurückkommen hat, für jeden "
+                        + "Verbindungsabbruch ab jetzt",
                 "  die Teamgröße, außer ein Turnier läuft oder ein Team hat mehr Spieler als eine kleinere neue Größe",
                 "  die Blockmengen der Reinigung und des Ausgangszustands und die Partikel einer laufenden Reinigung",
                 "  die Tiefe unter dem Boden, bis zu der der nächste Ausgangszustand aufgenommen wird",

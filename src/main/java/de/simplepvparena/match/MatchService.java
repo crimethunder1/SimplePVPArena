@@ -23,8 +23,10 @@ import org.bukkit.scheduler.BukkitTask;
 
 import java.time.Duration;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Random;
@@ -37,8 +39,13 @@ public final class MatchService {
 
     private static final long DEFAULT_ROUND_RESET_DELAY_TICKS = 100L;
     private static final long ROUND_TIMER_PERIOD_TICKS = 20L;
+    private static final long TICKS_PER_SECOND = 20L;
 
     public static final boolean DEFAULT_SUDDEN_DEATH_DISABLED_IN_FINAL = true;
+
+    public static final int DEFAULT_RECONNECT_SECONDS = 60;
+    public static final int MINIMUM_RECONNECT_SECONDS = 0;
+    public static final int MAXIMUM_RECONNECT_SECONDS = 600;
 
     private static final Title.Times SUDDEN_DEATH_TITLE_TIMES = Title.Times.times(
             Duration.ofMillis(200L), Duration.ofSeconds(2L), Duration.ofMillis(500L));
@@ -64,6 +71,7 @@ public final class MatchService {
     private final StartGates startGates;
     private final ArenaTemporaryEntityRemover temporaryEntityRemover;
     private final SuddenDeathTick suddenDeathTick = new SuddenDeathTick(new Random());
+    private final Map<UUID, ReconnectWindow> reconnectWindows = new LinkedHashMap<>();
 
     private MatchCompletionHandler matchCompletionHandler = (match, winnerTeamName) -> { };
     private ArenaAudience arenaAudience;
@@ -73,6 +81,7 @@ public final class MatchService {
     private long roundResetDelayTicks = DEFAULT_ROUND_RESET_DELAY_TICKS;
     private RoundTimeoutSettings roundTimeoutSettings = RoundTimeoutSettings.defaults();
     private boolean suddenDeathDisabledInFinal = DEFAULT_SUDDEN_DEATH_DISABLED_IN_FINAL;
+    private int reconnectSeconds = DEFAULT_RECONNECT_SECONDS;
     private boolean roundTimersPaused;
 
     public MatchService(Plugin plugin, KitService kitService, SpectatorService spectatorService,
@@ -121,6 +130,14 @@ public final class MatchService {
 
     public boolean isSuddenDeathDisabledInFinal() {
         return suddenDeathDisabledInFinal;
+    }
+
+    public void setReconnectSeconds(int reconnectSeconds) {
+        this.reconnectSeconds = Math.clamp(reconnectSeconds, MINIMUM_RECONNECT_SECONDS, MAXIMUM_RECONNECT_SECONDS);
+    }
+
+    public int getReconnectSeconds() {
+        return reconnectSeconds;
     }
 
     public void startMatch(Match match) {
@@ -200,6 +217,34 @@ public final class MatchService {
         return insideSuddenDeathTick;
     }
 
+    public void handlePlayerDisconnected(Player player) {
+        UUID playerUniqueId = player.getUniqueId();
+        Optional<Match> runningMatch = findRunningMatchOfActiveFighter(playerUniqueId);
+        if (reconnectSeconds <= 0 || runningMatch.isEmpty()) {
+            handlePlayerEliminated(playerUniqueId);
+            return;
+        }
+        openReconnectWindow(runningMatch.get(), playerUniqueId, player.getName());
+    }
+
+    public boolean handlePlayerReturned(Player player) {
+        UUID playerUniqueId = player.getUniqueId();
+        if (!closeReconnectWindow(playerUniqueId)) {
+            return false;
+        }
+        Optional<Match> runningMatch = findRunningMatchOfActiveFighter(playerUniqueId);
+        if (runningMatch.isEmpty()) {
+            return false;
+        }
+        announceToMatch(runningMatch.get(), Messages.text(MatchMessage.RECONNECT_RETURNED,
+                Placeholder.of("player", player.getName())));
+        return true;
+    }
+
+    public boolean isWaitingForReconnect(UUID playerUniqueId) {
+        return reconnectWindows.containsKey(playerUniqueId);
+    }
+
     public void handlePlayerEliminated(UUID playerUniqueId) {
         Optional<Match> matchOfPlayer = findMatchOfPlayer(playerUniqueId);
         if (matchOfPlayer.isEmpty()) {
@@ -213,6 +258,7 @@ public final class MatchService {
         if (roundParticipants.isEmpty() || !roundParticipants.get().eliminate(playerUniqueId)) {
             return;
         }
+        closeReconnectWindow(playerUniqueId);
         if (insideSuddenDeathTick) {
             return;
         }
@@ -238,6 +284,7 @@ public final class MatchService {
         }
         Match cancelledMatch = activeMatch;
         stopRoundTimer();
+        closeReconnectWindows();
         startGates.stopAndRestore();
         cancelledMatch.setState(MatchState.CANCELLED);
         activeMatch = null;
@@ -272,7 +319,52 @@ public final class MatchService {
                 .flatMap(Match::getRoundParticipants);
     }
 
+    private Optional<Match> findRunningMatchOfActiveFighter(UUID playerUniqueId) {
+        return getActiveMatch()
+                .filter(match -> match.getState() == MatchState.RUNNING)
+                .filter(match -> match.getRoundParticipants()
+                        .map(participants -> participants.isActive(playerUniqueId))
+                        .orElse(false));
+    }
+
+    private void openReconnectWindow(Match match, UUID playerUniqueId, String playerName) {
+        closeReconnectWindow(playerUniqueId);
+        int windowSeconds = reconnectSeconds;
+        BukkitTask expiryTask = plugin.getServer().getScheduler().runTaskLater(plugin,
+                () -> expireReconnectWindow(match, playerUniqueId), windowSeconds * TICKS_PER_SECOND);
+        reconnectWindows.put(playerUniqueId, new ReconnectWindow(playerName, expiryTask));
+        announceWarningToMatch(match, Messages.plural(MatchMessage.RECONNECT_CONNECTION_LOST, windowSeconds,
+                Placeholder.of("player", playerName)));
+    }
+
+    private void expireReconnectWindow(Match match, UUID playerUniqueId) {
+        ReconnectWindow window = reconnectWindows.remove(playerUniqueId);
+        if (window == null || findRunningMatchOfActiveFighter(playerUniqueId).filter(match::equals).isEmpty()) {
+            return;
+        }
+        announceWarningToMatch(match, Messages.text(MatchMessage.RECONNECT_NOT_RETURNED,
+                Placeholder.of("player", window.playerName())));
+        handlePlayerEliminated(playerUniqueId);
+    }
+
+    private boolean closeReconnectWindow(UUID playerUniqueId) {
+        ReconnectWindow window = reconnectWindows.remove(playerUniqueId);
+        if (window == null) {
+            return false;
+        }
+        window.expiryTask().cancel();
+        return true;
+    }
+
+    private void closeReconnectWindows() {
+        for (ReconnectWindow window : List.copyOf(reconnectWindows.values())) {
+            window.expiryTask().cancel();
+        }
+        reconnectWindows.clear();
+    }
+
     private void beginRound(Match match) {
+        closeReconnectWindows();
         removeTemporaryEntities(match);
         Set<UUID> firstTeamPlayers = collectOnlineMembers(match.getFirstTeam());
         Set<UUID> secondTeamPlayers = collectOnlineMembers(match.getSecondTeam());
@@ -356,6 +448,7 @@ public final class MatchService {
 
     private void finishMatch(Match match, String winnerTeamName, boolean decidedByAnAdmin) {
         stopRoundTimer();
+        closeReconnectWindows();
         startGates.stopAndRestore();
         match.setState(MatchState.FINISHED);
         activeMatch = null;
@@ -588,4 +681,6 @@ public final class MatchService {
     }
 
     private record ScheduledRoundTimer(RoundTimer timer, BukkitTask task) { }
+
+    private record ReconnectWindow(String playerName, BukkitTask expiryTask) { }
 }

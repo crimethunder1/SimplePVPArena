@@ -12,6 +12,7 @@ public record ConfigurationReloadReport(List<String> problems) {
             ConfigMessage.LANGUAGE_CATEGORY,
             ConfigMessage.ROUND_CATEGORY,
             ConfigMessage.START_GATE_CATEGORY,
+            ConfigMessage.RECONNECT_CATEGORY,
             ConfigMessage.TEAM_SIZE_CATEGORY,
             ConfigMessage.CLEANING_CATEGORY,
             ConfigMessage.BASELINE_DEPTH_CATEGORY,
