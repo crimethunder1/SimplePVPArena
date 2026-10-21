@@ -11,6 +11,7 @@ import de.simplepvparena.gate.StartGateDuration;
 import de.simplepvparena.match.MatchService;
 import de.simplepvparena.match.RoundTimeoutSettings;
 import de.simplepvparena.match.TeamColourSettings;
+import de.simplepvparena.message.MessageCatalogLoader;
 import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.configuration.MemoryConfiguration;
 import org.junit.jupiter.api.Test;
@@ -58,7 +59,7 @@ class PluginSettingsTest {
         assertEquals(6L * PluginSettings.TICKS_PER_SECOND, settings.borderWallPreviewDurationTicks());
         assertEquals(new ConfirmedBorderParticleSettings("DUST", 1.5D, 10, 20, 30),
                 settings.confirmedBorderParticleSettings());
-        assertEquals("de", settings.language());
+        assertEquals("de", PluginSettings.readLanguage(configuration, problems::add));
     }
 
     @Test
@@ -89,7 +90,8 @@ class PluginSettingsTest {
         assertTrue(shipped.borderParticleMaximumLinesPerPlayer() != settings.borderParticleMaximumLinesPerPlayer());
         assertTrue(shipped.borderWallPreviewDurationTicks() != settings.borderWallPreviewDurationTicks());
         assertTrue(!shipped.confirmedBorderParticleSettings().equals(settings.confirmedBorderParticleSettings()));
-        assertTrue(!shipped.language().equals(settings.language()));
+        assertTrue(!MessageCatalogLoader.DEFAULT_LANGUAGE.equals(
+                PluginSettings.readLanguage(configurationWithEveryValueChanged(), problems::add)));
     }
 
     @Test

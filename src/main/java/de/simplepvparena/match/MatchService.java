@@ -103,10 +103,10 @@ public final class MatchService {
     public MatchService(Plugin plugin, KitService kitService, SpectatorService spectatorService,
                         FighterColours fighterColours, StartGates startGates,
                         ArenaTemporaryEntityRemover temporaryEntityRemover) {
-        this.plugin = plugin;
-        this.kitService = kitService;
-        this.spectatorService = spectatorService;
-        this.fighterColours = fighterColours;
+        this.plugin = Objects.requireNonNull(plugin, "plugin");
+        this.kitService = Objects.requireNonNull(kitService, "kitService");
+        this.spectatorService = Objects.requireNonNull(spectatorService, "spectatorService");
+        this.fighterColours = Objects.requireNonNull(fighterColours, "fighterColours");
         this.startGates = Objects.requireNonNull(startGates, "startGates");
         this.temporaryEntityRemover = Objects.requireNonNull(temporaryEntityRemover, "temporaryEntityRemover");
     }

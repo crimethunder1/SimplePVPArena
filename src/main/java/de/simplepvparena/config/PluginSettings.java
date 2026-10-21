@@ -50,8 +50,7 @@ public record PluginSettings(long roundResetDelayTicks,
                              int borderParticleMaximumBlocksPerPlayer,
                              int borderParticleMaximumLinesPerPlayer,
                              long borderWallPreviewDurationTicks,
-                             ConfirmedBorderParticleSettings confirmedBorderParticleSettings,
-                             String language) {
+                             ConfirmedBorderParticleSettings confirmedBorderParticleSettings) {
 
     public static final String KIT_SECTION_PATH = "kit";
 
@@ -145,8 +144,7 @@ public record PluginSettings(long roundResetDelayTicks,
                 BorderParticleService.DEFAULT_MAXIMUM_BLOCKS_PER_PLAYER,
                 BorderParticleService.DEFAULT_MAXIMUM_LINES_PER_PLAYER,
                 BorderWallPreview.DEFAULT_DURATION_TICKS,
-                ConfirmedBorderParticleSettings.defaults(),
-                MessageCatalogLoader.DEFAULT_LANGUAGE);
+                ConfirmedBorderParticleSettings.defaults());
     }
 
     public static PluginSettings read(ConfigurationSection configuration, Consumer<String> problemReporter) {
@@ -154,7 +152,7 @@ public record PluginSettings(long roundResetDelayTicks,
             return defaults();
         }
         PluginSettings shipped = defaults();
-        return new PluginSettings(
+        PluginSettings settings = new PluginSettings(
                 configuration.getLong(ROUND_RESET_DELAY_PATH, shipped.roundResetDelayTicks()),
                 readRoundTimeoutSettings(configuration, problemReporter),
                 configuration.getBoolean(DISABLE_SUDDEN_DEATH_IN_FINAL_PATH,
@@ -180,8 +178,9 @@ public record PluginSettings(long roundResetDelayTicks,
                         shipped.borderParticleMaximumLinesPerPlayer()),
                 TICKS_PER_SECOND * configuration.getInt(BORDER_WALL_PREVIEW_SECONDS_PATH,
                         DEFAULT_WALL_PREVIEW_SECONDS),
-                readConfirmedBorderParticleSettings(configuration, problemReporter),
-                readLanguage(configuration, problemReporter));
+                readConfirmedBorderParticleSettings(configuration, problemReporter));
+        readLanguage(configuration, problemReporter);
+        return settings;
     }
 
     public static String readLanguage(ConfigurationSection configuration, Consumer<String> problemReporter) {

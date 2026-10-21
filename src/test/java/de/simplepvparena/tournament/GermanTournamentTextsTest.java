@@ -276,32 +276,19 @@ class GermanTournamentTextsTest {
     }
 
     @Test
-    void describesTheStatusAndTheBracketBeforeTheTournament() {
+    void describesTheStatusBeforeTheTournament() {
         TournamentManagerFixture fixture = TournamentManagerFixture.withoutStorage(FOUR_TEAMS);
 
         assertEquals("Turnierstatus: kein Turnier", fixture.tournamentManager().describeStatus());
-        assertEquals(List.of("Es läuft kein Turnier"), fixture.tournamentManager().describeBracket());
     }
 
     @Test
-    void describesTheStatusAndTheBracketOfARunningTournament() {
+    void describesTheStatusOfARunningTournament() {
         TournamentManagerFixture fixture = TournamentManagerFixture.withoutStorage(FOUR_TEAMS);
         fixture.startTournament();
-        BracketMatch firstMatch = fixture.bracketMatch("round1-match1");
-        BracketMatch secondMatch = fixture.bracketMatch("round1-match2");
-        String firstTeam = firstMatch.getFirstTeamName().orElseThrow();
-        String secondTeam = firstMatch.getSecondTeamName().orElseThrow();
 
         assertEquals("Turnierstatus: läuft | Turnierrunden: 2 | laufendes Match: round1-match1 | Finale: wartet auf "
                 + "Finalisten", fixture.tournamentManager().describeStatus());
-        fixture.forceRunningMatchForTheFirstTeam();
-
-        assertEquals(List.of("Turnierrunde 1:",
-                "  round1-match1 " + firstTeam + " gegen " + secondTeam + " -> " + firstTeam,
-                "  round1-match2 " + secondMatch.getFirstTeamName().orElseThrow() + " gegen "
-                        + secondMatch.getSecondTeamName().orElseThrow(),
-                "Turnierrunde 2:",
-                "  round2-match1 " + firstTeam + " gegen offen"), fixture.tournamentManager().describeBracket());
     }
 
     @Test

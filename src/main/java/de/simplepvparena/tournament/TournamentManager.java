@@ -545,32 +545,6 @@ public final class TournamentManager implements MatchCompletionHandler {
                 .toList();
     }
 
-    public List<String> describeBracket() {
-        if (bracket == null) {
-            return List.of(Messages.text(CommonMessage.NO_TOURNAMENT_IN_PROGRESS));
-        }
-        List<String> lines = new ArrayList<>();
-        List<List<BracketMatch>> rounds = bracket.getRounds();
-        for (int roundIndex = 0; roundIndex < rounds.size(); roundIndex++) {
-            lines.add(Messages.text(TournamentStatusMessage.BRACKET_ROUND, Placeholder.of("round", roundIndex + 1)));
-            for (BracketMatch bracketMatch : rounds.get(roundIndex)) {
-                lines.add(describeBracketMatch(bracketMatch));
-            }
-        }
-        return lines;
-    }
-
-    private static String describeBracketMatch(BracketMatch bracketMatch) {
-        String openSlot = Messages.text(TournamentStatusMessage.BRACKET_OPEN_SLOT);
-        Placeholder match = Placeholder.of("match", bracketMatch.getMatchId());
-        Placeholder firstTeam = Placeholder.of("firstTeam", bracketMatch.getFirstTeamName().orElse(openSlot));
-        Placeholder secondTeam = Placeholder.of("secondTeam", bracketMatch.getSecondTeamName().orElse(openSlot));
-        return bracketMatch.getWinnerTeamName()
-                .map(winner -> Messages.text(TournamentStatusMessage.BRACKET_DECIDED_MATCH, match, firstTeam,
-                        secondTeam, Placeholder.of("winner", winner)))
-                .orElseGet(() -> Messages.text(TournamentStatusMessage.BRACKET_MATCH, match, firstTeam, secondTeam));
-    }
-
     private void recordBracketWinner(String matchId, String winnerTeamName, MatchDecisionKind decisionKind) {
         if (bracket == null) {
             return;

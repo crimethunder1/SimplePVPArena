@@ -113,7 +113,7 @@ class GermanMenuSnapshotTest {
 
         assertTrue(kitChoiceFixture.describeLastMenu().contains("""
                 23 | CHEST | Kit für das nächste Match wählen | Match round1-match1: Alpha gegen Bravo / \
-                Das Fenster schließt sich, wenn die Zeit um ist oder ein Kit gewählt wurde
+                Das Menü schließt sich, wenn die Zeit um ist oder ein Kit gewählt wurde
                 """), kitChoiceFixture.describeLastMenu());
         assertTrue(kitChoiceFixture.lastMenu().findTile(MAIN_KIT_CHOICE_SLOT).isPresent());
     }

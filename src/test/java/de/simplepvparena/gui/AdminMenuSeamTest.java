@@ -10,6 +10,7 @@ import de.simplepvparena.arena.ArenaHeightMarkerService;
 import de.simplepvparena.arena.ArenaHeightMarkers;
 import de.simplepvparena.arena.ArenaRegistry;
 import de.simplepvparena.arena.ArenaSetupService;
+import de.simplepvparena.arena.SpectatorService;
 import de.simplepvparena.border.BorderMarkIndex;
 import de.simplepvparena.border.BorderSelectorModeRegistry;
 import de.simplepvparena.border.BorderVisualEffect;
@@ -26,10 +27,13 @@ import de.simplepvparena.kit.KitLibrary;
 import de.simplepvparena.kit.KitLibraryStorage;
 import de.simplepvparena.kit.KitSaveService;
 import de.simplepvparena.kit.KitService;
+import de.simplepvparena.match.FighterColours;
 import de.simplepvparena.match.MatchService;
 import de.simplepvparena.message.TournamentMessages;
 import de.simplepvparena.permission.AdminPermission;
 import de.simplepvparena.support.FakeKitItemSerializer;
+import de.simplepvparena.support.FakeSpectatorItems;
+import de.simplepvparena.support.SharedBukkitServer;
 import de.simplepvparena.team.TeamMemberLookup;
 import de.simplepvparena.team.TeamRegistry;
 import de.simplepvparena.tournament.AutomaticArenaCleanup;
@@ -91,7 +95,9 @@ class AdminMenuSeamTest {
                 problem -> { }, problem -> { });
         StartGateMarks gateMarks = new StartGateMarks();
         StartGateDuration gateDuration = new StartGateDuration();
-        MatchService matchService = new MatchService(plugin, kitService, null, null, StartGates.NONE);
+        MatchService matchService = new MatchService(plugin, kitService,
+                new SpectatorService(arenaRegistry, new FakeSpectatorItems()),
+                SharedBukkitServer.proxy(FighterColours.class, (method, arguments) -> null), StartGates.NONE);
         ArenaCleaningService cleaningService = new ArenaCleaningService(plugin, (world, shape) -> 0);
         ArenaSetupService arenaSetupService = new ArenaSetupService(
                 new ActiveArenaState(arenaRegistry, heightMarkers), matchService,

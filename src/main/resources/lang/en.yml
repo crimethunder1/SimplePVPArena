@@ -1200,11 +1200,6 @@ tournament-status:
     no-running-match: 'Tournament state: {state} | rounds: {rounds} | running match: none | final: {stage}'
     running-match-and-champion: 'Tournament state: {state} | rounds: {rounds} | running match: {match} | final: {stage} | champion: {champion}'
     no-running-match-and-champion: 'Tournament state: {state} | rounds: {rounds} | running match: none | final: {stage} | champion: {champion}'
-  bracket:
-    round: 'Round {round}:'
-    match: '  {match} {firstTeam} vs {secondTeam}'
-    decided-match: '  {match} {firstTeam} vs {secondTeam} -> {winner}'
-    open-slot: 'open'
 final:
   start-reference: '"{tile}" in /tournament'
   refusal:

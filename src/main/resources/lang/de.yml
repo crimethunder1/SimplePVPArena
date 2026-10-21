@@ -124,7 +124,7 @@ main-menu:
     kit-choice:
       title: 'Kit für das nächste Match wählen'
       match: 'Match {match}: {firstTeam} gegen {secondTeam}'
-      lore: 'Das Fenster schließt sich, wenn die Zeit um ist oder ein Kit gewählt wurde'
+      lore: 'Das Menü schließt sich, wenn die Zeit um ist oder ein Kit gewählt wurde'
     close:
       title: 'Schließen'
       lore: 'Schließt das Menü'
@@ -1200,11 +1200,6 @@ tournament-status:
     no-running-match: 'Turnierstatus: {state} | Turnierrunden: {rounds} | laufendes Match: keins | Finale: {stage}'
     running-match-and-champion: 'Turnierstatus: {state} | Turnierrunden: {rounds} | laufendes Match: {match} | Finale: {stage} | Sieger: {champion}'
     no-running-match-and-champion: 'Turnierstatus: {state} | Turnierrunden: {rounds} | laufendes Match: keins | Finale: {stage} | Sieger: {champion}'
-  bracket:
-    round: 'Turnierrunde {round}:'
-    match: '  {match} {firstTeam} gegen {secondTeam}'
-    decided-match: '  {match} {firstTeam} gegen {secondTeam} -> {winner}'
-    open-slot: 'offen'
 final:
   start-reference: '"{tile}" in /tournament'
   refusal:

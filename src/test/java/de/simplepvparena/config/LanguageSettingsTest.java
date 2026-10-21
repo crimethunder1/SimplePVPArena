@@ -57,25 +57,28 @@ class LanguageSettingsTest {
 
     @Test
     void aShippedLanguageIsTakenInAnySpelling() {
-        assertEquals("de", PluginSettings.read(configurationWithLanguage("de"), problems::add).language());
-        assertEquals("de", PluginSettings.read(configurationWithLanguage(" DE "), problems::add).language());
-        assertEquals("en", PluginSettings.read(configurationWithLanguage("En"), problems::add).language());
+        assertEquals("de", PluginSettings.readLanguage(configurationWithLanguage("de"), problems::add));
+        assertEquals("de", PluginSettings.readLanguage(configurationWithLanguage(" DE "), problems::add));
+        assertEquals("en", PluginSettings.readLanguage(configurationWithLanguage("En"), problems::add));
+        PluginSettings.read(configurationWithLanguage(" DE "), problems::add);
         assertEquals(List.of(), problems);
     }
 
     @Test
     void aFileWithoutTheLanguageIsEnglishWithoutAProblem() {
         assertEquals(MessageCatalogLoader.DEFAULT_LANGUAGE,
-                PluginSettings.read(new MemoryConfiguration(), problems::add).language());
+                PluginSettings.readLanguage(new MemoryConfiguration(), problems::add));
         assertEquals(MessageCatalogLoader.DEFAULT_LANGUAGE, PluginSettings.readLanguage(null, problems::add));
+        PluginSettings.read(new MemoryConfiguration(), problems::add);
         assertEquals(List.of(), problems);
     }
 
     @Test
     void anUnknownLanguageFallsBackToEnglishAndIsReported() {
-        PluginSettings settings = PluginSettings.read(configurationWithLanguage("fr"), problems::add);
+        assertEquals("en", PluginSettings.readLanguage(configurationWithLanguage("fr"), problem -> { }));
 
-        assertEquals("en", settings.language());
+        PluginSettings.read(configurationWithLanguage("fr"), problems::add);
+
         assertEquals(List.of("language fr is no shipped language, falling back to en. Shipped languages: en and de"),
                 problems);
     }

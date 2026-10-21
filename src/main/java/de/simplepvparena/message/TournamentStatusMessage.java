@@ -19,11 +19,7 @@ public enum TournamentStatusMessage implements MessageKey {
     STATUS_WITH_RUNNING_MATCH_AND_CHAMPION("tournament-status.status.running-match-and-champion", "state", "rounds",
             "match", "stage", "champion"),
     STATUS_WITHOUT_RUNNING_MATCH_AND_CHAMPION("tournament-status.status.no-running-match-and-champion", "state",
-            "rounds", "stage", "champion"),
-    BRACKET_ROUND("tournament-status.bracket.round", "round"),
-    BRACKET_MATCH("tournament-status.bracket.match", "match", "firstTeam", "secondTeam"),
-    BRACKET_DECIDED_MATCH("tournament-status.bracket.decided-match", "match", "firstTeam", "secondTeam", "winner"),
-    BRACKET_OPEN_SLOT("tournament-status.bracket.open-slot");
+            "rounds", "stage", "champion");
 
     private final String path;
     private final Set<String> placeholderNames;

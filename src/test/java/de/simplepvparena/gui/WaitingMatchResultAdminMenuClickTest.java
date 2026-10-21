@@ -247,10 +247,6 @@ class WaitingMatchResultAdminMenuClickTest {
     private void assertDecidedFor(String winningTeamName) {
         assertEquals(List.of("Match " + MATCH_ID + " was decided for " + winningTeamName), fixture.messages());
         assertEquals(Optional.of(winningTeamName), bracketMatch(MATCH_ID).getWinnerTeamName());
-        assertTrue(fixture.tournamentManager().describeBracket().contains("  " + MATCH_ID + " "
-                + bracketMatch(MATCH_ID).getFirstTeamName().orElseThrow() + " vs "
-                + bracketMatch(MATCH_ID).getSecondTeamName().orElseThrow() + " -> " + winningTeamName),
-                fixture.tournamentManager().describeBracket().toString());
         assertEquals("round1-match1", fixture.runningMatch().getMatchId(), "the running match is left alone");
         assertWaitingMatchesOpened(0, "Waiting matches (page 1)");
         assertEquals(List.of("No match is waiting"),

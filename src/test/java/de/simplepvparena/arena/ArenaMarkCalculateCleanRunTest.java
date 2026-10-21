@@ -7,8 +7,12 @@ import de.simplepvparena.border.BorderWallPreview;
 import de.simplepvparena.border.ConfirmedBorderParticleSettings;
 import de.simplepvparena.border.SpectatorBorderService;
 import de.simplepvparena.gate.StartGates;
+import de.simplepvparena.kit.KitService;
+import de.simplepvparena.match.FighterColours;
 import de.simplepvparena.match.MatchService;
 import de.simplepvparena.message.TournamentMessages;
+import de.simplepvparena.support.FakeSpectatorItems;
+import de.simplepvparena.support.SharedBukkitServer;
 import net.kyori.adventure.text.Component;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -192,7 +196,10 @@ class ArenaMarkCalculateCleanRunTest {
                 }
             }
             setupService = new ArenaSetupService(activeArena,
-                    new MatchService(harness.getPlugin(), null, null, null, StartGates.NONE),
+                    new MatchService(harness.getPlugin(), new KitService(),
+                            new SpectatorService(arenaRegistry, new FakeSpectatorItems()),
+                            SharedBukkitServer.proxy(FighterColours.class, (method, arguments) -> null),
+                            StartGates.NONE),
                     new SpectatorBorderService(borderMarks, () -> { }),
                     new BorderWallPreview(harness.getPlugin(), new SilentVisualEffect()),
                     new ArenaGapGuide(harness.getPlugin()), cleaningService, baselineService,

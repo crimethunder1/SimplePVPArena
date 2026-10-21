@@ -1,7 +1,7 @@
 # Language of the texts players and admins see: en or de. The texts live in the files of the lang folder next to this file.
 language: en
 
-# Rounds, the round time limit, sudden death, the start gate, the team size and team colours.
+# Rounds, the round time limit, sudden death, the start gate, the countdown before the fight, the time to come back after a lost connection, the team size and team colours.
 match:
   # Ticks between the end of a round and the start of the next one (20 ticks are one second).
   round-reset-delay-ticks: 100

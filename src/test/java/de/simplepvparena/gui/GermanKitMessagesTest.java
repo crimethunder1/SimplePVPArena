@@ -179,7 +179,7 @@ class GermanKitMessagesTest {
         kitChoiceFixture.openMainMenu();
 
         assertEquals("23 | CHEST | Kit für das nächste Match wählen | Match round1-match1: Alpha gegen Bravo / "
-                + "Das Fenster schließt sich, wenn die Zeit um ist oder ein Kit gewählt wurde",
+                + "Das Menü schließt sich, wenn die Zeit um ist oder ein Kit gewählt wurde",
                 kitChoiceFixture.describeLastMenu().lines().filter(line -> line.startsWith("23 | "))
                         .findFirst().orElseThrow());
     }

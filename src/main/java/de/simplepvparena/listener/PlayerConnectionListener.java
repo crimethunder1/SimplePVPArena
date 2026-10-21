@@ -16,6 +16,7 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 
+import java.util.Objects;
 import java.util.Optional;
 
 public final class PlayerConnectionListener implements Listener {
@@ -29,11 +30,11 @@ public final class PlayerConnectionListener implements Listener {
     public PlayerConnectionListener(MatchService matchService, SpectatorService spectatorService,
                                     ArenaRegistry arenaRegistry, BorderSelectorModeRegistry selectorModes,
                                     KitService kitService) {
-        this.matchService = matchService;
-        this.spectatorService = spectatorService;
-        this.arenaRegistry = arenaRegistry;
-        this.selectorModes = selectorModes;
-        this.kitService = kitService;
+        this.matchService = Objects.requireNonNull(matchService, "matchService");
+        this.spectatorService = Objects.requireNonNull(spectatorService, "spectatorService");
+        this.arenaRegistry = Objects.requireNonNull(arenaRegistry, "arenaRegistry");
+        this.selectorModes = Objects.requireNonNull(selectorModes, "selectorModes");
+        this.kitService = Objects.requireNonNull(kitService, "kitService");
     }
 
     @EventHandler
