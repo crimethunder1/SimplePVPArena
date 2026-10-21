@@ -32,6 +32,7 @@ import de.simplepvparena.command.TournamentCommand;
 import de.simplepvparena.config.AutoMatchConfigurationWriter;
 import de.simplepvparena.config.ConfigurationReloadReport;
 import de.simplepvparena.config.ConfigurationReloadService;
+import de.simplepvparena.config.ConfirmedBorderParticleConfigurationWriter;
 import de.simplepvparena.config.PluginLiveConfiguration;
 import de.simplepvparena.config.PluginSettings;
 import de.simplepvparena.config.TeamSizeConfigurationWriter;
@@ -271,6 +272,8 @@ public final class SimplePVPArenaPlugin extends JavaPlugin {
                 this::reloadConfiguration, new TeamSizeConfigurationWriter(this::getConfig,
                         new File(getDataFolder(), CONFIGURATION_FILE_NAME), getLogger()),
                 autoMatchService, new AutoMatchConfigurationWriter(this::getConfig,
+                        new File(getDataFolder(), CONFIGURATION_FILE_NAME), getLogger()),
+                borderParticleService, new ConfirmedBorderParticleConfigurationWriter(this::getConfig,
                         new File(getDataFolder(), CONFIGURATION_FILE_NAME), getLogger()));
 
         configurationReloadService = new ConfigurationReloadService(this::getConfig, this::reloadConfig,

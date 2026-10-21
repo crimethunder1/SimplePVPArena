@@ -5,6 +5,8 @@ import de.simplepvparena.arena.ArenaHeightMarkerService;
 import de.simplepvparena.arena.ArenaSetupService;
 import de.simplepvparena.arena.ArenaShapeFloodFill;
 import de.simplepvparena.arena.ArenaSpawnType;
+import de.simplepvparena.border.BorderParticleService;
+import de.simplepvparena.border.ConfirmedBorderParticleWriter;
 import de.simplepvparena.gate.StartGateItemService;
 import de.simplepvparena.input.BlockItemRequest;
 import de.simplepvparena.input.BlockItemRequestResult;
@@ -20,6 +22,7 @@ import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -37,22 +40,30 @@ final class ArenaAdminMenu implements AdminMenu {
     private static final int ARENA_RESET_SLOT = 16;
     private static final int ARENA_HEIGHT_MARKER_SLOT = 19;
     private static final int ARENA_START_GATE_SLOT = 20;
+    private static final int ARENA_BORDER_PARTICLES_SLOT = 21;
     private static final Material START_GATE_TILE_MATERIAL = Material.IRON_BARS;
+    private static final Material BORDER_PARTICLES_TILE_MATERIAL = Material.BLAZE_POWDER;
 
     private final AdminMenuNavigation navigation;
     private final ArenaSetupService arenaSetupService;
     private final ArenaHeightMarkerService heightMarkerService;
     private final StartGateItemService gateItemService;
     private final ChatInputService chatInputService;
+    private final BorderParticleService borderParticleService;
+    private final ConfirmedBorderParticleWriter confirmedBorderParticleWriter;
 
     ArenaAdminMenu(AdminMenuNavigation navigation, ArenaSetupService arenaSetupService,
                    ArenaHeightMarkerService heightMarkerService, StartGateItemService gateItemService,
-                   ChatInputService chatInputService) {
+                   ChatInputService chatInputService, BorderParticleService borderParticleService,
+                   ConfirmedBorderParticleWriter confirmedBorderParticleWriter) {
         this.navigation = Objects.requireNonNull(navigation, "navigation");
         this.arenaSetupService = Objects.requireNonNull(arenaSetupService, "arenaSetupService");
         this.heightMarkerService = Objects.requireNonNull(heightMarkerService, "heightMarkerService");
         this.gateItemService = Objects.requireNonNull(gateItemService, "gateItemService");
         this.chatInputService = Objects.requireNonNull(chatInputService, "chatInputService");
+        this.borderParticleService = Objects.requireNonNull(borderParticleService, "borderParticleService");
+        this.confirmedBorderParticleWriter = Objects.requireNonNull(confirmedBorderParticleWriter,
+                "confirmedBorderParticleWriter");
     }
 
     @Override
@@ -77,6 +88,8 @@ final class ArenaAdminMenu implements AdminMenu {
                 Messages.text(ArenaMenuMessage.HEIGHT_MARKER_TITLE), buildHeightMarkerLore()));
         canvas.set(ARENA_START_GATE_SLOT, MenuItems.create(START_GATE_TILE_MATERIAL,
                 Messages.text(ArenaMenuMessage.START_GATE_TITLE), buildStartGateLore()));
+        canvas.set(ARENA_BORDER_PARTICLES_SLOT, MenuItems.create(BORDER_PARTICLES_TILE_MATERIAL,
+                Messages.text(ArenaMenuMessage.BORDER_PARTICLES_TITLE), buildBorderParticlesLore()));
         canvas.set(ARENA_FIRST_TEAM_SPAWN_SLOT, buildSpawnItem(Material.BLUE_BED, ArenaSpawnType.FIRST_TEAM,
                 ArenaMenuMessage.FIRST_TEAM_SPAWN_TITLE));
         canvas.set(ARENA_SECOND_TEAM_SPAWN_SLOT, buildSpawnItem(Material.RED_BED, ArenaSpawnType.SECOND_TEAM,
@@ -100,6 +113,7 @@ final class ArenaAdminMenu implements AdminMenu {
             case ARENA_DIAGNOSE_SLOT -> askForDebugCellLimitLine(player);
             case ARENA_HEIGHT_MARKER_SLOT -> handOutHeightMarker(player, holder);
             case ARENA_START_GATE_SLOT -> askForStartGateItemLine(player);
+            case ARENA_BORDER_PARTICLES_SLOT -> switchBorderParticles(player, holder);
             case ARENA_FIRST_TEAM_SPAWN_SLOT -> setSpawn(player, holder, ArenaSpawnType.FIRST_TEAM);
             case ARENA_SECOND_TEAM_SPAWN_SLOT -> setSpawn(player, holder, ArenaSpawnType.SECOND_TEAM);
             case ARENA_TRIBUNE_SPAWN_SLOT -> setSpawn(player, holder, ArenaSpawnType.TRIBUNE);
@@ -246,6 +260,40 @@ final class ArenaAdminMenu implements AdminMenu {
         List<String> lore = new ArrayList<>(Messages.lines(ArenaMenuMessage.START_GATE_LORE));
         lore.addAll(gateItemService.describeGate());
         return lore;
+    }
+
+    private List<String> buildBorderParticlesLore() {
+        boolean enabled = borderParticleService.isConfirmedParticleEnabled();
+        List<String> lore = new ArrayList<>();
+        lore.add(Messages.text(enabled
+                ? ArenaMenuMessage.BORDER_PARTICLES_STATE_SHOWN
+                : ArenaMenuMessage.BORDER_PARTICLES_STATE_HIDDEN));
+        lore.addAll(Messages.lines(ArenaMenuMessage.BORDER_PARTICLES_LORE));
+        lore.add(Messages.text(enabled
+                ? ArenaMenuMessage.BORDER_PARTICLES_CLICK_TO_HIDE
+                : ArenaMenuMessage.BORDER_PARTICLES_CLICK_TO_SHOW));
+        return lore;
+    }
+
+    private void switchBorderParticles(Player player, AdminMenuHolder holder) {
+        boolean enabled = !borderParticleService.isConfirmedParticleEnabled();
+        borderParticleService.setConfirmedParticleEnabled(enabled);
+        try {
+            confirmedBorderParticleWriter.write(enabled);
+            TournamentMessages.sendSuccess(player, Messages.text(enabled
+                    ? ArenaMenuMessage.BORDER_PARTICLES_SWITCHED_TO_SHOWN
+                    : ArenaMenuMessage.BORDER_PARTICLES_SWITCHED_TO_HIDDEN));
+        } catch (IOException failure) {
+            TournamentMessages.sendWarning(player, Messages.text(enabled
+                    ? ArenaMenuMessage.BORDER_PARTICLES_SWITCHED_TO_SHOWN_NOT_WRITTEN
+                    : ArenaMenuMessage.BORDER_PARTICLES_SWITCHED_TO_HIDDEN_NOT_WRITTEN,
+                    Placeholder.of("reason", describeFailure(failure))));
+        }
+        navigation.refresh(player, holder);
+    }
+
+    private static String describeFailure(IOException failure) {
+        return failure.getMessage() == null ? failure.getClass().getSimpleName() : failure.getMessage();
     }
 
     private List<String> buildResetTileLore() {

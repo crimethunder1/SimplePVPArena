@@ -50,6 +50,8 @@ class GermanArenaMenuSnapshotTest {
             und baut es mit einem Countdown von oben wieder ab / \
             Ein nicht gebautes Starttor wird übersprungen, die Runde startet trotzdem / \
             Das Starttor hat noch keinen Block / Es wird über 10 Sekunden abgebaut
+            21 | BLAZE_POWDER | Wandpartikel | Die Partikel werden angezeigt / \
+            Nur die Partikel an der bestätigten Arenawand / Klicke, um sie auszublenden
             22 | OAK_DOOR | Zurück | Zurück zum Hauptmenü
             """;
     private static final String INFO_OF_A_READY_ARENA = "4 | BOOK | Arena | Arena bereit / "

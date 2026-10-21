@@ -5,6 +5,7 @@ import de.simplepvparena.particle.ParticleNames;
 public record ConfirmedBorderParticleSettings(String particleName, double height, int red, int green, int blue) {
 
     public static final String SECTION_CONFIGURATION_PATH = "border.confirmed-particle";
+    public static final String ENABLED_CONFIGURATION_PATH = SECTION_CONFIGURATION_PATH + ".enabled";
     public static final String TYPE_CONFIGURATION_PATH = SECTION_CONFIGURATION_PATH + ".type";
     public static final String HEIGHT_CONFIGURATION_PATH = SECTION_CONFIGURATION_PATH + ".height";
     public static final String RED_CONFIGURATION_PATH = SECTION_CONFIGURATION_PATH + ".colour.red";

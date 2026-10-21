@@ -17,6 +17,7 @@ import de.simplepvparena.arena.PositionSnapshot;
 import de.simplepvparena.arena.SpectatorItemFactory;
 import de.simplepvparena.arena.SpectatorService;
 import de.simplepvparena.border.BorderMarkIndex;
+import de.simplepvparena.border.BorderParticleService;
 import de.simplepvparena.border.BorderSelectorModeRegistry;
 import de.simplepvparena.border.BorderVisualEffect;
 import de.simplepvparena.border.BorderWallPreview;
@@ -127,6 +128,7 @@ final class AdminMenuFixture {
     private final List<String> adminNotifications = new ArrayList<>();
     private final List<Integer> writtenTeamSizes = new ArrayList<>();
     private final List<Boolean> writtenAutoMatchModes = new ArrayList<>();
+    private final List<Boolean> writtenBorderParticleSwitches = new ArrayList<>();
     private final TickingScheduler kitChoiceScheduler = new TickingScheduler();
     private final KitChoiceService kitChoiceService;
     private final World world;
@@ -135,6 +137,7 @@ final class AdminMenuFixture {
     private final ArenaSetupService arenaSetupService;
     private final TournamentManager tournamentManager;
     private final AutoMatchService autoMatchService;
+    private final BorderParticleService borderParticleService;
     private final ChatInputService chatInputService;
     private final ChatInputListener chatInputListener;
     private final AdminMenuService menuService;
@@ -147,6 +150,7 @@ final class AdminMenuFixture {
     private int arenaConfigurationSaveCount;
     private IOException teamSizeWriteFailure;
     private IOException autoMatchModeWriteFailure;
+    private IOException borderParticleSwitchWriteFailure;
 
     AdminMenuFixture() {
         this(false);
@@ -164,6 +168,10 @@ final class AdminMenuFixture {
                 new SpectatorService(arenaRegistry, new SpectatorItemFactory(plugin)),
                 SharedBukkitServer.proxy(FighterColours.class, (method, arguments) -> null), StartGates.NONE);
         ArenaCleaningService cleaningService = new ArenaCleaningService(plugin, (cleanedWorld, shape) -> 0);
+        ArenaBorderConfirmation borderConfirmation = new ArenaBorderConfirmation(arenaRegistry.getArena()::hasShape);
+        borderParticleService = new BorderParticleService(plugin, borderMarks,
+                SharedBukkitServer.proxy(BorderVisualEffect.class, (method, arguments) -> null),
+                matchService::isActiveFighter, borderConfirmation);
         arenaSetupService = new ArenaSetupService(
                 new ActiveArenaState(arenaRegistry, heightMarkers), matchService,
                 new SpectatorBorderService(borderMarks, () -> { }),
@@ -171,7 +179,7 @@ final class AdminMenuFixture {
                         (method, arguments) -> null)),
                 new ArenaGapGuide(plugin), cleaningService,
                 new ArenaBaselineService(plugin, new ArenaBaselineRegistry()),
-                new ArenaBorderConfirmation(arenaRegistry.getArena()::hasShape),
+                borderConfirmation,
                 () -> arenaConfigurationSaveCount++);
         AutomaticArenaCleanup arenaCleanup = new AutomaticArenaCleanup(arenaSetupService, cleaningService);
         if (kitChoiceEnabled) {
@@ -211,6 +219,8 @@ final class AdminMenuFixture {
                 this::writeTeamSize,
                 autoMatchService,
                 this::writeAutoMatchMode,
+                borderParticleService,
+                this::writeBorderParticleSwitch,
                 windows,
                 () -> List.copyOf(onlinePlayers));
     }
@@ -341,6 +351,18 @@ final class AdminMenuFixture {
 
     void failAutoMatchModeWrites(IOException failure) {
         autoMatchModeWriteFailure = failure;
+    }
+
+    BorderParticleService borderParticleService() {
+        return borderParticleService;
+    }
+
+    List<Boolean> writtenBorderParticleSwitches() {
+        return writtenBorderParticleSwitches;
+    }
+
+    void failBorderParticleSwitchWrites(IOException failure) {
+        borderParticleSwitchWriteFailure = failure;
     }
 
     void makePlayersKnown(String... playerNames) {
@@ -644,6 +666,13 @@ final class AdminMenuFixture {
             throw autoMatchModeWriteFailure;
         }
         writtenAutoMatchModes.add(enabled);
+    }
+
+    private void writeBorderParticleSwitch(boolean enabled) throws IOException {
+        if (borderParticleSwitchWriteFailure != null) {
+            throw borderParticleSwitchWriteFailure;
+        }
+        writtenBorderParticleSwitches.add(enabled);
     }
 
     private static void assertSuccessful(TournamentOperationResult result) {

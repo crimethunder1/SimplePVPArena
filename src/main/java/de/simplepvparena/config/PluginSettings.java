@@ -52,7 +52,8 @@ public record PluginSettings(long roundResetDelayTicks,
                              int borderParticleMaximumBlocksPerPlayer,
                              int borderParticleMaximumLinesPerPlayer,
                              long borderWallPreviewDurationTicks,
-                             ConfirmedBorderParticleSettings confirmedBorderParticleSettings) {
+                             ConfirmedBorderParticleSettings confirmedBorderParticleSettings,
+                             boolean confirmedBorderParticleEnabled) {
 
     public static final String KIT_SECTION_PATH = "kit";
 
@@ -124,6 +125,7 @@ public record PluginSettings(long roundResetDelayTicks,
             BORDER_PARTICLE_MAXIMUM_BLOCKS_PATH,
             BORDER_PARTICLE_MAXIMUM_LINES_PATH,
             BORDER_WALL_PREVIEW_SECONDS_PATH,
+            ConfirmedBorderParticleSettings.ENABLED_CONFIGURATION_PATH,
             ConfirmedBorderParticleSettings.TYPE_CONFIGURATION_PATH,
             ConfirmedBorderParticleSettings.HEIGHT_CONFIGURATION_PATH,
             ConfirmedBorderParticleSettings.RED_CONFIGURATION_PATH,
@@ -153,7 +155,8 @@ public record PluginSettings(long roundResetDelayTicks,
                 BorderParticleService.DEFAULT_MAXIMUM_BLOCKS_PER_PLAYER,
                 BorderParticleService.DEFAULT_MAXIMUM_LINES_PER_PLAYER,
                 BorderWallPreview.DEFAULT_DURATION_TICKS,
-                ConfirmedBorderParticleSettings.defaults());
+                ConfirmedBorderParticleSettings.defaults(),
+                BorderParticleService.DEFAULT_CONFIRMED_PARTICLE_ENABLED);
     }
 
     public static PluginSettings read(ConfigurationSection configuration, Consumer<String> problemReporter) {
@@ -188,7 +191,8 @@ public record PluginSettings(long roundResetDelayTicks,
                         shipped.borderParticleMaximumLinesPerPlayer()),
                 TICKS_PER_SECOND * configuration.getInt(BORDER_WALL_PREVIEW_SECONDS_PATH,
                         DEFAULT_WALL_PREVIEW_SECONDS),
-                readConfirmedBorderParticleSettings(configuration, problemReporter));
+                readConfirmedBorderParticleSettings(configuration, problemReporter),
+                readConfirmedBorderParticleEnabled(configuration, problemReporter));
         readLanguage(configuration, problemReporter);
         return settings;
     }
@@ -241,6 +245,7 @@ public record PluginSettings(long roundResetDelayTicks,
         liveConfiguration.setBorderParticleMaximumLinesPerPlayer(borderParticleMaximumLinesPerPlayer);
         liveConfiguration.setBorderWallPreviewDurationTicks(borderWallPreviewDurationTicks);
         liveConfiguration.setConfirmedBorderParticleSettings(confirmedBorderParticleSettings);
+        liveConfiguration.setConfirmedBorderParticleEnabled(confirmedBorderParticleEnabled);
     }
 
     private static int readMaximumArenaCellCount(ConfigurationSection configuration,
@@ -517,5 +522,19 @@ public record PluginSettings(long roundResetDelayTicks,
                 configuration.getInt(ConfirmedBorderParticleSettings.RED_CONFIGURATION_PATH, defaults.red()),
                 configuration.getInt(ConfirmedBorderParticleSettings.GREEN_CONFIGURATION_PATH, defaults.green()),
                 configuration.getInt(ConfirmedBorderParticleSettings.BLUE_CONFIGURATION_PATH, defaults.blue()));
+    }
+
+    private static boolean readConfirmedBorderParticleEnabled(ConfigurationSection configuration,
+                                                              Consumer<String> problemReporter) {
+        if (!configuration.isSet(ConfirmedBorderParticleSettings.ENABLED_CONFIGURATION_PATH)) {
+            return BorderParticleService.DEFAULT_CONFIRMED_PARTICLE_ENABLED;
+        }
+        if (configuration.isBoolean(ConfirmedBorderParticleSettings.ENABLED_CONFIGURATION_PATH)) {
+            return configuration.getBoolean(ConfirmedBorderParticleSettings.ENABLED_CONFIGURATION_PATH);
+        }
+        problemReporter.accept(Messages.text(ConfigMessage.CONFIRMED_PARTICLE_ENABLED_NOT_A_TRUTH_VALUE,
+                Placeholder.of("path", ConfirmedBorderParticleSettings.ENABLED_CONFIGURATION_PATH),
+                Placeholder.of("fallback", BorderParticleService.DEFAULT_CONFIRMED_PARTICLE_ENABLED)));
+        return BorderParticleService.DEFAULT_CONFIRMED_PARTICLE_ENABLED;
     }
 }

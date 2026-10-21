@@ -57,4 +57,6 @@ public interface LiveConfiguration {
     void setBorderWallPreviewDurationTicks(long durationTicks);
 
     void setConfirmedBorderParticleSettings(ConfirmedBorderParticleSettings settings);
+
+    void setConfirmedBorderParticleEnabled(boolean enabled);
 }

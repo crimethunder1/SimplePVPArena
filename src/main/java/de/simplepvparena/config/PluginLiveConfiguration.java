@@ -247,4 +247,9 @@ public final class PluginLiveConfiguration implements LiveConfiguration {
     public void setConfirmedBorderParticleSettings(ConfirmedBorderParticleSettings settings) {
         borderVisualEffect.applyConfirmedParticleSettings(settings, problemReporter);
     }
+
+    @Override
+    public void setConfirmedBorderParticleEnabled(boolean enabled) {
+        borderParticleService.setConfirmedParticleEnabled(enabled);
+    }
 }

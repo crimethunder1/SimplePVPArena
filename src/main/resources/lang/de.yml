@@ -808,6 +808,14 @@ arena-menu:
         - 'Jeder Rundenstart stellt das ganze Starttor wieder her'
         - 'und baut es mit einem Countdown von oben wieder ab'
         - 'Ein nicht gebautes Starttor wird übersprungen, die Runde startet trotzdem'
+    border-particles:
+      title: 'Wandpartikel'
+      state-shown: 'Die Partikel werden angezeigt'
+      state-hidden: 'Die Partikel sind ausgeblendet'
+      lore:
+        - 'Nur die Partikel an der bestätigten Arenawand'
+      click-to-hide: 'Klicke, um sie auszublenden'
+      click-to-show: 'Klicke, um sie anzuzeigen'
   cleaning:
     affected-blocks:
       one: '{count} Block ist betroffen'
@@ -844,6 +852,11 @@ arena-menu:
         - 'Baue die Box um einen Team-Spawn aus dem, woraus deine Map besteht, und schließe sie mit diesen Blöcken'
         - 'Jeder davon, den du setzt, gehört sofort zum Starttor, ein abgebauter ist wieder draußen'
         - 'Jeder Rundenstart stellt das ganze Starttor wieder her und baut es von oben wieder ab'
+  border-particles:
+    switched-to-shown: 'Die Wandpartikel werden angezeigt'
+    switched-to-hidden: 'Die Wandpartikel sind ausgeblendet'
+    switched-to-shown-not-written: 'Die Wandpartikel werden angezeigt, aber config.yml konnte nicht geschrieben werden: {reason}'
+    switched-to-hidden-not-written: 'Die Wandpartikel sind ausgeblendet, aber config.yml konnte nicht geschrieben werden: {reason}'
   diagnosis-input:
     description: 'die Diagnose mit einem höheren Zellenlimit'
     prompt:
@@ -1508,6 +1521,7 @@ config:
     same-team-colours: '{path} gibt beiden Teams die Farbe {colour}, das wäre gar keine Färbung, stattdessen gelten {firstColour} und {secondColour}'
     unknown-team-colour: '{path} ist keine Farbe, in der ein Name gezeigt werden kann, stattdessen gilt {fallback}. Nutzbare Farben: {colours}'
     marker-height-negative: '{path} darf nicht negativ sein, stattdessen gelten {height} Blöcke. Mit null wird die Markierung so kurz wie möglich'
+    confirmed-particle-enabled-not-a-truth-value: '{path} muss true oder false sein, stattdessen gilt {fallback}'
   reload:
     reloaded: 'config.yml wurde neu geladen und angewendet'
     category:

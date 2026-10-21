@@ -86,6 +86,8 @@ border:
   wall-preview-seconds: 4
   # Marker on each border block once the wall is confirmed.
   confirmed-particle:
+    # false hides the marker, the outline shown after a calculation stays. The arena menu writes this value.
+    enabled: true
     # Particle type.
     type: END_ROD
     # Height in blocks of the particle stream above the block. 0 draws a single particle.

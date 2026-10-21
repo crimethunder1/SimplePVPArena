@@ -27,6 +27,8 @@ public enum ConfigMessage implements MessageKey {
     SAME_TEAM_COLOURS("config.problem.same-team-colours", "path", "colour", "firstColour", "secondColour"),
     UNKNOWN_TEAM_COLOUR("config.problem.unknown-team-colour", "path", "fallback", "colours"),
     MARKER_HEIGHT_NEGATIVE("config.problem.marker-height-negative", "path", "height"),
+    CONFIRMED_PARTICLE_ENABLED_NOT_A_TRUTH_VALUE("config.problem.confirmed-particle-enabled-not-a-truth-value", "path",
+            "fallback"),
     RELOADED("config.reload.reloaded"),
     LANGUAGE_CATEGORY("config.reload.category.language"),
     ROUND_CATEGORY("config.reload.category.round"),

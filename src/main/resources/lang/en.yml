@@ -808,6 +808,14 @@ arena-menu:
         - 'Every round start puts the whole gate back and takes'
         - 'it apart again from the top, with a countdown'
         - 'A gate nobody placed is skipped, the round still starts'
+    border-particles:
+      title: 'Border particles'
+      state-shown: 'The particles are shown'
+      state-hidden: 'The particles are hidden'
+      lore:
+        - 'Only the particles at the confirmed border wall'
+      click-to-hide: 'Click to hide them'
+      click-to-show: 'Click to show them'
   cleaning:
     affected-blocks:
       one: '{count} block is affected'
@@ -844,6 +852,11 @@ arena-menu:
         - 'Build the box around a team spawn out of whatever your map is made of and close it with these blocks'
         - 'Every one of them you place is part of the gate right away, breaking one takes it out again'
         - 'Every round start puts the whole gate back and takes it apart again from the top'
+  border-particles:
+    switched-to-shown: 'Border particles are shown'
+    switched-to-hidden: 'Border particles are hidden'
+    switched-to-shown-not-written: 'Border particles are shown, but config.yml could not be written: {reason}'
+    switched-to-hidden-not-written: 'Border particles are hidden, but config.yml could not be written: {reason}'
   diagnosis-input:
     description: 'the diagnosis cell limit'
     prompt:
@@ -1508,6 +1521,7 @@ config:
     same-team-colours: '{path} gives both teams the colour {colour}, which would be no colouring at all, falling back to {firstColour} and {secondColour}'
     unknown-team-colour: '{path} is no colour a name can be shown in, falling back to {fallback}. Usable colours: {colours}'
     marker-height-negative: '{path} cannot be negative, falling back to {height} blocks. Use zero for the shortest possible marker'
+    confirmed-particle-enabled-not-a-truth-value: '{path} must be true or false, falling back to {fallback}'
   reload:
     reloaded: 'config.yml was reloaded and applied'
     category:

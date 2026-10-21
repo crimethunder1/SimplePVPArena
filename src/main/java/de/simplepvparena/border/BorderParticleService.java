@@ -20,6 +20,8 @@ public final class BorderParticleService {
 
     public static final long DEFAULT_PERIOD_TICKS = 30L;
 
+    public static final boolean DEFAULT_CONFIRMED_PARTICLE_ENABLED = true;
+
     private static final int CONNECTION_LINE_POINT_COUNT = 3;
 
     private final Plugin plugin;
@@ -32,6 +34,7 @@ public final class BorderParticleService {
     private int maximumBlocksPerPlayer = DEFAULT_MAXIMUM_BLOCKS_PER_PLAYER;
     private int maximumLinesPerPlayer = DEFAULT_MAXIMUM_LINES_PER_PLAYER;
     private long periodTicks = DEFAULT_PERIOD_TICKS;
+    private boolean confirmedParticleEnabled = DEFAULT_CONFIRMED_PARTICLE_ENABLED;
     private BukkitTask activeTask;
 
     public BorderParticleService(Plugin plugin, BorderMarkIndex borderMarks, BorderVisualEffect visualEffect,
@@ -67,6 +70,14 @@ public final class BorderParticleService {
         }
     }
 
+    public void setConfirmedParticleEnabled(boolean confirmedParticleEnabled) {
+        this.confirmedParticleEnabled = confirmedParticleEnabled;
+    }
+
+    public boolean isConfirmedParticleEnabled() {
+        return confirmedParticleEnabled;
+    }
+
     public boolean isRunning() {
         return activeTask != null;
     }
@@ -88,6 +99,9 @@ public final class BorderParticleService {
 
     private void showBorderToNearbyPlayers() {
         if (borderMarks.getWorldNames().isEmpty()) {
+            return;
+        }
+        if (!confirmedParticleEnabled && borderConfirmation.isConfirmed()) {
             return;
         }
         for (Player player : plugin.getServer().getOnlinePlayers()) {

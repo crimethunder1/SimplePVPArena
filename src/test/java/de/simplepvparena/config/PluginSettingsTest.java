@@ -61,6 +61,7 @@ class PluginSettingsTest {
         assertEquals(6L * PluginSettings.TICKS_PER_SECOND, settings.borderWallPreviewDurationTicks());
         assertEquals(new ConfirmedBorderParticleSettings("DUST", 1.5D, 10, 20, 30),
                 settings.confirmedBorderParticleSettings());
+        assertFalse(settings.confirmedBorderParticleEnabled());
         assertEquals("de", PluginSettings.readLanguage(configuration, problems::add));
     }
 
@@ -96,6 +97,7 @@ class PluginSettingsTest {
         assertTrue(shipped.borderParticleMaximumLinesPerPlayer() != settings.borderParticleMaximumLinesPerPlayer());
         assertTrue(shipped.borderWallPreviewDurationTicks() != settings.borderWallPreviewDurationTicks());
         assertTrue(!shipped.confirmedBorderParticleSettings().equals(settings.confirmedBorderParticleSettings()));
+        assertTrue(shipped.confirmedBorderParticleEnabled() != settings.confirmedBorderParticleEnabled());
         assertTrue(!MessageCatalogLoader.DEFAULT_LANGUAGE.equals(
                 PluginSettings.readLanguage(configurationWithEveryValueChanged(), problems::add)));
     }
@@ -422,6 +424,7 @@ class PluginSettingsTest {
         configuration.set(ConfirmedBorderParticleSettings.RED_CONFIGURATION_PATH, 10);
         configuration.set(ConfirmedBorderParticleSettings.GREEN_CONFIGURATION_PATH, 20);
         configuration.set(ConfirmedBorderParticleSettings.BLUE_CONFIGURATION_PATH, 30);
+        configuration.set(ConfirmedBorderParticleSettings.ENABLED_CONFIGURATION_PATH, false);
         configuration.set(PluginSettings.KIT_SECTION_PATH + ".items", List.of());
         return configuration;
     }

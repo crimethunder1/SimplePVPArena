@@ -13,6 +13,7 @@ import de.simplepvparena.arena.ArenaRegistry;
 import de.simplepvparena.arena.ArenaSetupService;
 import de.simplepvparena.arena.SpectatorService;
 import de.simplepvparena.border.BorderMarkIndex;
+import de.simplepvparena.border.BorderParticleService;
 import de.simplepvparena.border.BorderSelectorModeRegistry;
 import de.simplepvparena.border.BorderVisualEffect;
 import de.simplepvparena.border.BorderWallPreview;
@@ -132,6 +133,11 @@ class AdminMenuSeamTest {
                         new ArenaAudience(List::of, arenaRegistry)),
                 enabled -> {
                     throw new UnsupportedOperationException("the auto match mode is not written in this test");
+                },
+                new BorderParticleService(plugin, new BorderMarkIndex(), silentVisualEffect,
+                        matchService::isActiveFighter, new ArenaBorderConfirmation(arenaRegistry.getArena()::hasShape)),
+                enabled -> {
+                    throw new UnsupportedOperationException("the border particles are not written in this test");
                 },
                 windows,
                 List::of);

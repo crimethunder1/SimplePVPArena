@@ -2,7 +2,9 @@ package de.simplepvparena.gui;
 
 import de.simplepvparena.arena.ArenaHeightMarkerService;
 import de.simplepvparena.arena.ArenaSetupService;
+import de.simplepvparena.border.BorderParticleService;
 import de.simplepvparena.border.BorderSelectorModeRegistry;
+import de.simplepvparena.border.ConfirmedBorderParticleWriter;
 import de.simplepvparena.config.ConfigurationReloadReport;
 import de.simplepvparena.diagnostics.TournamentDryRun;
 import de.simplepvparena.gate.StartGateItemService;
@@ -46,11 +48,14 @@ public final class AdminMenuService {
                             Supplier<ConfigurationReloadReport> configurationReloader,
                             TeamSizeWriter teamSizeWriter,
                             AutoMatchService autoMatchService,
-                            AutoMatchModeWriter autoMatchModeWriter) {
+                            AutoMatchModeWriter autoMatchModeWriter,
+                            BorderParticleService borderParticleService,
+                            ConfirmedBorderParticleWriter confirmedBorderParticleWriter) {
         this(plugin, tournamentManager, tournamentDryRun, teamRegistry, teamMemberLookup,
                 matchService, arenaSetupService, heightMarkerService, gateItemService, borderSelectorModes,
                 kitLibrary, kitSaveService, chatInputService, teamConfigurationSaver, configurationReloader,
-                teamSizeWriter, autoMatchService, autoMatchModeWriter, new InventoryAdminMenuWindows(plugin),
+                teamSizeWriter, autoMatchService, autoMatchModeWriter, borderParticleService,
+                confirmedBorderParticleWriter, new InventoryAdminMenuWindows(plugin),
                 () -> plugin.getServer().getOnlinePlayers());
     }
 
@@ -72,6 +77,8 @@ public final class AdminMenuService {
                      TeamSizeWriter teamSizeWriter,
                      AutoMatchService autoMatchService,
                      AutoMatchModeWriter autoMatchModeWriter,
+                     BorderParticleService borderParticleService,
+                     ConfirmedBorderParticleWriter confirmedBorderParticleWriter,
                      AdminMenuWindows windows,
                      Supplier<Collection<? extends Player>> onlinePlayers) {
         Objects.requireNonNull(plugin, "plugin");
@@ -113,7 +120,7 @@ public final class AdminMenuService {
                 chatInputService, teamConfigurationSaver, tournamentManager.getTeamSizeSetting(),
                 tournamentManager::isTournamentInProgress, teamSizeWriter);
         ArenaAdminMenu arenaAdminMenu = new ArenaAdminMenu(navigator, arenaSetupService, heightMarkerService,
-                gateItemService, chatInputService);
+                gateItemService, chatInputService, borderParticleService, confirmedBorderParticleWriter);
         bracketViewMenu = new BracketViewMenu(navigator, tournamentManager, matchService);
         MainAdminMenu mainAdminMenu = new MainAdminMenu(navigator, tournamentManager, tournamentDryRun, teamRegistry,
                 matchService, arenaSetupService, borderSelectorModes, configurationReloader, tournamentMenuStatus,
