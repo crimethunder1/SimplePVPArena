@@ -8,7 +8,7 @@ A Paper plugin that runs a team versus team single elimination tournament in one
 - A Paper server for Minecraft 26.2, built against `paper-api` 26.2.build.134-stable
 - Maven to build
 
-ViaVersion and ViaBackwards are optional soft dependencies.
+ViaVersion, ViaBackwards and ItemsAdder are optional soft dependencies, see "ItemsAdder (optional)" for the last one.
 
 ## Building
 
@@ -40,12 +40,13 @@ The bracket menu shows a tile for every match of a round with its two teams and 
 
 ## Configuration
 
-`config.yml` has four sections, each value is described by a comment in the file:
+`config.yml` has five sections, each value is described by a comment in the file:
 
 - `match`: delay between rounds, round time limit, sudden death damage, whether the final runs without sudden death, start gate duration, a countdown right before the fight of every round in which the fighters are blind and cannot be hurt and after which the round time limit starts (`countdown-seconds`, 3, 0 to 10, 0 turns it off), the seconds a fighter who loses the connection during a round has to come back before being eliminated (`reconnect-seconds`, 60, 0 to 600, 0 eliminates at once as before), the team size (`team-size`, 2 players) and team colours
 - `auto-match`: whether two teams that each have a player online get a match without a tournament (`enabled`, false, also switched by the tile "Auto match mode" in the match menu), the seconds between the announcement of such a match and its start (`start-delay-seconds`, 10, 3 to 120) and the pause after it and its cleaning (`pause-seconds`, 20, 0 to 300)
 - `arena`: cleaning speed and particles, flood fill limit, safety zone radius, the margin of the area of effect (`effect-margin`, 96 blocks), whether joining players are sent to the tribune (`teleport-on-join`, true), whether every player hands in the inventory inside the area of effect (`area-inventory.enabled`, true, see "Inventory in the area of effect"), plus the fight area and spawns the plugin writes itself
 - `border`: particle display of border blocks and the marker of a confirmed wall, with whether that marker is shown (`confirmed-particle.enabled`, true, also switched by the tile "Border particles" in the arena menu; false hides only the marker, the outline shown after a calculation stays)
+- `items-adder`: optional images for the countdown and an optional item for the totem at the start of the fight, taken from ItemsAdder, see "ItemsAdder (optional)"
 
 Changes can be applied while the server runs with the "Reload config.yml" item in the main menu of `/tournament`. A changed `team-size` is taken over only under the rules of the team menu, otherwise the old size stays and the log and the online admins read why. At the start of the server the value of `config.yml` is always taken over, also during a restored tournament; a team with more players is then named in the log and to the online admins and keeps its players.
 
@@ -90,3 +91,24 @@ When the file cannot be written the player keeps the inventory, the plugin tries
 Creative admins can put items into chests inside the area. Those chests belong to the arena, the cleaning resets the ones inside the fight area.
 
 `arena.area-inventory.enabled: false` in `config.yml` turns it off. "Reload config.yml" then gives every inventory back at once.
+
+## ItemsAdder (optional)
+
+ItemsAdder is a soft dependency. When it runs on the server, the countdown before the fight can show images and the totem animation at the start of the fight can show an own item. The plugin builds no resource pack of its own, the images and items come from the pack of ItemsAdder.
+
+Without ItemsAdder nothing changes: the countdown shows 3, 2, 1 and "Fight!", and every fighter sees the vanilla totem. The same holds with ItemsAdder while the IDs are empty or `items-adder.enabled` is false.
+
+| Value in `config.yml` | Default | Effect | Suggested ID |
+| --- | --- | --- | --- |
+| `items-adder.enabled` | `true` | When true and ItemsAdder runs, the IDs below are looked up in ItemsAdder. false keeps the own titles and effects | |
+| `items-adder.countdown-images.three` | `''` | Font image shown as the title instead of 3 | `simplepvparena:countdown_3` |
+| `items-adder.countdown-images.two` | `''` | Font image shown as the title instead of 2 | `simplepvparena:countdown_2` |
+| `items-adder.countdown-images.one` | `''` | Font image shown as the title instead of 1 | `simplepvparena:countdown_1` |
+| `items-adder.countdown-images.fight` | `''` | Font image shown as the title instead of "Fight!" | `simplepvparena:countdown_fight` |
+| `items-adder.totem-item` | `''` | Item every fighter sees in the totem animation at the start of the fight | `simplepvparena:totem` |
+
+The images are font images of ItemsAdder. They replace the title of the start animation and of the start gate countdown for the seconds 3, 2 and 1 and at the start of the fight; seconds above three keep their numbers, a second without an ID keeps its own title, the subtitle and the timing of the titles stay. For the totem the plugin puts a copy of the item with death protection into the off hand of every fighter for two ticks, plays the animation and gives back the item held there before; it is also given back at once when the fighter is eliminated or leaves, when the round or the match ends or is cancelled, and when the plugin stops. That copy cannot be dropped and never saves a fighter from death. A real totem in the main hand of a fighter is shown instead, the client prefers the main hand.
+
+The IDs are looked up once ItemsAdder has loaded its content. An ID that ItemsAdder does not know, or a failure inside ItemsAdder, falls back to the own title or effect and writes one warning per ID into the log. A value that is no truth value or no text falls back to the default with a warning in the log and in the answer of "Reload config.yml".
+
+"Reload config.yml" applies the IDs and the switch, false then ignores the IDs. Whether the plugin talks to ItemsAdder at all is decided when the server starts: installing or removing ItemsAdder, or starting with `items-adder.enabled: false` and switching it to true later, needs a restart of the server.

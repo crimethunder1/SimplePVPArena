@@ -5,6 +5,7 @@ import de.simplepvparena.border.ConfirmedBorderParticleSettings;
 import de.simplepvparena.match.RoundTimeoutSettings;
 import de.simplepvparena.match.TeamColourSettings;
 import de.simplepvparena.tournament.AutoMatchSettings;
+import de.simplepvparena.visual.CustomVisualSettings;
 
 public interface LiveConfiguration {
 
@@ -61,4 +62,6 @@ public interface LiveConfiguration {
     void setConfirmedBorderParticleEnabled(boolean enabled);
 
     void setAreaInventoryEnabled(boolean enabled);
+
+    void setCustomVisualSettings(CustomVisualSettings settings);
 }

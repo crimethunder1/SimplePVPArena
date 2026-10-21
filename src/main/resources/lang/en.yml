@@ -1302,6 +1302,13 @@ area-inventory:
   not-restored: 'The saved inventory of {player} could not be given back ({reason}), the file is kept and the next check tries again. This warning repeats at most once a minute'
   player-data-not-saved: 'The inventory of {player} is back, but the player data could not be saved ({reason}), {file} is kept as a copy'
   file-not-deleted: 'The inventory of {player} is back, but {file} could not be deleted ({reason})'
+visual:
+  items-adder-used: 'ItemsAdder was found, the IDs of the section {section} in config.yml are looked up in ItemsAdder once it has loaded its content'
+  items-adder-switched-off: 'ItemsAdder was found, but {path} in config.yml is false, the plugin shows its own titles and effects until a restart with true'
+  unknown-font-image: 'ItemsAdder has no font image {identifier}, set in {path} of config.yml, the own title of the plugin is shown instead'
+  unknown-item: 'ItemsAdder has no item {identifier}, set in {path} of config.yml, the own effect of the plugin is used instead'
+  lookup-failed: 'ItemsAdder could not hand out {identifier}, set in {path} of config.yml ({reason}), the own title or effect of the plugin is used instead'
+  totem-not-prepared: 'The item of {path} in config.yml could not be made into a totem ({reason}), the vanilla totem is played instead'
 command:
   menu-only-for-players:
     - 'The tournament administration is a menu'
@@ -1536,6 +1543,8 @@ config:
     marker-height-negative: '{path} cannot be negative, falling back to {height} blocks. Use zero for the shortest possible marker'
     confirmed-particle-enabled-not-a-truth-value: '{path} must be true or false, falling back to {fallback}'
     area-inventory-enabled-not-a-truth-value: '{path} must be true or false, falling back to {fallback}'
+    items-adder-enabled-not-a-truth-value: '{path} must be true or false, falling back to {fallback}'
+    items-adder-identifier-not-text: '{path} must be an ID in quotes such as {example} or empty, falling back to empty, the own title or effect of the plugin is used'
   reload:
     reloaded: 'config.yml was reloaded and applied'
     category:
@@ -1554,6 +1563,7 @@ config:
       teleport-on-join: 'whether joining players are sent to the tribune'
       area-inventory: 'whether players hand in their inventory in the area of effect, false gives every inventory back at once'
       border: 'the border particles, their limits and the confirmed border marker'
+      items-adder: 'the IDs of the ItemsAdder images and items and whether they are used, a switch between ItemsAdder and the own visuals of the plugin needs a restart'
     untouched: 'The calculated fight area, the spawns, the border blocks, the teams and a running match stay untouched'
     unusable-entries: 'Entries that could not be used and fell back to their default:'
   notice:

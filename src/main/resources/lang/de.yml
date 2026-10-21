@@ -1302,6 +1302,13 @@ area-inventory:
   not-restored: 'Das gesicherte Inventar von {player} konnte nicht zurückgegeben werden ({reason}), die Datei bleibt erhalten und die nächste Prüfung versucht es erneut. Diese Warnung kommt höchstens einmal pro Minute'
   player-data-not-saved: 'Das Inventar von {player} ist zurück, aber die Spielerdaten konnten nicht gespeichert werden ({reason}), {file} bleibt als Kopie erhalten'
   file-not-deleted: 'Das Inventar von {player} ist zurück, aber {file} konnte nicht gelöscht werden ({reason})'
+visual:
+  items-adder-used: 'ItemsAdder wurde gefunden, die IDs aus dem Abschnitt {section} in config.yml werden in ItemsAdder nachgeschlagen, sobald es seine Inhalte geladen hat'
+  items-adder-switched-off: 'ItemsAdder wurde gefunden, aber {path} in config.yml ist false, das Plugin zeigt bis zu einem Neustart mit true seine eigenen Titel und Effekte'
+  unknown-font-image: 'ItemsAdder kennt kein Schriftbild {identifier} aus {path} in config.yml, stattdessen erscheint der eigene Titel des Plugins'
+  unknown-item: 'ItemsAdder kennt kein Item {identifier} aus {path} in config.yml, stattdessen gilt der eigene Effekt des Plugins'
+  lookup-failed: 'ItemsAdder konnte {identifier} aus {path} in config.yml nicht liefern ({reason}), stattdessen gilt der eigene Titel oder Effekt des Plugins'
+  totem-not-prepared: 'Das Item aus {path} in config.yml konnte nicht zum Totem gemacht werden ({reason}), stattdessen erscheint das normale Totem'
 command:
   menu-only-for-players:
     - 'Die Turnierverwaltung ist ein Menü'
@@ -1536,6 +1543,8 @@ config:
     marker-height-negative: '{path} darf nicht negativ sein, stattdessen gelten {height} Blöcke. Mit null wird die Markierung so kurz wie möglich'
     confirmed-particle-enabled-not-a-truth-value: '{path} muss true oder false sein, stattdessen gilt {fallback}'
     area-inventory-enabled-not-a-truth-value: '{path} muss true oder false sein, stattdessen gilt {fallback}'
+    items-adder-enabled-not-a-truth-value: '{path} muss true oder false sein, stattdessen gilt {fallback}'
+    items-adder-identifier-not-text: '{path} muss eine ID in Anführungszeichen wie {example} oder leer sein, stattdessen bleibt der Wert leer und es gilt der eigene Titel oder Effekt des Plugins'
   reload:
     reloaded: 'config.yml wurde neu geladen und angewendet'
     category:
@@ -1554,6 +1563,7 @@ config:
       teleport-on-join: 'ob Spieler, die dem Server beitreten, auf die Tribüne geschickt werden'
       area-inventory: 'ob Spieler im Wirkungsbereich ihr Inventar abgeben, mit false bekommt jeder sein Inventar sofort zurück'
       border: 'die Wandpartikel, ihre Grenzen und die Markierung der bestätigten Arenawand'
+      items-adder: 'die IDs der Bilder und Items aus ItemsAdder und ob sie genutzt werden, ein Wechsel zwischen ItemsAdder und den eigenen Anzeigen des Plugins braucht einen Neustart'
     untouched: 'Die berechnete Kampffläche, die Spawns, die Wandblöcke, die Teams und ein laufendes Match bleiben unberührt'
     unusable-entries: 'Einträge, die nicht genutzt werden konnten und auf ihren Standardwert zurückgefallen sind:'
   notice:

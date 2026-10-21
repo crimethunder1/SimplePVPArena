@@ -12,6 +12,7 @@ final class RecordingRoundStartEffects implements RoundStartEffects {
 
     private final Map<String, Integer> blindnessTicksByPlayerName = new LinkedHashMap<>();
     private final List<String> events = new ArrayList<>();
+    private final List<String> stops = new ArrayList<>();
 
     @Override
     public void blind(Player player, int durationTicks) {
@@ -28,6 +29,20 @@ final class RecordingRoundStartEffects implements RoundStartEffects {
     @Override
     public void playFightStartAnimation(Player player) {
         events.add("totem for " + player.getName());
+    }
+
+    @Override
+    public void stopFightStartAnimation(Player player) {
+        stops.add("stop the totem of " + player.getName());
+    }
+
+    @Override
+    public void stopFightStartAnimations() {
+        stops.add("stop every totem");
+    }
+
+    List<String> stops() {
+        return stops;
     }
 
     boolean isBlind(ArenaMatchHarness.FakePlayer player) {

@@ -149,6 +149,8 @@ class ConfigTextsTest {
                 "  whether players hand in their inventory in the area of effect, false gives every inventory back "
                         + "at once",
                 "  the border particles, their limits and the confirmed border marker",
+                "  the IDs of the ItemsAdder images and items and whether they are used, a switch between ItemsAdder "
+                        + "and the own visuals of the plugin needs a restart",
                 "The calculated fight area, the spawns, the border blocks, the teams and a running match stay "
                         + "untouched",
                 "Entries that could not be used and fell back to their default:",

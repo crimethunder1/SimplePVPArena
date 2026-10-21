@@ -23,7 +23,8 @@ public record ConfigurationReloadReport(List<String> problems) {
             ConfigMessage.EFFECT_MARGIN_CATEGORY,
             ConfigMessage.TELEPORT_ON_JOIN_CATEGORY,
             ConfigMessage.AREA_INVENTORY_CATEGORY,
-            ConfigMessage.BORDER_CATEGORY);
+            ConfigMessage.BORDER_CATEGORY,
+            ConfigMessage.ITEMS_ADDER_CATEGORY);
 
     private static final String ENTRY_INDENT = "  ";
 

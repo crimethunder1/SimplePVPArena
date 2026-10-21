@@ -101,3 +101,16 @@ border:
       red: 255
       green: 255
       blue: 255
+
+# Optional images and items from the ItemsAdder plugin. Without ItemsAdder or with an empty ID, the plugin shows its own titles and effects as before. The plugin builds no resource pack, the images come with the pack of ItemsAdder.
+items-adder:
+  # When true and ItemsAdder runs, the IDs below are looked up in ItemsAdder. false keeps the own titles and effects even with ItemsAdder. A reload applies this value to the IDs, a switch between ItemsAdder and the own visuals of the plugin needs a server restart.
+  enabled: true
+  # Font images of ItemsAdder shown as the title instead of the numbers 3, 2, 1 and the word at the start of the fight. Empty shows the own title. Suggested IDs: simplepvparena:countdown_3, simplepvparena:countdown_2, simplepvparena:countdown_1, simplepvparena:countdown_fight.
+  countdown-images:
+    three: ''
+    two: ''
+    one: ''
+    fight: ''
+  # Item of ItemsAdder every fighter sees in the totem animation at the start of the fight. It sits in the off hand for two ticks, the item held there before comes back right after. Empty plays the vanilla totem. Suggested ID: simplepvparena:totem.
+  totem-item: ''

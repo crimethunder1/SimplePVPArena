@@ -90,6 +90,8 @@ class GermanConfigTextsTest {
                 "  ob Spieler im Wirkungsbereich ihr Inventar abgeben, mit false bekommt jeder sein Inventar sofort "
                         + "zurück",
                 "  die Wandpartikel, ihre Grenzen und die Markierung der bestätigten Arenawand",
+                "  die IDs der Bilder und Items aus ItemsAdder und ob sie genutzt werden, ein Wechsel zwischen "
+                        + "ItemsAdder und den eigenen Anzeigen des Plugins braucht einen Neustart",
                 "Die berechnete Kampffläche, die Spawns, die Wandblöcke, die Teams und ein laufendes Match bleiben "
                         + "unberührt",
                 "Einträge, die nicht genutzt werden konnten und auf ihren Standardwert zurückgefallen sind:",

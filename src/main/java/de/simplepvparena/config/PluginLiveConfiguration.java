@@ -23,6 +23,7 @@ import de.simplepvparena.message.Placeholder;
 import de.simplepvparena.team.TeamRegistry;
 import de.simplepvparena.team.TeamSizeSetting;
 import de.simplepvparena.tournament.AutoMatchSettings;
+import de.simplepvparena.visual.CustomVisualSettings;
 
 import java.util.Objects;
 import java.util.Optional;
@@ -51,6 +52,7 @@ public final class PluginLiveConfiguration implements LiveConfiguration {
     private final Consumer<String> languageApplier;
     private final Consumer<AutoMatchSettings> autoMatchSettingsApplier;
     private final Consumer<Boolean> areaInventoryEnabledApplier;
+    private final Consumer<CustomVisualSettings> customVisualSettingsApplier;
 
     public PluginLiveConfiguration(MatchService matchService,
                                    StartGateDuration startGateDuration,
@@ -71,7 +73,8 @@ public final class PluginLiveConfiguration implements LiveConfiguration {
                                    Consumer<String> problemReporter,
                                    Consumer<String> languageApplier,
                                    Consumer<AutoMatchSettings> autoMatchSettingsApplier,
-                                   Consumer<Boolean> areaInventoryEnabledApplier) {
+                                   Consumer<Boolean> areaInventoryEnabledApplier,
+                                   Consumer<CustomVisualSettings> customVisualSettingsApplier) {
         this.matchService = Objects.requireNonNull(matchService, "matchService");
         this.startGateDuration = Objects.requireNonNull(startGateDuration, "startGateDuration");
         this.fighterColours = Objects.requireNonNull(fighterColours, "fighterColours");
@@ -95,6 +98,8 @@ public final class PluginLiveConfiguration implements LiveConfiguration {
                 "autoMatchSettingsApplier");
         this.areaInventoryEnabledApplier = Objects.requireNonNull(areaInventoryEnabledApplier,
                 "areaInventoryEnabledApplier");
+        this.customVisualSettingsApplier = Objects.requireNonNull(customVisualSettingsApplier,
+                "customVisualSettingsApplier");
     }
 
     @Override
@@ -260,5 +265,10 @@ public final class PluginLiveConfiguration implements LiveConfiguration {
     @Override
     public void setAreaInventoryEnabled(boolean enabled) {
         areaInventoryEnabledApplier.accept(enabled);
+    }
+
+    @Override
+    public void setCustomVisualSettings(CustomVisualSettings settings) {
+        customVisualSettingsApplier.accept(settings);
     }
 }

@@ -84,6 +84,7 @@ public final class MatchService {
     private MatchCompletionHandler matchCompletionHandler = (match, winnerTeamName) -> { };
     private MatchCompletionHandler autoMatchCompletionHandler = (match, winnerTeamName) -> { };
     private RoundStartEffects roundStartEffects = new VanillaRoundStartEffects();
+    private CountdownImages countdownImages = CountdownImages.NONE;
     private ArenaAudience arenaAudience;
     private Match activeMatch;
     private ScheduledRoundTimer activeRoundTimer;
@@ -131,6 +132,10 @@ public final class MatchService {
 
     public void setRoundStartEffects(RoundStartEffects roundStartEffects) {
         this.roundStartEffects = Objects.requireNonNull(roundStartEffects, "roundStartEffects");
+    }
+
+    public void setCountdownImages(CountdownImages countdownImages) {
+        this.countdownImages = Objects.requireNonNull(countdownImages, "countdownImages");
     }
 
     public void setRoundResetDelayTicks(long roundResetDelayTicks) {
@@ -251,6 +256,7 @@ public final class MatchService {
     }
 
     public void handlePlayerDisconnected(Player player) {
+        roundStartEffects.stopFightStartAnimation(player);
         UUID playerUniqueId = player.getUniqueId();
         Optional<Match> runningMatch = findRunningMatchOfActiveFighter(playerUniqueId);
         if (reconnectSeconds <= 0 || runningMatch.isEmpty() || isSuddenDeathRunning()
@@ -298,6 +304,7 @@ public final class MatchService {
             return;
         }
         removeStartAnimationBlindness(playerUniqueId);
+        stopFightStartAnimation(playerUniqueId);
         closeReconnectWindow(playerUniqueId);
         if (insideSuddenDeathTick) {
             return;
@@ -514,7 +521,15 @@ public final class MatchService {
         }
     }
 
+    private void stopFightStartAnimation(UUID playerUniqueId) {
+        Player player = plugin.getServer().getPlayer(playerUniqueId);
+        if (player != null) {
+            roundStartEffects.stopFightStartAnimation(player);
+        }
+    }
+
     private void stopStartAnimation() {
+        roundStartEffects.stopFightStartAnimations();
         StartAnimation animation = activeStartAnimation;
         if (animation == null) {
             return;
@@ -807,10 +822,11 @@ public final class MatchService {
 
     private void showCountdownTitle(Match match, int remainingSeconds, Component subtitle) {
         boolean release = StartGateCountdown.isRelease(remainingSeconds);
-        Title title = Title.title(
-                Component.text(StartGateCountdown.describeTitle(remainingSeconds),
-                        release ? TournamentMessages.SUCCESS_COLOUR : TournamentMessages.WARNING_COLOUR),
-                subtitle,
+        Component headline = countdownImages.findImage(remainingSeconds)
+                .<Component>map(Component::text)
+                .orElseGet(() -> Component.text(StartGateCountdown.describeTitle(remainingSeconds),
+                        release ? TournamentMessages.SUCCESS_COLOUR : TournamentMessages.WARNING_COLOUR));
+        Title title = Title.title(headline, subtitle,
                 release ? START_GATE_RELEASE_TITLE_TIMES : START_GATE_SECOND_TITLE_TIMES);
         forEachAreaAudience(match, player -> player.showTitle(title));
     }

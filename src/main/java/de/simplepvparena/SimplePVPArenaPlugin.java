@@ -72,6 +72,7 @@ import de.simplepvparena.listener.ArenaMobRuleListener;
 import de.simplepvparena.listener.ArenaSafetyZoneListener;
 import de.simplepvparena.listener.BorderSelectorListener;
 import de.simplepvparena.listener.ChatInputListener;
+import de.simplepvparena.listener.FightStartTotemListener;
 import de.simplepvparena.listener.FriendlyFireListener;
 import de.simplepvparena.listener.GlobalPvpLockListener;
 import de.simplepvparena.listener.PlayerConnectionListener;
@@ -81,9 +82,12 @@ import de.simplepvparena.listener.PlayerMoveListener;
 import de.simplepvparena.listener.PlayerRespawnListener;
 import de.simplepvparena.listener.SpectatorBorderListener;
 import de.simplepvparena.listener.StartGateListener;
+import de.simplepvparena.match.CustomItemRoundStartEffects;
 import de.simplepvparena.match.FighterColours;
 import de.simplepvparena.match.MatchService;
+import de.simplepvparena.match.PaperFightStartTotems;
 import de.simplepvparena.match.ScoreboardFighterColours;
+import de.simplepvparena.match.VanillaRoundStartEffects;
 import de.simplepvparena.message.MessageCatalogLoader;
 import de.simplepvparena.message.Messages;
 import de.simplepvparena.message.Placeholder;
@@ -100,6 +104,10 @@ import de.simplepvparena.tournament.FileTournamentStateStorage;
 import de.simplepvparena.tournament.KitChoiceService;
 import de.simplepvparena.tournament.OnlineAdminNotifier;
 import de.simplepvparena.tournament.TournamentManager;
+import de.simplepvparena.visual.ConfiguredVisuals;
+import de.simplepvparena.visual.CustomVisuals;
+import de.simplepvparena.visual.CustomVisualsSelection;
+import de.simplepvparena.visual.ItemsAdderVisuals;
 import org.bukkit.command.PluginCommand;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -154,6 +162,8 @@ public final class SimplePVPArenaPlugin extends JavaPlugin {
     private TournamentDryRun tournamentDryRun;
     private ConfigurationReloadService configurationReloadService;
     private AreaInventoryService areaInventoryService;
+    private ConfiguredVisuals configuredVisuals;
+    private CustomItemRoundStartEffects fightStartEffects;
 
     @Override
     public void onEnable() {
@@ -285,6 +295,14 @@ public final class SimplePVPArenaPlugin extends JavaPlugin {
                 borderParticleService, new ConfirmedBorderParticleConfigurationWriter(this::getConfig,
                         new File(getDataFolder(), CONFIGURATION_FILE_NAME), getLogger()));
 
+        configuredVisuals = new ConfiguredVisuals(CustomVisualsSelection.select(getServer().getPluginManager(),
+                PluginSettings.readItemsAdderEnabled(getConfig(), problem -> { }), this::createItemsAdderVisuals,
+                getLogger()::info), getLogger()::warning);
+        matchService.setCountdownImages(configuredVisuals);
+        fightStartEffects = new CustomItemRoundStartEffects(this, new VanillaRoundStartEffects(),
+                configuredVisuals::findTotemItem, new PaperFightStartTotems(this), getLogger()::warning);
+        matchService.setRoundStartEffects(fightStartEffects);
+
         configurationReloadService = new ConfigurationReloadService(this::getConfig, this::reloadConfig,
                 new PluginLiveConfiguration(matchService, startGateDuration, fighterColours,
                         arenaCleaningService, arenaCleaningVisualEffect, arenaBaselineService, arenaSetupService,
@@ -292,7 +310,7 @@ public final class SimplePVPArenaPlugin extends JavaPlugin {
                         borderVisualEffect, teamSizeSetting, teamRegistry, tournamentManager::isTournamentInProgress,
                         adminNotifier::notifyAdmins,
                         getLogger()::warning, messageCatalogLoader::useLanguage, autoMatchService::applySettings,
-                        areaInventoryService::setEnabled),
+                        areaInventoryService::setEnabled, configuredVisuals::applySettings),
                 getLogger()::warning);
         configurationReloadService.applyStoredConfiguration();
 
@@ -329,6 +347,9 @@ public final class SimplePVPArenaPlugin extends JavaPlugin {
         }
         if (autoMatchService != null) {
             autoMatchService.stop();
+        }
+        if (fightStartEffects != null) {
+            fightStartEffects.stopFightStartAnimations();
         }
         if (matchService != null) {
             matchService.cancelActiveMatch();
@@ -373,6 +394,12 @@ public final class SimplePVPArenaPlugin extends JavaPlugin {
 
     public TournamentManager getTournamentManager() {
         return tournamentManager;
+    }
+
+    private CustomVisuals createItemsAdderVisuals() {
+        ItemsAdderVisuals itemsAdderVisuals = new ItemsAdderVisuals();
+        getServer().getPluginManager().registerEvents(itemsAdderVisuals, this);
+        return itemsAdderVisuals;
     }
 
     static void loadKitLibrary(KitLibraryLoader kitLibraryLoader, ConfigurationSection legacyKitSection,
@@ -473,5 +500,6 @@ public final class SimplePVPArenaPlugin extends JavaPlugin {
                 new ArenaDamageListener(matchService, spectatorService, arenaRegistry, getServer()), this);
         getServer().getPluginManager().registerEvents(
                 new AreaInventoryListener(this, areaInventoryService), this);
+        getServer().getPluginManager().registerEvents(new FightStartTotemListener(fightStartEffects), this);
     }
 }

@@ -6,6 +6,7 @@ import de.simplepvparena.gate.StartGateDuration;
 import de.simplepvparena.match.RoundTimeoutSettings;
 import de.simplepvparena.match.TeamColourSettings;
 import de.simplepvparena.tournament.AutoMatchSettings;
+import de.simplepvparena.visual.CustomVisualSettings;
 
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -39,6 +40,7 @@ final class RecordingLiveConfiguration implements LiveConfiguration {
     static final String CONFIRMED_PARTICLE = "confirmedBorderParticleSettings";
     static final String CONFIRMED_PARTICLE_ENABLED = "confirmedBorderParticleEnabled";
     static final String AREA_INVENTORY_ENABLED = "areaInventoryEnabled";
+    static final String CUSTOM_VISUALS = "customVisualSettings";
 
     static final List<String> EVERY_APPLIED_VALUE = List.of(
             LANGUAGE,
@@ -48,7 +50,7 @@ final class RecordingLiveConfiguration implements LiveConfiguration {
             CLEANING_PARTICLE, MAXIMUM_CELL_COUNT, SAFETY_ZONE_RADIUS, EFFECT_MARGIN, TELEPORT_ON_JOIN,
             PARTICLE_PERIOD, PARTICLE_VIEW_RADIUS,
             PARTICLE_MAXIMUM_BLOCKS, PARTICLE_MAXIMUM_LINES, WALL_PREVIEW_DURATION, CONFIRMED_PARTICLE,
-            CONFIRMED_PARTICLE_ENABLED, AREA_INVENTORY_ENABLED);
+            CONFIRMED_PARTICLE_ENABLED, AREA_INVENTORY_ENABLED, CUSTOM_VISUALS);
 
     private final Map<String, Object> appliedValues = new LinkedHashMap<>();
     private final StartGateDuration startGateDuration = new StartGateDuration();
@@ -189,6 +191,11 @@ final class RecordingLiveConfiguration implements LiveConfiguration {
         appliedValues.put(AREA_INVENTORY_ENABLED, enabled);
     }
 
+    @Override
+    public void setCustomVisualSettings(CustomVisualSettings settings) {
+        appliedValues.put(CUSTOM_VISUALS, settings);
+    }
+
     StartGateDuration startGateDuration() {
         return startGateDuration;
     }
@@ -227,6 +234,10 @@ final class RecordingLiveConfiguration implements LiveConfiguration {
 
     ConfirmedBorderParticleSettings confirmedBorderParticleSettings() {
         return (ConfirmedBorderParticleSettings) appliedValues.get(CONFIRMED_PARTICLE);
+    }
+
+    CustomVisualSettings customVisualSettings() {
+        return (CustomVisualSettings) appliedValues.get(CUSTOM_VISUALS);
     }
 
     List<String> appliedValueNames() {

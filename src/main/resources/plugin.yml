@@ -8,6 +8,7 @@ authors:
 softdepend:
   - ViaVersion
   - ViaBackwards
+  - ItemsAdder
 commands:
   tournament:
     description: Opens the tournament administration menu, /tournament bracket shows the bracket, /tournament spectate returns to the tribune

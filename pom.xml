@@ -17,6 +17,7 @@
         <java.version>25</java.version>
         <paper.api.version>26.2.build.134-stable</paper.api.version>
         <junit.version>5.14.4</junit.version>
+        <items.adder.api.version>4.0.18-beta-10</items.adder.api.version>
     </properties>
 
     <repositories>
@@ -31,6 +32,12 @@
             <groupId>io.papermc.paper</groupId>
             <artifactId>paper-api</artifactId>
             <version>${paper.api.version}</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>beer.devs</groupId>
+            <artifactId>itemsadder-api</artifactId>
+            <version>${items.adder.api.version}</version>
             <scope>provided</scope>
         </dependency>
         <dependency>

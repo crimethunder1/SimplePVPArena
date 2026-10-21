@@ -22,6 +22,7 @@ import de.simplepvparena.message.Placeholder;
 import de.simplepvparena.team.Team;
 import de.simplepvparena.team.TeamSizeSetting;
 import de.simplepvparena.tournament.AutoMatchSettings;
+import de.simplepvparena.visual.CustomVisualSettings;
 import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.configuration.ConfigurationSection;
 
@@ -55,7 +56,8 @@ public record PluginSettings(long roundResetDelayTicks,
                              long borderWallPreviewDurationTicks,
                              ConfirmedBorderParticleSettings confirmedBorderParticleSettings,
                              boolean confirmedBorderParticleEnabled,
-                             boolean areaInventoryEnabled) {
+                             boolean areaInventoryEnabled,
+                             CustomVisualSettings customVisualSettings) {
 
     public static final String KIT_SECTION_PATH = "kit";
 
@@ -134,7 +136,13 @@ public record PluginSettings(long roundResetDelayTicks,
             ConfirmedBorderParticleSettings.HEIGHT_CONFIGURATION_PATH,
             ConfirmedBorderParticleSettings.RED_CONFIGURATION_PATH,
             ConfirmedBorderParticleSettings.GREEN_CONFIGURATION_PATH,
-            ConfirmedBorderParticleSettings.BLUE_CONFIGURATION_PATH);
+            ConfirmedBorderParticleSettings.BLUE_CONFIGURATION_PATH,
+            CustomVisualSettings.ENABLED_CONFIGURATION_PATH,
+            CustomVisualSettings.THREE_IMAGE_CONFIGURATION_PATH,
+            CustomVisualSettings.TWO_IMAGE_CONFIGURATION_PATH,
+            CustomVisualSettings.ONE_IMAGE_CONFIGURATION_PATH,
+            CustomVisualSettings.FIGHT_IMAGE_CONFIGURATION_PATH,
+            CustomVisualSettings.TOTEM_ITEM_CONFIGURATION_PATH);
 
     public static PluginSettings defaults() {
         return new PluginSettings(DEFAULT_ROUND_RESET_DELAY_TICKS,
@@ -161,7 +169,8 @@ public record PluginSettings(long roundResetDelayTicks,
                 BorderWallPreview.DEFAULT_DURATION_TICKS,
                 ConfirmedBorderParticleSettings.defaults(),
                 BorderParticleService.DEFAULT_CONFIRMED_PARTICLE_ENABLED,
-                AreaInventoryService.DEFAULT_ENABLED);
+                AreaInventoryService.DEFAULT_ENABLED,
+                CustomVisualSettings.defaults());
     }
 
     public static PluginSettings read(ConfigurationSection configuration, Consumer<String> problemReporter) {
@@ -198,7 +207,8 @@ public record PluginSettings(long roundResetDelayTicks,
                         DEFAULT_WALL_PREVIEW_SECONDS),
                 readConfirmedBorderParticleSettings(configuration, problemReporter),
                 readConfirmedBorderParticleEnabled(configuration, problemReporter),
-                readAreaInventoryEnabled(configuration, problemReporter));
+                readAreaInventoryEnabled(configuration, problemReporter),
+                readCustomVisualSettings(configuration, problemReporter));
         readLanguage(configuration, problemReporter);
         return settings;
     }
@@ -253,6 +263,49 @@ public record PluginSettings(long roundResetDelayTicks,
         liveConfiguration.setConfirmedBorderParticleSettings(confirmedBorderParticleSettings);
         liveConfiguration.setConfirmedBorderParticleEnabled(confirmedBorderParticleEnabled);
         liveConfiguration.setAreaInventoryEnabled(areaInventoryEnabled);
+        liveConfiguration.setCustomVisualSettings(customVisualSettings);
+    }
+
+    public static boolean readItemsAdderEnabled(ConfigurationSection configuration,
+                                                Consumer<String> problemReporter) {
+        if (configuration == null || !configuration.isSet(CustomVisualSettings.ENABLED_CONFIGURATION_PATH)) {
+            return CustomVisualSettings.DEFAULT_ENABLED;
+        }
+        if (configuration.isBoolean(CustomVisualSettings.ENABLED_CONFIGURATION_PATH)) {
+            return configuration.getBoolean(CustomVisualSettings.ENABLED_CONFIGURATION_PATH);
+        }
+        problemReporter.accept(Messages.text(ConfigMessage.ITEMS_ADDER_ENABLED_NOT_A_TRUTH_VALUE,
+                Placeholder.of("path", CustomVisualSettings.ENABLED_CONFIGURATION_PATH),
+                Placeholder.of("fallback", CustomVisualSettings.DEFAULT_ENABLED)));
+        return CustomVisualSettings.DEFAULT_ENABLED;
+    }
+
+    private static CustomVisualSettings readCustomVisualSettings(ConfigurationSection configuration,
+                                                                 Consumer<String> problemReporter) {
+        return new CustomVisualSettings(readItemsAdderEnabled(configuration, problemReporter),
+                readItemsAdderIdentifier(configuration, CustomVisualSettings.THREE_IMAGE_CONFIGURATION_PATH,
+                        CustomVisualSettings.SUGGESTED_THREE_IMAGE_IDENTIFIER, problemReporter),
+                readItemsAdderIdentifier(configuration, CustomVisualSettings.TWO_IMAGE_CONFIGURATION_PATH,
+                        CustomVisualSettings.SUGGESTED_TWO_IMAGE_IDENTIFIER, problemReporter),
+                readItemsAdderIdentifier(configuration, CustomVisualSettings.ONE_IMAGE_CONFIGURATION_PATH,
+                        CustomVisualSettings.SUGGESTED_ONE_IMAGE_IDENTIFIER, problemReporter),
+                readItemsAdderIdentifier(configuration, CustomVisualSettings.FIGHT_IMAGE_CONFIGURATION_PATH,
+                        CustomVisualSettings.SUGGESTED_FIGHT_IMAGE_IDENTIFIER, problemReporter),
+                readItemsAdderIdentifier(configuration, CustomVisualSettings.TOTEM_ITEM_CONFIGURATION_PATH,
+                        CustomVisualSettings.SUGGESTED_TOTEM_ITEM_IDENTIFIER, problemReporter));
+    }
+
+    private static String readItemsAdderIdentifier(ConfigurationSection configuration, String path,
+                                                   String suggestedIdentifier, Consumer<String> problemReporter) {
+        if (!configuration.isSet(path)) {
+            return CustomVisualSettings.NO_IDENTIFIER;
+        }
+        if (configuration.isString(path)) {
+            return configuration.getString(path, CustomVisualSettings.NO_IDENTIFIER);
+        }
+        problemReporter.accept(Messages.text(ConfigMessage.ITEMS_ADDER_IDENTIFIER_NOT_TEXT,
+                Placeholder.of("path", path), Placeholder.of("example", suggestedIdentifier)));
+        return CustomVisualSettings.NO_IDENTIFIER;
     }
 
     private static int readMaximumArenaCellCount(ConfigurationSection configuration,

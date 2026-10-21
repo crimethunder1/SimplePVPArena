@@ -120,7 +120,18 @@ class ConvertedClassesHaveNoTextLiteralsTest {
             "arena/AreaInventoryStorage.java",
             "arena/AreaInventoryLookup.java",
             "arena/FileAreaInventoryStorage.java",
-            "listener/AreaInventoryListener.java");
+            "listener/AreaInventoryListener.java",
+            "visual/CustomVisuals.java",
+            "visual/VanillaVisuals.java",
+            "visual/ItemsAdderVisuals.java",
+            "visual/CustomVisualSettings.java",
+            "visual/CustomVisualsSelection.java",
+            "visual/ConfiguredVisuals.java",
+            "match/CountdownImages.java",
+            "match/FightStartTotems.java",
+            "match/PaperFightStartTotems.java",
+            "match/CustomItemRoundStartEffects.java",
+            "listener/FightStartTotemListener.java");
 
     private static final Pattern STRING_LITERAL = Pattern.compile("\"((?:[^\"\\\\]|\\\\.)*)\"");
     private static final Pattern USAGE_TOKEN = Pattern.compile("<[^<>]*>");
