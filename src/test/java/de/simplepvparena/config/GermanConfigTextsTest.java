@@ -87,6 +87,8 @@ class GermanConfigTextsTest {
                 "  der Radius der Schutzzone",
                 "  der Rand des Wirkungsbereichs um die Kampffläche",
                 "  ob Spieler, die dem Server beitreten, auf die Tribüne geschickt werden",
+                "  ob Spieler im Wirkungsbereich ihr Inventar abgeben, mit false bekommt jeder sein Inventar sofort "
+                        + "zurück",
                 "  die Wandpartikel, ihre Grenzen und die Markierung der bestätigten Arenawand",
                 "Die berechnete Kampffläche, die Spawns, die Wandblöcke, die Teams und ein laufendes Match bleiben "
                         + "unberührt",

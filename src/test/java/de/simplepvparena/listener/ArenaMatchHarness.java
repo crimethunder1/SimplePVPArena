@@ -498,6 +498,9 @@ final class ArenaMatchHarness {
         private int level;
         private RuntimeException inventoryClearFailure;
         private RuntimeException teleportFailure;
+        private RuntimeException playerDataSaveFailure;
+        private int playerDataSaveCount;
+        private boolean keepingItemsSetBySlot;
         private Runnable damageReaction = () -> { };
 
         private FakePlayer(String playerName, Location location) {
@@ -575,6 +578,13 @@ final class ArenaMatchHarness {
                 case "getAttribute" -> null;
                 case "getInventory" -> inventory();
                 case "getPersistentDataContainer" -> SharedBukkitServer.createPersistentDataContainer(persistentData);
+                case "saveData" -> {
+                    if (playerDataSaveFailure != null) {
+                        throw playerDataSaveFailure;
+                    }
+                    playerDataSaveCount++;
+                    yield null;
+                }
                 default -> throw new UnsupportedOperationException("Player." + method.getName());
             });
         }
@@ -680,6 +690,18 @@ final class ArenaMatchHarness {
             this.damageReaction = damageReaction;
         }
 
+        void failPlayerDataSaveWith(RuntimeException failure) {
+            this.playerDataSaveFailure = failure;
+        }
+
+        int playerDataSaveCount() {
+            return playerDataSaveCount;
+        }
+
+        void keepItemsSetBySlot() {
+            this.keepingItemsSetBySlot = true;
+        }
+
         private Object inventory() {
             return proxy(org.bukkit.inventory.PlayerInventory.class, (method, arguments) -> switch (method.getName()) {
                 case "clear" -> {
@@ -695,7 +717,12 @@ final class ArenaMatchHarness {
                     contents = ((ItemStack[]) arguments[0]).clone();
                     yield null;
                 }
-                case "setItem" -> null;
+                case "setItem" -> {
+                    if (keepingItemsSetBySlot && arguments[0] instanceof Integer slotIndex) {
+                        contents[slotIndex] = (ItemStack) arguments[1];
+                    }
+                    yield null;
+                }
                 default -> throw new UnsupportedOperationException("PlayerInventory." + method.getName());
             });
         }

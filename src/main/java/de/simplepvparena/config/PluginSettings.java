@@ -1,5 +1,6 @@
 package de.simplepvparena.config;
 
+import de.simplepvparena.arena.AreaInventoryService;
 import de.simplepvparena.arena.ArenaBaselineService;
 import de.simplepvparena.arena.ArenaCleaningParticleSettings;
 import de.simplepvparena.arena.ArenaCleaningService;
@@ -53,7 +54,8 @@ public record PluginSettings(long roundResetDelayTicks,
                              int borderParticleMaximumLinesPerPlayer,
                              long borderWallPreviewDurationTicks,
                              ConfirmedBorderParticleSettings confirmedBorderParticleSettings,
-                             boolean confirmedBorderParticleEnabled) {
+                             boolean confirmedBorderParticleEnabled,
+                             boolean areaInventoryEnabled) {
 
     public static final String KIT_SECTION_PATH = "kit";
 
@@ -81,6 +83,7 @@ public record PluginSettings(long roundResetDelayTicks,
     public static final String ARENA_SAFETY_ZONE_RADIUS_PATH = ArenaSafetyZone.RADIUS_CONFIGURATION_PATH;
     public static final String ARENA_EFFECT_MARGIN_PATH = EffectArea.MARGIN_CONFIGURATION_PATH;
     public static final String ARENA_TELEPORT_ON_JOIN_PATH = "arena.teleport-on-join";
+    public static final String ARENA_AREA_INVENTORY_ENABLED_PATH = AreaInventoryService.ENABLED_CONFIGURATION_PATH;
     public static final String BORDER_PARTICLE_PERIOD_PATH = "border.particle-period-ticks";
     public static final String BORDER_PARTICLE_VIEW_RADIUS_PATH = "border.particle-view-radius";
     public static final String BORDER_PARTICLE_MAXIMUM_BLOCKS_PATH = "border.particle-maximum-blocks-per-player";
@@ -120,6 +123,7 @@ public record PluginSettings(long roundResetDelayTicks,
             ARENA_SAFETY_ZONE_RADIUS_PATH,
             ARENA_EFFECT_MARGIN_PATH,
             ARENA_TELEPORT_ON_JOIN_PATH,
+            ARENA_AREA_INVENTORY_ENABLED_PATH,
             BORDER_PARTICLE_PERIOD_PATH,
             BORDER_PARTICLE_VIEW_RADIUS_PATH,
             BORDER_PARTICLE_MAXIMUM_BLOCKS_PATH,
@@ -156,7 +160,8 @@ public record PluginSettings(long roundResetDelayTicks,
                 BorderParticleService.DEFAULT_MAXIMUM_LINES_PER_PLAYER,
                 BorderWallPreview.DEFAULT_DURATION_TICKS,
                 ConfirmedBorderParticleSettings.defaults(),
-                BorderParticleService.DEFAULT_CONFIRMED_PARTICLE_ENABLED);
+                BorderParticleService.DEFAULT_CONFIRMED_PARTICLE_ENABLED,
+                AreaInventoryService.DEFAULT_ENABLED);
     }
 
     public static PluginSettings read(ConfigurationSection configuration, Consumer<String> problemReporter) {
@@ -192,7 +197,8 @@ public record PluginSettings(long roundResetDelayTicks,
                 TICKS_PER_SECOND * configuration.getInt(BORDER_WALL_PREVIEW_SECONDS_PATH,
                         DEFAULT_WALL_PREVIEW_SECONDS),
                 readConfirmedBorderParticleSettings(configuration, problemReporter),
-                readConfirmedBorderParticleEnabled(configuration, problemReporter));
+                readConfirmedBorderParticleEnabled(configuration, problemReporter),
+                readAreaInventoryEnabled(configuration, problemReporter));
         readLanguage(configuration, problemReporter);
         return settings;
     }
@@ -246,6 +252,7 @@ public record PluginSettings(long roundResetDelayTicks,
         liveConfiguration.setBorderWallPreviewDurationTicks(borderWallPreviewDurationTicks);
         liveConfiguration.setConfirmedBorderParticleSettings(confirmedBorderParticleSettings);
         liveConfiguration.setConfirmedBorderParticleEnabled(confirmedBorderParticleEnabled);
+        liveConfiguration.setAreaInventoryEnabled(areaInventoryEnabled);
     }
 
     private static int readMaximumArenaCellCount(ConfigurationSection configuration,
@@ -536,5 +543,19 @@ public record PluginSettings(long roundResetDelayTicks,
                 Placeholder.of("path", ConfirmedBorderParticleSettings.ENABLED_CONFIGURATION_PATH),
                 Placeholder.of("fallback", BorderParticleService.DEFAULT_CONFIRMED_PARTICLE_ENABLED)));
         return BorderParticleService.DEFAULT_CONFIRMED_PARTICLE_ENABLED;
+    }
+
+    private static boolean readAreaInventoryEnabled(ConfigurationSection configuration,
+                                                    Consumer<String> problemReporter) {
+        if (!configuration.isSet(ARENA_AREA_INVENTORY_ENABLED_PATH)) {
+            return AreaInventoryService.DEFAULT_ENABLED;
+        }
+        if (configuration.isBoolean(ARENA_AREA_INVENTORY_ENABLED_PATH)) {
+            return configuration.getBoolean(ARENA_AREA_INVENTORY_ENABLED_PATH);
+        }
+        problemReporter.accept(Messages.text(ConfigMessage.AREA_INVENTORY_ENABLED_NOT_A_TRUTH_VALUE,
+                Placeholder.of("path", ARENA_AREA_INVENTORY_ENABLED_PATH),
+                Placeholder.of("fallback", AreaInventoryService.DEFAULT_ENABLED)));
+        return AreaInventoryService.DEFAULT_ENABLED;
     }
 }

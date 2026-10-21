@@ -67,6 +67,10 @@ arena:
   effect-margin: 96
   # When true, a player who joins is sent to the tribune once the arena is fully configured.
   teleport-on-join: true
+  # Inventories of the players inside the area of effect.
+  area-inventory:
+    # When true, every player who enters the area of effect, admins included, hands in the whole inventory and gets it back on leaving. Items taken inside are removed on leaving. false keeps the inventory with the player.
+    enabled: true
   # Calculated fight area, written by the plugin.
   shape: {}
   # Spawns of both teams and the tribune, written by the plugin.

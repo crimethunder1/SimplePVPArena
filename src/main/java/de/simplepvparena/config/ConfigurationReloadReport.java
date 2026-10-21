@@ -22,6 +22,7 @@ public record ConfigurationReloadReport(List<String> problems) {
             ConfigMessage.SAFETY_ZONE_CATEGORY,
             ConfigMessage.EFFECT_MARGIN_CATEGORY,
             ConfigMessage.TELEPORT_ON_JOIN_CATEGORY,
+            ConfigMessage.AREA_INVENTORY_CATEGORY,
             ConfigMessage.BORDER_CATEGORY);
 
     private static final String ENTRY_INDENT = "  ";

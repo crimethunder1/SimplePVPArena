@@ -146,6 +146,8 @@ class ConfigTextsTest {
                 "  the radius of the safety zone",
                 "  the margin of the area of effect around the fight area",
                 "  whether joining players are sent to the tribune",
+                "  whether players hand in their inventory in the area of effect, false gives every inventory back "
+                        + "at once",
                 "  the border particles, their limits and the confirmed border marker",
                 "The calculated fight area, the spawns, the border blocks, the teams and a running match stay "
                         + "untouched",

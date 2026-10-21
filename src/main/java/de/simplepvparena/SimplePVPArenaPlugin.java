@@ -1,6 +1,7 @@
 package de.simplepvparena;
 
 import de.simplepvparena.arena.ActiveArenaState;
+import de.simplepvparena.arena.AreaInventoryService;
 import de.simplepvparena.arena.Arena;
 import de.simplepvparena.arena.ArenaAudience;
 import de.simplepvparena.arena.ArenaBaselineRegistry;
@@ -17,6 +18,7 @@ import de.simplepvparena.arena.ArenaSafetyZone;
 import de.simplepvparena.arena.ArenaSetupService;
 import de.simplepvparena.arena.ArenaTemporaryEntityRemover;
 import de.simplepvparena.arena.BukkitArenaTemporaryEntityRemover;
+import de.simplepvparena.arena.FileAreaInventoryStorage;
 import de.simplepvparena.arena.SpectatorItemFactory;
 import de.simplepvparena.arena.SpectatorService;
 import de.simplepvparena.arena.VanillaArenaCleaningVisualEffect;
@@ -59,6 +61,7 @@ import de.simplepvparena.kit.KitLibraryStorage;
 import de.simplepvparena.kit.KitSaveService;
 import de.simplepvparena.kit.KitService;
 import de.simplepvparena.listener.AdminMenuListener;
+import de.simplepvparena.listener.AreaInventoryListener;
 import de.simplepvparena.listener.ArenaBreakListener;
 import de.simplepvparena.listener.ArenaBuildListener;
 import de.simplepvparena.listener.ArenaDamageListener;
@@ -150,6 +153,7 @@ public final class SimplePVPArenaPlugin extends JavaPlugin {
     private AutoMatchService autoMatchService;
     private TournamentDryRun tournamentDryRun;
     private ConfigurationReloadService configurationReloadService;
+    private AreaInventoryService areaInventoryService;
 
     @Override
     public void onEnable() {
@@ -190,6 +194,11 @@ public final class SimplePVPArenaPlugin extends JavaPlugin {
         kitSaveService = new KitSaveService(kitLibrary, kitItemSerializer);
 
         spectatorService = new SpectatorService(arenaRegistry, new SpectatorItemFactory(this));
+        areaInventoryService = new AreaInventoryService(this, arenaRegistry::findEffectArea,
+                new FileAreaInventoryStorage(
+                        new File(getDataFolder(), FileAreaInventoryStorage.DIRECTORY_NAME).toPath(),
+                        new BukkitItemStackCodec()),
+                kitService::hasAppliedKit, adminNotifier::notifyAdmins, System::currentTimeMillis);
 
         borderMarkIndex = new BorderMarkIndex();
         borderMarkStorage = new BorderMarkStorage(new File(getDataFolder(), BORDERS_FILE_NAME), getLogger());
@@ -282,7 +291,8 @@ public final class SimplePVPArenaPlugin extends JavaPlugin {
                         arenaSafetyZone, arenaRegistry, borderParticleService, borderWallPreview,
                         borderVisualEffect, teamSizeSetting, teamRegistry, tournamentManager::isTournamentInProgress,
                         adminNotifier::notifyAdmins,
-                        getLogger()::warning, messageCatalogLoader::useLanguage, autoMatchService::applySettings),
+                        getLogger()::warning, messageCatalogLoader::useLanguage, autoMatchService::applySettings,
+                        areaInventoryService::setEnabled),
                 getLogger()::warning);
         configurationReloadService.applyStoredConfiguration();
 
@@ -291,6 +301,7 @@ public final class SimplePVPArenaPlugin extends JavaPlugin {
         borderParticleService.start();
         arenaMobRemovalService.start();
         chatInputService.start();
+        areaInventoryService.start();
     }
 
     @Override
@@ -321,6 +332,10 @@ public final class SimplePVPArenaPlugin extends JavaPlugin {
         }
         if (matchService != null) {
             matchService.cancelActiveMatch();
+        }
+        if (areaInventoryService != null) {
+            areaInventoryService.stop();
+            areaInventoryService.giveEveryInventoryBackQuietly();
         }
         if (startGateOpeningService != null) {
             startGateOpeningService.stopAndRestore();
@@ -456,5 +471,7 @@ public final class SimplePVPArenaPlugin extends JavaPlugin {
         getServer().getPluginManager().registerEvents(new FriendlyFireListener(matchService), this);
         getServer().getPluginManager().registerEvents(
                 new ArenaDamageListener(matchService, spectatorService, arenaRegistry, getServer()), this);
+        getServer().getPluginManager().registerEvents(
+                new AreaInventoryListener(this, areaInventoryService), this);
     }
 }

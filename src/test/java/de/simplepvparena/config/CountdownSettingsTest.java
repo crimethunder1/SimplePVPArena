@@ -229,6 +229,7 @@ class CountdownSettingsTest {
                 new BorderParticleService(plugin, new BorderMarkIndex(), borderVisualEffect,
                         playerUniqueId -> false, borderConfirmation),
                 wallPreview, borderVisualEffect, new TeamSizeSetting(), new TeamRegistry(), () -> false,
-                notice -> { }, problems::add, language -> { }, autoMatchSettings -> { });
+                notice -> { }, problems::add, language -> { }, autoMatchSettings -> { },
+                enabled -> { });
     }
 }

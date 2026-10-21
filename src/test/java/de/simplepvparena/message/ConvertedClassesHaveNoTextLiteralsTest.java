@@ -115,7 +115,12 @@ class ConvertedClassesHaveNoTextLiteralsTest {
             "config/ConfigurationReloadReport.java",
             "config/ConfigurationReloadService.java",
             "config/PluginLiveConfiguration.java",
-            "config/LiveConfiguration.java");
+            "config/LiveConfiguration.java",
+            "arena/AreaInventoryService.java",
+            "arena/AreaInventoryStorage.java",
+            "arena/AreaInventoryLookup.java",
+            "arena/FileAreaInventoryStorage.java",
+            "listener/AreaInventoryListener.java");
 
     private static final Pattern STRING_LITERAL = Pattern.compile("\"((?:[^\"\\\\]|\\\\.)*)\"");
     private static final Pattern USAGE_TOKEN = Pattern.compile("<[^<>]*>");

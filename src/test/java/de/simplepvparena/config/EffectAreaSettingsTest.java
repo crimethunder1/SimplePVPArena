@@ -222,6 +222,7 @@ class EffectAreaSettingsTest {
                 new BorderParticleService(plugin, new BorderMarkIndex(), borderVisualEffect,
                         playerUniqueId -> false, borderConfirmation),
                 wallPreview, borderVisualEffect, new TeamSizeSetting(), new TeamRegistry(), () -> false,
-                notice -> { }, logger, language -> { }, autoMatchSettings -> { });
+                notice -> { }, logger, language -> { }, autoMatchSettings -> { },
+                enabled -> { });
     }
 }

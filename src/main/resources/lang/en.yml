@@ -1289,6 +1289,19 @@ player-state:
   not-written: 'The inventory and state of {player} could not be written to disk ({reason}), they are kept in memory only and are lost if the server stops unexpectedly'
   file-not-deleted: 'The saved inventory and state of {player} were restored, but the file could not be deleted ({reason})'
   set-aside: 'The saved inventory and state of {player} were restored, but the file could not be deleted ({reason}), it was set aside as a .restored file and is not restored again'
+area-inventory:
+  kept-safe: 'Your inventory is kept safe while you are in the event area, you get it back when you leave'
+  back: 'Your inventory is back'
+  not-given-back: 'Your inventory could not be restored, an admin has been informed'
+  drop-locked: 'You cannot drop items in the event area'
+  ender-chest-locked: 'The ender chest is locked in the event area'
+  not-written: 'The inventory of {player} could not be written to disk ({reason}), it stays with the player and the next check tries again. This warning repeats at most once a minute'
+  not-cleared: 'The inventory of {player} was saved but could not be cleared ({reason}), the saved inventory is given back when the player leaves the area of effect'
+  unreadable: 'The saved inventory of {player} could not be read, nothing was cleared and nothing given back, the file is kept as {file} for a restore by hand'
+  missing: 'The inventory of {player} was marked as handed in, but {file} does not exist, nothing was cleared and nothing given back'
+  not-restored: 'The saved inventory of {player} could not be given back ({reason}), the file is kept and the next check tries again. This warning repeats at most once a minute'
+  player-data-not-saved: 'The inventory of {player} is back, but the player data could not be saved ({reason}), {file} is kept as a copy'
+  file-not-deleted: 'The inventory of {player} is back, but {file} could not be deleted ({reason})'
 command:
   menu-only-for-players:
     - 'The tournament administration is a menu'
@@ -1522,6 +1535,7 @@ config:
     unknown-team-colour: '{path} is no colour a name can be shown in, falling back to {fallback}. Usable colours: {colours}'
     marker-height-negative: '{path} cannot be negative, falling back to {height} blocks. Use zero for the shortest possible marker'
     confirmed-particle-enabled-not-a-truth-value: '{path} must be true or false, falling back to {fallback}'
+    area-inventory-enabled-not-a-truth-value: '{path} must be true or false, falling back to {fallback}'
   reload:
     reloaded: 'config.yml was reloaded and applied'
     category:
@@ -1538,6 +1552,7 @@ config:
       safety-zone: 'the radius of the safety zone'
       effect-margin: 'the margin of the area of effect around the fight area'
       teleport-on-join: 'whether joining players are sent to the tribune'
+      area-inventory: 'whether players hand in their inventory in the area of effect, false gives every inventory back at once'
       border: 'the border particles, their limits and the confirmed border marker'
     untouched: 'The calculated fight area, the spawns, the border blocks, the teams and a running match stay untouched'
     unusable-entries: 'Entries that could not be used and fell back to their default:'

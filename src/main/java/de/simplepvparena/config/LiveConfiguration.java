@@ -59,4 +59,6 @@ public interface LiveConfiguration {
     void setConfirmedBorderParticleSettings(ConfirmedBorderParticleSettings settings);
 
     void setConfirmedBorderParticleEnabled(boolean enabled);
+
+    void setAreaInventoryEnabled(boolean enabled);
 }

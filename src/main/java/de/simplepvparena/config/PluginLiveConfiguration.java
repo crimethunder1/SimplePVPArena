@@ -50,6 +50,7 @@ public final class PluginLiveConfiguration implements LiveConfiguration {
     private final Consumer<String> problemReporter;
     private final Consumer<String> languageApplier;
     private final Consumer<AutoMatchSettings> autoMatchSettingsApplier;
+    private final Consumer<Boolean> areaInventoryEnabledApplier;
 
     public PluginLiveConfiguration(MatchService matchService,
                                    StartGateDuration startGateDuration,
@@ -69,7 +70,8 @@ public final class PluginLiveConfiguration implements LiveConfiguration {
                                    Consumer<String> adminNotifier,
                                    Consumer<String> problemReporter,
                                    Consumer<String> languageApplier,
-                                   Consumer<AutoMatchSettings> autoMatchSettingsApplier) {
+                                   Consumer<AutoMatchSettings> autoMatchSettingsApplier,
+                                   Consumer<Boolean> areaInventoryEnabledApplier) {
         this.matchService = Objects.requireNonNull(matchService, "matchService");
         this.startGateDuration = Objects.requireNonNull(startGateDuration, "startGateDuration");
         this.fighterColours = Objects.requireNonNull(fighterColours, "fighterColours");
@@ -91,6 +93,8 @@ public final class PluginLiveConfiguration implements LiveConfiguration {
         this.languageApplier = Objects.requireNonNull(languageApplier, "languageApplier");
         this.autoMatchSettingsApplier = Objects.requireNonNull(autoMatchSettingsApplier,
                 "autoMatchSettingsApplier");
+        this.areaInventoryEnabledApplier = Objects.requireNonNull(areaInventoryEnabledApplier,
+                "areaInventoryEnabledApplier");
     }
 
     @Override
@@ -251,5 +255,10 @@ public final class PluginLiveConfiguration implements LiveConfiguration {
     @Override
     public void setConfirmedBorderParticleEnabled(boolean enabled) {
         borderParticleService.setConfirmedParticleEnabled(enabled);
+    }
+
+    @Override
+    public void setAreaInventoryEnabled(boolean enabled) {
+        areaInventoryEnabledApplier.accept(enabled);
     }
 }

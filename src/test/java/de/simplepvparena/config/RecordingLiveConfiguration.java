@@ -38,6 +38,7 @@ final class RecordingLiveConfiguration implements LiveConfiguration {
     static final String WALL_PREVIEW_DURATION = "borderWallPreviewDurationTicks";
     static final String CONFIRMED_PARTICLE = "confirmedBorderParticleSettings";
     static final String CONFIRMED_PARTICLE_ENABLED = "confirmedBorderParticleEnabled";
+    static final String AREA_INVENTORY_ENABLED = "areaInventoryEnabled";
 
     static final List<String> EVERY_APPLIED_VALUE = List.of(
             LANGUAGE,
@@ -47,7 +48,7 @@ final class RecordingLiveConfiguration implements LiveConfiguration {
             CLEANING_PARTICLE, MAXIMUM_CELL_COUNT, SAFETY_ZONE_RADIUS, EFFECT_MARGIN, TELEPORT_ON_JOIN,
             PARTICLE_PERIOD, PARTICLE_VIEW_RADIUS,
             PARTICLE_MAXIMUM_BLOCKS, PARTICLE_MAXIMUM_LINES, WALL_PREVIEW_DURATION, CONFIRMED_PARTICLE,
-            CONFIRMED_PARTICLE_ENABLED);
+            CONFIRMED_PARTICLE_ENABLED, AREA_INVENTORY_ENABLED);
 
     private final Map<String, Object> appliedValues = new LinkedHashMap<>();
     private final StartGateDuration startGateDuration = new StartGateDuration();
@@ -181,6 +182,11 @@ final class RecordingLiveConfiguration implements LiveConfiguration {
     @Override
     public void setConfirmedBorderParticleEnabled(boolean enabled) {
         appliedValues.put(CONFIRMED_PARTICLE_ENABLED, enabled);
+    }
+
+    @Override
+    public void setAreaInventoryEnabled(boolean enabled) {
+        appliedValues.put(AREA_INVENTORY_ENABLED, enabled);
     }
 
     StartGateDuration startGateDuration() {
