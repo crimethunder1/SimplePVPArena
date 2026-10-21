@@ -57,6 +57,7 @@ public final class TournamentManager implements MatchCompletionHandler {
 
     private boolean waitingForArenaCleaning;
     private ArenaAudience arenaAudience;
+    private AutoMatchReservation autoMatchReservation = AutoMatchReservation.NONE;
 
     public TournamentManager(Plugin plugin, TeamRegistry teamRegistry, ArenaRegistry arenaRegistry,
                              MatchService matchService, ArenaCleanup arenaCleanup,
@@ -101,6 +102,10 @@ public final class TournamentManager implements MatchCompletionHandler {
         this.arenaAudience = Objects.requireNonNull(arenaAudience, "arenaAudience");
     }
 
+    public void setAutoMatchReservation(AutoMatchReservation autoMatchReservation) {
+        this.autoMatchReservation = Objects.requireNonNull(autoMatchReservation, "autoMatchReservation");
+    }
+
     public TournamentState getState() {
         return state;
     }
@@ -129,6 +134,10 @@ public final class TournamentManager implements MatchCompletionHandler {
         return kitChoiceService.isPending();
     }
 
+    public boolean isWaitingForArenaCleaning() {
+        return waitingForArenaCleaning;
+    }
+
     public Optional<String> findTeamRenameRejection(String teamName) {
         if (isTournamentInProgress()) {
             return Optional.of(Messages.text(TournamentMessage.RENAME_IN_TOURNAMENT));
@@ -144,6 +153,12 @@ public final class TournamentManager implements MatchCompletionHandler {
                                 Placeholder.of("match", match.getMatchId()))));
         if (runningMatchRejection.isPresent()) {
             return runningMatchRejection;
+        }
+        Optional<String> autoMatchRejection = autoMatchReservation.findAnnouncedTeamName(teamName)
+                .map(announcedTeamName -> Messages.text(TournamentMessage.TEAM_ABOUT_TO_PLAY_AUTO_MATCH,
+                        Placeholder.of("team", announcedTeamName)));
+        if (autoMatchRejection.isPresent()) {
+            return autoMatchRejection;
         }
         return kitChoiceService.getPending()
                 .flatMap(pending -> findBracketTeamName(pending.matchId(), teamName)
@@ -162,6 +177,9 @@ public final class TournamentManager implements MatchCompletionHandler {
         if (state == TournamentState.RUNNING || state == TournamentState.PAUSED) {
             return TournamentOperationResult.failure(Messages.text(CommonMessage.TOURNAMENT_ALREADY_IN_PROGRESS));
         }
+        if (autoMatchReservation.occupiesTheArena()) {
+            return TournamentOperationResult.failure(Messages.text(TournamentMessage.AUTO_MATCH_RUNNING));
+        }
         List<String> teamNames = new ArrayList<>(teamRegistry.getTeamNames());
         if (teamNames.size() < Bracket.MINIMUM_TEAM_COUNT) {
             return TournamentOperationResult.failure(Messages.plural(TournamentMessage.AT_LEAST_TEAMS_REQUIRED,
@@ -178,6 +196,7 @@ public final class TournamentManager implements MatchCompletionHandler {
             return TournamentOperationResult.failure(describeArenaBeingCleaned());
         }
 
+        autoMatchReservation.cancelAnnouncementForATournament();
         Collections.shuffle(teamNames, seedingRandom);
         bracket = Bracket.createSingleElimination(teamNames);
         decisionKindsByMatchId.clear();
@@ -249,10 +268,10 @@ public final class TournamentManager implements MatchCompletionHandler {
     }
 
     public TournamentOperationResult forceMatchResult(String matchId, String teamName) {
-        if (bracket == null) {
+        Optional<Match> activeMatch = matchService.findMatchById(matchId);
+        if (bracket == null && activeMatch.filter(Match::isAutoMatch).isEmpty()) {
             return TournamentOperationResult.failure(Messages.text(CommonMessage.NO_TOURNAMENT_IN_PROGRESS));
         }
-        Optional<Match> activeMatch = matchService.findMatchById(matchId);
         if (activeMatch.isPresent()) {
             Optional<Team> winningTeam = activeMatch.get().findTeamByName(teamName);
             if (winningTeam.isEmpty()) {
@@ -423,6 +442,9 @@ public final class TournamentManager implements MatchCompletionHandler {
 
     @Override
     public void onMatchCompleted(Match match, String winnerTeamName) {
+        if (match.isAutoMatch()) {
+            return;
+        }
         MatchDecisionKind decisionKind = match.getMatchId().equals(forcedRunningMatchId)
                 ? MatchDecisionKind.FORCED
                 : MatchDecisionKind.PLAYED;

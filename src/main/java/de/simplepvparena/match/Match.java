@@ -17,26 +17,33 @@ public final class Match {
     private final Arena arena;
     private final MatchScore score;
     private final boolean finalMatch;
+    private final boolean autoMatch;
 
     private MatchState state = MatchState.PREPARING;
     private RoundParticipants roundParticipants;
     private int roundNumber;
 
-    private Match(String matchId, Team firstTeam, Team secondTeam, Arena arena, boolean finalMatch) {
+    private Match(String matchId, Team firstTeam, Team secondTeam, Arena arena, boolean finalMatch,
+                  boolean autoMatch) {
         this.matchId = Objects.requireNonNull(matchId, "matchId");
         this.firstTeam = Objects.requireNonNull(firstTeam, "firstTeam");
         this.secondTeam = Objects.requireNonNull(secondTeam, "secondTeam");
         this.arena = Objects.requireNonNull(arena, "arena");
         this.score = new MatchScore(firstTeam.getTeamName(), secondTeam.getTeamName());
         this.finalMatch = finalMatch;
+        this.autoMatch = autoMatch;
     }
 
     public static Match regularMatch(String matchId, Team firstTeam, Team secondTeam, Arena arena) {
-        return new Match(matchId, firstTeam, secondTeam, arena, false);
+        return new Match(matchId, firstTeam, secondTeam, arena, false, false);
     }
 
     public static Match finalMatch(String matchId, Team firstTeam, Team secondTeam, Arena arena) {
-        return new Match(matchId, firstTeam, secondTeam, arena, true);
+        return new Match(matchId, firstTeam, secondTeam, arena, true, false);
+    }
+
+    public static Match autoMatch(String matchId, Team firstTeam, Team secondTeam, Arena arena) {
+        return new Match(matchId, firstTeam, secondTeam, arena, false, true);
     }
 
     public String getMatchId() {
@@ -45,6 +52,10 @@ public final class Match {
 
     public boolean isFinalMatch() {
         return finalMatch;
+    }
+
+    public boolean isAutoMatch() {
+        return autoMatch;
     }
 
     public Team getFirstTeam() {

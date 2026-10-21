@@ -5,11 +5,17 @@ import de.simplepvparena.message.CommonMessage;
 import de.simplepvparena.message.MatchMenuMessage;
 import de.simplepvparena.message.MenuMessage;
 import de.simplepvparena.message.Messages;
+import de.simplepvparena.message.Placeholder;
+import de.simplepvparena.message.TournamentMessages;
+import de.simplepvparena.tournament.AutoMatchModeWriter;
+import de.simplepvparena.tournament.AutoMatchService;
 import de.simplepvparena.tournament.TournamentManager;
 import de.simplepvparena.tournament.TournamentOperationResult;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 
+import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.function.Supplier;
@@ -23,6 +29,7 @@ final class MatchAdminMenu implements AdminMenu {
     private static final int MATCH_DECIDE_WAITING_MATCH_SLOT = 14;
     private static final int MATCH_FINAL_SLOT = 15;
     private static final int MATCH_FORCE_RESULT_SLOT = 16;
+    private static final int MATCH_AUTO_MATCH_SLOT = 17;
 
     private final AdminMenuNavigation navigation;
     private final TournamentManager tournamentManager;
@@ -30,16 +37,21 @@ final class MatchAdminMenu implements AdminMenu {
     private final TournamentMenuStatus tournamentMenuStatus;
     private final ForceResultAdminMenu forceResultAdminMenu;
     private final WaitingMatchesAdminMenu waitingMatchesAdminMenu;
+    private final AutoMatchService autoMatchService;
+    private final AutoMatchModeWriter autoMatchModeWriter;
 
     MatchAdminMenu(AdminMenuNavigation navigation, TournamentManager tournamentManager, MatchService matchService,
                    TournamentMenuStatus tournamentMenuStatus, ForceResultAdminMenu forceResultAdminMenu,
-                   WaitingMatchesAdminMenu waitingMatchesAdminMenu) {
+                   WaitingMatchesAdminMenu waitingMatchesAdminMenu, AutoMatchService autoMatchService,
+                   AutoMatchModeWriter autoMatchModeWriter) {
         this.navigation = Objects.requireNonNull(navigation, "navigation");
         this.tournamentManager = Objects.requireNonNull(tournamentManager, "tournamentManager");
         this.matchService = Objects.requireNonNull(matchService, "matchService");
         this.tournamentMenuStatus = Objects.requireNonNull(tournamentMenuStatus, "tournamentMenuStatus");
         this.forceResultAdminMenu = Objects.requireNonNull(forceResultAdminMenu, "forceResultAdminMenu");
         this.waitingMatchesAdminMenu = Objects.requireNonNull(waitingMatchesAdminMenu, "waitingMatchesAdminMenu");
+        this.autoMatchService = Objects.requireNonNull(autoMatchService, "autoMatchService");
+        this.autoMatchModeWriter = Objects.requireNonNull(autoMatchModeWriter, "autoMatchModeWriter");
     }
 
     @Override
@@ -88,6 +100,8 @@ final class MatchAdminMenu implements AdminMenu {
                         Messages.lines(MatchMenuMessage.FORCE_RESULT_LORE))
                 : MenuItems.unavailable(Messages.text(MatchMenuMessage.FORCE_RESULT_TITLE),
                         Messages.text(MatchMenuMessage.NO_MATCH_RUNNING)));
+        canvas.set(MATCH_AUTO_MATCH_SLOT, MenuItems.create(Material.COMPARATOR,
+                Messages.text(MatchMenuMessage.AUTO_MATCH_TITLE), buildAutoMatchLore()));
         canvas.set(AdminMenuLayout.BACK_SLOT, MenuItems.back(MenuMessage.BACK_TO_MAIN_MENU));
     }
 
@@ -102,6 +116,7 @@ final class MatchAdminMenu implements AdminMenu {
             case MATCH_DECIDE_WAITING_MATCH_SLOT -> waitingMatchesAdminMenu.openWaitingMatchesMenu(player);
             case MATCH_FINAL_SLOT -> runOperation(player, holder, tournamentManager::startFinalMatch);
             case MATCH_FORCE_RESULT_SLOT -> forceResultAdminMenu.openForceResultMenu(player);
+            case MATCH_AUTO_MATCH_SLOT -> switchAutoMatchMode(player, holder);
             case AdminMenuLayout.BACK_SLOT -> navigation.open(player, AdminMenuHolder.main());
             default -> { }
         }
@@ -146,6 +161,41 @@ final class MatchAdminMenu implements AdminMenu {
         }
         return MenuItems.unavailable(Messages.text(MatchMenuMessage.PAUSE_TITLE),
                 Messages.text(CommonMessage.NO_TOURNAMENT_IN_PROGRESS));
+    }
+
+    private List<String> buildAutoMatchLore() {
+        boolean enabled = autoMatchService.isEnabled();
+        List<String> lore = new ArrayList<>();
+        lore.add(Messages.text(enabled ? MatchMenuMessage.AUTO_MATCH_MODE_ON : MatchMenuMessage.AUTO_MATCH_MODE_OFF));
+        lore.addAll(Messages.lines(MatchMenuMessage.AUTO_MATCH_LORE));
+        if (tournamentManager.isTournamentInProgress()) {
+            lore.add(Messages.text(MatchMenuMessage.AUTO_MATCH_TOURNAMENT_RUNNING));
+        }
+        lore.add(Messages.text(enabled
+                ? MatchMenuMessage.AUTO_MATCH_SWITCH_OFF
+                : MatchMenuMessage.AUTO_MATCH_SWITCH_ON));
+        return lore;
+    }
+
+    private void switchAutoMatchMode(Player player, AdminMenuHolder holder) {
+        boolean enabled = !autoMatchService.isEnabled();
+        autoMatchService.setEnabled(enabled);
+        try {
+            autoMatchModeWriter.write(enabled);
+            TournamentMessages.sendSuccess(player, Messages.text(enabled
+                    ? MatchMenuMessage.AUTO_MATCH_SWITCHED_ON
+                    : MatchMenuMessage.AUTO_MATCH_SWITCHED_OFF));
+        } catch (IOException failure) {
+            TournamentMessages.sendWarning(player, Messages.text(enabled
+                    ? MatchMenuMessage.AUTO_MATCH_SWITCHED_ON_NOT_WRITTEN
+                    : MatchMenuMessage.AUTO_MATCH_SWITCHED_OFF_NOT_WRITTEN,
+                    Placeholder.of("reason", describeFailure(failure))));
+        }
+        navigation.refresh(player, holder);
+    }
+
+    private static String describeFailure(IOException failure) {
+        return failure.getMessage() == null ? failure.getClass().getSimpleName() : failure.getMessage();
     }
 
     private void runOperation(Player player, AdminMenuHolder holder,

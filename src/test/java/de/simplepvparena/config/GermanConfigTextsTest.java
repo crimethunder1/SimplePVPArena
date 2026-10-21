@@ -79,6 +79,8 @@ class GermanConfigTextsTest {
                 "  die Sekunden, die ein Kämpfer nach einem Verbindungsabbruch zum Zurückkommen hat, für jeden "
                         + "Verbindungsabbruch ab jetzt",
                 "  die Teamgröße, außer ein Turnier läuft oder ein Team hat mehr Spieler als eine kleinere neue Größe",
+                "  ob der Auto-Match-Modus an ist, die Sekunden bis zum Beginn eines Auto-Matches und die Pause "
+                        + "zwischen zwei Auto-Matches",
                 "  die Blockmengen der Reinigung und des Ausgangszustands und die Partikel einer laufenden Reinigung",
                 "  die Tiefe unter dem Boden, bis zu der der nächste Ausgangszustand aufgenommen wird",
                 "  die Zellgrenze der Arena-Berechnung",

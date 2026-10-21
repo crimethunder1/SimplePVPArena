@@ -213,6 +213,9 @@ class GermanMenuSnapshotTest {
                 14 | GRAY_DYE | Wartendes Match entscheiden | Es läuft kein Turnier
                 15 | GRAY_DYE | Finale starten | Es läuft kein Turnier
                 16 | GRAY_DYE | Ergebnis erzwingen | Es läuft kein Match
+                17 | COMPARATOR | Auto-Match-Modus | Der Modus ist aus / \
+                Zwei Teams mit je einem Spieler online bekommen ein Match ohne Turnier / \
+                Ein laufendes Turnier hat Vorrang / Klicke, um ihn einzuschalten
                 22 | OAK_DOOR | Zurück | Zurück zum Hauptmenü
                 """, fixture.describeLastMenu());
     }
@@ -237,6 +240,11 @@ class GermanMenuSnapshotTest {
                 Entscheidet ein Match, das nicht läuft, für eines seiner zwei Teams
                 15 | GRAY_DYE | Finale starten | Das Finale ist nicht bereit, seine Finalisten stehen noch nicht fest
                 16 | ANVIL | Ergebnis erzwingen | Entscheidet das laufende Match für eines seiner zwei Teams
+                17 | COMPARATOR | Auto-Match-Modus | Der Modus ist aus / \
+                Zwei Teams mit je einem Spieler online bekommen ein Match ohne Turnier / \
+                Ein laufendes Turnier hat Vorrang / \
+                Ein Turnier läuft, der Modus wirkt, wenn es vorbei ist / \
+                Klicke, um ihn einzuschalten
                 22 | OAK_DOOR | Zurück | Zurück zum Hauptmenü
                 """.formatted(fixture.runningFirstTeamName(), fixture.runningSecondTeamName()),
                 fixture.describeLastMenu());

@@ -29,6 +29,7 @@ import de.simplepvparena.border.BorderVisualEffects;
 import de.simplepvparena.border.BorderWallPreview;
 import de.simplepvparena.border.SpectatorBorderService;
 import de.simplepvparena.command.TournamentCommand;
+import de.simplepvparena.config.AutoMatchConfigurationWriter;
 import de.simplepvparena.config.ConfigurationReloadReport;
 import de.simplepvparena.config.ConfigurationReloadService;
 import de.simplepvparena.config.PluginLiveConfiguration;
@@ -88,6 +89,8 @@ import de.simplepvparena.team.TeamRegistry;
 import de.simplepvparena.team.TeamSizeSetting;
 import de.simplepvparena.team.TeamStorage;
 import de.simplepvparena.tournament.AdminNotifier;
+import de.simplepvparena.tournament.ArenaCleanup;
+import de.simplepvparena.tournament.AutoMatchService;
 import de.simplepvparena.tournament.AutomaticArenaCleanup;
 import de.simplepvparena.tournament.FileTournamentStateStorage;
 import de.simplepvparena.tournament.KitChoiceService;
@@ -143,6 +146,7 @@ public final class SimplePVPArenaPlugin extends JavaPlugin {
     private FighterColours fighterColours;
     private MatchService matchService;
     private TournamentManager tournamentManager;
+    private AutoMatchService autoMatchService;
     private TournamentDryRun tournamentDryRun;
     private ConfigurationReloadService configurationReloadService;
 
@@ -242,13 +246,16 @@ public final class SimplePVPArenaPlugin extends JavaPlugin {
         arenaSetupService.setArenaReservedForMatch(kitChoiceService::isPending);
 
         TeamSizeSetting teamSizeSetting = new TeamSizeSetting();
-        tournamentManager = new TournamentManager(this, teamRegistry, arenaRegistry, matchService,
-                new AutomaticArenaCleanup(arenaSetupService, arenaCleaningService),
+        ArenaCleanup arenaCleanup = new AutomaticArenaCleanup(arenaSetupService, arenaCleaningService);
+        tournamentManager = new TournamentManager(this, teamRegistry, arenaRegistry, matchService, arenaCleanup,
                 adminNotifier, new FileTournamentStateStorage(
                         new File(getDataFolder(), FileTournamentStateStorage.FILE_NAME).toPath()),
                 kitChoiceService, teamSizeSetting);
         tournamentManager.setArenaAudience(arenaAudience);
         tournamentManager.restoreSavedTournament();
+        autoMatchService = new AutoMatchService(this, teamRegistry, arenaRegistry, matchService, tournamentManager,
+                kitLibrary, arenaCleanup, adminNotifier, arenaAudience);
+        arenaSetupService.setArenaReservedForAutoMatch(autoMatchService::isAnnounced);
 
         tournamentDryRun = new TournamentDryRun(tournamentManager::getState,
                 matchService::hasActiveMatch, teamRegistry,
@@ -262,6 +269,8 @@ public final class SimplePVPArenaPlugin extends JavaPlugin {
                 arenaHeightMarkerService, startGateItemService,
                 borderSelectorModes, kitLibrary, kitSaveService, chatInputService, this::saveTeamConfiguration,
                 this::reloadConfiguration, new TeamSizeConfigurationWriter(this::getConfig,
+                        new File(getDataFolder(), CONFIGURATION_FILE_NAME), getLogger()),
+                autoMatchService, new AutoMatchConfigurationWriter(this::getConfig,
                         new File(getDataFolder(), CONFIGURATION_FILE_NAME), getLogger()));
 
         configurationReloadService = new ConfigurationReloadService(this::getConfig, this::reloadConfig,
@@ -270,7 +279,7 @@ public final class SimplePVPArenaPlugin extends JavaPlugin {
                         arenaSafetyZone, arenaRegistry, borderParticleService, borderWallPreview,
                         borderVisualEffect, teamSizeSetting, teamRegistry, tournamentManager::isTournamentInProgress,
                         adminNotifier::notifyAdmins,
-                        getLogger()::warning, messageCatalogLoader::useLanguage),
+                        getLogger()::warning, messageCatalogLoader::useLanguage, autoMatchService::applySettings),
                 getLogger()::warning);
         configurationReloadService.applyStoredConfiguration();
 
@@ -303,6 +312,9 @@ public final class SimplePVPArenaPlugin extends JavaPlugin {
         }
         if (arenaBaselineService != null) {
             arenaBaselineService.stopCapture();
+        }
+        if (autoMatchService != null) {
+            autoMatchService.stop();
         }
         if (matchService != null) {
             matchService.cancelActiveMatch();

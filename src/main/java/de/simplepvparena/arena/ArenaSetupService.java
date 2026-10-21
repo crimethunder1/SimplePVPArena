@@ -37,6 +37,7 @@ public final class ArenaSetupService {
 
     private int maximumArenaCellCount = ArenaShapeFloodFill.DEFAULT_MAXIMUM_CELL_COUNT;
     private BooleanSupplier arenaReservedForMatch = () -> false;
+    private BooleanSupplier arenaReservedForAutoMatch = () -> false;
 
     public ArenaSetupService(ActiveArenaState activeArena,
                              MatchService matchService,
@@ -66,6 +67,11 @@ public final class ArenaSetupService {
         this.arenaReservedForMatch = Objects.requireNonNull(arenaReservedForMatch, "arenaReservedForMatch");
     }
 
+    public void setArenaReservedForAutoMatch(BooleanSupplier arenaReservedForAutoMatch) {
+        this.arenaReservedForAutoMatch = Objects.requireNonNull(arenaReservedForAutoMatch,
+                "arenaReservedForAutoMatch");
+    }
+
     public int getMaximumArenaCellCount() {
         return maximumArenaCellCount;
     }
@@ -91,8 +97,9 @@ public final class ArenaSetupService {
             TournamentMessages.sendError(admin, Messages.text(ArenaSetupMessage.CALCULATION_DURING_MATCH));
             return;
         }
-        if (arenaReservedForMatch.getAsBoolean()) {
-            TournamentMessages.sendError(admin, describeArenaReservedForMatch());
+        Optional<String> reservation = findReservation();
+        if (reservation.isPresent()) {
+            TournamentMessages.sendError(admin, reservation.get());
             return;
         }
         if (isDiagnosisRun) {
@@ -266,14 +273,17 @@ public final class ArenaSetupService {
         if (matchService.hasActiveMatch()) {
             return Optional.of(Messages.text(ArenaSetupMessage.RESET_DURING_MATCH));
         }
-        if (arenaReservedForMatch.getAsBoolean()) {
-            return Optional.of(describeArenaReservedForMatch());
-        }
-        return Optional.empty();
+        return findReservation();
     }
 
-    private static String describeArenaReservedForMatch() {
-        return Messages.text(ArenaSetupMessage.ARENA_RESERVED_FOR_MATCH);
+    private Optional<String> findReservation() {
+        if (arenaReservedForMatch.getAsBoolean()) {
+            return Optional.of(Messages.text(ArenaSetupMessage.ARENA_RESERVED_FOR_MATCH));
+        }
+        if (arenaReservedForAutoMatch.getAsBoolean()) {
+            return Optional.of(Messages.text(ArenaSetupMessage.ARENA_RESERVED_FOR_AUTO_MATCH));
+        }
+        return Optional.empty();
     }
 
     public void clearConfiguration(CommandSender sender) {
@@ -296,8 +306,9 @@ public final class ArenaSetupService {
         if (matchService.hasActiveMatch()) {
             return Optional.of(Messages.text(ArenaSetupMessage.CLEANING_DURING_MATCH));
         }
-        if (arenaReservedForMatch.getAsBoolean()) {
-            return Optional.of(describeArenaReservedForMatch());
+        Optional<String> reservation = findReservation();
+        if (reservation.isPresent()) {
+            return reservation;
         }
         if (arenaCleaningService.isCleaning()) {
             return Optional.of(Messages.text(ArenaSetupMessage.CLEANING_ALREADY_RUNNING));

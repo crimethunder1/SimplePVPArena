@@ -150,6 +150,11 @@ match-menu:
   cancel-confirmation:
     - 'Das laufende Turnier wird abgebrochen'
     - 'Das laufende Match wird gestoppt und sein Turnierbaum verworfen'
+  auto-match:
+    switched-on: 'Der Auto-Match-Modus ist an'
+    switched-off: 'Der Auto-Match-Modus ist aus'
+    switched-on-not-written: 'Der Auto-Match-Modus ist an, aber config.yml konnte nicht geschrieben werden: {reason}'
+    switched-off-not-written: 'Der Auto-Match-Modus ist aus, aber config.yml konnte nicht geschrieben werden: {reason}'
   tile:
     info:
       title: 'Turnier'
@@ -185,6 +190,16 @@ match-menu:
       ready-while-paused: 'Das Finale ist bereit, setze das Turnier fort, um es zu starten'
       running: 'Das Finale läuft'
       over: 'Das Finale ist vorbei'
+    auto-match:
+      title: 'Auto-Match-Modus'
+      mode-on: 'Der Modus ist an'
+      mode-off: 'Der Modus ist aus'
+      lore:
+        - 'Zwei Teams mit je einem Spieler online bekommen ein Match ohne Turnier'
+        - 'Ein laufendes Turnier hat Vorrang'
+      tournament-running: 'Ein Turnier läuft, der Modus wirkt, wenn es vorbei ist'
+      switch-on: 'Klicke, um ihn einzuschalten'
+      switch-off: 'Klicke, um ihn auszuschalten'
 force-result-menu:
   title: 'Ergebnis von {match}'
   match-not-running: 'Match {match} läuft nicht mehr'
@@ -591,6 +606,7 @@ arena:
     not-a-number: 'Das Zellenlimit {value} ist keine Zahl'
     out-of-range: 'Das Zellenlimit muss zwischen {minimum} und {maximum} liegen'
   reserved-for-match: 'Das Kit für das nächste Match wird gerade gewählt, die Arena ist bis zu dessen Start für dieses Match reserviert'
+  reserved-for-auto-match: 'Ein Auto-Match beginnt gleich, die Arena ist dafür reserviert'
   calculation:
     during-match: 'Ein Match läuft, die Kampffläche lässt sich nur zwischen den Matches berechnen'
     diagnosis-run:
@@ -1111,6 +1127,7 @@ tournament:
       one: 'Mindestens {count} Team ist nötig'
       other: 'Mindestens {count} Teams sind nötig'
     uneven-team-count: 'Die Anzahl der Teams ist ungerade, nutze {action}, um trotzdem zu starten'
+    auto-match-running: 'Ein Auto-Match läuft, starte das Turnier, wenn es vorbei ist'
   arena:
     not-configured:
       - 'Die Arena ist nicht vollständig eingerichtet'
@@ -1138,6 +1155,7 @@ tournament:
     rename-refusal: 'Ein Team kann nicht umbenannt werden, während ein Turnier läuft, der Turnierbaum behält seinen Namen'
     in-match: 'Team {team} spielt in Match {match}, es kann erst nach dem Ende des Matches geändert werden'
     waiting-for-kit-choice: 'Team {team} wartet auf die Kit-Wahl von Match {match}, es kann erst nach dem Ende des Matches geändert werden'
+    about-to-play-auto-match: 'Team {team} spielt gleich ein Auto-Match, es kann erst nach dem Ende des Matches geändert werden'
   announcement:
     started: 'Das Turnier hat mit {teams} in {rounds} begonnen'
     team-count:
@@ -1241,6 +1259,15 @@ match:
     final-won: '{team} gewinnt das Finale'
     result: '{match}, {score}'
     decided-by-an-admin: '{match}, von einem Admin entschieden'
+auto-match:
+  announcement:
+    one: 'Auto-Match: {firstTeam} gegen {secondTeam} beginnt in {count} Sekunde'
+    other: 'Auto-Match: {firstTeam} gegen {secondTeam} beginnt in {count} Sekunden'
+  cancelled:
+    team-offline: 'Auto-Match abgebrochen: ein Team hat keinen Spieler mehr online'
+    mode-switched-off: 'Auto-Match abgebrochen: der Modus wurde ausgeschaltet'
+    tournament-starting: 'Auto-Match abgebrochen: ein Turnier beginnt'
+    arena-not-ready: 'Auto-Match abgebrochen: die Arena ist nicht bereit'
 player-state:
   not-found: 'Für {player} wurde kein gespeichertes Inventar und kein gespeicherter Zustand gefunden, das Kit wurde abgeräumt, ohne etwas wiederherzustellen'
   unreadable-cleared: 'Das gespeicherte Inventar und der Zustand von {player} konnten nicht gelesen werden, das Kit wurde abgeräumt, ohne etwas wiederherzustellen, die Datei bleibt als {file} erhalten'
@@ -1461,6 +1488,13 @@ config:
     team-size-out-of-range:
       one: '{path} muss eine ganze Zahl zwischen {minimum} und {maximum} Spielern sein, stattdessen gilt {count} Spieler'
       other: '{path} muss eine ganze Zahl zwischen {minimum} und {maximum} Spielern sein, stattdessen gelten {count} Spieler'
+    auto-match-enabled-not-a-truth-value: '{path} muss true oder false sein, stattdessen gilt {fallback}'
+    auto-match-start-delay-out-of-range:
+      one: '{path} muss eine ganze Zahl zwischen {minimum} und {maximum} Sekunden sein, stattdessen gilt {count} Sekunde'
+      other: '{path} muss eine ganze Zahl zwischen {minimum} und {maximum} Sekunden sein, stattdessen gelten {count} Sekunden'
+    auto-match-pause-out-of-range:
+      one: '{path} muss eine ganze Zahl zwischen {minimum} und {maximum} Sekunden sein, stattdessen gilt {count} Sekunde'
+      other: '{path} muss eine ganze Zahl zwischen {minimum} und {maximum} Sekunden sein, stattdessen gelten {count} Sekunden'
     cleaning-duration-negative: '{path} darf nicht negativ sein, stattdessen gelten {seconds} Sekunden. Mit null reinigst du ohne die beiden farbigen Phasen'
     cleaning-columns-negative:
       one: '{path} darf nicht negativ sein, stattdessen gilt {count} Spalte pro Tick. Mit null wird keine gezeichnet'
@@ -1483,6 +1517,7 @@ config:
       countdown: 'die Sekunden des Countdowns direkt vor dem Kampf, ab der nächsten Runde'
       reconnect: 'die Sekunden, die ein Kämpfer nach einem Verbindungsabbruch zum Zurückkommen hat, für jeden Verbindungsabbruch ab jetzt'
       team-size: 'die Teamgröße, außer ein Turnier läuft oder ein Team hat mehr Spieler als eine kleinere neue Größe'
+      auto-match: 'ob der Auto-Match-Modus an ist, die Sekunden bis zum Beginn eines Auto-Matches und die Pause zwischen zwei Auto-Matches'
       cleaning: 'die Blockmengen der Reinigung und des Ausgangszustands und die Partikel einer laufenden Reinigung'
       baseline-depth: 'die Tiefe unter dem Boden, bis zu der der nächste Ausgangszustand aufgenommen wird'
       cell-limit: 'die Zellgrenze der Arena-Berechnung'

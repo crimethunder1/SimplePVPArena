@@ -138,6 +138,8 @@ class ConfigTextsTest {
                         + "now on",
                 "  the team size, unless a tournament is in progress or a team has more players than a smaller new "
                         + "size",
+                "  whether the auto match mode is on, the seconds before an auto match starts and the pause between "
+                        + "two auto matches",
                 "  the cleaning and baseline batch sizes and the particles of a running cleaning",
                 "  the depth below the floor the next baseline is taken to",
                 "  the cell limit of the arena calculation",

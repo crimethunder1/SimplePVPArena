@@ -150,6 +150,11 @@ match-menu:
   cancel-confirmation:
     - 'The running tournament is cancelled'
     - 'The running match is stopped and its bracket is dropped'
+  auto-match:
+    switched-on: 'Auto match mode is on'
+    switched-off: 'Auto match mode is off'
+    switched-on-not-written: 'Auto match mode is on, but config.yml could not be written: {reason}'
+    switched-off-not-written: 'Auto match mode is off, but config.yml could not be written: {reason}'
   tile:
     info:
       title: 'Tournament'
@@ -185,6 +190,16 @@ match-menu:
       ready-while-paused: 'The final is ready, continue the tournament to start it'
       running: 'The final is running'
       over: 'The final is over'
+    auto-match:
+      title: 'Auto match mode'
+      mode-on: 'The mode is on'
+      mode-off: 'The mode is off'
+      lore:
+        - 'Two teams with a player each online get a match without a tournament'
+        - 'A running tournament has priority'
+      tournament-running: 'A tournament is running, the mode takes effect when it is over'
+      switch-on: 'Click to switch it on'
+      switch-off: 'Click to switch it off'
 force-result-menu:
   title: 'Result of {match}'
   match-not-running: 'Match {match} is not running any more'
@@ -591,6 +606,7 @@ arena:
     not-a-number: 'The cell limit {value} is not a number'
     out-of-range: 'The cell limit has to be between {minimum} and {maximum}'
   reserved-for-match: 'The kit for the next match is being chosen, the arena is reserved for that match until it starts'
+  reserved-for-auto-match: 'An auto match is about to start, the arena is reserved for it'
   calculation:
     during-match: 'A match is running, the fight area can only be calculated between matches'
     diagnosis-run:
@@ -1111,6 +1127,7 @@ tournament:
       one: 'At least {count} team is required'
       other: 'At least {count} teams are required'
     uneven-team-count: 'The team count is uneven, use {action} to start anyway'
+    auto-match-running: 'An auto match is running, start the tournament when it is over'
   arena:
     not-configured:
       - 'The arena is not fully configured'
@@ -1138,6 +1155,7 @@ tournament:
     rename-refusal: 'A team cannot be renamed while a tournament is in progress, the bracket keeps its name'
     in-match: 'Team {team} is in match {match}, it cannot be changed before the match is over'
     waiting-for-kit-choice: 'Team {team} is waiting for the kit choice of match {match}, it cannot be changed before the match is over'
+    about-to-play-auto-match: 'Team {team} is about to play an auto match, it cannot be changed before the match is over'
   announcement:
     started: 'The tournament has started with {teams} in {rounds}'
     team-count:
@@ -1241,6 +1259,15 @@ match:
     final-won: '{team} wins the final'
     result: '{match}, {score}'
     decided-by-an-admin: '{match}, decided by an admin'
+auto-match:
+  announcement:
+    one: 'Auto match: {firstTeam} against {secondTeam} begins in {count} second'
+    other: 'Auto match: {firstTeam} against {secondTeam} begins in {count} seconds'
+  cancelled:
+    team-offline: 'Auto match cancelled: a team has no player online any more'
+    mode-switched-off: 'Auto match cancelled: the mode was switched off'
+    tournament-starting: 'Auto match cancelled: a tournament is starting'
+    arena-not-ready: 'Auto match cancelled: the arena is not ready'
 player-state:
   not-found: 'No saved inventory and state of {player} was found, the kit was cleared without restoring anything'
   unreadable-cleared: 'The saved inventory and state of {player} could not be read, the kit was cleared without restoring anything, the file is kept as {file}'
@@ -1461,6 +1488,13 @@ config:
     team-size-out-of-range:
       one: '{path} must be a whole number between {minimum} and {maximum} players, falling back to {count} player'
       other: '{path} must be a whole number between {minimum} and {maximum} players, falling back to {count} players'
+    auto-match-enabled-not-a-truth-value: '{path} must be true or false, falling back to {fallback}'
+    auto-match-start-delay-out-of-range:
+      one: '{path} must be a whole number between {minimum} and {maximum} seconds, falling back to {count} second'
+      other: '{path} must be a whole number between {minimum} and {maximum} seconds, falling back to {count} seconds'
+    auto-match-pause-out-of-range:
+      one: '{path} must be a whole number between {minimum} and {maximum} seconds, falling back to {count} second'
+      other: '{path} must be a whole number between {minimum} and {maximum} seconds, falling back to {count} seconds'
     cleaning-duration-negative: '{path} cannot be negative, falling back to {seconds} seconds. Use zero to clean without the two coloured phases'
     cleaning-columns-negative:
       one: '{path} cannot be negative, falling back to {count} column per tick. Use zero to draw none'
@@ -1483,6 +1517,7 @@ config:
       countdown: 'the seconds of the countdown right before the fight, from the next round on'
       reconnect: 'the seconds a fighter who lost the connection has to come back, for every connection lost from now on'
       team-size: 'the team size, unless a tournament is in progress or a team has more players than a smaller new size'
+      auto-match: 'whether the auto match mode is on, the seconds before an auto match starts and the pause between two auto matches'
       cleaning: 'the cleaning and baseline batch sizes and the particles of a running cleaning'
       baseline-depth: 'the depth below the floor the next baseline is taken to'
       cell-limit: 'the cell limit of the arena calculation'

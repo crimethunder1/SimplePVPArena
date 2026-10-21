@@ -22,6 +22,7 @@ import de.simplepvparena.message.Messages;
 import de.simplepvparena.message.Placeholder;
 import de.simplepvparena.team.TeamRegistry;
 import de.simplepvparena.team.TeamSizeSetting;
+import de.simplepvparena.tournament.AutoMatchSettings;
 
 import java.util.Objects;
 import java.util.Optional;
@@ -48,6 +49,7 @@ public final class PluginLiveConfiguration implements LiveConfiguration {
     private final Consumer<String> adminNotifier;
     private final Consumer<String> problemReporter;
     private final Consumer<String> languageApplier;
+    private final Consumer<AutoMatchSettings> autoMatchSettingsApplier;
 
     public PluginLiveConfiguration(MatchService matchService,
                                    StartGateDuration startGateDuration,
@@ -66,7 +68,8 @@ public final class PluginLiveConfiguration implements LiveConfiguration {
                                    BooleanSupplier tournamentInProgress,
                                    Consumer<String> adminNotifier,
                                    Consumer<String> problemReporter,
-                                   Consumer<String> languageApplier) {
+                                   Consumer<String> languageApplier,
+                                   Consumer<AutoMatchSettings> autoMatchSettingsApplier) {
         this.matchService = Objects.requireNonNull(matchService, "matchService");
         this.startGateDuration = Objects.requireNonNull(startGateDuration, "startGateDuration");
         this.fighterColours = Objects.requireNonNull(fighterColours, "fighterColours");
@@ -86,6 +89,8 @@ public final class PluginLiveConfiguration implements LiveConfiguration {
         this.adminNotifier = Objects.requireNonNull(adminNotifier, "adminNotifier");
         this.problemReporter = Objects.requireNonNull(problemReporter, "problemReporter");
         this.languageApplier = Objects.requireNonNull(languageApplier, "languageApplier");
+        this.autoMatchSettingsApplier = Objects.requireNonNull(autoMatchSettingsApplier,
+                "autoMatchSettingsApplier");
     }
 
     @Override
@@ -162,6 +167,11 @@ public final class PluginLiveConfiguration implements LiveConfiguration {
             problemReporter.accept(warning);
             adminNotifier.accept(warning);
         });
+    }
+
+    @Override
+    public void setAutoMatchSettings(AutoMatchSettings autoMatchSettings) {
+        autoMatchSettingsApplier.accept(autoMatchSettings);
     }
 
     @Override

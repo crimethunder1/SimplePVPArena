@@ -1,6 +1,7 @@
 package de.simplepvparena.gui;
 
 import de.simplepvparena.arena.ActiveArenaState;
+import de.simplepvparena.arena.ArenaAudience;
 import de.simplepvparena.arena.ArenaBaselineRegistry;
 import de.simplepvparena.arena.ArenaBaselineService;
 import de.simplepvparena.arena.ArenaBorderConfirmation;
@@ -36,6 +37,7 @@ import de.simplepvparena.support.FakeSpectatorItems;
 import de.simplepvparena.support.SharedBukkitServer;
 import de.simplepvparena.team.TeamMemberLookup;
 import de.simplepvparena.team.TeamRegistry;
+import de.simplepvparena.tournament.AutoMatchService;
 import de.simplepvparena.tournament.AutomaticArenaCleanup;
 import de.simplepvparena.tournament.TournamentManager;
 import net.kyori.adventure.text.Component;
@@ -124,6 +126,12 @@ class AdminMenuSeamTest {
                 },
                 teamSize -> {
                     throw new UnsupportedOperationException("the team size is not written in this test");
+                },
+                new AutoMatchService(plugin, teamRegistry, arenaRegistry, matchService, tournamentManager,
+                        kitLibrary, new AutomaticArenaCleanup(arenaSetupService, cleaningService), message -> { },
+                        new ArenaAudience(List::of, arenaRegistry)),
+                enabled -> {
+                    throw new UnsupportedOperationException("the auto match mode is not written in this test");
                 },
                 windows,
                 List::of);

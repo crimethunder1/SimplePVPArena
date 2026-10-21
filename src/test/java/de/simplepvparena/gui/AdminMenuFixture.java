@@ -1,6 +1,7 @@
 package de.simplepvparena.gui;
 
 import de.simplepvparena.arena.ActiveArenaState;
+import de.simplepvparena.arena.ArenaAudience;
 import de.simplepvparena.arena.ArenaBaselineRegistry;
 import de.simplepvparena.arena.ArenaBaselineService;
 import de.simplepvparena.arena.ArenaBorderConfirmation;
@@ -50,6 +51,7 @@ import de.simplepvparena.support.TickingScheduler;
 import de.simplepvparena.team.TeamMember;
 import de.simplepvparena.team.TeamMemberLookup;
 import de.simplepvparena.team.TeamRegistry;
+import de.simplepvparena.tournament.AutoMatchService;
 import de.simplepvparena.tournament.AutomaticArenaCleanup;
 import de.simplepvparena.tournament.KitChoiceService;
 import de.simplepvparena.tournament.TournamentManager;
@@ -124,6 +126,7 @@ final class AdminMenuFixture {
     private final List<Player> onlinePlayers = new ArrayList<>();
     private final List<String> adminNotifications = new ArrayList<>();
     private final List<Integer> writtenTeamSizes = new ArrayList<>();
+    private final List<Boolean> writtenAutoMatchModes = new ArrayList<>();
     private final TickingScheduler kitChoiceScheduler = new TickingScheduler();
     private final KitChoiceService kitChoiceService;
     private final World world;
@@ -131,6 +134,7 @@ final class AdminMenuFixture {
     private final MatchService matchService;
     private final ArenaSetupService arenaSetupService;
     private final TournamentManager tournamentManager;
+    private final AutoMatchService autoMatchService;
     private final ChatInputService chatInputService;
     private final ChatInputListener chatInputListener;
     private final AdminMenuService menuService;
@@ -142,6 +146,7 @@ final class AdminMenuFixture {
     private int teamConfigurationSaveCount;
     private int arenaConfigurationSaveCount;
     private IOException teamSizeWriteFailure;
+    private IOException autoMatchModeWriteFailure;
 
     AdminMenuFixture() {
         this(false);
@@ -168,18 +173,22 @@ final class AdminMenuFixture {
                 new ArenaBaselineService(plugin, new ArenaBaselineRegistry()),
                 new ArenaBorderConfirmation(arenaRegistry.getArena()::hasShape),
                 () -> arenaConfigurationSaveCount++);
+        AutomaticArenaCleanup arenaCleanup = new AutomaticArenaCleanup(arenaSetupService, cleaningService);
         if (kitChoiceEnabled) {
             kitChoiceService = new KitChoiceService(kitChoiceScheduler.plugin(), kitLibrary,
                     adminNotifications::add, kitChoiceScheduler.clock());
             tournamentManager = new TournamentManager(plugin, teamRegistry, arenaRegistry, matchService,
-                    new AutomaticArenaCleanup(arenaSetupService, cleaningService), message -> { },
-                    TournamentStateStorage.NONE, kitChoiceService);
+                    arenaCleanup, message -> { }, TournamentStateStorage.NONE, kitChoiceService);
         } else {
             tournamentManager = new TournamentManager(plugin, teamRegistry, arenaRegistry, matchService,
-                    new AutomaticArenaCleanup(arenaSetupService, cleaningService), message -> { });
+                    arenaCleanup, message -> { });
             kitChoiceService = tournamentManager.getKitChoiceService();
         }
         arenaSetupService.setArenaReservedForMatch(kitChoiceService::isPending);
+        autoMatchService = new AutoMatchService(plugin, teamRegistry, arenaRegistry, matchService, tournamentManager,
+                kitLibrary, arenaCleanup, adminNotifications::add,
+                new ArenaAudience(() -> List.copyOf(onlinePlayers), arenaRegistry));
+        arenaSetupService.setArenaReservedForAutoMatch(autoMatchService::isAnnounced);
         TournamentDryRun tournamentDryRun = new TournamentDryRun(tournamentManager::getState,
                 matchService::hasActiveMatch, teamRegistry,
                 new PluginDryRunArena(arenaRegistry.getArena(), arenaSetupService), kitService, gateMarks,
@@ -200,6 +209,8 @@ final class AdminMenuFixture {
                 chatInputService, this::saveTeamConfiguration,
                 this::reloadConfiguration,
                 this::writeTeamSize,
+                autoMatchService,
+                this::writeAutoMatchMode,
                 windows,
                 () -> List.copyOf(onlinePlayers));
     }
@@ -318,6 +329,18 @@ final class AdminMenuFixture {
 
     void failTeamSizeWrites(IOException failure) {
         teamSizeWriteFailure = failure;
+    }
+
+    AutoMatchService autoMatchService() {
+        return autoMatchService;
+    }
+
+    List<Boolean> writtenAutoMatchModes() {
+        return writtenAutoMatchModes;
+    }
+
+    void failAutoMatchModeWrites(IOException failure) {
+        autoMatchModeWriteFailure = failure;
     }
 
     void makePlayersKnown(String... playerNames) {
@@ -614,6 +637,13 @@ final class AdminMenuFixture {
             throw teamSizeWriteFailure;
         }
         writtenTeamSizes.add(teamSize);
+    }
+
+    private void writeAutoMatchMode(boolean enabled) throws IOException {
+        if (autoMatchModeWriteFailure != null) {
+            throw autoMatchModeWriteFailure;
+        }
+        writtenAutoMatchModes.add(enabled);
     }
 
     private static void assertSuccessful(TournamentOperationResult result) {

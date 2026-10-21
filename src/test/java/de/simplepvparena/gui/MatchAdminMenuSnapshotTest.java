@@ -24,6 +24,9 @@ class MatchAdminMenuSnapshotTest {
                 14 | GRAY_DYE | Decide a waiting match | No tournament is in progress
                 15 | GRAY_DYE | Start the final | No tournament is in progress
                 16 | GRAY_DYE | Force a result | No match is running
+                17 | COMPARATOR | Auto match mode | The mode is off / \
+                Two teams with a player each online get a match without a tournament / \
+                A running tournament has priority / Click to switch it on
                 22 | OAK_DOOR | Back | Returns to the main menu
                 """, fixture.describeLastMenu());
     }
@@ -45,6 +48,9 @@ class MatchAdminMenuSnapshotTest {
                 14 | GRAY_DYE | Decide a waiting match | No tournament is in progress
                 15 | GRAY_DYE | Start the final | No tournament is in progress
                 16 | GRAY_DYE | Force a result | No match is running
+                17 | COMPARATOR | Auto match mode | The mode is off / \
+                Two teams with a player each online get a match without a tournament / \
+                A running tournament has priority / Click to switch it on
                 22 | OAK_DOOR | Back | Returns to the main menu
                 """, fixture.describeLastMenu());
     }
@@ -70,6 +76,11 @@ class MatchAdminMenuSnapshotTest {
                 14 | LECTERN | Decide a waiting match | Decides a match that is not running for one of its two teams
                 15 | GRAY_DYE | Start the final | The final is not ready, its finalists are not decided yet
                 16 | ANVIL | Force a result | Decides the running match for one of its two teams
+                17 | COMPARATOR | Auto match mode | The mode is off / \
+                Two teams with a player each online get a match without a tournament / \
+                A running tournament has priority / \
+                A tournament is running, the mode takes effect when it is over / \
+                Click to switch it on
                 22 | OAK_DOOR | Back | Returns to the main menu
                 """.formatted(fixture.runningFirstTeamName(), fixture.runningSecondTeamName()),
                 fixture.describeLastMenu());
@@ -96,6 +107,11 @@ class MatchAdminMenuSnapshotTest {
                 14 | LECTERN | Decide a waiting match | Decides a match that is not running for one of its two teams
                 15 | GRAY_DYE | Start the final | The final is not ready, its finalists are not decided yet
                 16 | ANVIL | Force a result | Decides the running match for one of its two teams
+                17 | COMPARATOR | Auto match mode | The mode is off / \
+                Two teams with a player each online get a match without a tournament / \
+                A running tournament has priority / \
+                A tournament is running, the mode takes effect when it is over / \
+                Click to switch it on
                 22 | OAK_DOOR | Back | Returns to the main menu
                 """.formatted(fixture.runningFirstTeamName(), fixture.runningSecondTeamName()),
                 fixture.describeLastMenu());
@@ -122,6 +138,11 @@ class MatchAdminMenuSnapshotTest {
                 14 | LECTERN | Decide a waiting match | Decides a match that is not running for one of its two teams
                 15 | NETHER_STAR | Start the final | Both finalists are known / Starts the final on the arena
                 16 | GRAY_DYE | Force a result | No match is running
+                17 | COMPARATOR | Auto match mode | The mode is off / \
+                Two teams with a player each online get a match without a tournament / \
+                A running tournament has priority / \
+                A tournament is running, the mode takes effect when it is over / \
+                Click to switch it on
                 22 | OAK_DOOR | Back | Returns to the main menu
                 """, fixture.describeLastMenu());
     }
@@ -147,6 +168,9 @@ class MatchAdminMenuSnapshotTest {
                 14 | GRAY_DYE | Decide a waiting match | No tournament is in progress
                 15 | GRAY_DYE | Start the final | The final is over
                 16 | GRAY_DYE | Force a result | No match is running
+                17 | COMPARATOR | Auto match mode | The mode is off / \
+                Two teams with a player each online get a match without a tournament / \
+                A running tournament has priority / Click to switch it on
                 22 | OAK_DOOR | Back | Returns to the main menu
                 """, fixture.describeLastMenu());
     }
@@ -173,6 +197,11 @@ class MatchAdminMenuSnapshotTest {
                 14 | LECTERN | Decide a waiting match | Decides a match that is not running for one of its two teams
                 15 | GRAY_DYE | Start the final | The final is running
                 16 | ANVIL | Force a result | Decides the running match for one of its two teams
+                17 | COMPARATOR | Auto match mode | The mode is off / \
+                Two teams with a player each online get a match without a tournament / \
+                A running tournament has priority / \
+                A tournament is running, the mode takes effect when it is over / \
+                Click to switch it on
                 22 | OAK_DOOR | Back | Returns to the main menu
                 """.formatted(fixture.runningFirstTeamName(), fixture.runningSecondTeamName()),
                 fixture.describeLastMenu());

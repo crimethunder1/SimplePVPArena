@@ -20,6 +20,7 @@ import de.simplepvparena.message.Messages;
 import de.simplepvparena.message.Placeholder;
 import de.simplepvparena.team.Team;
 import de.simplepvparena.team.TeamSizeSetting;
+import de.simplepvparena.tournament.AutoMatchSettings;
 import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.configuration.ConfigurationSection;
 
@@ -37,6 +38,7 @@ public record PluginSettings(long roundResetDelayTicks,
                              int reconnectSeconds,
                              TeamColourSettings teamColourSettings,
                              int teamSize,
+                             AutoMatchSettings autoMatchSettings,
                              int arenaCleaningBlocksPerTick,
                              int arenaBaselineBlocksPerTick,
                              int arenaBaselineDepthBelowFloor,
@@ -66,6 +68,9 @@ public record PluginSettings(long roundResetDelayTicks,
     public static final String COUNTDOWN_SECONDS_PATH = "match.countdown-seconds";
     public static final String RECONNECT_SECONDS_PATH = "match.reconnect-seconds";
     public static final String TEAM_SIZE_PATH = "match.team-size";
+    public static final String AUTO_MATCH_ENABLED_PATH = "auto-match.enabled";
+    public static final String AUTO_MATCH_START_DELAY_SECONDS_PATH = "auto-match.start-delay-seconds";
+    public static final String AUTO_MATCH_PAUSE_SECONDS_PATH = "auto-match.pause-seconds";
     public static final String FIRST_TEAM_COLOUR_PATH = TeamColourSettings.FIRST_TEAM_CONFIGURATION_PATH;
     public static final String SECOND_TEAM_COLOUR_PATH = TeamColourSettings.SECOND_TEAM_CONFIGURATION_PATH;
     public static final String ARENA_CLEAN_BLOCKS_PER_TICK_PATH = "arena.clean-blocks-per-tick";
@@ -100,6 +105,9 @@ public record PluginSettings(long roundResetDelayTicks,
             TEAM_SIZE_PATH,
             FIRST_TEAM_COLOUR_PATH,
             SECOND_TEAM_COLOUR_PATH,
+            AUTO_MATCH_ENABLED_PATH,
+            AUTO_MATCH_START_DELAY_SECONDS_PATH,
+            AUTO_MATCH_PAUSE_SECONDS_PATH,
             ARENA_CLEAN_BLOCKS_PER_TICK_PATH,
             ARENA_BASELINE_BLOCKS_PER_TICK_PATH,
             ARENA_BASELINE_DEPTH_BELOW_FLOOR_PATH,
@@ -131,6 +139,7 @@ public record PluginSettings(long roundResetDelayTicks,
                 MatchService.DEFAULT_RECONNECT_SECONDS,
                 TeamColourSettings.defaults(),
                 TeamSizeSetting.DEFAULT_TEAM_SIZE,
+                AutoMatchSettings.defaults(),
                 ArenaCleaningService.DEFAULT_BLOCKS_PER_TICK,
                 ArenaBaselineService.DEFAULT_BLOCKS_PER_TICK,
                 ArenaBaselineService.DEFAULT_DEPTH_BELOW_FLOOR,
@@ -162,6 +171,7 @@ public record PluginSettings(long roundResetDelayTicks,
                 readReconnectSeconds(configuration, problemReporter),
                 readTeamColourSettings(configuration, problemReporter),
                 readTeamSize(configuration, problemReporter),
+                readAutoMatchSettings(configuration, problemReporter),
                 configuration.getInt(ARENA_CLEAN_BLOCKS_PER_TICK_PATH, shipped.arenaCleaningBlocksPerTick()),
                 configuration.getInt(ARENA_BASELINE_BLOCKS_PER_TICK_PATH, shipped.arenaBaselineBlocksPerTick()),
                 readBaselineDepthBelowFloor(configuration, problemReporter),
@@ -216,6 +226,7 @@ public record PluginSettings(long roundResetDelayTicks,
         liveConfiguration.setReconnectSeconds(reconnectSeconds);
         liveConfiguration.setTeamColourSettings(teamColourSettings);
         teamSizeTarget.accept(teamSize);
+        liveConfiguration.setAutoMatchSettings(autoMatchSettings);
         liveConfiguration.setArenaCleaningBlocksPerTick(arenaCleaningBlocksPerTick);
         liveConfiguration.setArenaBaselineBlocksPerTick(arenaBaselineBlocksPerTick);
         liveConfiguration.setArenaBaselineDepthBelowFloor(arenaBaselineDepthBelowFloor);
@@ -335,6 +346,66 @@ public record PluginSettings(long roundResetDelayTicks,
                 Placeholder.of("path", TEAM_SIZE_PATH), Placeholder.of("minimum", Team.MINIMUM_MEMBER_COUNT),
                 Placeholder.of("maximum", Team.MAXIMUM_MEMBER_COUNT)));
         return TeamSizeSetting.DEFAULT_TEAM_SIZE;
+    }
+
+    private static AutoMatchSettings readAutoMatchSettings(ConfigurationSection configuration,
+                                                           Consumer<String> problemReporter) {
+        return new AutoMatchSettings(readAutoMatchEnabled(configuration, problemReporter),
+                readAutoMatchStartDelaySeconds(configuration, problemReporter),
+                readAutoMatchPauseSeconds(configuration, problemReporter));
+    }
+
+    private static boolean readAutoMatchEnabled(ConfigurationSection configuration,
+                                                Consumer<String> problemReporter) {
+        if (!configuration.isSet(AUTO_MATCH_ENABLED_PATH)) {
+            return AutoMatchSettings.DEFAULT_ENABLED;
+        }
+        if (configuration.isBoolean(AUTO_MATCH_ENABLED_PATH)) {
+            return configuration.getBoolean(AUTO_MATCH_ENABLED_PATH);
+        }
+        problemReporter.accept(Messages.text(ConfigMessage.AUTO_MATCH_ENABLED_NOT_A_TRUTH_VALUE,
+                Placeholder.of("path", AUTO_MATCH_ENABLED_PATH),
+                Placeholder.of("fallback", AutoMatchSettings.DEFAULT_ENABLED)));
+        return AutoMatchSettings.DEFAULT_ENABLED;
+    }
+
+    private static int readAutoMatchStartDelaySeconds(ConfigurationSection configuration,
+                                                      Consumer<String> problemReporter) {
+        if (!configuration.isSet(AUTO_MATCH_START_DELAY_SECONDS_PATH)) {
+            return AutoMatchSettings.DEFAULT_START_DELAY_SECONDS;
+        }
+        if (configuration.isInt(AUTO_MATCH_START_DELAY_SECONDS_PATH)) {
+            int startDelaySeconds = configuration.getInt(AUTO_MATCH_START_DELAY_SECONDS_PATH);
+            if (startDelaySeconds >= AutoMatchSettings.MINIMUM_START_DELAY_SECONDS
+                    && startDelaySeconds <= AutoMatchSettings.MAXIMUM_START_DELAY_SECONDS) {
+                return startDelaySeconds;
+            }
+        }
+        problemReporter.accept(Messages.plural(ConfigMessage.AUTO_MATCH_START_DELAY_OUT_OF_RANGE,
+                AutoMatchSettings.DEFAULT_START_DELAY_SECONDS,
+                Placeholder.of("path", AUTO_MATCH_START_DELAY_SECONDS_PATH),
+                Placeholder.of("minimum", AutoMatchSettings.MINIMUM_START_DELAY_SECONDS),
+                Placeholder.of("maximum", AutoMatchSettings.MAXIMUM_START_DELAY_SECONDS)));
+        return AutoMatchSettings.DEFAULT_START_DELAY_SECONDS;
+    }
+
+    private static int readAutoMatchPauseSeconds(ConfigurationSection configuration,
+                                                 Consumer<String> problemReporter) {
+        if (!configuration.isSet(AUTO_MATCH_PAUSE_SECONDS_PATH)) {
+            return AutoMatchSettings.DEFAULT_PAUSE_SECONDS;
+        }
+        if (configuration.isInt(AUTO_MATCH_PAUSE_SECONDS_PATH)) {
+            int pauseSeconds = configuration.getInt(AUTO_MATCH_PAUSE_SECONDS_PATH);
+            if (pauseSeconds >= AutoMatchSettings.MINIMUM_PAUSE_SECONDS
+                    && pauseSeconds <= AutoMatchSettings.MAXIMUM_PAUSE_SECONDS) {
+                return pauseSeconds;
+            }
+        }
+        problemReporter.accept(Messages.plural(ConfigMessage.AUTO_MATCH_PAUSE_OUT_OF_RANGE,
+                AutoMatchSettings.DEFAULT_PAUSE_SECONDS, Placeholder.of("path", AUTO_MATCH_PAUSE_SECONDS_PATH),
+                Placeholder.of("minimum", AutoMatchSettings.MINIMUM_PAUSE_SECONDS),
+                Placeholder.of("maximum", AutoMatchSettings.MAXIMUM_PAUSE_SECONDS)));
+        return AutoMatchSettings.DEFAULT_PAUSE_SECONDS;
     }
 
     private static ArenaCleaningParticleSettings readArenaCleaningParticleSettings(

@@ -12,6 +12,7 @@ import de.simplepvparena.match.MatchService;
 import de.simplepvparena.match.RoundTimeoutSettings;
 import de.simplepvparena.match.TeamColourSettings;
 import de.simplepvparena.message.MessageCatalogLoader;
+import de.simplepvparena.tournament.AutoMatchSettings;
 import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.configuration.MemoryConfiguration;
 import org.junit.jupiter.api.Test;
@@ -43,6 +44,7 @@ class PluginSettingsTest {
         assertEquals(new TeamColourSettings(NamedTextColor.GOLD, NamedTextColor.DARK_PURPLE),
                 settings.teamColourSettings());
         assertEquals(4, settings.teamSize());
+        assertEquals(new AutoMatchSettings(true, 45, 0), settings.autoMatchSettings());
         assertEquals(1024, settings.arenaCleaningBlocksPerTick());
         assertEquals(2048, settings.arenaBaselineBlocksPerTick());
         assertEquals(20, settings.arenaBaselineDepthBelowFloor());
@@ -76,6 +78,10 @@ class PluginSettingsTest {
         assertTrue(shipped.reconnectSeconds() != settings.reconnectSeconds());
         assertTrue(!shipped.teamColourSettings().equals(settings.teamColourSettings()));
         assertTrue(shipped.teamSize() != settings.teamSize());
+        assertTrue(shipped.autoMatchSettings().enabled() != settings.autoMatchSettings().enabled());
+        assertTrue(shipped.autoMatchSettings().startDelaySeconds()
+                != settings.autoMatchSettings().startDelaySeconds());
+        assertTrue(shipped.autoMatchSettings().pauseSeconds() != settings.autoMatchSettings().pauseSeconds());
         assertTrue(shipped.arenaCleaningBlocksPerTick() != settings.arenaCleaningBlocksPerTick());
         assertTrue(shipped.arenaBaselineBlocksPerTick() != settings.arenaBaselineBlocksPerTick());
         assertTrue(shipped.arenaBaselineDepthBelowFloor() != settings.arenaBaselineDepthBelowFloor());
@@ -390,6 +396,9 @@ class PluginSettingsTest {
         configuration.set(PluginSettings.COUNTDOWN_SECONDS_PATH, 7);
         configuration.set(PluginSettings.RECONNECT_SECONDS_PATH, 25);
         configuration.set(PluginSettings.TEAM_SIZE_PATH, 4);
+        configuration.set(PluginSettings.AUTO_MATCH_ENABLED_PATH, true);
+        configuration.set(PluginSettings.AUTO_MATCH_START_DELAY_SECONDS_PATH, 45);
+        configuration.set(PluginSettings.AUTO_MATCH_PAUSE_SECONDS_PATH, 0);
         configuration.set(PluginSettings.FIRST_TEAM_COLOUR_PATH, "GOLD");
         configuration.set(PluginSettings.SECOND_TEAM_COLOUR_PATH, "dark purple");
         configuration.set(PluginSettings.ARENA_CLEAN_BLOCKS_PER_TICK_PATH, 1024);

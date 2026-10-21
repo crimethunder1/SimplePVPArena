@@ -13,6 +13,8 @@ import de.simplepvparena.match.MatchService;
 import de.simplepvparena.team.TeamMemberLookup;
 import de.simplepvparena.team.TeamRegistry;
 import de.simplepvparena.team.TeamSizeWriter;
+import de.simplepvparena.tournament.AutoMatchModeWriter;
+import de.simplepvparena.tournament.AutoMatchService;
 import de.simplepvparena.tournament.KitChoiceService;
 import de.simplepvparena.tournament.TournamentManager;
 import org.bukkit.entity.Player;
@@ -42,11 +44,14 @@ public final class AdminMenuService {
                             ChatInputService chatInputService,
                             Runnable teamConfigurationSaver,
                             Supplier<ConfigurationReloadReport> configurationReloader,
-                            TeamSizeWriter teamSizeWriter) {
+                            TeamSizeWriter teamSizeWriter,
+                            AutoMatchService autoMatchService,
+                            AutoMatchModeWriter autoMatchModeWriter) {
         this(plugin, tournamentManager, tournamentDryRun, teamRegistry, teamMemberLookup,
                 matchService, arenaSetupService, heightMarkerService, gateItemService, borderSelectorModes,
                 kitLibrary, kitSaveService, chatInputService, teamConfigurationSaver, configurationReloader,
-                teamSizeWriter, new InventoryAdminMenuWindows(plugin), () -> plugin.getServer().getOnlinePlayers());
+                teamSizeWriter, autoMatchService, autoMatchModeWriter, new InventoryAdminMenuWindows(plugin),
+                () -> plugin.getServer().getOnlinePlayers());
     }
 
     AdminMenuService(Plugin plugin,
@@ -65,6 +70,8 @@ public final class AdminMenuService {
                      Runnable teamConfigurationSaver,
                      Supplier<ConfigurationReloadReport> configurationReloader,
                      TeamSizeWriter teamSizeWriter,
+                     AutoMatchService autoMatchService,
+                     AutoMatchModeWriter autoMatchModeWriter,
                      AdminMenuWindows windows,
                      Supplier<Collection<? extends Player>> onlinePlayers) {
         Objects.requireNonNull(plugin, "plugin");
@@ -100,7 +107,8 @@ public final class AdminMenuService {
                 tournamentManager, teamRegistry);
         TournamentMenuStatus tournamentMenuStatus = new TournamentMenuStatus(tournamentManager, matchService);
         MatchAdminMenu matchAdminMenu = new MatchAdminMenu(navigator, tournamentManager, matchService,
-                tournamentMenuStatus, forceResultAdminMenu, waitingMatchesAdminMenu);
+                tournamentMenuStatus, forceResultAdminMenu, waitingMatchesAdminMenu, autoMatchService,
+                autoMatchModeWriter);
         TeamsAdminMenu teamsAdminMenu = new TeamsAdminMenu(navigator, teamRegistry, teamMemberLookup,
                 chatInputService, teamConfigurationSaver, tournamentManager.getTeamSizeSetting(),
                 tournamentManager::isTournamentInProgress, teamSizeWriter);

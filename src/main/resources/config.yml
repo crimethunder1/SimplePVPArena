@@ -28,6 +28,15 @@ match:
     first-team: red
     second-team: aqua
 
+# Matches between two teams without a tournament. The match menu of /tournament switches the mode on and off.
+auto-match:
+  # When true, two teams that each have a player online get a match while no tournament is in progress. The match menu writes this value.
+  enabled: false
+  # Seconds between the announcement of an auto match and its start, 3 to 120.
+  start-delay-seconds: 10
+  # Seconds of pause after an auto match and its cleaning before the next one is announced, 0 to 300.
+  pause-seconds: 20
+
 # Kits live in kits.yml since this version and are created, replaced and deleted in the kit menu of /tournament.
 # A kit section of an older version, saved from the menu or written by hand, is taken over into kits.yml once and is not read afterwards.
 

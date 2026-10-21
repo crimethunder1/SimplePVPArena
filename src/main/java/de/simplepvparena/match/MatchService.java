@@ -82,6 +82,7 @@ public final class MatchService {
     private final Set<UUID> reconnectWindowsUsedThisRound = new HashSet<>();
 
     private MatchCompletionHandler matchCompletionHandler = (match, winnerTeamName) -> { };
+    private MatchCompletionHandler autoMatchCompletionHandler = (match, winnerTeamName) -> { };
     private RoundStartEffects roundStartEffects = new VanillaRoundStartEffects();
     private ArenaAudience arenaAudience;
     private Match activeMatch;
@@ -117,6 +118,11 @@ public final class MatchService {
 
     public void setMatchCompletionHandler(MatchCompletionHandler matchCompletionHandler) {
         this.matchCompletionHandler = matchCompletionHandler;
+    }
+
+    public void setAutoMatchCompletionHandler(MatchCompletionHandler autoMatchCompletionHandler) {
+        this.autoMatchCompletionHandler = Objects.requireNonNull(autoMatchCompletionHandler,
+                "autoMatchCompletionHandler");
     }
 
     public void setArenaAudience(ArenaAudience arenaAudience) {
@@ -615,7 +621,10 @@ public final class MatchService {
                 Placeholder.of("team", winnerTeamName), Placeholder.of("score", match.getScore().describe())));
         releaseParticipants(match);
         announceMatchTitle(match, winnerTeamName, decidedByAnAdmin);
-        matchCompletionHandler.onMatchCompleted(match, winnerTeamName);
+        MatchCompletionHandler completionHandler = match.isAutoMatch()
+                ? autoMatchCompletionHandler
+                : matchCompletionHandler;
+        completionHandler.onMatchCompleted(match, winnerTeamName);
     }
 
     private boolean isTimeLimited(Match match) {
