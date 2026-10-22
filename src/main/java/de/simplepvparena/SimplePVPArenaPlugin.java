@@ -72,7 +72,6 @@ import de.simplepvparena.listener.ArenaMobRuleListener;
 import de.simplepvparena.listener.ArenaSafetyZoneListener;
 import de.simplepvparena.listener.BorderSelectorListener;
 import de.simplepvparena.listener.ChatInputListener;
-import de.simplepvparena.listener.FightStartTotemListener;
 import de.simplepvparena.listener.FriendlyFireListener;
 import de.simplepvparena.listener.GlobalPvpLockListener;
 import de.simplepvparena.listener.PlayerConnectionListener;
@@ -81,12 +80,12 @@ import de.simplepvparena.listener.PlayerInteractListener;
 import de.simplepvparena.listener.PlayerMoveListener;
 import de.simplepvparena.listener.PlayerRespawnListener;
 import de.simplepvparena.listener.RegistrationStationListener;
+import de.simplepvparena.listener.RegistrationStationWorldListener;
 import de.simplepvparena.listener.SpectatorBorderListener;
 import de.simplepvparena.listener.StartGateListener;
 import de.simplepvparena.match.CustomItemRoundStartEffects;
 import de.simplepvparena.match.FighterColours;
 import de.simplepvparena.match.MatchService;
-import de.simplepvparena.match.PaperFightStartTotems;
 import de.simplepvparena.match.ScoreboardFighterColours;
 import de.simplepvparena.match.VanillaRoundStartEffects;
 import de.simplepvparena.message.MessageCatalogLoader;
@@ -94,9 +93,12 @@ import de.simplepvparena.message.Messages;
 import de.simplepvparena.message.Placeholder;
 import de.simplepvparena.message.PluginMessage;
 import de.simplepvparena.registration.FileRegistrationStorage;
+import de.simplepvparena.registration.PaperStationDisplayEntities;
 import de.simplepvparena.registration.RandomTeamFormation;
 import de.simplepvparena.registration.RegistrationList;
 import de.simplepvparena.registration.RegistrationService;
+import de.simplepvparena.registration.RegistrationStationButtonCheck;
+import de.simplepvparena.registration.RegistrationStationDisplays;
 import de.simplepvparena.registration.RegistrationStationService;
 import de.simplepvparena.registration.RegistrationStations;
 import de.simplepvparena.team.TeamMemberLookup;
@@ -134,6 +136,8 @@ public final class SimplePVPArenaPlugin extends JavaPlugin {
     private static final String TEAMS_FILE_NAME = "teams.yml";
     private static final String BORDERS_FILE_NAME = "borders.yml";
     private static final String CONFIGURATION_FILE_NAME = "config.yml";
+    private static final long VISUALS_READINESS_CHECK_PERIOD_TICKS = 20L;
+    private static final long STATION_BUTTON_CHECK_PERIOD_TICKS = 100L;
 
     private ArenaRegistry arenaRegistry;
     private TeamRegistry teamRegistry;
@@ -143,6 +147,8 @@ public final class SimplePVPArenaPlugin extends JavaPlugin {
     private RegistrationStations registrationStations;
     private RegistrationService registrationService;
     private RegistrationStationService registrationStationService;
+    private RegistrationStationDisplays registrationStationDisplays;
+    private RegistrationStationButtonCheck registrationStationButtonCheck;
     private KitService kitService;
     private KitLibrary kitLibrary;
     private KitSaveService kitSaveService;
@@ -179,7 +185,6 @@ public final class SimplePVPArenaPlugin extends JavaPlugin {
     private ConfigurationReloadService configurationReloadService;
     private AreaInventoryService areaInventoryService;
     private ConfiguredVisuals configuredVisuals;
-    private CustomItemRoundStartEffects fightStartEffects;
 
     @Override
     public void onEnable() {
@@ -331,9 +336,8 @@ public final class SimplePVPArenaPlugin extends JavaPlugin {
                 PluginSettings.readItemsAdderEnabled(getConfig(), problem -> { }), this::createItemsAdderVisuals,
                 getLogger()::info), getLogger()::warning);
         matchService.setCountdownImages(configuredVisuals);
-        fightStartEffects = new CustomItemRoundStartEffects(this, new VanillaRoundStartEffects(),
-                configuredVisuals::findTotemItem, new PaperFightStartTotems(this), getLogger()::warning);
-        matchService.setRoundStartEffects(fightStartEffects);
+        matchService.setRoundStartEffects(new CustomItemRoundStartEffects(new VanillaRoundStartEffects(),
+                configuredVisuals::playTotemAnimation));
 
         configurationReloadService = new ConfigurationReloadService(this::getConfig, this::reloadConfig,
                 new PluginLiveConfiguration(matchService, startGateDuration, fighterColours,
@@ -346,12 +350,26 @@ public final class SimplePVPArenaPlugin extends JavaPlugin {
                 getLogger()::warning);
         configurationReloadService.applyStoredConfiguration();
 
+        registrationStationDisplays = new RegistrationStationDisplays(registrationStations, getServer()::getWorld,
+                new PaperStationDisplayEntities(this), configuredVisuals::findStationItem,
+                configuredVisuals.getCustomVisuals()::isReady);
+        registrationStationService.addObserver(registrationStationDisplays);
+        registrationStationButtonCheck = new RegistrationStationButtonCheck(registrationStations,
+                registrationStationService, getServer()::getWorld, Tag.BUTTONS::isTagged,
+                task -> getServer().getScheduler().runTask(this, task), getLogger()::warning);
+
         registerCommand();
         registerListeners();
         borderParticleService.start();
         arenaMobRemovalService.start();
         chatInputService.start();
         areaInventoryService.start();
+        registrationStationButtonCheck.checkLoadedStations();
+        registrationStationDisplays.showAll();
+        getServer().getScheduler().runTaskTimer(this, registrationStationDisplays::refreshOnceReady,
+                VISUALS_READINESS_CHECK_PERIOD_TICKS, VISUALS_READINESS_CHECK_PERIOD_TICKS);
+        getServer().getScheduler().runTaskTimer(this, registrationStationButtonCheck::checkLoadedStations,
+                STATION_BUTTON_CHECK_PERIOD_TICKS, STATION_BUTTON_CHECK_PERIOD_TICKS);
     }
 
     @Override
@@ -380,9 +398,6 @@ public final class SimplePVPArenaPlugin extends JavaPlugin {
         if (autoMatchService != null) {
             autoMatchService.stop();
         }
-        if (fightStartEffects != null) {
-            fightStartEffects.stopFightStartAnimations();
-        }
         if (matchService != null) {
             matchService.cancelActiveMatch();
         }
@@ -398,6 +413,9 @@ public final class SimplePVPArenaPlugin extends JavaPlugin {
         }
         if (spectatorService != null) {
             spectatorService.clearAllAssignments();
+        }
+        if (registrationStationDisplays != null) {
+            registrationStationDisplays.hideAll();
         }
         Messages.reset();
     }
@@ -416,7 +434,9 @@ public final class SimplePVPArenaPlugin extends JavaPlugin {
     }
 
     public ConfigurationReloadReport reloadConfiguration() {
-        return configurationReloadService.reloadFromFile();
+        ConfigurationReloadReport report = configurationReloadService.reloadFromFile();
+        registrationStationDisplays.refreshAll();
+        return report;
     }
 
     public void onBorderMarksChanged() {
@@ -536,8 +556,10 @@ public final class SimplePVPArenaPlugin extends JavaPlugin {
                 new ArenaDamageListener(matchService, spectatorService, arenaRegistry, getServer()), this);
         getServer().getPluginManager().registerEvents(
                 new AreaInventoryListener(this, areaInventoryService), this);
-        getServer().getPluginManager().registerEvents(new FightStartTotemListener(fightStartEffects), this);
         getServer().getPluginManager().registerEvents(
                 new RegistrationStationListener(registrationStationService), this);
+        getServer().getPluginManager().registerEvents(
+                new RegistrationStationWorldListener(registrationStationDisplays, registrationStationButtonCheck),
+                this);
     }
 }

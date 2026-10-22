@@ -5,6 +5,7 @@ import de.simplepvparena.match.CountdownImages;
 import de.simplepvparena.message.Messages;
 import de.simplepvparena.message.Placeholder;
 import de.simplepvparena.message.VisualMessage;
+import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
 import java.util.HashSet;
@@ -61,8 +62,25 @@ public final class ConfiguredVisuals implements CountdownImages {
         };
     }
 
-    public Optional<ItemStack> findTotemItem() {
-        return findItem(CustomVisualSettings.TOTEM_ITEM_CONFIGURATION_PATH, settings.totemItemIdentifier());
+    public Optional<ItemStack> findStationItem() {
+        return findItem(CustomVisualSettings.STATION_ITEM_CONFIGURATION_PATH, settings.stationItemIdentifier());
+    }
+
+    public boolean playTotemAnimation(Player player) {
+        String identifier = settings.totemItemIdentifier();
+        if (!isAskable(identifier)) {
+            return false;
+        }
+        try {
+            if (customVisuals.playTotemAnimation(player, identifier)) {
+                return true;
+            }
+            reportUnknownWhenReady(CustomVisualSettings.TOTEM_ITEM_CONFIGURATION_PATH, identifier,
+                    VisualMessage.UNKNOWN_ITEM);
+        } catch (RuntimeException | LinkageError failure) {
+            reportFailure(CustomVisualSettings.TOTEM_ITEM_CONFIGURATION_PATH, identifier, failure);
+        }
+        return false;
     }
 
     Optional<String> findFontImage(String path, String identifier) {
@@ -75,22 +93,36 @@ public final class ConfiguredVisuals implements CountdownImages {
 
     private <T> Optional<T> find(String path, String identifier, Function<String, Optional<T>> lookup,
                                  VisualMessage unknownMessage) {
-        if (!settings.enabled() || identifier.isEmpty() || customVisuals instanceof VanillaVisuals) {
+        if (!isAskable(identifier)) {
             return Optional.empty();
         }
         try {
             Optional<T> found = Objects.requireNonNullElse(lookup.apply(identifier), Optional.empty());
-            if (found.isEmpty() && customVisuals.isReady()) {
-                reportOnce(identifier, Messages.text(unknownMessage, Placeholder.of("identifier", identifier),
-                        Placeholder.of("path", path)));
+            if (found.isEmpty()) {
+                reportUnknownWhenReady(path, identifier, unknownMessage);
             }
             return found;
         } catch (RuntimeException | LinkageError failure) {
-            reportOnce(identifier, Messages.text(VisualMessage.LOOKUP_FAILED,
-                    Placeholder.of("identifier", identifier), Placeholder.of("path", path),
-                    Placeholder.of("reason", describe(failure))));
+            reportFailure(path, identifier, failure);
             return Optional.empty();
         }
+    }
+
+    private boolean isAskable(String identifier) {
+        return settings.enabled() && !identifier.isEmpty() && !(customVisuals instanceof VanillaVisuals);
+    }
+
+    private void reportUnknownWhenReady(String path, String identifier, VisualMessage unknownMessage) {
+        if (customVisuals.isReady()) {
+            reportOnce(identifier, Messages.text(unknownMessage, Placeholder.of("identifier", identifier),
+                    Placeholder.of("path", path)));
+        }
+    }
+
+    private void reportFailure(String path, String identifier, Throwable failure) {
+        reportOnce(identifier, Messages.text(VisualMessage.LOOKUP_FAILED,
+                Placeholder.of("identifier", identifier), Placeholder.of("path", path),
+                Placeholder.of("reason", describe(failure))));
     }
 
     private void reportOnce(String identifier, String warning) {

@@ -8,8 +8,7 @@ public enum VisualMessage implements MessageKey {
     ITEMS_ADDER_SWITCHED_OFF("visual.items-adder-switched-off", "path"),
     UNKNOWN_FONT_IMAGE("visual.unknown-font-image", "identifier", "path"),
     UNKNOWN_ITEM("visual.unknown-item", "identifier", "path"),
-    LOOKUP_FAILED("visual.lookup-failed", "identifier", "path", "reason"),
-    TOTEM_NOT_PREPARED("visual.totem-not-prepared", "path", "reason");
+    LOOKUP_FAILED("visual.lookup-failed", "identifier", "path", "reason");
 
     private final String path;
     private final Set<String> placeholderNames;

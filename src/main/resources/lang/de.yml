@@ -1345,7 +1345,6 @@ visual:
   unknown-font-image: 'ItemsAdder kennt kein Schriftbild {identifier} aus {path} in config.yml, stattdessen erscheint der eigene Titel des Plugins'
   unknown-item: 'ItemsAdder kennt kein Item {identifier} aus {path} in config.yml, stattdessen gilt der eigene Effekt des Plugins'
   lookup-failed: 'ItemsAdder konnte {identifier} aus {path} in config.yml nicht liefern ({reason}), stattdessen gilt der eigene Titel oder Effekt des Plugins'
-  totem-not-prepared: 'Das Item aus {path} in config.yml konnte nicht zum Totem gemacht werden ({reason}), stattdessen erscheint das normale Totem'
 command:
   menu-only-for-players:
     - 'Die Turnierverwaltung ist ein Menü'
@@ -1372,6 +1371,10 @@ registration:
     removed: 'Dieser Knopf ist keine Anmelde-Station mehr'
     click-a-button: 'Klicke einen Knopf an'
     protected: 'Das ist eine Anmelde-Station'
+    without-button: 'Die Anmelde-Station bei {x} {y} {z} in der Welt {world} hat keinen Knopf mehr und wurde entfernt'
+  display:
+    title: 'Anmelden'
+    hint: 'Klicke, um teilzunehmen'
   forming:
     tournament-in-progress: 'Während eines Turniers lassen sich keine Teams bilden'
     auto-match: 'Während ein Auto-Match angesagt ist oder läuft, lassen sich keine Teams bilden'

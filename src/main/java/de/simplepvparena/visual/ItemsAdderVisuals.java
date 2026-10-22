@@ -5,6 +5,7 @@ import dev.lone.itemsadder.api.Events.ItemsAdderLoadDataEvent;
 import dev.lone.itemsadder.api.FontImages.FontImageWrapper;
 import dev.lone.itemsadder.api.ItemsAdder;
 import org.bukkit.event.EventHandler;
+import org.bukkit.entity.Player;
 import org.bukkit.event.Listener;
 import org.bukkit.inventory.ItemStack;
 
@@ -36,6 +37,11 @@ public final class ItemsAdderVisuals implements CustomVisuals, Listener {
             return Optional.empty();
         }
         return Optional.ofNullable(customStack.getItemStack()).map(ItemStack::clone);
+    }
+
+    @Override
+    public boolean playTotemAnimation(Player player, String identifier) {
+        return ready && ItemsAdder.playTotemAnimation(player, identifier);
     }
 
     @Override

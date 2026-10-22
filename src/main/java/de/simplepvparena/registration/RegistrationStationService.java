@@ -15,6 +15,8 @@ import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.plugin.Plugin;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 import java.util.function.Function;
 import java.util.function.Predicate;
@@ -33,6 +35,7 @@ public final class RegistrationStationService {
     private final Predicate<Material> buttonMaterials;
     private final Runnable stationSaver;
     private final Function<Material, ItemStack> itemStackFactory;
+    private final List<RegistrationStationObserver> observers = new ArrayList<>();
 
     public RegistrationStationService(Plugin plugin, RegistrationStations stations,
                                       RegistrationService registrationService, Predicate<Material> buttonMaterials,
@@ -43,6 +46,10 @@ public final class RegistrationStationService {
         this.buttonMaterials = Objects.requireNonNull(buttonMaterials, "buttonMaterials");
         this.stationSaver = Objects.requireNonNull(stationSaver, "stationSaver");
         this.itemStackFactory = Objects.requireNonNull(itemStackFactory, "itemStackFactory");
+    }
+
+    public void addObserver(RegistrationStationObserver observer) {
+        observers.add(Objects.requireNonNull(observer, "observer"));
     }
 
     public ItemStack createTool() {
@@ -77,6 +84,7 @@ public final class RegistrationStationService {
         RegistrationStation station = RegistrationStation.of(clickedBlock);
         if (stations.remove(station)) {
             stationSaver.run();
+            observers.forEach(observer -> observer.stationRemoved(station));
             TournamentMessages.sendSuccess(admin, Messages.text(RegistrationMessage.STATION_REMOVED));
             return;
         }
@@ -86,6 +94,7 @@ public final class RegistrationStationService {
         }
         stations.add(station);
         stationSaver.run();
+        observers.forEach(observer -> observer.stationAdded(station));
         TournamentMessages.sendSuccess(admin, Messages.text(RegistrationMessage.STATION_ADDED));
     }
 
@@ -119,11 +128,22 @@ public final class RegistrationStationService {
     }
 
     public void removeBrokenStation(Player player, Block block) {
-        if (!stations.remove(RegistrationStation.of(block))) {
+        RegistrationStation station = RegistrationStation.of(block);
+        if (!stations.remove(station)) {
             return;
         }
         stationSaver.run();
+        observers.forEach(observer -> observer.stationRemoved(station));
         TournamentMessages.sendSuccess(player, Messages.text(RegistrationMessage.STATION_REMOVED));
+    }
+
+    public boolean removeStationWithoutButton(RegistrationStation station) {
+        if (!stations.remove(station)) {
+            return false;
+        }
+        stationSaver.run();
+        observers.forEach(observer -> observer.stationRemoved(station));
+        return true;
     }
 
     public RegistrationStations getStations() {

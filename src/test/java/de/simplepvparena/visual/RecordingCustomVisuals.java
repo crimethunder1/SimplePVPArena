@@ -1,5 +1,6 @@
 package de.simplepvparena.visual;
 
+import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
 import java.util.ArrayList;
@@ -14,6 +15,7 @@ public final class RecordingCustomVisuals implements CustomVisuals {
 
     private final Map<String, String> fontImages = new LinkedHashMap<>();
     private final Map<String, ItemStack> items = new LinkedHashMap<>();
+    private final Set<String> totemIdentifiers = new LinkedHashSet<>();
     private final Set<String> failingIdentifiers = new LinkedHashSet<>();
     private final List<String> lookups = new ArrayList<>();
 
@@ -26,6 +28,11 @@ public final class RecordingCustomVisuals implements CustomVisuals {
 
     public RecordingCustomVisuals withItem(String identifier, ItemStack itemStack) {
         items.put(identifier, itemStack);
+        return this;
+    }
+
+    public RecordingCustomVisuals withTotem(String identifier) {
+        totemIdentifiers.add(identifier);
         return this;
     }
 
@@ -55,6 +62,13 @@ public final class RecordingCustomVisuals implements CustomVisuals {
         failIfAsked(identifier);
         ItemStack itemStack = ready ? items.get(identifier) : null;
         return itemStack == null ? Optional.empty() : Optional.of(itemStack.clone());
+    }
+
+    @Override
+    public boolean playTotemAnimation(Player player, String identifier) {
+        lookups.add("totem " + identifier + " for " + player.getName());
+        failIfAsked(identifier);
+        return ready && totemIdentifiers.contains(identifier);
     }
 
     @Override

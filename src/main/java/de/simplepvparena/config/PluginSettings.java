@@ -142,7 +142,8 @@ public record PluginSettings(long roundResetDelayTicks,
             CustomVisualSettings.TWO_IMAGE_CONFIGURATION_PATH,
             CustomVisualSettings.ONE_IMAGE_CONFIGURATION_PATH,
             CustomVisualSettings.FIGHT_IMAGE_CONFIGURATION_PATH,
-            CustomVisualSettings.TOTEM_ITEM_CONFIGURATION_PATH);
+            CustomVisualSettings.TOTEM_ITEM_CONFIGURATION_PATH,
+            CustomVisualSettings.STATION_ITEM_CONFIGURATION_PATH);
 
     public static PluginSettings defaults() {
         return new PluginSettings(DEFAULT_ROUND_RESET_DELAY_TICKS,
@@ -292,7 +293,9 @@ public record PluginSettings(long roundResetDelayTicks,
                 readItemsAdderIdentifier(configuration, CustomVisualSettings.FIGHT_IMAGE_CONFIGURATION_PATH,
                         CustomVisualSettings.SUGGESTED_FIGHT_IMAGE_IDENTIFIER, problemReporter),
                 readItemsAdderIdentifier(configuration, CustomVisualSettings.TOTEM_ITEM_CONFIGURATION_PATH,
-                        CustomVisualSettings.SUGGESTED_TOTEM_ITEM_IDENTIFIER, problemReporter));
+                        CustomVisualSettings.SUGGESTED_TOTEM_ITEM_IDENTIFIER, problemReporter),
+                readItemsAdderIdentifier(configuration, CustomVisualSettings.STATION_ITEM_CONFIGURATION_PATH,
+                        CustomVisualSettings.SUGGESTED_STATION_ITEM_IDENTIFIER, problemReporter));
     }
 
     private static String readItemsAdderIdentifier(ConfigurationSection configuration, String path,

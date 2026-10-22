@@ -9,8 +9,4 @@ public interface RoundStartEffects {
     void removeBlindness(Player player);
 
     void playFightStartAnimation(Player player);
-
-    void stopFightStartAnimation(Player player);
-
-    void stopFightStartAnimations();
 }

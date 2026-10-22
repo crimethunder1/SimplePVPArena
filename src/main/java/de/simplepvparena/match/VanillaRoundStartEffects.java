@@ -26,12 +26,4 @@ public final class VanillaRoundStartEffects implements RoundStartEffects {
     public void playFightStartAnimation(Player player) {
         player.playEffect(EntityEffect.PROTECTED_FROM_DEATH);
     }
-
-    @Override
-    public void stopFightStartAnimation(Player player) {
-    }
-
-    @Override
-    public void stopFightStartAnimations() {
-    }
 }

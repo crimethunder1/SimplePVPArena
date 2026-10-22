@@ -7,7 +7,8 @@ public record CustomVisualSettings(boolean enabled,
                                    String twoImageIdentifier,
                                    String oneImageIdentifier,
                                    String fightImageIdentifier,
-                                   String totemItemIdentifier) {
+                                   String totemItemIdentifier,
+                                   String stationItemIdentifier) {
 
     public static final String SECTION_CONFIGURATION_PATH = "items-adder";
     public static final String ENABLED_CONFIGURATION_PATH = SECTION_CONFIGURATION_PATH + ".enabled";
@@ -17,6 +18,7 @@ public record CustomVisualSettings(boolean enabled,
     public static final String ONE_IMAGE_CONFIGURATION_PATH = COUNTDOWN_IMAGES_CONFIGURATION_PATH + ".one";
     public static final String FIGHT_IMAGE_CONFIGURATION_PATH = COUNTDOWN_IMAGES_CONFIGURATION_PATH + ".fight";
     public static final String TOTEM_ITEM_CONFIGURATION_PATH = SECTION_CONFIGURATION_PATH + ".totem-item";
+    public static final String STATION_ITEM_CONFIGURATION_PATH = SECTION_CONFIGURATION_PATH + ".station-item";
 
     public static final boolean DEFAULT_ENABLED = true;
     public static final String NO_IDENTIFIER = "";
@@ -26,6 +28,7 @@ public record CustomVisualSettings(boolean enabled,
     public static final String SUGGESTED_ONE_IMAGE_IDENTIFIER = "simplepvparena:countdown_1";
     public static final String SUGGESTED_FIGHT_IMAGE_IDENTIFIER = "simplepvparena:countdown_fight";
     public static final String SUGGESTED_TOTEM_ITEM_IDENTIFIER = "simplepvparena:totem";
+    public static final String SUGGESTED_STATION_ITEM_IDENTIFIER = "simplepvparena:station";
 
     public CustomVisualSettings {
         threeImageIdentifier = normalize(threeImageIdentifier);
@@ -33,11 +36,12 @@ public record CustomVisualSettings(boolean enabled,
         oneImageIdentifier = normalize(oneImageIdentifier);
         fightImageIdentifier = normalize(fightImageIdentifier);
         totemItemIdentifier = normalize(totemItemIdentifier);
+        stationItemIdentifier = normalize(stationItemIdentifier);
     }
 
     public static CustomVisualSettings defaults() {
         return new CustomVisualSettings(DEFAULT_ENABLED, NO_IDENTIFIER, NO_IDENTIFIER, NO_IDENTIFIER, NO_IDENTIFIER,
-                NO_IDENTIFIER);
+                NO_IDENTIFIER, NO_IDENTIFIER);
     }
 
     private static String normalize(String identifier) {

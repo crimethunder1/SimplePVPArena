@@ -25,6 +25,10 @@ public final class RegistrationStations {
         return stations.contains(station);
     }
 
+    public boolean isEmpty() {
+        return stations.isEmpty();
+    }
+
     public List<RegistrationStation> stations() {
         return List.copyOf(stations);
     }

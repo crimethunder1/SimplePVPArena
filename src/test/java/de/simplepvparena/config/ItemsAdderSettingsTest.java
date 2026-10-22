@@ -28,7 +28,7 @@ class ItemsAdderSettingsTest {
     void shipsItemsAdderSwitchedOnWithoutAnyIdentifier() {
         CustomVisualSettings defaults = PluginSettings.defaults().customVisualSettings();
 
-        assertEquals(new CustomVisualSettings(true, "", "", "", "", ""), defaults);
+        assertEquals(new CustomVisualSettings(true, "", "", "", "", "", ""), defaults);
         assertEquals(CustomVisualSettings.defaults(), defaults);
         assertEquals(defaults, PluginSettings.read(new MemoryConfiguration(), problems::add).customVisualSettings());
         assertEquals(List.of(), problems);
@@ -76,7 +76,7 @@ class ItemsAdderSettingsTest {
         CustomVisualSettings settings = PluginSettings.read(configuration, problems::add).customVisualSettings();
 
         assertEquals(new CustomVisualSettings(false, "simplepvparena:countdown_3", "simplepvparena:countdown_2",
-                "simplepvparena:countdown_1", "simplepvparena:countdown_fight", "simplepvparena:totem"), settings);
+                "simplepvparena:countdown_1", "simplepvparena:countdown_fight", "simplepvparena:totem", ""), settings);
         assertEquals(List.of(), problems);
     }
 
@@ -88,7 +88,7 @@ class ItemsAdderSettingsTest {
         CustomVisualSettings settings = PluginSettings.read(configuration, problems::add).customVisualSettings();
 
         assertEquals(new CustomVisualSettings(true, "simplepvparena:countdown_3", "", "", "",
-                "simplepvparena:totem"), settings);
+                "simplepvparena:totem", ""), settings);
         assertEquals(List.of(), problems);
     }
 
@@ -164,14 +164,14 @@ class ItemsAdderSettingsTest {
                 liveConfiguration, problems::add);
 
         reloadService.applyStoredConfiguration();
-        assertEquals(new CustomVisualSettings(true, "simplepvparena:countdown_3", "", "", "", ""),
+        assertEquals(new CustomVisualSettings(true, "simplepvparena:countdown_3", "", "", "", "", ""),
                 liveConfiguration.customVisualSettings());
 
         fileOnDisk.set(configurationWith(false, "", "", "", "simplepvparena:countdown_fight",
                 "simplepvparena:totem"));
         reloadService.reloadFromFile();
         assertEquals(new CustomVisualSettings(false, "", "", "", "simplepvparena:countdown_fight",
-                "simplepvparena:totem"), liveConfiguration.customVisualSettings());
+                "simplepvparena:totem", ""), liveConfiguration.customVisualSettings());
 
         MemoryConfiguration broken = new MemoryConfiguration();
         broken.set(CustomVisualSettings.ENABLED_CONFIGURATION_PATH, "broken");

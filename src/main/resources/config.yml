@@ -112,5 +112,7 @@ items-adder:
     two: ''
     one: ''
     fight: ''
-  # Item of ItemsAdder every fighter sees in the totem animation at the start of the fight. It sits in the off hand for two ticks, the item held there before comes back right after. Empty plays the vanilla totem. Suggested ID: simplepvparena:totem.
+  # Item of ItemsAdder every fighter sees in the totem animation at the start of the fight. ItemsAdder plays the animation itself, nothing in the inventory changes. Empty or an ID ItemsAdder does not know plays the vanilla totem. Suggested ID: simplepvparena:totem.
   totem-item: ''
+  # Item of ItemsAdder floating above every registration station. Empty or an ID ItemsAdder does not know shows a short text above the station instead. Suggested ID: simplepvparena:station.
+  station-item: ''

@@ -30,7 +30,7 @@ class CountdownImageTest {
     private static final String FIGHT_IMAGE = "";
     private static final CustomVisualSettings EVERY_IMAGE = new CustomVisualSettings(true,
             "simplepvparena:countdown_3", "simplepvparena:countdown_2", "simplepvparena:countdown_1",
-            "simplepvparena:countdown_fight", "");
+            "simplepvparena:countdown_fight", "", "");
     private static final Title.Times SECOND_TITLE_TIMES = Title.Times.times(Duration.ZERO, Duration.ofMillis(800L),
             Duration.ofMillis(200L));
     private static final Title.Times RELEASE_TITLE_TIMES = Title.Times.times(Duration.ZERO,
@@ -97,7 +97,7 @@ class CountdownImageTest {
     @Test
     void aSecondWithoutAnIdentifierKeepsItsOwnTitle() {
         configuredVisuals.applySettings(new CustomVisualSettings(true, "simplepvparena:countdown_3", "", "",
-                "simplepvparena:countdown_fight", ""));
+                "simplepvparena:countdown_fight", "", ""));
 
         start();
         harness.advanceSeconds(3);
@@ -110,7 +110,7 @@ class CountdownImageTest {
     @Test
     void onlyTheWordOfTheFightCanBeAnImage() {
         configuredVisuals.applySettings(new CustomVisualSettings(true, "", "", "", "simplepvparena:countdown_fight",
-                ""));
+                "", ""));
 
         start();
         harness.advanceSeconds(3);
@@ -152,7 +152,7 @@ class CountdownImageTest {
     @Test
     void anUnknownIdentifierKeepsTheOwnTitleAndIsWarnedAboutOnce() {
         configuredVisuals.applySettings(new CustomVisualSettings(true, "simplepvparena:missing",
-                "simplepvparena:missing", "simplepvparena:missing", "simplepvparena:missing", ""));
+                "simplepvparena:missing", "simplepvparena:missing", "simplepvparena:missing", "", ""));
 
         start();
         harness.advanceSeconds(3);
@@ -179,7 +179,7 @@ class CountdownImageTest {
     @Test
     void theSwitchedOffSettingKeepsEveryOwnTitle() {
         configuredVisuals.applySettings(new CustomVisualSettings(false, "simplepvparena:countdown_3",
-                "simplepvparena:countdown_2", "simplepvparena:countdown_1", "simplepvparena:countdown_fight", ""));
+                "simplepvparena:countdown_2", "simplepvparena:countdown_1", "simplepvparena:countdown_fight", "", ""));
 
         start();
         harness.advanceSeconds(3);

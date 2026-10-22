@@ -110,9 +110,9 @@ Creative admins can put items into chests inside the area. Those chests belong t
 
 ## ItemsAdder (optional)
 
-ItemsAdder is a soft dependency. When it runs on the server, the countdown before the fight can show images and the totem animation at the start of the fight can show an own item. The plugin builds no resource pack of its own, the images and items come from the pack of ItemsAdder.
+ItemsAdder is a soft dependency. When it runs on the server, the countdown before the fight can show images, the totem animation at the start of the fight can show an own item and an own item can float above every registration station. The plugin builds no resource pack of its own, the images and items come from the pack of ItemsAdder.
 
-Without ItemsAdder nothing changes: the countdown shows 3, 2, 1 and "Fight!", and every fighter sees the vanilla totem. The same holds with ItemsAdder while the IDs are empty or `items-adder.enabled` is false.
+Without ItemsAdder the countdown shows 3, 2, 1 and "Fight!", every fighter sees the vanilla totem, and above every registration station floats the text "Register" with "Click to take part" below it, in the language of the server. The same holds with ItemsAdder while the IDs are empty or `items-adder.enabled` is false.
 
 | Value in `config.yml` | Default | Effect | Suggested ID |
 | --- | --- | --- | --- |
@@ -122,8 +122,11 @@ Without ItemsAdder nothing changes: the countdown shows 3, 2, 1 and "Fight!", an
 | `items-adder.countdown-images.one` | `''` | Font image shown as the title instead of 1 | `simplepvparena:countdown_1` |
 | `items-adder.countdown-images.fight` | `''` | Font image shown as the title instead of "Fight!" | `simplepvparena:countdown_fight` |
 | `items-adder.totem-item` | `''` | Item every fighter sees in the totem animation at the start of the fight | `simplepvparena:totem` |
+| `items-adder.station-item` | `''` | Item floating above every registration station instead of the text | `simplepvparena:station` |
 
-The images are font images of ItemsAdder. They replace the title of the start animation and of the start gate countdown for the seconds 3, 2 and 1 and at the start of the fight; seconds above three keep their numbers, a second without an ID keeps its own title, the subtitle and the timing of the titles stay. For the totem the plugin puts a copy of the item with death protection into the off hand of every fighter for two ticks, plays the animation and gives back the item held there before; it is also given back at once when the fighter is eliminated or leaves, when the round or the match ends or is cancelled, and when the plugin stops. That copy cannot be dropped and never saves a fighter from death. A real totem in the main hand of a fighter is shown instead, the client prefers the main hand.
+The images are font images of ItemsAdder. They replace the title of the start animation and of the start gate countdown for the seconds 3, 2 and 1 and at the start of the fight; seconds above three keep their numbers, a second without an ID keeps its own title, the subtitle and the timing of the titles stay. For the totem the plugin asks ItemsAdder to play its totem animation with that item (`ItemsAdder.playTotemAnimation`) for every fighter; nothing in the inventory changes. When ItemsAdder does not play it, for example for an unknown ID or before ItemsAdder has loaded its content, the fighter sees the vanilla totem.
+
+The display above a registration station is an entity that is never saved with the world. It hangs 0.7 blocks above the block of the button: an item display of `station-item` without rotation, or the text, which always faces the viewer. It appears when the server starts, when the chunk of the station loads and when a station is added, and goes away when the station is removed, when the chunk unloads and when the plugin stops. "Reload config.yml" rebuilds every display, so a new language or a new `station-item` shows at once, and when ItemsAdder finishes loading after the plugin the displays are rebuilt once with the item.
 
 The IDs are looked up once ItemsAdder has loaded its content. An ID that ItemsAdder does not know, or a failure inside ItemsAdder, falls back to the own title or effect and writes one warning per ID into the log. A value that is no truth value or no text falls back to the default with a warning in the log and in the answer of "Reload config.yml".
 

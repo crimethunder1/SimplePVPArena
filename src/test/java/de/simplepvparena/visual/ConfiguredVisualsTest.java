@@ -1,7 +1,9 @@
 package de.simplepvparena.visual;
 
 import de.simplepvparena.support.FakeItemStack;
+import de.simplepvparena.support.SharedBukkitServer;
 import de.simplepvparena.support.UseLanguage;
+import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.junit.jupiter.api.Test;
 
@@ -10,8 +12,10 @@ import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotSame;
 import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class ConfiguredVisualsTest {
 
@@ -24,6 +28,11 @@ class ConfiguredVisualsTest {
             .withFontImage("simplepvparena:countdown_3", "")
             .withItem("simplepvparena:totem", totem);
     private final ConfiguredVisuals configuredVisuals = new ConfiguredVisuals(customVisuals, warnings::add);
+    private final Player fighter = SharedBukkitServer.proxy(Player.class, (method, arguments) ->
+            switch (method.getName()) {
+                case "getName" -> "Fighter";
+                default -> throw new UnsupportedOperationException("Player." + method.getName());
+            });
 
     @Test
     void startsWithTheShippedSettingsAndHandsOutTheChosenVisuals() {
@@ -53,7 +62,7 @@ class ConfiguredVisualsTest {
     @Test
     void theSwitchedOffSettingFallsBackForEveryIdentifierWithoutAskingItemsAdder() {
         configuredVisuals.applySettings(new CustomVisualSettings(false, "simplepvparena:countdown_3", "", "", "",
-                "simplepvparena:totem"));
+                "simplepvparena:totem", ""));
 
         assertEquals(Optional.empty(), configuredVisuals.findFontImage(THREE_PATH, "simplepvparena:countdown_3"));
         assertEquals(Optional.empty(), configuredVisuals.findItem(TOTEM_PATH, "simplepvparena:totem"));
@@ -105,6 +114,11 @@ class ConfiguredVisualsTest {
             }
 
             @Override
+            public boolean playTotemAnimation(Player player, String identifier) {
+                throw new NoClassDefFoundError("dev/lone/itemsadder/api/ItemsAdder");
+            }
+
+            @Override
             public boolean isReady() {
                 return true;
             }
@@ -131,7 +145,8 @@ class ConfiguredVisualsTest {
     @Test
     void anIdentifierStaysWarnedAboutAfterAReload() {
         configuredVisuals.findItem(TOTEM_PATH, "simplepvparena:lost_totem");
-        configuredVisuals.applySettings(new CustomVisualSettings(true, "", "", "", "", "simplepvparena:lost_totem"));
+        configuredVisuals.applySettings(new CustomVisualSettings(true, "", "", "", "", "simplepvparena:lost_totem",
+                ""));
         configuredVisuals.findItem(TOTEM_PATH, "simplepvparena:lost_totem");
 
         assertEquals(1, warnings.size(), warnings.toString());
@@ -143,7 +158,7 @@ class ConfiguredVisualsTest {
                 .withFontImage("three", "3 image").withFontImage("two", "2 image")
                 .withFontImage("one", "1 image").withFontImage("fight", "fight image");
         ConfiguredVisuals countdownVisuals = new ConfiguredVisuals(everyImage, warnings::add);
-        countdownVisuals.applySettings(new CustomVisualSettings(true, "three", "two", "one", "fight", ""));
+        countdownVisuals.applySettings(new CustomVisualSettings(true, "three", "two", "one", "fight", "", ""));
 
         assertEquals(Optional.of("3 image"), countdownVisuals.findImage(3));
         assertEquals(Optional.of("2 image"), countdownVisuals.findImage(2));
@@ -159,10 +174,113 @@ class ConfiguredVisualsTest {
     void withoutItemsAdderNothingIsLookedUpOrWarnedAboutEvenWithIdentifiers() {
         ConfiguredVisuals vanilla = new ConfiguredVisuals(new VanillaVisuals(), warnings::add);
         vanilla.applySettings(new CustomVisualSettings(true, "simplepvparena:countdown_3", "", "", "",
-                "simplepvparena:totem"));
+                "simplepvparena:totem", ""));
 
         assertEquals(Optional.empty(), vanilla.findImage(3));
         assertEquals(Optional.empty(), vanilla.findItem(TOTEM_PATH, "simplepvparena:totem"));
+        assertEquals(List.of(), warnings);
+    }
+
+    @Test
+    void aTotemItemThatItemsAdderPlaysIsReportedAsPlayed() {
+        customVisuals.withTotem("simplepvparena:totem");
+        configuredVisuals.applySettings(totemSettings(true, "simplepvparena:totem"));
+
+        assertTrue(configuredVisuals.playTotemAnimation(fighter));
+        assertEquals(List.of("totem simplepvparena:totem for Fighter"), customVisuals.lookups());
+        assertEquals(List.of(), warnings);
+    }
+
+    @Test
+    void aTotemItemThatItemsAdderDoesNotPlayFallsBackAndIsWarnedAboutOnlyOnce() {
+        configuredVisuals.applySettings(totemSettings(true, "simplepvparena:lost_totem"));
+
+        for (int start = 0; start < 3; start++) {
+            assertFalse(configuredVisuals.playTotemAnimation(fighter));
+        }
+
+        assertEquals(List.of("ItemsAdder has no item simplepvparena:lost_totem, set in items-adder.totem-item of "
+                + "config.yml, the own effect of the plugin is used instead"), warnings);
+    }
+
+    @Test
+    void withoutATotemItemItemsAdderIsNotAskedForTheAnimation() {
+        assertFalse(configuredVisuals.playTotemAnimation(fighter));
+
+        configuredVisuals.applySettings(totemSettings(false, "simplepvparena:totem"));
+        assertFalse(configuredVisuals.playTotemAnimation(fighter));
+
+        assertEquals(List.of(), customVisuals.lookups());
+        assertEquals(List.of(), warnings);
+    }
+
+    @Test
+    void aFailingTotemAnimationFallsBackAndIsWarnedAboutOnlyOnceWithTheReason() {
+        customVisuals.withTotem("simplepvparena:totem").failingFor("simplepvparena:totem");
+        configuredVisuals.applySettings(totemSettings(true, "simplepvparena:totem"));
+
+        for (int start = 0; start < 3; start++) {
+            assertFalse(configuredVisuals.playTotemAnimation(fighter));
+        }
+
+        assertEquals(List.of("ItemsAdder could not hand out simplepvparena:totem, set in items-adder.totem-item of "
+                + "config.yml (ItemsAdder is broken for simplepvparena:totem), the own title or effect of the plugin "
+                + "is used instead"), warnings);
+    }
+
+    @Test
+    void aTotemAnimationStaysQuietWhileItemsAdderHasNotLoadedItsContentYet() {
+        customVisuals.withTotem("simplepvparena:totem");
+        customVisuals.setReady(false);
+        configuredVisuals.applySettings(totemSettings(true, "simplepvparena:totem"));
+
+        assertFalse(configuredVisuals.playTotemAnimation(fighter));
+        assertEquals(List.of(), warnings);
+
+        customVisuals.setReady(true);
+        assertTrue(configuredVisuals.playTotemAnimation(fighter));
+    }
+
+    @Test
+    void aMissingClassOfItemsAdderInTheTotemAnimationFallsBackLikeAnyOtherFailure() {
+        ConfiguredVisuals brokenVisuals = new ConfiguredVisuals(new CustomVisuals() {
+
+            @Override
+            public Optional<String> findFontImage(String identifier) {
+                return Optional.empty();
+            }
+
+            @Override
+            public Optional<ItemStack> findItem(String identifier) {
+                return Optional.empty();
+            }
+
+            @Override
+            public boolean playTotemAnimation(Player player, String identifier) {
+                throw new NoClassDefFoundError("dev/lone/itemsadder/api/ItemsAdder");
+            }
+
+            @Override
+            public boolean isReady() {
+                return true;
+            }
+        }, warnings::add);
+        brokenVisuals.applySettings(totemSettings(true, "simplepvparena:totem"));
+
+        assertFalse(brokenVisuals.playTotemAnimation(fighter));
+        assertEquals(List.of("ItemsAdder could not hand out simplepvparena:totem, set in items-adder.totem-item of "
+                + "config.yml (dev/lone/itemsadder/api/ItemsAdder), the own title or effect of the plugin is used "
+                + "instead"), warnings);
+    }
+
+    @Test
+    void withoutItemsAdderTheTotemAnimationIsNeverPlayedByTheVisuals() {
+        VanillaVisuals vanillaVisuals = new VanillaVisuals();
+        ConfiguredVisuals vanilla = new ConfiguredVisuals(vanillaVisuals, warnings::add);
+        vanilla.applySettings(totemSettings(true, "simplepvparena:totem"));
+
+        assertFalse(vanillaVisuals.playTotemAnimation(fighter, "simplepvparena:totem"));
+        assertFalse(vanilla.playTotemAnimation(fighter));
         assertEquals(List.of(), warnings);
     }
 
@@ -182,5 +300,9 @@ class ConfiguredVisualsTest {
                 "ItemsAdder konnte simplepvparena:totem aus items-adder.totem-item in config.yml nicht liefern "
                         + "(ItemsAdder is broken for simplepvparena:totem), stattdessen gilt der eigene Titel oder "
                         + "Effekt des Plugins"), warnings);
+    }
+
+    private static CustomVisualSettings totemSettings(boolean enabled, String totemIdentifier) {
+        return new CustomVisualSettings(enabled, "", "", "", "", totemIdentifier, "");
     }
 }

@@ -77,7 +77,6 @@ class MatchRestartPlayerStateTest {
         List<ArenaMatchHarness.FakePlayer> matchFighters = fightersOfTheRunningMatch();
         matchFighters.forEach(fighter -> assertTrue(effects.isBlind(fighter), fighter.name()));
         matchFighters.forEach(fighter -> assertTrue(fixture.kitService().hasAppliedKit(fighter.player())));
-        effects.stops().clear();
         adminMessages.clear();
 
         restart();
@@ -85,7 +84,6 @@ class MatchRestartPlayerStateTest {
         assertFalse(matchService.hasActiveMatch());
         assertFalse(matchService.isStartAnimationRunning());
         assertEquals(List.of(), effects.blindPlayerNames());
-        assertEquals(List.of("stop every totem"), effects.stops());
         for (ArenaMatchHarness.FakePlayer fighter : matchFighters) {
             assertFalse(fixture.kitService().hasAppliedKit(fighter.player()), fighter.name());
             assertArrayEquals(contentsBeforeTheMatch.get(fighter), fighter.contents(), fighter.name());

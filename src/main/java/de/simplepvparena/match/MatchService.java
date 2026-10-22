@@ -256,7 +256,6 @@ public final class MatchService {
     }
 
     public void handlePlayerDisconnected(Player player) {
-        roundStartEffects.stopFightStartAnimation(player);
         UUID playerUniqueId = player.getUniqueId();
         Optional<Match> runningMatch = findRunningMatchOfActiveFighter(playerUniqueId);
         if (reconnectSeconds <= 0 || runningMatch.isEmpty() || isSuddenDeathRunning()
@@ -304,7 +303,6 @@ public final class MatchService {
             return;
         }
         removeStartAnimationBlindness(playerUniqueId);
-        stopFightStartAnimation(playerUniqueId);
         closeReconnectWindow(playerUniqueId);
         if (insideSuddenDeathTick) {
             return;
@@ -521,15 +519,7 @@ public final class MatchService {
         }
     }
 
-    private void stopFightStartAnimation(UUID playerUniqueId) {
-        Player player = plugin.getServer().getPlayer(playerUniqueId);
-        if (player != null) {
-            roundStartEffects.stopFightStartAnimation(player);
-        }
-    }
-
     private void stopStartAnimation() {
-        roundStartEffects.stopFightStartAnimations();
         StartAnimation animation = activeStartAnimation;
         if (animation == null) {
             return;

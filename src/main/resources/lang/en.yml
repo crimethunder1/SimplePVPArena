@@ -1345,7 +1345,6 @@ visual:
   unknown-font-image: 'ItemsAdder has no font image {identifier}, set in {path} of config.yml, the own title of the plugin is shown instead'
   unknown-item: 'ItemsAdder has no item {identifier}, set in {path} of config.yml, the own effect of the plugin is used instead'
   lookup-failed: 'ItemsAdder could not hand out {identifier}, set in {path} of config.yml ({reason}), the own title or effect of the plugin is used instead'
-  totem-not-prepared: 'The item of {path} in config.yml could not be made into a totem ({reason}), the vanilla totem is played instead'
 command:
   menu-only-for-players:
     - 'The tournament administration is a menu'
@@ -1372,6 +1371,10 @@ registration:
     removed: 'This button is no longer a registration station'
     click-a-button: 'Click a button'
     protected: 'This is a registration station'
+    without-button: 'The registration station at {x} {y} {z} in world {world} has no button any more and was removed'
+  display:
+    title: 'Register'
+    hint: 'Click to take part'
   forming:
     tournament-in-progress: 'Teams cannot be formed while a tournament is in progress'
     auto-match: 'Teams cannot be formed while an auto match is announced or running'
