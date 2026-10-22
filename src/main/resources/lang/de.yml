@@ -532,6 +532,30 @@ kit-choice:
   chosen: '{player} hat das Kit {kit} für Match {match} gewählt'
   expired: 'Für Match {match} wurde kein Kit gewählt, das Standard-Kit {kit} gilt'
   cancelled: 'Die Kit-Wahl wurde abgebrochen'
+unequal-team-vote-menu:
+  title: 'Wer kämpft in Match {match}?'
+  vote-over: 'Die Abstimmung für Match {match} ist vorbei'
+  tile:
+    player:
+      votes:
+        one: '{count} Stimme'
+        other: '{count} Stimmen'
+      lore: 'Klicke, um für diesen Spieler zu stimmen'
+    info:
+      title: 'Abstimmung'
+      players:
+        one: 'Dein Team hat {online} Spieler online, {count} darf kämpfen'
+        other: 'Dein Team hat {online} Spieler online, {count} dürfen kämpfen'
+      time-left:
+        one: 'Restzeit: {count} Sekunde'
+        other: 'Restzeit: {count} Sekunden'
+      hint: 'Wenn die Zeit um ist, entscheidet der Zufall den Rest'
+unequal-team-vote:
+  begin:
+    one: 'Dein Team hat mehr Spieler online als {opponent}: Stimme innerhalb von {count} Sekunde ab, wer kämpft. /tournament vote öffnet die Abstimmung wieder'
+    other: 'Dein Team hat mehr Spieler online als {opponent}: Stimme innerhalb von {count} Sekunden ab, wer kämpft. /tournament vote öffnet die Abstimmung wieder'
+  result: '{team} kämpft mit {players}'
+  not-voting: 'Gerade läuft keine Abstimmung für dich'
 kit-menu:
   title: 'Kits (Seite {page})'
   tile:
@@ -1186,6 +1210,7 @@ tournament:
     unknown-match: 'Unbekanntes Match {match}'
     already-decided: 'Match {match} ist bereits entschieden'
   kit-choice-running: 'Für Match {match} wird gerade ein Kit gewählt, warte darauf oder pausiere das Turnier'
+  unequal-team-vote-running: 'Die Spieler von Match {match} stimmen noch ab, wer kämpft, warte, bis die Abstimmung vorbei ist'
   restart:
     auto-match: 'Ein Auto-Match lässt sich nicht neu starten'
   final:
@@ -1623,6 +1648,10 @@ config:
     reconnect-seconds-out-of-range:
       one: '{path} muss eine ganze Zahl zwischen {minimum} und {maximum} Sekunden sein, stattdessen gilt {count} Sekunde'
       other: '{path} muss eine ganze Zahl zwischen {minimum} und {maximum} Sekunden sein, stattdessen gelten {count} Sekunden'
+    unequal-teams-mode-unknown: '{path} muss einer der Werte {modes} sein, stattdessen gilt {fallback}'
+    unequal-teams-vote-seconds-out-of-range:
+      one: '{path} muss eine ganze Zahl zwischen {minimum} und {maximum} Sekunden sein, stattdessen gilt {count} Sekunde'
+      other: '{path} muss eine ganze Zahl zwischen {minimum} und {maximum} Sekunden sein, stattdessen gelten {count} Sekunden'
     team-size-out-of-range:
       one: '{path} muss eine ganze Zahl zwischen {minimum} und {maximum} Spielern sein, stattdessen gilt {count} Spieler'
       other: '{path} muss eine ganze Zahl zwischen {minimum} und {maximum} Spielern sein, stattdessen gelten {count} Spieler'
@@ -1658,6 +1687,7 @@ config:
       start-gate: 'die Sekunden, die das Starttor zu Beginn einer Runde braucht'
       countdown: 'die Sekunden des Countdowns direkt vor dem Kampf, ab der nächsten Runde'
       reconnect: 'die Sekunden, die ein Kämpfer nach einem Verbindungsabbruch zum Zurückkommen hat, für jeden Verbindungsabbruch ab jetzt'
+      unequal-teams: 'ob das größere Team abstimmt, wer kämpft, wenn die Teams unterschiedlich viele Spieler online haben, und die Sekunden der Abstimmung, ab dem nächsten Match'
       team-size: 'die Teamgröße, außer ein Turnier läuft oder ein Team hat mehr Spieler als eine kleinere neue Größe'
       auto-match: 'ob der Auto-Match-Modus an ist, die Sekunden bis zum Beginn eines Auto-Matches und die Pause zwischen zwei Auto-Matches'
       cleaning: 'die Blockmengen der Reinigung und des Ausgangszustands und die Partikel einer laufenden Reinigung'

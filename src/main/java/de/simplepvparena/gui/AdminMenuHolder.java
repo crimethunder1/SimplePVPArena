@@ -98,6 +98,11 @@ public final class AdminMenuHolder implements InventoryHolder {
         return new AdminMenuHolder(AdminMenuType.BRACKET_VIEW, null, null, pageIndex, openedFromMainMenu);
     }
 
+    public static AdminMenuHolder unequalTeamVote(String matchId) {
+        return new AdminMenuHolder(AdminMenuType.UNEQUAL_TEAM_VOTE, Objects.requireNonNull(matchId, "matchId"), null,
+                0);
+    }
+
     public AdminMenuType getMenuType() {
         return menuType;
     }

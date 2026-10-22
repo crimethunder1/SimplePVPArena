@@ -87,6 +87,7 @@ import de.simplepvparena.match.CustomItemRoundStartEffects;
 import de.simplepvparena.match.FighterColours;
 import de.simplepvparena.match.MatchService;
 import de.simplepvparena.match.ScoreboardFighterColours;
+import de.simplepvparena.match.UnequalTeamVoteService;
 import de.simplepvparena.match.VanillaRoundStartEffects;
 import de.simplepvparena.message.MessageCatalogLoader;
 import de.simplepvparena.message.Messages;
@@ -271,6 +272,8 @@ public final class SimplePVPArenaPlugin extends JavaPlugin {
                 startGateOpeningService, temporaryEntityRemover);
         ArenaAudience arenaAudience = new ArenaAudience(getServer(), arenaRegistry);
         matchService.setArenaAudience(arenaAudience);
+        matchService.setUnequalTeamVoteService(new UnequalTeamVoteService(this, getServer()::getPlayer,
+                RandomGenerator.getDefault()));
 
         BorderVisualEffect borderVisualEffect = BorderVisualEffects.create(getServer().getPluginManager(),
                 getLogger());

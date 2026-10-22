@@ -21,6 +21,12 @@ match:
   countdown-seconds: 3
   # Seconds a fighter who loses the connection during a round has to come back before being eliminated, 0 to 600. 0 eliminates at once.
   reconnect-seconds: 60
+  # Teams with different numbers of players online when the first round of a match starts, for example 2 against 1. Applies from the next match.
+  unequal-teams:
+    # vote: the larger team votes which of its players fight, as many as the smaller team has online, and chance fills the places nobody decided. all: every online player fights.
+    mode: vote
+    # Seconds the vote lasts, 5 to 120. It ends earlier once every player of the larger team has voted.
+    vote-seconds: 30
   # Players per team, 1 to 8. A team added in the team menu of /tournament has at most this many players, the team menu changes it as well.
   team-size: 2
   # Scoreboard colours of the two teams of a match, as Minecraft colour names. Both must differ.

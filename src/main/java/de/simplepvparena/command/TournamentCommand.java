@@ -29,6 +29,7 @@ public final class TournamentCommand implements TabExecutor {
     private static final String BRACKET_ARGUMENT = "bracket";
     private static final String JOIN_ARGUMENT = "join";
     private static final String LEAVE_ARGUMENT = "leave";
+    private static final String VOTE_ARGUMENT = "vote";
 
     private final MatchService matchService;
     private final SpectatorService spectatorService;
@@ -64,6 +65,10 @@ public final class TournamentCommand implements TabExecutor {
             handleRegistration(sender, false);
             return true;
         }
+        if (arguments.length > 0 && arguments[0].toLowerCase(Locale.ROOT).equals(VOTE_ARGUMENT)) {
+            openUnequalTeamVote(sender);
+            return true;
+        }
         openAdminMenu(sender);
         return true;
     }
@@ -90,6 +95,14 @@ public final class TournamentCommand implements TabExecutor {
             return;
         }
         adminMenuService.openBracketView(player);
+    }
+
+    private void openUnequalTeamVote(CommandSender sender) {
+        if (!(sender instanceof Player player)) {
+            TournamentMessages.sendError(sender, Messages.text(CommandMessage.ONLY_FOR_PLAYERS));
+            return;
+        }
+        adminMenuService.openUnequalTeamVote(player);
     }
 
     private void handleRegistration(CommandSender sender, boolean join) {
@@ -138,7 +151,7 @@ public final class TournamentCommand implements TabExecutor {
         return findAvailableArguments(sender).stream().filter(argument -> argument.startsWith(prefix)).toList();
     }
 
-    private static List<String> findAvailableArguments(CommandSender sender) {
+    private List<String> findAvailableArguments(CommandSender sender) {
         List<String> availableArguments = new ArrayList<>();
         if (ViewPermission.mayView(sender)) {
             availableArguments.add(BRACKET_ARGUMENT);
@@ -149,6 +162,10 @@ public final class TournamentCommand implements TabExecutor {
         }
         if (sender.hasPermission(SPECTATE_PERMISSION)) {
             availableArguments.add(SPECTATE_ARGUMENT);
+        }
+        if (sender instanceof Player player
+                && matchService.getUnequalTeamVoteService().isVoter(player.getUniqueId())) {
+            availableArguments.add(VOTE_ARGUMENT);
         }
         return availableArguments;
     }

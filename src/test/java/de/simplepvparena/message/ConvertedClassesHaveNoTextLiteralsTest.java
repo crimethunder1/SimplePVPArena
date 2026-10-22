@@ -144,7 +144,13 @@ class ConvertedClassesHaveNoTextLiteralsTest {
             "listener/RegistrationStationListener.java",
             "listener/RegistrationStationWorldListener.java",
             "gui/RegistrationsAdminMenu.java",
-            "team/TeamColour.java");
+            "team/TeamColour.java",
+            "match/UnequalTeamsMode.java",
+            "match/UnequalTeamSettings.java",
+            "match/PendingUnequalTeamVote.java",
+            "match/UnequalTeamVotePresenter.java",
+            "gui/UnequalTeamVoteMenu.java",
+            "gui/UnequalTeamVoteMenuPresenter.java");
 
     private static final Pattern STRING_LITERAL = Pattern.compile("\"((?:[^\"\\\\]|\\\\.)*)\"");
     private static final Pattern USAGE_TOKEN = Pattern.compile("<[^<>]*>");

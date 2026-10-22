@@ -14,6 +14,7 @@ public record ConfigurationReloadReport(List<String> problems) {
             ConfigMessage.START_GATE_CATEGORY,
             ConfigMessage.COUNTDOWN_CATEGORY,
             ConfigMessage.RECONNECT_CATEGORY,
+            ConfigMessage.UNEQUAL_TEAMS_CATEGORY,
             ConfigMessage.TEAM_SIZE_CATEGORY,
             ConfigMessage.AUTO_MATCH_CATEGORY,
             ConfigMessage.CLEANING_CATEGORY,

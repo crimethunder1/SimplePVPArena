@@ -25,7 +25,14 @@ final class AdminMenuReplies {
         return false;
     }
 
-    static boolean mayStillUse(Player player, AdminMenuType menuType) {
+    static boolean mayStillUse(Player player, AdminMenuType menuType, boolean memberOfTheVotingTeam) {
+        if (menuType.isReadableByVotingTeam()) {
+            if (memberOfTheVotingTeam) {
+                return true;
+            }
+            TournamentMessages.sendError(player, Messages.text(MenuMessage.NOT_ALLOWED));
+            return false;
+        }
         if (menuType.isReadableByPlayers() && ViewPermission.mayView(player)) {
             return true;
         }

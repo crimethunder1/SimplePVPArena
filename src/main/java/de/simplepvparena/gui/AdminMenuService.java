@@ -12,6 +12,11 @@ import de.simplepvparena.input.ChatInputService;
 import de.simplepvparena.kit.KitLibrary;
 import de.simplepvparena.kit.KitSaveService;
 import de.simplepvparena.match.MatchService;
+import de.simplepvparena.match.PendingUnequalTeamVote;
+import de.simplepvparena.match.UnequalTeamVoteService;
+import de.simplepvparena.message.Messages;
+import de.simplepvparena.message.TournamentMessages;
+import de.simplepvparena.message.UnequalTeamVoteMessage;
 import de.simplepvparena.registration.RandomTeamFormation;
 import de.simplepvparena.registration.RegistrationService;
 import de.simplepvparena.registration.RegistrationStationService;
@@ -27,12 +32,15 @@ import org.bukkit.plugin.Plugin;
 
 import java.util.Collection;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.function.Supplier;
 
 public final class AdminMenuService {
 
     private final AdminMenuNavigator navigator;
     private final BracketViewMenu bracketViewMenu;
+    private final UnequalTeamVoteService unequalTeamVoteService;
+    private final UnequalTeamVoteMenuPresenter unequalTeamVoteMenuPresenter;
 
     public AdminMenuService(Plugin plugin,
                             TournamentManager tournamentManager,
@@ -109,6 +117,10 @@ public final class AdminMenuService {
         KitChoiceService kitChoiceService = tournamentManager.getKitChoiceService();
         KitChoiceAdminMenu kitChoiceAdminMenu = new KitChoiceAdminMenu(navigator, kitLibrary, kitChoiceService);
         kitChoiceService.setPresenter(new KitChoiceAdminMenuPresenter(navigator, onlinePlayers));
+        unequalTeamVoteService = matchService.getUnequalTeamVoteService();
+        UnequalTeamVoteMenu unequalTeamVoteMenu = new UnequalTeamVoteMenu(navigator, unequalTeamVoteService);
+        unequalTeamVoteMenuPresenter = new UnequalTeamVoteMenuPresenter(navigator, onlinePlayers);
+        unequalTeamVoteService.setPresenter(unequalTeamVoteMenuPresenter);
         Objects.requireNonNull(teamConfigurationSaver, "teamConfigurationSaver");
         Objects.requireNonNull(configurationReloader, "configurationReloader");
         Objects.requireNonNull(teamSizeWriter, "teamSizeWriter");
@@ -165,6 +177,7 @@ public final class AdminMenuService {
         navigator.register(AdminMenuType.WAITING_MATCH_RESULT, waitingMatchResultAdminMenu);
         navigator.register(AdminMenuType.CONFIRMATION, confirmationAdminMenu);
         navigator.register(AdminMenuType.BRACKET_VIEW, bracketViewMenu);
+        navigator.register(AdminMenuType.UNEQUAL_TEAM_VOTE, unequalTeamVoteMenu);
         navigator.requireEveryMenuRegistered();
     }
 
@@ -176,8 +189,19 @@ public final class AdminMenuService {
         bracketViewMenu.open(player);
     }
 
+    public void openUnequalTeamVote(Player player) {
+        Optional<PendingUnequalTeamVote> vote = unequalTeamVoteService.getPending()
+                .filter(pendingVote -> pendingVote.isVoter(player.getUniqueId()));
+        if (vote.isEmpty()) {
+            TournamentMessages.sendError(player, Messages.text(UnequalTeamVoteMessage.NOT_VOTING));
+            return;
+        }
+        unequalTeamVoteMenuPresenter.open(player, vote.get());
+    }
+
     public void handleClick(Player player, AdminMenuHolder holder, int slot) {
-        if (!AdminMenuReplies.mayStillUse(player, holder.getMenuType())) {
+        boolean memberOfTheVotingTeam = unequalTeamVoteService.isVoter(player.getUniqueId());
+        if (!AdminMenuReplies.mayStillUse(player, holder.getMenuType(), memberOfTheVotingTeam)) {
             navigator.close(player);
             return;
         }

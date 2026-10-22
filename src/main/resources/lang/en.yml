@@ -532,6 +532,30 @@ kit-choice:
   chosen: '{player} chose the kit {kit} for match {match}'
   expired: 'No kit was chosen for match {match}, the default kit {kit} is used'
   cancelled: 'The kit choice was cancelled'
+unequal-team-vote-menu:
+  title: 'Who fights in match {match}?'
+  vote-over: 'The vote for match {match} is over'
+  tile:
+    player:
+      votes:
+        one: '{count} vote'
+        other: '{count} votes'
+      lore: 'Click to vote for this player'
+    info:
+      title: 'Vote'
+      players:
+        one: 'Your team has {online} players online, {count} may fight'
+        other: 'Your team has {online} players online, {count} may fight'
+      time-left:
+        one: 'Time left: {count} second'
+        other: 'Time left: {count} seconds'
+      hint: 'When the time is over, chance decides the rest'
+unequal-team-vote:
+  begin:
+    one: 'Your team has more players online than {opponent}: vote within {count} second who fights. /tournament vote opens the vote again'
+    other: 'Your team has more players online than {opponent}: vote within {count} seconds who fights. /tournament vote opens the vote again'
+  result: '{team} fights with {players}'
+  not-voting: 'There is no vote for you right now'
 kit-menu:
   title: 'Kits (page {page})'
   tile:
@@ -1186,6 +1210,7 @@ tournament:
     unknown-match: 'Unknown match {match}'
     already-decided: 'Match {match} is already decided'
   kit-choice-running: 'A kit is being chosen for match {match}, wait for it or pause the tournament'
+  unequal-team-vote-running: 'The players of match {match} are still voting who fights, wait until the vote is over'
   restart:
     auto-match: 'An auto match cannot be restarted'
   final:
@@ -1623,6 +1648,10 @@ config:
     reconnect-seconds-out-of-range:
       one: '{path} must be a whole number between {minimum} and {maximum} seconds, falling back to {count} second'
       other: '{path} must be a whole number between {minimum} and {maximum} seconds, falling back to {count} seconds'
+    unequal-teams-mode-unknown: '{path} must be one of {modes}, falling back to {fallback}'
+    unequal-teams-vote-seconds-out-of-range:
+      one: '{path} must be a whole number between {minimum} and {maximum} seconds, falling back to {count} second'
+      other: '{path} must be a whole number between {minimum} and {maximum} seconds, falling back to {count} seconds'
     team-size-out-of-range:
       one: '{path} must be a whole number between {minimum} and {maximum} players, falling back to {count} player'
       other: '{path} must be a whole number between {minimum} and {maximum} players, falling back to {count} players'
@@ -1658,6 +1687,7 @@ config:
       start-gate: 'the seconds the start gate takes at the beginning of a round'
       countdown: 'the seconds of the countdown right before the fight, from the next round on'
       reconnect: 'the seconds a fighter who lost the connection has to come back, for every connection lost from now on'
+      unequal-teams: 'whether the larger team votes who fights when the teams have different numbers of players online and the seconds of the vote, from the next match on'
       team-size: 'the team size, unless a tournament is in progress or a team has more players than a smaller new size'
       auto-match: 'whether the auto match mode is on, the seconds before an auto match starts and the pause between two auto matches'
       cleaning: 'the cleaning and baseline batch sizes and the particles of a running cleaning'

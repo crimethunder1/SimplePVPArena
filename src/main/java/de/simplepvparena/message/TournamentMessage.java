@@ -21,6 +21,7 @@ public enum TournamentMessage implements MessageKey {
     UNKNOWN_MATCH("tournament.result.unknown-match", "match"),
     MATCH_ALREADY_DECIDED("tournament.result.already-decided", "match"),
     KIT_CHOICE_RUNNING("tournament.kit-choice-running", "match"),
+    UNEQUAL_TEAM_VOTE_RUNNING("tournament.unequal-team-vote-running", "match"),
     RESTART_AUTO_MATCH("tournament.restart.auto-match"),
     FINAL_WHILE_PAUSED("tournament.final.paused", "action"),
     FINAL_ARENA_BEING_CLEANED("tournament.final.arena-being-cleaned"),

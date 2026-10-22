@@ -22,6 +22,8 @@ public final class Match {
     private MatchState state = MatchState.PREPARING;
     private RoundParticipants roundParticipants;
     private int roundNumber;
+    private Team teamWithChosenFighters;
+    private List<UUID> chosenFighterUniqueIds = List.of();
 
     private Match(String matchId, Team firstTeam, Team secondTeam, Arena arena, boolean finalMatch,
                   boolean autoMatch) {
@@ -95,6 +97,25 @@ public final class Match {
                 secondTeam.getTeamName(), secondTeamActivePlayers);
         roundNumber++;
         state = MatchState.RUNNING;
+    }
+
+    public void chooseFighters(Team team, Collection<UUID> fighterUniqueIds) {
+        if (!firstTeam.equals(team) && !secondTeam.equals(team)) {
+            throw new IllegalArgumentException(team.getTeamName() + " does not take part in match " + matchId);
+        }
+        teamWithChosenFighters = team;
+        chosenFighterUniqueIds = List.copyOf(fighterUniqueIds);
+    }
+
+    public Optional<List<UUID>> findChosenFighters(Team team) {
+        if (teamWithChosenFighters == null || !teamWithChosenFighters.equals(team)) {
+            return Optional.empty();
+        }
+        return Optional.of(chosenFighterUniqueIds);
+    }
+
+    public Optional<Team> findTeamWithChosenFighters() {
+        return Optional.ofNullable(teamWithChosenFighters);
     }
 
     public Optional<RoundParticipants> getRoundParticipants() {

@@ -12,6 +12,7 @@ import de.simplepvparena.message.MatchMessage;
 import de.simplepvparena.message.Messages;
 import de.simplepvparena.message.Placeholder;
 import de.simplepvparena.message.TournamentMessages;
+import de.simplepvparena.message.UnequalTeamVoteMessage;
 import de.simplepvparena.team.Team;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.title.Title;
@@ -95,6 +96,8 @@ public final class MatchService {
     private boolean suddenDeathDisabledInFinal = DEFAULT_SUDDEN_DEATH_DISABLED_IN_FINAL;
     private int reconnectSeconds = DEFAULT_RECONNECT_SECONDS;
     private int countdownSeconds = DEFAULT_COUNTDOWN_SECONDS;
+    private UnequalTeamSettings unequalTeamSettings = UnequalTeamSettings.defaults();
+    private UnequalTeamVoteService unequalTeamVoteService = new UnequalTeamVoteService();
     private boolean roundTimersPaused;
 
     public MatchService(Plugin plugin, KitService kitService, SpectatorService spectatorService,
@@ -174,12 +177,51 @@ public final class MatchService {
         return countdownSeconds;
     }
 
+    public void setUnequalTeamSettings(UnequalTeamSettings unequalTeamSettings) {
+        this.unequalTeamSettings = Objects.requireNonNull(unequalTeamSettings, "unequalTeamSettings");
+    }
+
+    public UnequalTeamSettings getUnequalTeamSettings() {
+        return unequalTeamSettings;
+    }
+
+    public void setUnequalTeamVoteService(UnequalTeamVoteService unequalTeamVoteService) {
+        this.unequalTeamVoteService = Objects.requireNonNull(unequalTeamVoteService, "unequalTeamVoteService");
+    }
+
+    public UnequalTeamVoteService getUnequalTeamVoteService() {
+        return unequalTeamVoteService;
+    }
+
     public void startMatch(Match match) {
         if (activeMatch != null) {
             throw new IllegalStateException("match " + activeMatch.getMatchId() + " is still running in the arena");
         }
         activeMatch = match;
+        unequalTeamVoteService.begin(match, unequalTeamSettings, () -> beginFirstRound(match));
+    }
+
+    private void beginFirstRound(Match match) {
+        if (activeMatch != match) {
+            return;
+        }
+        match.findTeamWithChosenFighters().ifPresent(team -> announceChosenFighters(match, team));
         beginRound(match);
+    }
+
+    private void announceChosenFighters(Match match, Team team) {
+        List<String> fighterNames = new ArrayList<>();
+        for (UUID fighterUniqueId : match.findChosenFighters(team).orElseThrow()) {
+            team.getMembers().stream()
+                    .filter(member -> member.uniqueId().equals(fighterUniqueId))
+                    .findFirst()
+                    .ifPresent(member -> fighterNames.add(member.playerName()));
+        }
+        if (fighterNames.isEmpty()) {
+            return;
+        }
+        announceToMatch(match, Messages.text(UnequalTeamVoteMessage.RESULT, Placeholder.of("team", team.getTeamName()),
+                Placeholder.of("players", Messages.join(fighterNames))));
     }
 
     public boolean hasActiveMatch() {
@@ -257,6 +299,7 @@ public final class MatchService {
 
     public void handlePlayerDisconnected(Player player) {
         UUID playerUniqueId = player.getUniqueId();
+        unequalTeamVoteService.handlePlayerLeft(playerUniqueId);
         Optional<Match> runningMatch = findRunningMatchOfActiveFighter(playerUniqueId);
         if (reconnectSeconds <= 0 || runningMatch.isEmpty() || isSuddenDeathRunning()
                 || reconnectWindowsUsedThisRound.contains(playerUniqueId)) {
@@ -328,6 +371,7 @@ public final class MatchService {
             return;
         }
         Match cancelledMatch = activeMatch;
+        unequalTeamVoteService.cancel();
         stopRoundTimer();
         stopStartAnimation();
         closeReconnectWindows();
@@ -414,12 +458,12 @@ public final class MatchService {
         reconnectWindowsUsedThisRound.clear();
         stopStartAnimation();
         removeTemporaryEntities(match);
-        Set<UUID> firstTeamPlayers = collectOnlineMembers(match.getFirstTeam());
-        Set<UUID> secondTeamPlayers = collectOnlineMembers(match.getSecondTeam());
+        Set<UUID> firstTeamPlayers = collectFighters(match, match.getFirstTeam());
+        Set<UUID> secondTeamPlayers = collectFighters(match, match.getSecondTeam());
         match.beginRound(firstTeamPlayers, secondTeamPlayers);
 
-        preparePlayers(match.getFirstTeam(), match.getArena().getFirstTeamSpawn());
-        preparePlayers(match.getSecondTeam(), match.getArena().getSecondTeamSpawn());
+        preparePlayers(match.getFirstTeam(), firstTeamPlayers, match.getArena().getFirstTeamSpawn());
+        preparePlayers(match.getSecondTeam(), secondTeamPlayers, match.getArena().getSecondTeamSpawn());
         fighterColours.colourFighters(match);
         int roundCountdownSeconds = countdownSeconds;
         startGates.openAtRoundStart(remainingSeconds -> announceStartGateSecond(match, remainingSeconds));
@@ -616,6 +660,7 @@ public final class MatchService {
     }
 
     private void finishMatch(Match match, String winnerTeamName, boolean decidedByAnAdmin) {
+        unequalTeamVoteService.cancel();
         stopRoundTimer();
         stopStartAnimation();
         closeReconnectWindows();
@@ -719,9 +764,9 @@ public final class MatchService {
         }
     }
 
-    private void preparePlayers(Team team, Optional<PositionSnapshot> spawnPosition) {
+    private void preparePlayers(Team team, Set<UUID> fighterUniqueIds, Optional<PositionSnapshot> spawnPosition) {
         Optional<Location> spawnLocation = spawnPosition.flatMap(PositionSnapshot::toLocation);
-        for (Player player : collectOnlinePlayers(team)) {
+        for (Player player : collectOnlinePlayers(fighterUniqueIds)) {
             spectatorService.clearAssignment(player.getUniqueId());
             spawnLocation.ifPresent(player::teleport);
             kitService.applyKit(player);
@@ -733,7 +778,7 @@ public final class MatchService {
 
     private void releaseParticipants(Match match) {
         for (Team team : match.getTeams()) {
-            for (Player player : collectOnlinePlayers(team)) {
+            for (Player player : collectOnlinePlayers(collectMembersWhoMayFight(match, team))) {
                 try {
                     kitService.clearKit(player);
                 } catch (RuntimeException failure) {
@@ -754,12 +799,12 @@ public final class MatchService {
     }
 
     private boolean hasAnyOnlineParticipant(Match match) {
-        return match.getTeams().stream().anyMatch(team -> !collectOnlineMembers(team).isEmpty());
+        return match.getTeams().stream().anyMatch(team -> !collectFighters(match, team).isEmpty());
     }
 
-    private Set<UUID> collectOnlineMembers(Team team) {
+    private Set<UUID> collectFighters(Match match, Team team) {
         Set<UUID> onlineMembers = new LinkedHashSet<>();
-        for (UUID memberUniqueId : team.getMemberUniqueIds()) {
+        for (UUID memberUniqueId : collectMembersWhoMayFight(match, team)) {
             Player player = plugin.getServer().getPlayer(memberUniqueId);
             if (player != null && player.isOnline()) {
                 onlineMembers.add(memberUniqueId);
@@ -768,9 +813,15 @@ public final class MatchService {
         return onlineMembers;
     }
 
-    private List<Player> collectOnlinePlayers(Team team) {
+    private static Set<UUID> collectMembersWhoMayFight(Match match, Team team) {
+        return match.findChosenFighters(team)
+                .<Set<UUID>>map(LinkedHashSet::new)
+                .orElseGet(() -> new LinkedHashSet<>(team.getMemberUniqueIds()));
+    }
+
+    private List<Player> collectOnlinePlayers(Set<UUID> memberUniqueIds) {
         List<Player> onlinePlayers = new ArrayList<>();
-        for (UUID memberUniqueId : team.getMemberUniqueIds()) {
+        for (UUID memberUniqueId : memberUniqueIds) {
             Player player = plugin.getServer().getPlayer(memberUniqueId);
             if (player != null && player.isOnline()) {
                 onlinePlayers.add(player);

@@ -41,6 +41,8 @@ import de.simplepvparena.listener.ChatInputListener;
 import de.simplepvparena.match.FighterColours;
 import de.simplepvparena.match.Match;
 import de.simplepvparena.match.MatchService;
+import de.simplepvparena.match.UnequalTeamSettings;
+import de.simplepvparena.match.UnequalTeamVoteService;
 import de.simplepvparena.message.TournamentMessages;
 import de.simplepvparena.permission.AdminPermission;
 import de.simplepvparena.permission.ViewPermission;
@@ -138,11 +140,13 @@ final class AdminMenuFixture {
     private final List<Boolean> writtenAutoMatchModes = new ArrayList<>();
     private final List<Boolean> writtenBorderParticleSwitches = new ArrayList<>();
     private final TickingScheduler kitChoiceScheduler = new TickingScheduler();
+    private final TickingScheduler voteScheduler = new TickingScheduler();
     private final RegistrationList registrationList = new RegistrationList();
     private final RegistrationService registrationService;
     private final RegistrationStations registrationStations = new RegistrationStations();
     private final RegistrationStationService registrationStationService;
     private final KitChoiceService kitChoiceService;
+    private final UnequalTeamVoteService unequalTeamVoteService;
     private final World world;
     private final Plugin plugin;
     private final MatchService matchService;
@@ -182,6 +186,9 @@ final class AdminMenuFixture {
         matchService = new MatchService(plugin, kitService,
                 new SpectatorService(arenaRegistry, new SpectatorItemFactory(plugin)),
                 SharedBukkitServer.proxy(FighterColours.class, (method, arguments) -> null), StartGates.NONE);
+        unequalTeamVoteService = new UnequalTeamVoteService(voteScheduler.plugin(), this::findOnlinePlayer,
+                new OrderKeepingRandomGenerator());
+        matchService.setUnequalTeamVoteService(unequalTeamVoteService);
         ArenaCleaningService cleaningService = new ArenaCleaningService(plugin, (cleanedWorld, shape) -> 0);
         ArenaBorderConfirmation borderConfirmation = new ArenaBorderConfirmation(arenaRegistry.getArena()::hasShape);
         borderParticleService = new BorderParticleService(plugin, borderMarks,
@@ -266,6 +273,7 @@ final class AdminMenuFixture {
         Player player = SharedBukkitServer.proxy(Player.class, (method, arguments) -> switch (method.getName()) {
             case "getUniqueId" -> playerUniqueId;
             case "getName" -> playerName;
+            case "isOnline" -> true;
             case "hasPermission" -> AdminPermission.ADMIN_PERMISSION_NAME.equals(arguments[0]) && adminPermission
                     || ViewPermission.VIEW_PERMISSION_NAME.equals(arguments[0]) && viewPermission;
             case "sendMessage" -> {
@@ -318,6 +326,34 @@ final class AdminMenuFixture {
 
     TickingScheduler kitChoiceScheduler() {
         return kitChoiceScheduler;
+    }
+
+    UnequalTeamVoteService unequalTeamVoteService() {
+        return unequalTeamVoteService;
+    }
+
+    TickingScheduler voteScheduler() {
+        return voteScheduler;
+    }
+
+    void registerTeamOfOnlinePlayers(String teamName, OnlinePlayer... players) {
+        List<TeamMember> members = new ArrayList<>();
+        for (OnlinePlayer player : players) {
+            members.add(new TeamMember(player.player().getUniqueId(), player.player().getName()));
+        }
+        teamRegistry.registerTeam(teamName, members);
+    }
+
+    Match beginUnequalTeamVote(String firstTeamName, String secondTeamName) {
+        Match match = Match.regularMatch("M1", teamRegistry.findTeam(firstTeamName).orElseThrow(),
+                teamRegistry.findTeam(secondTeamName).orElseThrow(), arenaRegistry.getArena());
+        unequalTeamVoteService.begin(match, UnequalTeamSettings.defaults(), () -> { });
+        return match;
+    }
+
+    void letPlayerLeave(OnlinePlayer player) {
+        onlinePlayers.remove(player.player());
+        unequalTeamVoteService.handlePlayerLeft(player.player().getUniqueId());
     }
 
     List<String> adminNotifications() {
@@ -573,6 +609,10 @@ final class AdminMenuFixture {
         windows.refillLastOpenedMenu(admin);
     }
 
+    void refillLastMenuOf(Player player) {
+        windows.refillLastOpenedMenu(player);
+    }
+
     boolean typeInChat(String line) {
         return chatInputService.handleLine(admin, line);
     }
@@ -608,7 +648,11 @@ final class AdminMenuFixture {
     }
 
     String describeLastMenu() {
-        RecordingAdminMenuWindows.RecordedMenu menu = lastMenu();
+        return describeLastMenuOf(admin);
+    }
+
+    String describeLastMenuOf(Player player) {
+        RecordingAdminMenuWindows.RecordedMenu menu = windows.lastOpenedMenu(player);
         StringBuilder description = new StringBuilder(menu.title()).append(" | ").append(menu.size()).append('\n');
         for (int slot = 0; slot < menu.size(); slot++) {
             int describedSlot = slot;

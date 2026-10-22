@@ -17,6 +17,7 @@ import de.simplepvparena.match.FighterColours;
 import de.simplepvparena.match.MatchService;
 import de.simplepvparena.match.RoundTimeoutSettings;
 import de.simplepvparena.match.TeamColourSettings;
+import de.simplepvparena.match.UnequalTeamSettings;
 import de.simplepvparena.message.ConfigMessage;
 import de.simplepvparena.message.Messages;
 import de.simplepvparena.message.Placeholder;
@@ -135,6 +136,11 @@ public final class PluginLiveConfiguration implements LiveConfiguration {
     @Override
     public void setReconnectSeconds(int reconnectSeconds) {
         matchService.setReconnectSeconds(reconnectSeconds);
+    }
+
+    @Override
+    public void setUnequalTeamSettings(UnequalTeamSettings unequalTeamSettings) {
+        matchService.setUnequalTeamSettings(unequalTeamSettings);
     }
 
     @Override

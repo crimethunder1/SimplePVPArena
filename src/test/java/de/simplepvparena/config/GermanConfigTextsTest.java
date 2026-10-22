@@ -78,6 +78,8 @@ class GermanConfigTextsTest {
                 "  die Sekunden des Countdowns direkt vor dem Kampf, ab der nächsten Runde",
                 "  die Sekunden, die ein Kämpfer nach einem Verbindungsabbruch zum Zurückkommen hat, für jeden "
                         + "Verbindungsabbruch ab jetzt",
+                "  ob das größere Team abstimmt, wer kämpft, wenn die Teams unterschiedlich viele Spieler online "
+                        + "haben, und die Sekunden der Abstimmung, ab dem nächsten Match",
                 "  die Teamgröße, außer ein Turnier läuft oder ein Team hat mehr Spieler als eine kleinere neue Größe",
                 "  ob der Auto-Match-Modus an ist, die Sekunden bis zum Beginn eines Auto-Matches und die Pause "
                         + "zwischen zwei Auto-Matches",

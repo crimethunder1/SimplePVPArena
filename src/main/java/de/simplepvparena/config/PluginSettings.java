@@ -15,6 +15,8 @@ import de.simplepvparena.gate.StartGateDuration;
 import de.simplepvparena.match.MatchService;
 import de.simplepvparena.match.RoundTimeoutSettings;
 import de.simplepvparena.match.TeamColourSettings;
+import de.simplepvparena.match.UnequalTeamSettings;
+import de.simplepvparena.match.UnequalTeamsMode;
 import de.simplepvparena.message.ConfigMessage;
 import de.simplepvparena.message.MessageCatalogLoader;
 import de.simplepvparena.message.Messages;
@@ -38,6 +40,7 @@ public record PluginSettings(long roundResetDelayTicks,
                              int startGateDurationSeconds,
                              int countdownSeconds,
                              int reconnectSeconds,
+                             UnequalTeamSettings unequalTeamSettings,
                              TeamColourSettings teamColourSettings,
                              int teamSize,
                              AutoMatchSettings autoMatchSettings,
@@ -72,6 +75,8 @@ public record PluginSettings(long roundResetDelayTicks,
     public static final String START_GATE_DURATION_SECONDS_PATH = "match.start-gate-duration-seconds";
     public static final String COUNTDOWN_SECONDS_PATH = "match.countdown-seconds";
     public static final String RECONNECT_SECONDS_PATH = "match.reconnect-seconds";
+    public static final String UNEQUAL_TEAMS_MODE_PATH = "match.unequal-teams.mode";
+    public static final String UNEQUAL_TEAMS_VOTE_SECONDS_PATH = "match.unequal-teams.vote-seconds";
     public static final String TEAM_SIZE_PATH = "match.team-size";
     public static final String AUTO_MATCH_ENABLED_PATH = "auto-match.enabled";
     public static final String AUTO_MATCH_START_DELAY_SECONDS_PATH = "auto-match.start-delay-seconds";
@@ -108,6 +113,8 @@ public record PluginSettings(long roundResetDelayTicks,
             START_GATE_DURATION_SECONDS_PATH,
             COUNTDOWN_SECONDS_PATH,
             RECONNECT_SECONDS_PATH,
+            UNEQUAL_TEAMS_MODE_PATH,
+            UNEQUAL_TEAMS_VOTE_SECONDS_PATH,
             TEAM_SIZE_PATH,
             FIRST_TEAM_COLOUR_PATH,
             SECOND_TEAM_COLOUR_PATH,
@@ -152,6 +159,7 @@ public record PluginSettings(long roundResetDelayTicks,
                 StartGateDuration.DEFAULT_SECONDS,
                 MatchService.DEFAULT_COUNTDOWN_SECONDS,
                 MatchService.DEFAULT_RECONNECT_SECONDS,
+                UnequalTeamSettings.defaults(),
                 TeamColourSettings.defaults(),
                 TeamSizeSetting.DEFAULT_TEAM_SIZE,
                 AutoMatchSettings.defaults(),
@@ -187,6 +195,7 @@ public record PluginSettings(long roundResetDelayTicks,
                 readStartGateDurationSeconds(configuration, problemReporter),
                 readCountdownSeconds(configuration, problemReporter),
                 readReconnectSeconds(configuration, problemReporter),
+                readUnequalTeamSettings(configuration, problemReporter),
                 readTeamColourSettings(configuration, problemReporter),
                 readTeamSize(configuration, problemReporter),
                 readAutoMatchSettings(configuration, problemReporter),
@@ -245,6 +254,7 @@ public record PluginSettings(long roundResetDelayTicks,
         liveConfiguration.setStartGateDurationSeconds(startGateDurationSeconds);
         liveConfiguration.setCountdownSeconds(countdownSeconds);
         liveConfiguration.setReconnectSeconds(reconnectSeconds);
+        liveConfiguration.setUnequalTeamSettings(unequalTeamSettings);
         liveConfiguration.setTeamColourSettings(teamColourSettings);
         teamSizeTarget.accept(teamSize);
         liveConfiguration.setAutoMatchSettings(autoMatchSettings);
@@ -398,6 +408,50 @@ public record PluginSettings(long roundResetDelayTicks,
                 Placeholder.of("minimum", MatchService.MINIMUM_RECONNECT_SECONDS),
                 Placeholder.of("maximum", MatchService.MAXIMUM_RECONNECT_SECONDS)));
         return MatchService.DEFAULT_RECONNECT_SECONDS;
+    }
+
+    private static UnequalTeamSettings readUnequalTeamSettings(ConfigurationSection configuration,
+                                                               Consumer<String> problemReporter) {
+        return new UnequalTeamSettings(readUnequalTeamsMode(configuration, problemReporter),
+                readUnequalTeamsVoteSeconds(configuration, problemReporter));
+    }
+
+    private static UnequalTeamsMode readUnequalTeamsMode(ConfigurationSection configuration,
+                                                         Consumer<String> problemReporter) {
+        if (!configuration.isSet(UNEQUAL_TEAMS_MODE_PATH)) {
+            return UnequalTeamSettings.DEFAULT_MODE;
+        }
+        if (configuration.isString(UNEQUAL_TEAMS_MODE_PATH)) {
+            Optional<UnequalTeamsMode> mode = UnequalTeamsMode.fromConfigurationName(
+                    configuration.getString(UNEQUAL_TEAMS_MODE_PATH));
+            if (mode.isPresent()) {
+                return mode.get();
+            }
+        }
+        problemReporter.accept(Messages.text(ConfigMessage.UNEQUAL_TEAMS_MODE_UNKNOWN,
+                Placeholder.of("path", UNEQUAL_TEAMS_MODE_PATH),
+                Placeholder.of("modes", Messages.join(UnequalTeamsMode.configurationNames())),
+                Placeholder.of("fallback", UnequalTeamSettings.DEFAULT_MODE.getConfigurationName())));
+        return UnequalTeamSettings.DEFAULT_MODE;
+    }
+
+    private static int readUnequalTeamsVoteSeconds(ConfigurationSection configuration,
+                                                   Consumer<String> problemReporter) {
+        if (!configuration.isSet(UNEQUAL_TEAMS_VOTE_SECONDS_PATH)) {
+            return UnequalTeamSettings.DEFAULT_VOTE_SECONDS;
+        }
+        if (configuration.isInt(UNEQUAL_TEAMS_VOTE_SECONDS_PATH)) {
+            int voteSeconds = configuration.getInt(UNEQUAL_TEAMS_VOTE_SECONDS_PATH);
+            if (voteSeconds >= UnequalTeamSettings.MINIMUM_VOTE_SECONDS
+                    && voteSeconds <= UnequalTeamSettings.MAXIMUM_VOTE_SECONDS) {
+                return voteSeconds;
+            }
+        }
+        problemReporter.accept(Messages.plural(ConfigMessage.UNEQUAL_TEAMS_VOTE_SECONDS_OUT_OF_RANGE,
+                UnequalTeamSettings.DEFAULT_VOTE_SECONDS, Placeholder.of("path", UNEQUAL_TEAMS_VOTE_SECONDS_PATH),
+                Placeholder.of("minimum", UnequalTeamSettings.MINIMUM_VOTE_SECONDS),
+                Placeholder.of("maximum", UnequalTeamSettings.MAXIMUM_VOTE_SECONDS)));
+        return UnequalTeamSettings.DEFAULT_VOTE_SECONDS;
     }
 
     private static int readTeamSize(ConfigurationSection configuration, Consumer<String> problemReporter) {

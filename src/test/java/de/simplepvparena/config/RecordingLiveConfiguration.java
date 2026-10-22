@@ -5,6 +5,7 @@ import de.simplepvparena.border.ConfirmedBorderParticleSettings;
 import de.simplepvparena.gate.StartGateDuration;
 import de.simplepvparena.match.RoundTimeoutSettings;
 import de.simplepvparena.match.TeamColourSettings;
+import de.simplepvparena.match.UnequalTeamSettings;
 import de.simplepvparena.tournament.AutoMatchSettings;
 import de.simplepvparena.visual.CustomVisualSettings;
 
@@ -21,6 +22,7 @@ final class RecordingLiveConfiguration implements LiveConfiguration {
     static final String START_GATE_DURATION = "startGateDurationSeconds";
     static final String COUNTDOWN_SECONDS = "countdownSeconds";
     static final String RECONNECT_SECONDS = "reconnectSeconds";
+    static final String UNEQUAL_TEAMS = "unequalTeamSettings";
     static final String TEAM_COLOURS = "teamColourSettings";
     static final String TEAM_SIZE = "teamSize";
     static final String AUTO_MATCH = "autoMatchSettings";
@@ -45,7 +47,7 @@ final class RecordingLiveConfiguration implements LiveConfiguration {
     static final List<String> EVERY_APPLIED_VALUE = List.of(
             LANGUAGE,
             ROUND_RESET_DELAY, ROUND_TIMEOUT, SUDDEN_DEATH_IN_FINAL, START_GATE_DURATION, COUNTDOWN_SECONDS,
-            RECONNECT_SECONDS, TEAM_COLOURS, TEAM_SIZE, AUTO_MATCH,
+            RECONNECT_SECONDS, UNEQUAL_TEAMS, TEAM_COLOURS, TEAM_SIZE, AUTO_MATCH,
             CLEANING_BLOCKS_PER_TICK, BASELINE_BLOCKS_PER_TICK, BASELINE_DEPTH_BELOW_FLOOR,
             CLEANING_PARTICLE, MAXIMUM_CELL_COUNT, SAFETY_ZONE_RADIUS, EFFECT_MARGIN, TELEPORT_ON_JOIN,
             PARTICLE_PERIOD, PARTICLE_VIEW_RADIUS,
@@ -89,6 +91,11 @@ final class RecordingLiveConfiguration implements LiveConfiguration {
     @Override
     public void setReconnectSeconds(int reconnectSeconds) {
         appliedValues.put(RECONNECT_SECONDS, reconnectSeconds);
+    }
+
+    @Override
+    public void setUnequalTeamSettings(UnequalTeamSettings unequalTeamSettings) {
+        appliedValues.put(UNEQUAL_TEAMS, unequalTeamSettings);
     }
 
     @Override
@@ -218,6 +225,10 @@ final class RecordingLiveConfiguration implements LiveConfiguration {
 
     RoundTimeoutSettings roundTimeoutSettings() {
         return (RoundTimeoutSettings) appliedValues.get(ROUND_TIMEOUT);
+    }
+
+    UnequalTeamSettings unequalTeamSettings() {
+        return (UnequalTeamSettings) appliedValues.get(UNEQUAL_TEAMS);
     }
 
     AutoMatchSettings autoMatchSettings() {

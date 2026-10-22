@@ -318,6 +318,12 @@ public final class TournamentManager implements MatchCompletionHandler {
         if (kitChoiceRejection.isPresent()) {
             return kitChoiceRejection;
         }
+        Optional<String> unequalTeamVoteRejection = matchService.getUnequalTeamVoteService().getPending()
+                .map(vote -> Messages.text(TournamentMessage.UNEQUAL_TEAM_VOTE_RUNNING,
+                        Placeholder.of("match", vote.getMatchId())));
+        if (unequalTeamVoteRejection.isPresent()) {
+            return unequalTeamVoteRejection;
+        }
         if (activeMatch.isEmpty()) {
             return Optional.of(Messages.text(MatchMenuMessage.NO_MATCH_RUNNING));
         }

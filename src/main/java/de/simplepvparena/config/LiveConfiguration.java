@@ -4,6 +4,7 @@ import de.simplepvparena.arena.ArenaCleaningParticleSettings;
 import de.simplepvparena.border.ConfirmedBorderParticleSettings;
 import de.simplepvparena.match.RoundTimeoutSettings;
 import de.simplepvparena.match.TeamColourSettings;
+import de.simplepvparena.match.UnequalTeamSettings;
 import de.simplepvparena.tournament.AutoMatchSettings;
 import de.simplepvparena.visual.CustomVisualSettings;
 
@@ -22,6 +23,8 @@ public interface LiveConfiguration {
     void setCountdownSeconds(int countdownSeconds);
 
     void setReconnectSeconds(int reconnectSeconds);
+
+    void setUnequalTeamSettings(UnequalTeamSettings unequalTeamSettings);
 
     void setTeamColourSettings(TeamColourSettings teamColourSettings);
 
