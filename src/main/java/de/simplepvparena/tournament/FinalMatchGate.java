@@ -41,6 +41,13 @@ public final class FinalMatchGate {
         stage = FinalMatchStage.RUNNING;
     }
 
+    public void returnToReady() {
+        if (stage != FinalMatchStage.RUNNING) {
+            throw new IllegalStateException("the final match is not running, its stage is " + stage);
+        }
+        stage = FinalMatchStage.READY;
+    }
+
     public void reset() {
         stage = FinalMatchStage.PENDING;
     }

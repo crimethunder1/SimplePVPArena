@@ -154,6 +154,10 @@ class MatchAdminMenuAutoMatchTest {
                 Ein laufendes Turnier hat Vorrang / \
                 Ein Turnier läuft, der Modus wirkt, wenn es vorbei ist / \
                 Klicke, um ihn auszuschalten
+                19 | REPEATER | Match neu starten | \
+                Stoppt das laufende Match und beginnt es mit denselben zwei Teams neu / \
+                Der Spielstand ist wieder 0 : 0, Kit-Wahl und Countdown laufen erneut / \
+                Fragt vorher nach einer Bestätigung
                 22 | OAK_DOOR | Zurück | Zurück zum Hauptmenü
                 """.formatted(fixture.runningFirstTeamName(), fixture.runningSecondTeamName()),
                 fixture.describeLastMenu());

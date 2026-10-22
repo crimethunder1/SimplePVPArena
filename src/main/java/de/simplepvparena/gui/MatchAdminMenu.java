@@ -18,6 +18,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.function.Supplier;
 
 final class MatchAdminMenu implements AdminMenu {
@@ -30,6 +31,7 @@ final class MatchAdminMenu implements AdminMenu {
     private static final int MATCH_FINAL_SLOT = 15;
     private static final int MATCH_FORCE_RESULT_SLOT = 16;
     private static final int MATCH_AUTO_MATCH_SLOT = 17;
+    private static final int MATCH_RESTART_SLOT = 19;
 
     private final AdminMenuNavigation navigation;
     private final TournamentManager tournamentManager;
@@ -102,6 +104,7 @@ final class MatchAdminMenu implements AdminMenu {
                         Messages.text(MatchMenuMessage.NO_MATCH_RUNNING)));
         canvas.set(MATCH_AUTO_MATCH_SLOT, MenuItems.create(Material.COMPARATOR,
                 Messages.text(MatchMenuMessage.AUTO_MATCH_TITLE), buildAutoMatchLore()));
+        canvas.set(MATCH_RESTART_SLOT, buildRestartItem());
         canvas.set(AdminMenuLayout.BACK_SLOT, MenuItems.back(MenuMessage.BACK_TO_MAIN_MENU));
     }
 
@@ -117,9 +120,58 @@ final class MatchAdminMenu implements AdminMenu {
             case MATCH_FINAL_SLOT -> runOperation(player, holder, tournamentManager::startFinalMatch);
             case MATCH_FORCE_RESULT_SLOT -> forceResultAdminMenu.openForceResultMenu(player);
             case MATCH_AUTO_MATCH_SLOT -> switchAutoMatchMode(player, holder);
+            case MATCH_RESTART_SLOT -> askForTheRestart(player);
             case AdminMenuLayout.BACK_SLOT -> navigation.open(player, AdminMenuHolder.main());
             default -> { }
         }
+    }
+
+    AdminMenuConfirmation restartConfirmation() {
+        return new AdminMenuConfirmation() {
+            @Override
+            public List<String> describe(AdminMenuHolder holder) {
+                return Messages.lines(MatchMenuMessage.RESTART_CONFIRMATION);
+            }
+
+            @Override
+            public void carryOut(Player player, AdminMenuHolder holder) {
+                restartRunningMatch(player, holder.getSubject().orElseThrow());
+            }
+
+            @Override
+            public AdminMenuHolder returnMenu(AdminMenuHolder holder) {
+                return AdminMenuHolder.match();
+            }
+        };
+    }
+
+    private MenuTile buildRestartItem() {
+        Optional<String> rejection = tournamentManager.findRestartRejection();
+        if (rejection.isPresent()) {
+            return MenuItems.unavailable(Messages.text(MatchMenuMessage.RESTART_TITLE), rejection.get());
+        }
+        List<String> lore = new ArrayList<>(Messages.lines(MatchMenuMessage.RESTART_LORE));
+        lore.add(Messages.text(CommonMessage.ASKS_FOR_CONFIRMATION));
+        return MenuItems.create(Material.REPEATER, Messages.text(MatchMenuMessage.RESTART_TITLE), lore);
+    }
+
+    private void askForTheRestart(Player player) {
+        Optional<String> rejection = tournamentManager.findRestartRejection();
+        if (rejection.isPresent()) {
+            TournamentMessages.sendError(player, rejection.get());
+            return;
+        }
+        navigation.open(player, AdminMenuHolder.confirmation(ConfirmationRequest.RESTART_MATCH,
+                matchService.getActiveMatch().orElseThrow().getMatchId(), 0));
+    }
+
+    private void restartRunningMatch(Player player, String matchId) {
+        if (matchService.findMatchById(matchId).isEmpty()) {
+            TournamentMessages.sendError(player, Messages.text(MatchMenuMessage.FORCE_RESULT_MATCH_NOT_RUNNING,
+                    Placeholder.of("match", matchId)));
+            return;
+        }
+        AdminMenuReplies.reportOperation(player, tournamentManager.restartRunningMatch());
     }
 
     AdminMenuConfirmation cancelConfirmation() {

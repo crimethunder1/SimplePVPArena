@@ -309,6 +309,53 @@ public final class TournamentManager implements MatchCompletionHandler {
         return TournamentOperationResult.success(describeMatchDecided(matchId, resolvedTeamName.get()));
     }
 
+    public Optional<String> findRestartRejection() {
+        Optional<Match> activeMatch = matchService.getActiveMatch();
+        if (activeMatch.filter(Match::isAutoMatch).isPresent()) {
+            return Optional.of(Messages.text(TournamentMessage.RESTART_AUTO_MATCH));
+        }
+        Optional<String> kitChoiceRejection = findKitChoiceRejection();
+        if (kitChoiceRejection.isPresent()) {
+            return kitChoiceRejection;
+        }
+        if (activeMatch.isEmpty()) {
+            return Optional.of(Messages.text(MatchMenuMessage.NO_MATCH_RUNNING));
+        }
+        if (bracket == null || !isTournamentInProgress()) {
+            return Optional.of(Messages.text(CommonMessage.NO_TOURNAMENT_IN_PROGRESS));
+        }
+        String matchId = activeMatch.get().getMatchId();
+        if (bracket.findMatch(matchId).isEmpty()) {
+            return Optional.of(Messages.text(TournamentMessage.UNKNOWN_MATCH, Placeholder.of("match", matchId)));
+        }
+        return Optional.empty();
+    }
+
+    public TournamentOperationResult restartRunningMatch() {
+        Optional<String> rejection = findRestartRejection();
+        if (rejection.isPresent()) {
+            return TournamentOperationResult.failure(rejection.get());
+        }
+        Match match = matchService.getActiveMatch().orElseThrow();
+        BracketMatch bracketMatch = bracket.findMatch(match.getMatchId()).orElseThrow();
+        boolean finalMatch = bracket.isFinalMatch(bracketMatch);
+        matchService.cancelActiveMatch();
+        kitChoiceService.activateDefaultKit();
+        if (finalMatch) {
+            finalMatchGate.returnToReady();
+        }
+        Placeholder matchId = Placeholder.of("match", match.getMatchId());
+        announceToMatchAudience(match.getTeams(), Messages.text(TournamentMessage.RESTART_ANNOUNCEMENT, matchId));
+        adminNotifier.notifyAdmins(Messages.text(TournamentMessage.RESTARTED_NOTICE, matchId));
+        cleanArenaBeforeTheNextMatch(match.getMatchId(), false);
+        startNextMatch();
+        if (finalMatch) {
+            return TournamentOperationResult.success(Messages.text(TournamentMessage.FINAL_RESTARTED_REPLY,
+                    Placeholder.of("action", MatchService.describeMatchMenuTile(MatchMenuMessage.FINAL_TITLE))));
+        }
+        return TournamentOperationResult.success(Messages.text(TournamentMessage.RESTARTED_REPLY, matchId));
+    }
+
     private static String describeTeamNotInMatch(String teamName, String matchId) {
         return Messages.text(TournamentMessage.TEAM_NOT_IN_MATCH, Placeholder.of("team", teamName),
                 Placeholder.of("match", matchId));
@@ -449,25 +496,24 @@ public final class TournamentManager implements MatchCompletionHandler {
                 ? MatchDecisionKind.FORCED
                 : MatchDecisionKind.PLAYED;
         kitChoiceService.activateDefaultKit();
-        cleanArenaBeforeTheNextMatch(match);
+        cleanArenaBeforeTheNextMatch(match.getMatchId(), match.isFinalMatch());
         recordBracketWinner(match.getMatchId(), winnerTeamName, decisionKind);
     }
 
-    private void cleanArenaBeforeTheNextMatch(Match match) {
+    private void cleanArenaBeforeTheNextMatch(String matchId, boolean finalMatch) {
         Optional<String> skipReason = arenaCleanup.startCleaningAfterMatch(this::onArenaCleaned);
         if (skipReason.isEmpty()) {
             waitingForArenaCleaning = true;
             return;
         }
-        if (match.isFinalMatch()) {
+        if (finalMatch) {
             plugin.getLogger().info("The arena is not cleaned automatically after the final: "
                     + toLogLine(skipReason.get()));
         } else {
             plugin.getLogger().info("The arena is not cleaned automatically after this match: "
                     + toLogLine(skipReason.get()) + ". The tournament carries on");
         }
-        adminNotifier.notifyAdmins(buildSkippedCleaningWarning(match.getMatchId(), skipReason.get(),
-                match.isFinalMatch()));
+        adminNotifier.notifyAdmins(buildSkippedCleaningWarning(matchId, skipReason.get(), finalMatch));
     }
 
     static String describeArenaNotConfigured() {

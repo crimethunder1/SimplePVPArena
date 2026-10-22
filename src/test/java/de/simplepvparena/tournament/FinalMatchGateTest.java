@@ -106,6 +106,29 @@ class FinalMatchGateTest {
         assertEquals(2, adminNotifier.messages.size());
     }
 
+    @Test
+    void offersTheStartAgainWhenARunningFinalReturnsToReadyWithoutANewNotice() {
+        determineBothFinalists();
+        synchronizeGate();
+        gate.markRunning();
+
+        gate.returnToReady();
+        synchronizeGate();
+
+        assertEquals(FinalMatchStage.READY, gate.getStage());
+        assertTrue(gate.findStartRejection().isEmpty());
+        assertEquals(1, adminNotifier.messages.size());
+    }
+
+    @Test
+    void refusesToReturnToReadyWhileTheFinalIsNotRunning() {
+        determineBothFinalists();
+        synchronizeGate();
+
+        assertThrows(IllegalStateException.class, gate::returnToReady);
+        assertEquals(FinalMatchStage.READY, gate.getStage());
+    }
+
     private void determineBothFinalists() {
         bracket.recordWinner("round1-match1", "alpha");
         bracket.recordWinner("round1-match2", "bravo");

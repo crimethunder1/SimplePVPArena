@@ -150,6 +150,9 @@ match-menu:
   cancel-confirmation:
     - 'The running tournament is cancelled'
     - 'The running match is stopped and its bracket is dropped'
+  restart-confirmation:
+    - 'The running match is stopped and begins again'
+    - 'Its score is lost'
   auto-match:
     switched-on: 'Auto match mode is on'
     switched-off: 'Auto match mode is off'
@@ -190,6 +193,11 @@ match-menu:
       ready-while-paused: 'The final is ready, continue the tournament to start it'
       running: 'The final is running'
       over: 'The final is over'
+    restart:
+      title: 'Restart the match'
+      lore:
+        - 'Stops the running match and begins it again with the same two teams'
+        - 'The score is back at 0 : 0, the kit choice and the countdown run again'
     auto-match:
       title: 'Auto match mode'
       mode-on: 'The mode is on'
@@ -272,6 +280,7 @@ confirmation:
     delete-kit: 'Delete the kit?'
     remove-team: 'Remove the team?'
     cancel-tournament: 'Cancel the tournament?'
+    restart-match: 'Restart the match?'
 team:
   name-rule: '1 to {maximumLength} letters, digits, hyphens or underscores'
   name-missing: 'A team needs a name, a team name has {rule}'
@@ -1135,6 +1144,8 @@ tournament:
     paused: 'Tournament paused'
     resumed: 'Tournament resumed'
     cancelled: 'Tournament cancelled'
+    restarted: 'Match {match} was stopped and begins again'
+    final-restarted: 'The final was stopped, start it again with {action}'
   start:
     at-least-teams-required:
       one: 'At least {count} team is required'
@@ -1153,6 +1164,8 @@ tournament:
     unknown-match: 'Unknown match {match}'
     already-decided: 'Match {match} is already decided'
   kit-choice-running: 'A kit is being chosen for match {match}, wait for it or pause the tournament'
+  restart:
+    auto-match: 'An auto match cannot be restarted'
   final:
     paused:
       - 'The tournament is paused'
@@ -1190,6 +1203,7 @@ tournament:
     final-players: 'The final will be played by {firstTeam} and {secondTeam}, an admin starts it'
     walkover: '{team} advances in match {match} because the opposing team is no longer registered'
     winner: 'The tournament is over, the winner is {team}'
+    restarted: 'Match {match} is restarted'
   notice:
     no-baseline: 'No baseline of the fight area is stored, so the arena is not cleaned between the matches. A baseline is taken by {action}'
     smaller-teams: '{teams}. The tournament starts anyway, a missing player counts as absent'
@@ -1199,6 +1213,7 @@ tournament:
     cleaning-skipped-after-final: 'The arena was not cleaned after match {match}: {reason}. Run {action} again before the next tournament'
     cleaning-skipped: 'The arena was not cleaned after match {match}: {reason}. The next match starts in the arena as it is now'
     both-teams-missing: 'Both teams of match {match} are no longer registered, the tournament waits for you. Decide the match in the match menu of /tournament under "{tile}"'
+    restarted: 'Match {match} was restarted'
   restore:
     unreadable: 'The saved tournament in {file} could not be read: {reason}. No tournament was restored'
     unreadable-without-reason: 'The saved tournament in {file} could not be read: unknown reason. No tournament was restored'

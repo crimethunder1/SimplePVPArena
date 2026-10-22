@@ -11,7 +11,8 @@ public enum ConfirmationRequest {
     REPLACE_KIT(ConfirmationMessage.REPLACE_KIT_QUESTION),
     DELETE_KIT(ConfirmationMessage.DELETE_KIT_QUESTION),
     REMOVE_TEAM(ConfirmationMessage.REMOVE_TEAM_QUESTION),
-    CANCEL_TOURNAMENT(ConfirmationMessage.CANCEL_TOURNAMENT_QUESTION);
+    CANCEL_TOURNAMENT(ConfirmationMessage.CANCEL_TOURNAMENT_QUESTION),
+    RESTART_MATCH(ConfirmationMessage.RESTART_MATCH_QUESTION);
 
     private final MessageKey question;
 

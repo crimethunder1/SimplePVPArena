@@ -27,6 +27,7 @@ class MatchAdminMenuSnapshotTest {
                 17 | COMPARATOR | Auto match mode | The mode is off / \
                 Two teams with a player each online get a match without a tournament / \
                 A running tournament has priority / Click to switch it on
+                19 | GRAY_DYE | Restart the match | No match is running
                 22 | OAK_DOOR | Back | Returns to the main menu
                 """, fixture.describeLastMenu());
     }
@@ -51,6 +52,7 @@ class MatchAdminMenuSnapshotTest {
                 17 | COMPARATOR | Auto match mode | The mode is off / \
                 Two teams with a player each online get a match without a tournament / \
                 A running tournament has priority / Click to switch it on
+                19 | GRAY_DYE | Restart the match | No match is running
                 22 | OAK_DOOR | Back | Returns to the main menu
                 """, fixture.describeLastMenu());
     }
@@ -81,6 +83,10 @@ class MatchAdminMenuSnapshotTest {
                 A running tournament has priority / \
                 A tournament is running, the mode takes effect when it is over / \
                 Click to switch it on
+                19 | REPEATER | Restart the match | \
+                Stops the running match and begins it again with the same two teams / \
+                The score is back at 0 : 0, the kit choice and the countdown run again / \
+                Asks for a confirmation first
                 22 | OAK_DOOR | Back | Returns to the main menu
                 """.formatted(fixture.runningFirstTeamName(), fixture.runningSecondTeamName()),
                 fixture.describeLastMenu());
@@ -112,6 +118,10 @@ class MatchAdminMenuSnapshotTest {
                 A running tournament has priority / \
                 A tournament is running, the mode takes effect when it is over / \
                 Click to switch it on
+                19 | REPEATER | Restart the match | \
+                Stops the running match and begins it again with the same two teams / \
+                The score is back at 0 : 0, the kit choice and the countdown run again / \
+                Asks for a confirmation first
                 22 | OAK_DOOR | Back | Returns to the main menu
                 """.formatted(fixture.runningFirstTeamName(), fixture.runningSecondTeamName()),
                 fixture.describeLastMenu());
@@ -143,6 +153,7 @@ class MatchAdminMenuSnapshotTest {
                 A running tournament has priority / \
                 A tournament is running, the mode takes effect when it is over / \
                 Click to switch it on
+                19 | GRAY_DYE | Restart the match | No match is running
                 22 | OAK_DOOR | Back | Returns to the main menu
                 """, fixture.describeLastMenu());
     }
@@ -171,6 +182,7 @@ class MatchAdminMenuSnapshotTest {
                 17 | COMPARATOR | Auto match mode | The mode is off / \
                 Two teams with a player each online get a match without a tournament / \
                 A running tournament has priority / Click to switch it on
+                19 | GRAY_DYE | Restart the match | No match is running
                 22 | OAK_DOOR | Back | Returns to the main menu
                 """, fixture.describeLastMenu());
     }
@@ -202,6 +214,10 @@ class MatchAdminMenuSnapshotTest {
                 A running tournament has priority / \
                 A tournament is running, the mode takes effect when it is over / \
                 Click to switch it on
+                19 | REPEATER | Restart the match | \
+                Stops the running match and begins it again with the same two teams / \
+                The score is back at 0 : 0, the kit choice and the countdown run again / \
+                Asks for a confirmation first
                 22 | OAK_DOOR | Back | Returns to the main menu
                 """.formatted(fixture.runningFirstTeamName(), fixture.runningSecondTeamName()),
                 fixture.describeLastMenu());

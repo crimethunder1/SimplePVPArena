@@ -150,6 +150,9 @@ match-menu:
   cancel-confirmation:
     - 'Das laufende Turnier wird abgebrochen'
     - 'Das laufende Match wird gestoppt und sein Turnierbaum verworfen'
+  restart-confirmation:
+    - 'Das laufende Match wird gestoppt und beginnt neu'
+    - 'Sein Spielstand geht verloren'
   auto-match:
     switched-on: 'Der Auto-Match-Modus ist an'
     switched-off: 'Der Auto-Match-Modus ist aus'
@@ -190,6 +193,11 @@ match-menu:
       ready-while-paused: 'Das Finale ist bereit, setze das Turnier fort, um es zu starten'
       running: 'Das Finale läuft'
       over: 'Das Finale ist vorbei'
+    restart:
+      title: 'Match neu starten'
+      lore:
+        - 'Stoppt das laufende Match und beginnt es mit denselben zwei Teams neu'
+        - 'Der Spielstand ist wieder 0 : 0, Kit-Wahl und Countdown laufen erneut'
     auto-match:
       title: 'Auto-Match-Modus'
       mode-on: 'Der Modus ist an'
@@ -272,6 +280,7 @@ confirmation:
     delete-kit: 'Kit löschen?'
     remove-team: 'Team entfernen?'
     cancel-tournament: 'Turnier abbrechen?'
+    restart-match: 'Match neu starten?'
 team:
   name-rule: '1 bis {maximumLength} Buchstaben, Ziffern, Bindestriche oder Unterstriche'
   name-missing: 'Ein Team braucht einen Namen, ein Teamname hat {rule}'
@@ -1135,6 +1144,8 @@ tournament:
     paused: 'Turnier pausiert'
     resumed: 'Turnier fortgesetzt'
     cancelled: 'Turnier abgebrochen'
+    restarted: 'Match {match} wurde gestoppt und beginnt neu'
+    final-restarted: 'Das Finale wurde gestoppt, starte es erneut mit {action}'
   start:
     at-least-teams-required:
       one: 'Mindestens {count} Team ist nötig'
@@ -1153,6 +1164,8 @@ tournament:
     unknown-match: 'Unbekanntes Match {match}'
     already-decided: 'Match {match} ist bereits entschieden'
   kit-choice-running: 'Für Match {match} wird gerade ein Kit gewählt, warte darauf oder pausiere das Turnier'
+  restart:
+    auto-match: 'Ein Auto-Match lässt sich nicht neu starten'
   final:
     paused:
       - 'Das Turnier ist pausiert'
@@ -1190,6 +1203,7 @@ tournament:
     final-players: 'Das Finale spielen {firstTeam} und {secondTeam}, ein Admin startet es'
     walkover: '{team} rückt in Match {match} kampflos vor, weil das gegnerische Team nicht mehr registriert ist'
     winner: 'Das Turnier ist vorbei, {team} gewinnt'
+    restarted: 'Match {match} wird neu gestartet'
   notice:
     no-baseline: 'Es ist kein Ausgangszustand der Kampffläche gespeichert, deshalb wird die Arena zwischen den Matches nicht gereinigt. Einen Ausgangszustand nimmt {action} auf'
     smaller-teams: '{teams}. Das Turnier startet trotzdem, ein fehlender Spieler zählt als abwesend'
@@ -1199,6 +1213,7 @@ tournament:
     cleaning-skipped-after-final: 'Die Arena wurde nach Match {match} nicht gereinigt: {reason}. Führe {action} vor dem nächsten Turnier erneut aus'
     cleaning-skipped: 'Die Arena wurde nach Match {match} nicht gereinigt: {reason}. Das nächste Match beginnt in der Arena, wie sie jetzt ist'
     both-teams-missing: 'Beide Teams von Match {match} sind nicht mehr registriert, das Turnier wartet auf dich. Entscheide das Match im Match-Menü von /tournament unter "{tile}"'
+    restarted: 'Match {match} wurde neu gestartet'
   restore:
     unreadable: 'Das gespeicherte Turnier in {file} konnte nicht gelesen werden: {reason}. Es wurde kein Turnier wiederhergestellt'
     unreadable-without-reason: 'Das gespeicherte Turnier in {file} konnte nicht gelesen werden, der Grund ist unbekannt. Es wurde kein Turnier wiederhergestellt'

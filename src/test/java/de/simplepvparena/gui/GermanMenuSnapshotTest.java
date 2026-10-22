@@ -216,6 +216,7 @@ class GermanMenuSnapshotTest {
                 17 | COMPARATOR | Auto-Match-Modus | Der Modus ist aus / \
                 Zwei Teams mit je einem Spieler online bekommen ein Match ohne Turnier / \
                 Ein laufendes Turnier hat Vorrang / Klicke, um ihn einzuschalten
+                19 | GRAY_DYE | Match neu starten | Es läuft kein Match
                 22 | OAK_DOOR | Zurück | Zurück zum Hauptmenü
                 """, fixture.describeLastMenu());
     }
@@ -245,6 +246,10 @@ class GermanMenuSnapshotTest {
                 Ein laufendes Turnier hat Vorrang / \
                 Ein Turnier läuft, der Modus wirkt, wenn es vorbei ist / \
                 Klicke, um ihn einzuschalten
+                19 | REPEATER | Match neu starten | \
+                Stoppt das laufende Match und beginnt es mit denselben zwei Teams neu / \
+                Der Spielstand ist wieder 0 : 0, Kit-Wahl und Countdown laufen erneut / \
+                Fragt vorher nach einer Bestätigung
                 22 | OAK_DOOR | Zurück | Zurück zum Hauptmenü
                 """.formatted(fixture.runningFirstTeamName(), fixture.runningSecondTeamName()),
                 fixture.describeLastMenu());
@@ -397,7 +402,8 @@ class GermanMenuSnapshotTest {
                 ConfirmationRequest.REPLACE_KIT, "Kit durch dein Inventar ersetzen?",
                 ConfirmationRequest.DELETE_KIT, "Kit löschen?",
                 ConfirmationRequest.REMOVE_TEAM, "Team entfernen?",
-                ConfirmationRequest.CANCEL_TOURNAMENT, "Turnier abbrechen?"), questions);
+                ConfirmationRequest.CANCEL_TOURNAMENT, "Turnier abbrechen?",
+                ConfirmationRequest.RESTART_MATCH, "Match neu starten?"), questions);
     }
 
     private List<String> finalTileOfTheMainMenu() {

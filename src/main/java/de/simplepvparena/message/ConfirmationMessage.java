@@ -13,7 +13,8 @@ public enum ConfirmationMessage implements MessageKey {
     REPLACE_KIT_QUESTION("confirmation.question.replace-kit"),
     DELETE_KIT_QUESTION("confirmation.question.delete-kit"),
     REMOVE_TEAM_QUESTION("confirmation.question.remove-team"),
-    CANCEL_TOURNAMENT_QUESTION("confirmation.question.cancel-tournament");
+    CANCEL_TOURNAMENT_QUESTION("confirmation.question.cancel-tournament"),
+    RESTART_MATCH_QUESTION("confirmation.question.restart-match");
 
     private final String path;
     private final Set<String> placeholderNames;

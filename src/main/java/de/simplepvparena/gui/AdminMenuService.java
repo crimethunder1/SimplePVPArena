@@ -132,6 +132,7 @@ public final class AdminMenuService {
         confirmationAdminMenu.register(ConfirmationRequest.DELETE_KIT, kitActionsAdminMenu.deleteConfirmation());
         confirmationAdminMenu.register(ConfirmationRequest.REMOVE_TEAM, teamActionsAdminMenu.removeConfirmation());
         confirmationAdminMenu.register(ConfirmationRequest.CANCEL_TOURNAMENT, matchAdminMenu.cancelConfirmation());
+        confirmationAdminMenu.register(ConfirmationRequest.RESTART_MATCH, matchAdminMenu.restartConfirmation());
         confirmationAdminMenu.requireEveryConfirmationRegistered();
         navigator.register(AdminMenuType.MAIN, mainAdminMenu);
         navigator.register(AdminMenuType.ARENA, arenaAdminMenu);
