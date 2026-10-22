@@ -21,6 +21,7 @@ import de.simplepvparena.message.ConfigMessage;
 import de.simplepvparena.message.MessageCatalogLoader;
 import de.simplepvparena.message.Messages;
 import de.simplepvparena.message.Placeholder;
+import de.simplepvparena.registration.TeamMode;
 import de.simplepvparena.team.Team;
 import de.simplepvparena.team.TeamSizeSetting;
 import de.simplepvparena.tournament.AutoMatchSettings;
@@ -44,6 +45,7 @@ public record PluginSettings(long roundResetDelayTicks,
                              TeamColourSettings teamColourSettings,
                              int teamSize,
                              AutoMatchSettings autoMatchSettings,
+                             TeamMode teamMode,
                              int arenaCleaningBlocksPerTick,
                              int arenaBaselineBlocksPerTick,
                              int arenaBaselineDepthBelowFloor,
@@ -81,6 +83,7 @@ public record PluginSettings(long roundResetDelayTicks,
     public static final String AUTO_MATCH_ENABLED_PATH = "auto-match.enabled";
     public static final String AUTO_MATCH_START_DELAY_SECONDS_PATH = "auto-match.start-delay-seconds";
     public static final String AUTO_MATCH_PAUSE_SECONDS_PATH = "auto-match.pause-seconds";
+    public static final String REGISTRATION_TEAM_MODE_PATH = "registration.team-mode";
     public static final String FIRST_TEAM_COLOUR_PATH = TeamColourSettings.FIRST_TEAM_CONFIGURATION_PATH;
     public static final String SECOND_TEAM_COLOUR_PATH = TeamColourSettings.SECOND_TEAM_CONFIGURATION_PATH;
     public static final String ARENA_CLEAN_BLOCKS_PER_TICK_PATH = "arena.clean-blocks-per-tick";
@@ -121,6 +124,7 @@ public record PluginSettings(long roundResetDelayTicks,
             AUTO_MATCH_ENABLED_PATH,
             AUTO_MATCH_START_DELAY_SECONDS_PATH,
             AUTO_MATCH_PAUSE_SECONDS_PATH,
+            REGISTRATION_TEAM_MODE_PATH,
             ARENA_CLEAN_BLOCKS_PER_TICK_PATH,
             ARENA_BASELINE_BLOCKS_PER_TICK_PATH,
             ARENA_BASELINE_DEPTH_BELOW_FLOOR_PATH,
@@ -163,6 +167,7 @@ public record PluginSettings(long roundResetDelayTicks,
                 TeamColourSettings.defaults(),
                 TeamSizeSetting.DEFAULT_TEAM_SIZE,
                 AutoMatchSettings.defaults(),
+                TeamMode.DEFAULT_TEAM_MODE,
                 ArenaCleaningService.DEFAULT_BLOCKS_PER_TICK,
                 ArenaBaselineService.DEFAULT_BLOCKS_PER_TICK,
                 ArenaBaselineService.DEFAULT_DEPTH_BELOW_FLOOR,
@@ -199,6 +204,7 @@ public record PluginSettings(long roundResetDelayTicks,
                 readTeamColourSettings(configuration, problemReporter),
                 readTeamSize(configuration, problemReporter),
                 readAutoMatchSettings(configuration, problemReporter),
+                readTeamMode(configuration, problemReporter),
                 configuration.getInt(ARENA_CLEAN_BLOCKS_PER_TICK_PATH, shipped.arenaCleaningBlocksPerTick()),
                 configuration.getInt(ARENA_BASELINE_BLOCKS_PER_TICK_PATH, shipped.arenaBaselineBlocksPerTick()),
                 readBaselineDepthBelowFloor(configuration, problemReporter),
@@ -258,6 +264,7 @@ public record PluginSettings(long roundResetDelayTicks,
         liveConfiguration.setTeamColourSettings(teamColourSettings);
         teamSizeTarget.accept(teamSize);
         liveConfiguration.setAutoMatchSettings(autoMatchSettings);
+        liveConfiguration.setTeamMode(teamMode);
         liveConfiguration.setArenaCleaningBlocksPerTick(arenaCleaningBlocksPerTick);
         liveConfiguration.setArenaBaselineBlocksPerTick(arenaBaselineBlocksPerTick);
         liveConfiguration.setArenaBaselineDepthBelowFloor(arenaBaselineDepthBelowFloor);
@@ -489,6 +496,24 @@ public record PluginSettings(long roundResetDelayTicks,
                 Placeholder.of("path", AUTO_MATCH_ENABLED_PATH),
                 Placeholder.of("fallback", AutoMatchSettings.DEFAULT_ENABLED)));
         return AutoMatchSettings.DEFAULT_ENABLED;
+    }
+
+    private static TeamMode readTeamMode(ConfigurationSection configuration, Consumer<String> problemReporter) {
+        if (!configuration.isSet(REGISTRATION_TEAM_MODE_PATH)) {
+            return TeamMode.DEFAULT_TEAM_MODE;
+        }
+        if (configuration.isString(REGISTRATION_TEAM_MODE_PATH)) {
+            Optional<TeamMode> teamMode = TeamMode.fromConfigurationName(
+                    configuration.getString(REGISTRATION_TEAM_MODE_PATH));
+            if (teamMode.isPresent()) {
+                return teamMode.get();
+            }
+        }
+        problemReporter.accept(Messages.text(ConfigMessage.TEAM_MODE_UNKNOWN,
+                Placeholder.of("path", REGISTRATION_TEAM_MODE_PATH),
+                Placeholder.of("modes", Messages.join(TeamMode.configurationNames())),
+                Placeholder.of("fallback", TeamMode.DEFAULT_TEAM_MODE.getConfigurationName())));
+        return TeamMode.DEFAULT_TEAM_MODE;
     }
 
     private static int readAutoMatchStartDelaySeconds(ConfigurationSection configuration,

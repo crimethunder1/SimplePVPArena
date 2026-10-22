@@ -20,6 +20,9 @@ import de.simplepvparena.message.UnequalTeamVoteMessage;
 import de.simplepvparena.registration.RandomTeamFormation;
 import de.simplepvparena.registration.RegistrationService;
 import de.simplepvparena.registration.RegistrationStationService;
+import de.simplepvparena.registration.TeamChoiceService;
+import de.simplepvparena.registration.TeamModeSetting;
+import de.simplepvparena.registration.TeamModeWriter;
 import de.simplepvparena.team.TeamMemberLookup;
 import de.simplepvparena.team.TeamRegistry;
 import de.simplepvparena.team.TeamSizeWriter;
@@ -41,6 +44,8 @@ public final class AdminMenuService {
     private final BracketViewMenu bracketViewMenu;
     private final UnequalTeamVoteService unequalTeamVoteService;
     private final UnequalTeamVoteMenuPresenter unequalTeamVoteMenuPresenter;
+    private final TeamChoiceService teamChoiceService;
+    private final TeamChoiceMenuPresenter teamChoiceMenuPresenter;
 
     public AdminMenuService(Plugin plugin,
                             TournamentManager tournamentManager,
@@ -64,14 +69,17 @@ public final class AdminMenuService {
                             ConfirmedBorderParticleWriter confirmedBorderParticleWriter,
                             RegistrationService registrationService,
                             RegistrationStationService registrationStationService,
-                            RandomTeamFormation randomTeamFormation) {
+                            RandomTeamFormation randomTeamFormation,
+                            TeamModeSetting teamModeSetting,
+                            TeamModeWriter teamModeWriter,
+                            TeamChoiceService teamChoiceService) {
         this(plugin, tournamentManager, tournamentDryRun, teamRegistry, teamMemberLookup,
                 matchService, arenaSetupService, heightMarkerService, gateItemService, borderSelectorModes,
                 kitLibrary, kitSaveService, chatInputService, teamConfigurationSaver, configurationReloader,
                 teamSizeWriter, autoMatchService, autoMatchModeWriter, borderParticleService,
                 confirmedBorderParticleWriter, registrationService, registrationStationService,
-                randomTeamFormation, new InventoryAdminMenuWindows(plugin),
-                () -> plugin.getServer().getOnlinePlayers());
+                randomTeamFormation, teamModeSetting, teamModeWriter, teamChoiceService,
+                new InventoryAdminMenuWindows(plugin), () -> plugin.getServer().getOnlinePlayers());
     }
 
     AdminMenuService(Plugin plugin,
@@ -97,6 +105,9 @@ public final class AdminMenuService {
                      RegistrationService registrationService,
                      RegistrationStationService registrationStationService,
                      RandomTeamFormation randomTeamFormation,
+                     TeamModeSetting teamModeSetting,
+                     TeamModeWriter teamModeWriter,
+                     TeamChoiceService teamChoiceService,
                      AdminMenuWindows windows,
                      Supplier<Collection<? extends Player>> onlinePlayers) {
         Objects.requireNonNull(plugin, "plugin");
@@ -121,6 +132,11 @@ public final class AdminMenuService {
         UnequalTeamVoteMenu unequalTeamVoteMenu = new UnequalTeamVoteMenu(navigator, unequalTeamVoteService);
         unequalTeamVoteMenuPresenter = new UnequalTeamVoteMenuPresenter(navigator, onlinePlayers);
         unequalTeamVoteService.setPresenter(unequalTeamVoteMenuPresenter);
+        this.teamChoiceService = Objects.requireNonNull(teamChoiceService, "teamChoiceService");
+        TeamChoiceMenu teamChoiceMenu = new TeamChoiceMenu(navigator, teamChoiceService);
+        teamChoiceMenuPresenter = new TeamChoiceMenuPresenter(navigator, teamChoiceService, onlinePlayers,
+                task -> plugin.getServer().getScheduler().runTask(plugin, task));
+        teamChoiceService.setPresenter(teamChoiceMenuPresenter);
         Objects.requireNonNull(teamConfigurationSaver, "teamConfigurationSaver");
         Objects.requireNonNull(configurationReloader, "configurationReloader");
         Objects.requireNonNull(teamSizeWriter, "teamSizeWriter");
@@ -143,7 +159,8 @@ public final class AdminMenuService {
                 chatInputService, teamConfigurationSaver, tournamentManager.getTeamSizeSetting(),
                 tournamentManager::isTournamentInProgress, teamSizeWriter, registrationService::getCount);
         RegistrationsAdminMenu registrationsAdminMenu = new RegistrationsAdminMenu(navigator, registrationService,
-                registrationStationService, randomTeamFormation, tournamentManager.getTeamSizeSetting());
+                registrationStationService, randomTeamFormation, tournamentManager.getTeamSizeSetting(),
+                teamModeSetting, teamModeWriter, teamChoiceService);
         ArenaAdminMenu arenaAdminMenu = new ArenaAdminMenu(navigator, arenaSetupService, heightMarkerService,
                 gateItemService, chatInputService, borderParticleService, confirmedBorderParticleWriter);
         bracketViewMenu = new BracketViewMenu(navigator, tournamentManager, matchService);
@@ -182,6 +199,7 @@ public final class AdminMenuService {
         navigator.register(AdminMenuType.CONFIRMATION, confirmationAdminMenu);
         navigator.register(AdminMenuType.BRACKET_VIEW, bracketViewMenu);
         navigator.register(AdminMenuType.UNEQUAL_TEAM_VOTE, unequalTeamVoteMenu);
+        navigator.register(AdminMenuType.TEAM_CHOICE, teamChoiceMenu);
         navigator.requireEveryMenuRegistered();
     }
 
@@ -203,9 +221,23 @@ public final class AdminMenuService {
         unequalTeamVoteMenuPresenter.open(player, vote.get());
     }
 
+    public void openTeamChoice(Player player) {
+        Optional<String> rejection = teamChoiceService.findAccessRejection(player.getUniqueId());
+        if (rejection.isPresent()) {
+            TournamentMessages.sendError(player, rejection.get());
+            return;
+        }
+        teamChoiceMenuPresenter.open(player);
+    }
+
+    public boolean mayChooseTeam(Player player) {
+        return teamChoiceService.findAccessRejection(player.getUniqueId()).isEmpty();
+    }
+
     public void handleClick(Player player, AdminMenuHolder holder, int slot) {
         boolean memberOfTheVotingTeam = unequalTeamVoteService.isVoter(player.getUniqueId());
-        if (!AdminMenuReplies.mayStillUse(player, holder.getMenuType(), memberOfTheVotingTeam)) {
+        if (!AdminMenuReplies.mayStillUse(player, holder.getMenuType(), memberOfTheVotingTeam,
+                () -> teamChoiceService.findAccessRejection(player.getUniqueId()))) {
             navigator.close(player);
             return;
         }

@@ -107,6 +107,10 @@ public final class AdminMenuHolder implements InventoryHolder {
                 0);
     }
 
+    public static AdminMenuHolder teamChoice() {
+        return new AdminMenuHolder(AdminMenuType.TEAM_CHOICE, null, null, 0);
+    }
+
     public AdminMenuType getMenuType() {
         return menuType;
     }

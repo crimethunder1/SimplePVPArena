@@ -55,7 +55,8 @@ class BracketViewAccessTest {
         AdminMenuHolder bracketView = fixture.findLastMenuOf(viewer.player()).orElseThrow().holder();
         int clickCount = 0;
 
-        for (AdminMenuType menuType : EnumSet.complementOf(EnumSet.of(AdminMenuType.BRACKET_VIEW))) {
+        for (AdminMenuType menuType : EnumSet.complementOf(EnumSet.of(AdminMenuType.BRACKET_VIEW,
+                AdminMenuType.TEAM_CHOICE))) {
             for (int slot = 0; slot < LARGEST_MENU_SIZE; slot++) {
                 fixture.clickInAs(viewer.player(), holderOf(menuType), slot);
                 clickCount++;
@@ -166,6 +167,7 @@ class BracketViewAccessTest {
             case CONFIRMATION -> AdminMenuHolder.confirmation(ConfirmationRequest.REMOVE_TEAM, "Alpha", 0);
             case BRACKET_VIEW -> AdminMenuHolder.bracketView(0, false);
             case UNEQUAL_TEAM_VOTE -> AdminMenuHolder.unequalTeamVote("round1-match1");
+            case TEAM_CHOICE -> AdminMenuHolder.teamChoice();
         };
     }
 }

@@ -190,7 +190,7 @@ class ConfirmedBorderParticleSwitchSettingsTest {
                 baselineService, setupService,
                 new ArenaSafetyZone(arenaRegistry.getArena()::getShape, playerUniqueId -> false), arenaRegistry,
                 borderParticleService, wallPreview, borderVisualEffect, new TeamSizeSetting(), new TeamRegistry(),
-                () -> false, notice -> { }, problems::add, language -> { }, autoMatchSettings -> { },
+                () -> false, notice -> { }, problems::add, language -> { }, autoMatchSettings -> { }, teamMode -> { },
                 enabled -> { }, settings -> { });
     }
 }

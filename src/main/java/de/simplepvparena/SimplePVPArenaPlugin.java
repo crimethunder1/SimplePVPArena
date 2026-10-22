@@ -37,6 +37,7 @@ import de.simplepvparena.config.ConfigurationReloadService;
 import de.simplepvparena.config.ConfirmedBorderParticleConfigurationWriter;
 import de.simplepvparena.config.PluginLiveConfiguration;
 import de.simplepvparena.config.PluginSettings;
+import de.simplepvparena.config.TeamModeConfigurationWriter;
 import de.simplepvparena.config.TeamSizeConfigurationWriter;
 import de.simplepvparena.diagnostics.PluginDryRunArena;
 import de.simplepvparena.diagnostics.TournamentDryRun;
@@ -98,6 +99,8 @@ import de.simplepvparena.registration.PaperStationDisplayEntities;
 import de.simplepvparena.registration.RandomTeamFormation;
 import de.simplepvparena.registration.RegistrationList;
 import de.simplepvparena.registration.RegistrationService;
+import de.simplepvparena.registration.TeamChoiceService;
+import de.simplepvparena.registration.TeamModeSetting;
 import de.simplepvparena.registration.RegistrationStationButtonCheck;
 import de.simplepvparena.registration.RegistrationStationDisplays;
 import de.simplepvparena.registration.RegistrationStationService;
@@ -315,6 +318,11 @@ public final class SimplePVPArenaPlugin extends JavaPlugin {
                 teamSizeSetting, tournamentManager::isTournamentInProgress,
                 () -> autoMatchService.isAnnounced() || autoMatchService.getState() == AutoMatchState.RUNNING,
                 this::saveTeamConfiguration, getServer()::getPlayer, RandomGenerator.getDefault());
+        TeamModeSetting teamModeSetting = new TeamModeSetting();
+        TeamChoiceService teamChoiceService = new TeamChoiceService(registrationService, teamRegistry,
+                teamSizeSetting, teamModeSetting, tournamentManager::isTournamentInProgress,
+                tournamentManager::findTeamChangeRejection, this::saveTeamConfiguration, getServer()::getPlayer);
+        registrationService.addObserver(teamChoiceService);
 
         tournamentDryRun = new TournamentDryRun(tournamentManager::getState,
                 matchService::hasActiveMatch, teamRegistry,
@@ -333,7 +341,9 @@ public final class SimplePVPArenaPlugin extends JavaPlugin {
                         new File(getDataFolder(), CONFIGURATION_FILE_NAME), getLogger()),
                 borderParticleService, new ConfirmedBorderParticleConfigurationWriter(this::getConfig,
                         new File(getDataFolder(), CONFIGURATION_FILE_NAME), getLogger()),
-                registrationService, registrationStationService, randomTeamFormation);
+                registrationService, registrationStationService, randomTeamFormation, teamModeSetting,
+                new TeamModeConfigurationWriter(this::getConfig, new File(getDataFolder(), CONFIGURATION_FILE_NAME),
+                        getLogger()), teamChoiceService);
 
         configuredVisuals = new ConfiguredVisuals(CustomVisualsSelection.select(getServer().getPluginManager(),
                 PluginSettings.readItemsAdderEnabled(getConfig(), problem -> { }), this::createItemsAdderVisuals,
@@ -349,7 +359,8 @@ public final class SimplePVPArenaPlugin extends JavaPlugin {
                         borderVisualEffect, teamSizeSetting, teamRegistry, tournamentManager::isTournamentInProgress,
                         adminNotifier::notifyAdmins,
                         getLogger()::warning, messageCatalogLoader::useLanguage, autoMatchService::applySettings,
-                        areaInventoryService::setEnabled, configuredVisuals::applySettings),
+                        teamModeSetting::setTeamMode, areaInventoryService::setEnabled,
+                        configuredVisuals::applySettings),
                 getLogger()::warning);
         configurationReloadService.applyStoredConfiguration();
 

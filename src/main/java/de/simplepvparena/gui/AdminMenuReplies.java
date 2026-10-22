@@ -11,6 +11,8 @@ import org.bukkit.entity.Player;
 
 import java.util.List;
 import java.util.Locale;
+import java.util.Optional;
+import java.util.function.Supplier;
 
 final class AdminMenuReplies {
 
@@ -25,12 +27,25 @@ final class AdminMenuReplies {
         return false;
     }
 
-    static boolean mayStillUse(Player player, AdminMenuType menuType, boolean memberOfTheVotingTeam) {
+    static boolean mayStillUse(Player player, AdminMenuType menuType, boolean memberOfTheVotingTeam,
+                               Supplier<Optional<String>> teamChoiceRejection) {
         if (menuType.isReadableByVotingTeam()) {
             if (memberOfTheVotingTeam) {
                 return true;
             }
             TournamentMessages.sendError(player, Messages.text(MenuMessage.NOT_ALLOWED));
+            return false;
+        }
+        if (menuType.isReadableByRegisteredPlayers()) {
+            if (!ViewPermission.mayView(player)) {
+                TournamentMessages.sendError(player, Messages.text(MenuMessage.NOT_ALLOWED));
+                return false;
+            }
+            Optional<String> rejection = teamChoiceRejection.get();
+            if (rejection.isEmpty()) {
+                return true;
+            }
+            TournamentMessages.sendError(player, rejection.get());
             return false;
         }
         if (menuType.isReadableByPlayers() && ViewPermission.mayView(player)) {

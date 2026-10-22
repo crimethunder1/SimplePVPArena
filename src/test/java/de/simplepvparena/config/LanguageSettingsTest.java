@@ -217,7 +217,7 @@ class LanguageSettingsTest {
                 new BorderParticleService(plugin, new BorderMarkIndex(), borderVisualEffect,
                         playerUniqueId -> false, borderConfirmation),
                 wallPreview, borderVisualEffect, new TeamSizeSetting(), new TeamRegistry(), () -> false,
-                notice -> { }, problems::add, languageApplier, autoMatchSettings -> { },
+                notice -> { }, problems::add, languageApplier, autoMatchSettings -> { }, teamMode -> { },
                 enabled -> { }, settings -> { });
     }
 }

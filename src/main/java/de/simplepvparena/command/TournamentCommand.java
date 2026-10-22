@@ -30,6 +30,7 @@ public final class TournamentCommand implements TabExecutor {
     private static final String JOIN_ARGUMENT = "join";
     private static final String LEAVE_ARGUMENT = "leave";
     private static final String VOTE_ARGUMENT = "vote";
+    private static final String TEAM_ARGUMENT = "team";
 
     private final MatchService matchService;
     private final SpectatorService spectatorService;
@@ -69,6 +70,10 @@ public final class TournamentCommand implements TabExecutor {
             openUnequalTeamVote(sender);
             return true;
         }
+        if (arguments.length > 0 && arguments[0].toLowerCase(Locale.ROOT).equals(TEAM_ARGUMENT)) {
+            openTeamChoice(sender);
+            return true;
+        }
         openAdminMenu(sender);
         return true;
     }
@@ -103,6 +108,18 @@ public final class TournamentCommand implements TabExecutor {
             return;
         }
         adminMenuService.openUnequalTeamVote(player);
+    }
+
+    private void openTeamChoice(CommandSender sender) {
+        if (!(sender instanceof Player player)) {
+            TournamentMessages.sendError(sender, Messages.text(CommandMessage.ONLY_FOR_PLAYERS));
+            return;
+        }
+        if (!ViewPermission.mayView(player)) {
+            TournamentMessages.sendError(player, Messages.text(CommonMessage.COMMAND_NOT_ALLOWED));
+            return;
+        }
+        adminMenuService.openTeamChoice(player);
     }
 
     private void handleRegistration(CommandSender sender, boolean join) {
@@ -159,6 +176,10 @@ public final class TournamentCommand implements TabExecutor {
         if (sender instanceof Player && ViewPermission.mayView(sender)) {
             availableArguments.add(JOIN_ARGUMENT);
             availableArguments.add(LEAVE_ARGUMENT);
+        }
+        if (sender instanceof Player player && ViewPermission.mayView(player)
+                && adminMenuService.mayChooseTeam(player)) {
+            availableArguments.add(TEAM_ARGUMENT);
         }
         if (sender.hasPermission(SPECTATE_PERMISSION)) {
             availableArguments.add(SPECTATE_ARGUMENT);

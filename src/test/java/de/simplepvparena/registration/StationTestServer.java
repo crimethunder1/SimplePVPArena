@@ -59,6 +59,10 @@ final class StationTestServer {
         return stationService;
     }
 
+    RegistrationService registrationService() {
+        return registrationService;
+    }
+
     RegistrationList registrationList() {
         return registrationList;
     }

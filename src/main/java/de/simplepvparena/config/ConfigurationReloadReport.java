@@ -17,6 +17,7 @@ public record ConfigurationReloadReport(List<String> problems) {
             ConfigMessage.UNEQUAL_TEAMS_CATEGORY,
             ConfigMessage.TEAM_SIZE_CATEGORY,
             ConfigMessage.AUTO_MATCH_CATEGORY,
+            ConfigMessage.TEAM_MODE_CATEGORY,
             ConfigMessage.CLEANING_CATEGORY,
             ConfigMessage.BASELINE_DEPTH_CATEGORY,
             ConfigMessage.CELL_LIMIT_CATEGORY,

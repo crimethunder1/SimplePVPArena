@@ -5,6 +5,7 @@ import de.simplepvparena.border.ConfirmedBorderParticleSettings;
 import de.simplepvparena.match.RoundTimeoutSettings;
 import de.simplepvparena.match.TeamColourSettings;
 import de.simplepvparena.match.UnequalTeamSettings;
+import de.simplepvparena.registration.TeamMode;
 import de.simplepvparena.tournament.AutoMatchSettings;
 import de.simplepvparena.visual.CustomVisualSettings;
 
@@ -33,6 +34,8 @@ public interface LiveConfiguration {
     void setTeamSizeAtStart(int teamSize);
 
     void setAutoMatchSettings(AutoMatchSettings autoMatchSettings);
+
+    void setTeamMode(TeamMode teamMode);
 
     void setArenaCleaningBlocksPerTick(int blocksPerTick);
 

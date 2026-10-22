@@ -6,6 +6,7 @@ import de.simplepvparena.gate.StartGateDuration;
 import de.simplepvparena.match.RoundTimeoutSettings;
 import de.simplepvparena.match.TeamColourSettings;
 import de.simplepvparena.match.UnequalTeamSettings;
+import de.simplepvparena.registration.TeamMode;
 import de.simplepvparena.tournament.AutoMatchSettings;
 import de.simplepvparena.visual.CustomVisualSettings;
 
@@ -26,6 +27,7 @@ final class RecordingLiveConfiguration implements LiveConfiguration {
     static final String TEAM_COLOURS = "teamColourSettings";
     static final String TEAM_SIZE = "teamSize";
     static final String AUTO_MATCH = "autoMatchSettings";
+    static final String TEAM_MODE = "teamMode";
     static final String CLEANING_BLOCKS_PER_TICK = "arenaCleaningBlocksPerTick";
     static final String BASELINE_BLOCKS_PER_TICK = "arenaBaselineBlocksPerTick";
     static final String BASELINE_DEPTH_BELOW_FLOOR = "arenaBaselineDepthBelowFloor";
@@ -47,7 +49,7 @@ final class RecordingLiveConfiguration implements LiveConfiguration {
     static final List<String> EVERY_APPLIED_VALUE = List.of(
             LANGUAGE,
             ROUND_RESET_DELAY, ROUND_TIMEOUT, SUDDEN_DEATH_IN_FINAL, START_GATE_DURATION, COUNTDOWN_SECONDS,
-            RECONNECT_SECONDS, UNEQUAL_TEAMS, TEAM_COLOURS, TEAM_SIZE, AUTO_MATCH,
+            RECONNECT_SECONDS, UNEQUAL_TEAMS, TEAM_COLOURS, TEAM_SIZE, AUTO_MATCH, TEAM_MODE,
             CLEANING_BLOCKS_PER_TICK, BASELINE_BLOCKS_PER_TICK, BASELINE_DEPTH_BELOW_FLOOR,
             CLEANING_PARTICLE, MAXIMUM_CELL_COUNT, SAFETY_ZONE_RADIUS, EFFECT_MARGIN, TELEPORT_ON_JOIN,
             PARTICLE_PERIOD, PARTICLE_VIEW_RADIUS,
@@ -116,6 +118,11 @@ final class RecordingLiveConfiguration implements LiveConfiguration {
     @Override
     public void setAutoMatchSettings(AutoMatchSettings autoMatchSettings) {
         appliedValues.put(AUTO_MATCH, autoMatchSettings);
+    }
+
+    @Override
+    public void setTeamMode(TeamMode teamMode) {
+        appliedValues.put(TEAM_MODE, teamMode);
     }
 
     @Override

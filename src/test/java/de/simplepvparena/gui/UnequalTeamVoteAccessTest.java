@@ -159,6 +159,7 @@ class UnequalTeamVoteAccessTest {
             case CONFIRMATION -> AdminMenuHolder.confirmation(ConfirmationRequest.REMOVE_TEAM, "Alpha", 0);
             case BRACKET_VIEW -> AdminMenuHolder.bracketView(0, false);
             case UNEQUAL_TEAM_VOTE -> VOTE_OF_M1;
+            case TEAM_CHOICE -> AdminMenuHolder.teamChoice();
         };
     }
 }

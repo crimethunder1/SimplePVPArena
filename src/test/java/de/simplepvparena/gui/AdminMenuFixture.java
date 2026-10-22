@@ -51,6 +51,9 @@ import de.simplepvparena.registration.RegistrationList;
 import de.simplepvparena.registration.RegistrationService;
 import de.simplepvparena.registration.RegistrationStationService;
 import de.simplepvparena.registration.RegistrationStations;
+import de.simplepvparena.registration.TeamChoiceService;
+import de.simplepvparena.registration.TeamMode;
+import de.simplepvparena.registration.TeamModeSetting;
 import de.simplepvparena.support.FakeKitItemSerializer;
 import de.simplepvparena.support.FakeSerializedKits;
 import de.simplepvparena.support.InMemoryKitLibraryStorage;
@@ -139,12 +142,15 @@ final class AdminMenuFixture {
     private final List<Integer> writtenTeamSizes = new ArrayList<>();
     private final List<Boolean> writtenAutoMatchModes = new ArrayList<>();
     private final List<Boolean> writtenBorderParticleSwitches = new ArrayList<>();
+    private final List<TeamMode> writtenTeamModes = new ArrayList<>();
+    private final TeamModeSetting teamModeSetting = new TeamModeSetting();
     private final TickingScheduler kitChoiceScheduler = new TickingScheduler();
     private final TickingScheduler voteScheduler = new TickingScheduler();
     private final RegistrationList registrationList = new RegistrationList();
     private final RegistrationService registrationService;
     private final RegistrationStations registrationStations = new RegistrationStations();
     private final RegistrationStationService registrationStationService;
+    private final TeamChoiceService teamChoiceService;
     private final KitChoiceService kitChoiceService;
     private final UnequalTeamVoteService unequalTeamVoteService;
     private final World world;
@@ -170,6 +176,7 @@ final class AdminMenuFixture {
     private IOException teamSizeWriteFailure;
     private IOException autoMatchModeWriteFailure;
     private IOException borderParticleSwitchWriteFailure;
+    private IOException teamModeWriteFailure;
 
     AdminMenuFixture() {
         this(false);
@@ -224,6 +231,10 @@ final class AdminMenuFixture {
         registrationStationService = new RegistrationStationService(plugin, registrationStations,
                 registrationService, material -> material.name().endsWith("_BUTTON"), () -> registrationSaveCount++,
                 material -> new RecordingItemStack(material, 1));
+        teamChoiceService = new TeamChoiceService(registrationService, teamRegistry,
+                tournamentManager.getTeamSizeSetting(), teamModeSetting, tournamentManager::isTournamentInProgress,
+                tournamentManager::findTeamChangeRejection, this::saveTeamConfiguration, this::findOnlinePlayer);
+        registrationService.addObserver(teamChoiceService);
         TournamentDryRun tournamentDryRun = new TournamentDryRun(tournamentManager::getState,
                 matchService::hasActiveMatch, teamRegistry,
                 new PluginDryRunArena(arenaRegistry.getArena(), arenaSetupService), kitService, gateMarks,
@@ -255,6 +266,9 @@ final class AdminMenuFixture {
                         () -> autoMatchService.isAnnounced() || autoMatchService.getState() == AutoMatchState.RUNNING,
                         this::saveTeamConfiguration, this::findOnlinePlayer,
                         new SwitchableRandomGenerator()),
+                teamModeSetting,
+                this::writeTeamMode,
+                teamChoiceService,
                 windows,
                 () -> List.copyOf(onlinePlayers));
     }
@@ -460,6 +474,26 @@ final class AdminMenuFixture {
 
     void failBorderParticleSwitchWrites(IOException failure) {
         borderParticleSwitchWriteFailure = failure;
+    }
+
+    TeamChoiceService teamChoiceService() {
+        return teamChoiceService;
+    }
+
+    void openTeamChoiceFor(Player player) {
+        menuService.openTeamChoice(player);
+    }
+
+    TeamModeSetting teamModeSetting() {
+        return teamModeSetting;
+    }
+
+    List<TeamMode> writtenTeamModes() {
+        return writtenTeamModes;
+    }
+
+    void failTeamModeWrites(IOException failure) {
+        teamModeWriteFailure = failure;
     }
 
     void makePlayersKnown(String... playerNames) {
@@ -782,6 +816,13 @@ final class AdminMenuFixture {
             throw borderParticleSwitchWriteFailure;
         }
         writtenBorderParticleSwitches.add(enabled);
+    }
+
+    private void writeTeamMode(TeamMode teamMode) throws IOException {
+        if (teamModeWriteFailure != null) {
+            throw teamModeWriteFailure;
+        }
+        writtenTeamModes.add(teamMode);
     }
 
     private static void assertSuccessful(TournamentOperationResult result) {

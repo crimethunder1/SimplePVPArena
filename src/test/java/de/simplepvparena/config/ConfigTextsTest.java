@@ -142,6 +142,7 @@ class ConfigTextsTest {
                         + "size",
                 "  whether the auto match mode is on, the seconds before an auto match starts and the pause between "
                         + "two auto matches",
+                "  whether the players choose their team after registering or the teams are formed at random",
                 "  the cleaning and baseline batch sizes and the particles of a running cleaning",
                 "  the depth below the floor the next baseline is taken to",
                 "  the cell limit of the arena calculation",

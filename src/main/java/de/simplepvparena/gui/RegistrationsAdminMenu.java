@@ -10,11 +10,16 @@ import de.simplepvparena.registration.RandomTeamFormation;
 import de.simplepvparena.registration.RegistrationEntry;
 import de.simplepvparena.registration.RegistrationService;
 import de.simplepvparena.registration.RegistrationStationService;
+import de.simplepvparena.registration.TeamChoiceService;
+import de.simplepvparena.registration.TeamMode;
+import de.simplepvparena.registration.TeamModeSetting;
+import de.simplepvparena.registration.TeamModeWriter;
 import de.simplepvparena.team.TeamSizeSetting;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -30,25 +35,34 @@ final class RegistrationsAdminMenu implements AdminMenu {
     private static final int REGISTRATIONS_INFO_SLOT = 47;
     private static final int REGISTRATIONS_FORM_SLOT = 48;
     private static final int REGISTRATIONS_BACK_SLOT = 49;
+    private static final int REGISTRATIONS_TEAM_MODE_SLOT = 52;
     private static final int REGISTRATIONS_CLEAR_SLOT = 51;
     private static final int REGISTRATIONS_NEXT_PAGE_SLOT = 53;
 
     private static final Material FORM_MATERIAL = Material.NETHER_STAR;
+    private static final Material TEAM_MODE_MATERIAL = Material.RED_BED;
 
     private final AdminMenuNavigation navigation;
     private final RegistrationService registrationService;
     private final RegistrationStationService stationService;
     private final RandomTeamFormation teamFormation;
     private final TeamSizeSetting teamSizeSetting;
+    private final TeamModeSetting teamModeSetting;
+    private final TeamModeWriter teamModeWriter;
+    private final TeamChoiceService teamChoiceService;
 
     RegistrationsAdminMenu(AdminMenuNavigation navigation, RegistrationService registrationService,
                            RegistrationStationService stationService, RandomTeamFormation teamFormation,
-                           TeamSizeSetting teamSizeSetting) {
+                           TeamSizeSetting teamSizeSetting, TeamModeSetting teamModeSetting,
+                           TeamModeWriter teamModeWriter, TeamChoiceService teamChoiceService) {
         this.navigation = Objects.requireNonNull(navigation, "navigation");
         this.registrationService = Objects.requireNonNull(registrationService, "registrationService");
         this.stationService = Objects.requireNonNull(stationService, "stationService");
         this.teamFormation = Objects.requireNonNull(teamFormation, "teamFormation");
         this.teamSizeSetting = Objects.requireNonNull(teamSizeSetting, "teamSizeSetting");
+        this.teamModeSetting = Objects.requireNonNull(teamModeSetting, "teamModeSetting");
+        this.teamModeWriter = Objects.requireNonNull(teamModeWriter, "teamModeWriter");
+        this.teamChoiceService = Objects.requireNonNull(teamChoiceService, "teamChoiceService");
     }
 
     @Override
@@ -80,6 +94,10 @@ final class RegistrationsAdminMenu implements AdminMenu {
         canvas.set(REGISTRATIONS_TOOL_SLOT, MenuItems.create(RegistrationStationService.TOOL_MATERIAL,
                 Messages.text(RegistrationMenuMessage.TOOL_TITLE), Messages.text(RegistrationMenuMessage.TOOL_LORE)));
         canvas.set(REGISTRATIONS_FORM_SLOT, buildFormItem());
+        canvas.set(REGISTRATIONS_TEAM_MODE_SLOT, MenuItems.create(TEAM_MODE_MATERIAL,
+                Messages.text(RegistrationMenuMessage.TEAM_MODE_TITLE),
+                describeTeamMode(teamModeSetting.getTeamMode()),
+                Messages.text(RegistrationMenuMessage.TEAM_MODE_SWITCH)));
         canvas.set(REGISTRATIONS_CLEAR_SLOT, buildClearItem(entries.size()));
         if (pagination.hasPreviousPage()) {
             canvas.set(REGISTRATIONS_PREVIOUS_PAGE_SLOT, MenuItems.previousPage(pagination));
@@ -107,6 +125,7 @@ final class RegistrationsAdminMenu implements AdminMenu {
             }
             case REGISTRATIONS_TOOL_SLOT -> handOutTool(player, holder);
             case REGISTRATIONS_FORM_SLOT -> askForFormingConfirmation(player, pagination.pageIndex());
+            case REGISTRATIONS_TEAM_MODE_SLOT -> switchTeamMode(player, holder);
             case REGISTRATIONS_CLEAR_SLOT -> askForClearingConfirmation(player, entries.size(),
                     pagination.pageIndex());
             case REGISTRATIONS_INFO_SLOT -> { }
@@ -141,13 +160,20 @@ final class RegistrationsAdminMenu implements AdminMenu {
             public List<String> describe(AdminMenuHolder holder) {
                 return List.of(Messages.plural(RegistrationMenuMessage.CLEAR_CONFIRMATION_REGISTRATIONS,
                                 registrationService.getCount()),
-                        Messages.text(RegistrationMenuMessage.CLEAR_CONFIRMATION_TEAMS_STAY));
+                        Messages.text(teamChoiceService.removesColouredTeamsWithTheRegistrations()
+                                ? RegistrationMenuMessage.CLEAR_CONFIRMATION_COLOURED_TEAMS
+                                : RegistrationMenuMessage.CLEAR_CONFIRMATION_TEAMS_STAY));
             }
 
             @Override
             public void carryOut(Player player, AdminMenuHolder holder) {
                 registrationService.clearRegistrations();
+                int removedTeamCount = teamChoiceService.removeColouredTeams();
                 TournamentMessages.sendSuccess(player, Messages.text(RegistrationMenuMessage.REGISTRATIONS_CLEARED));
+                if (removedTeamCount > 0) {
+                    TournamentMessages.sendSuccess(player, Messages.plural(
+                            RegistrationMenuMessage.COLOURED_TEAMS_REMOVED, removedTeamCount));
+                }
             }
 
             @Override
@@ -161,6 +187,12 @@ final class RegistrationsAdminMenu implements AdminMenu {
         return Messages.plural(RegistrationMenuMessage.REGISTERED_PLAYERS, registeredPlayerCount);
     }
 
+    static String describeTeamMode(TeamMode teamMode) {
+        return Messages.text(teamMode == TeamMode.FREE_CHOICE
+                ? RegistrationMenuMessage.TEAM_MODE_FREE_CHOICE
+                : RegistrationMenuMessage.TEAM_MODE_RANDOM);
+    }
+
     private MenuTile buildFormItem() {
         String title = Messages.text(RegistrationMenuMessage.FORM_TITLE);
         Optional<String> rejection = teamFormation.findRejection();
@@ -171,13 +203,16 @@ final class RegistrationsAdminMenu implements AdminMenu {
                 Messages.text(CommonMessage.ASKS_FOR_CONFIRMATION));
     }
 
-    private static MenuTile buildClearItem(int registeredPlayerCount) {
+    private MenuTile buildClearItem(int registeredPlayerCount) {
         String title = Messages.text(RegistrationMenuMessage.CLEAR_TITLE);
         if (registeredPlayerCount == 0) {
             return MenuItems.unavailable(title, Messages.text(RegistrationMenuMessage.NOBODY_REGISTERED));
         }
         return MenuItems.create(MenuItems.DESTRUCTIVE_MATERIAL, title,
-                Messages.text(RegistrationMenuMessage.CLEAR_LORE), Messages.text(CommonMessage.ASKS_FOR_CONFIRMATION));
+                Messages.text(teamChoiceService.removesColouredTeamsWithTheRegistrations()
+                        ? RegistrationMenuMessage.CLEAR_LORE_FREE_CHOICE
+                        : RegistrationMenuMessage.CLEAR_LORE),
+                Messages.text(CommonMessage.ASKS_FOR_CONFIRMATION));
     }
 
     private void handOutTool(Player player, AdminMenuHolder holder) {
@@ -188,6 +223,24 @@ final class RegistrationsAdminMenu implements AdminMenu {
         }
         TournamentMessages.sendSuccess(player, Messages.text(RegistrationMenuMessage.TOOL_HANDED_OUT));
         navigation.refresh(player, holder);
+    }
+
+    private void switchTeamMode(Player player, AdminMenuHolder holder) {
+        TeamMode teamMode = teamModeSetting.getTeamMode().switched();
+        teamModeSetting.setTeamMode(teamMode);
+        try {
+            teamModeWriter.write(teamMode);
+            TournamentMessages.sendSuccess(player, describeTeamMode(teamMode));
+        } catch (IOException failure) {
+            TournamentMessages.sendWarning(player, Messages.text(RegistrationMenuMessage.TEAM_MODE_NOT_WRITTEN,
+                    Placeholder.of("mode", describeTeamMode(teamMode)),
+                    Placeholder.of("reason", describeFailure(failure))));
+        }
+        navigation.refresh(player, holder);
+    }
+
+    private static String describeFailure(IOException failure) {
+        return failure.getMessage() == null ? failure.getClass().getSimpleName() : failure.getMessage();
     }
 
     private void askForFormingConfirmation(Player player, int pageIndex) {

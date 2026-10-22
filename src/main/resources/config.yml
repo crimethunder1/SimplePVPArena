@@ -43,6 +43,11 @@ auto-match:
   # Seconds of pause after an auto match and its cleaning before the next one is announced, 0 to 300.
   pause-seconds: 20
 
+# Registration of players for the next event, with the registration station or /tournament join.
+registration:
+  # free-choice: after registering, every player chooses a team in a menu of coloured beds, /tournament team opens it again. random: no menu, an admin forms the teams at random in the registrations menu. The registrations menu writes this value.
+  team-mode: free-choice
+
 # Kits live in kits.yml since this version and are created, replaced and deleted in the kit menu of /tournament.
 # A kit section of an older version, saved from the menu or written by hand, is taken over into kits.yml once and is not read afterwards.
 

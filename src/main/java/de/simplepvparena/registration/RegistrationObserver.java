@@ -1,0 +1,12 @@
+package de.simplepvparena.registration;
+
+import org.bukkit.entity.Player;
+
+import java.util.UUID;
+
+public interface RegistrationObserver {
+
+    void playerRegistered(Player player);
+
+    void playerUnregistered(UUID playerUniqueId);
+}

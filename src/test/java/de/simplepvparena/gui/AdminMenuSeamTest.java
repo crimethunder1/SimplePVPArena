@@ -38,6 +38,8 @@ import de.simplepvparena.registration.RegistrationList;
 import de.simplepvparena.registration.RegistrationService;
 import de.simplepvparena.registration.RegistrationStationService;
 import de.simplepvparena.registration.RegistrationStations;
+import de.simplepvparena.registration.TeamChoiceService;
+import de.simplepvparena.registration.TeamModeSetting;
 import de.simplepvparena.support.FakeKitItemSerializer;
 import de.simplepvparena.support.FakeSpectatorItems;
 import de.simplepvparena.support.SharedBukkitServer;
@@ -118,6 +120,7 @@ class AdminMenuSeamTest {
                 matchService, new AutomaticArenaCleanup(arenaSetupService, cleaningService), message -> { });
         RegistrationService registrationService = new RegistrationService(new RegistrationList(),
                 tournamentManager::isTournamentInProgress, () -> { });
+        TeamModeSetting teamModeSetting = new TeamModeSetting();
         TournamentDryRun tournamentDryRun = new TournamentDryRun(tournamentManager::getState,
                 matchService::hasActiveMatch, teamRegistry,
                 new PluginDryRunArena(arenaRegistry.getArena(), arenaSetupService), kitService, gateMarks,
@@ -155,6 +158,13 @@ class AdminMenuSeamTest {
                 new RandomTeamFormation(registrationService, teamRegistry, tournamentManager.getTeamSizeSetting(),
                         tournamentManager::isTournamentInProgress, () -> false, () -> { }, uniqueId -> null,
                         RandomGenerator.getDefault()),
+                teamModeSetting,
+                teamMode -> {
+                    throw new UnsupportedOperationException("the team mode is not written in this test");
+                },
+                new TeamChoiceService(registrationService, teamRegistry, tournamentManager.getTeamSizeSetting(),
+                        teamModeSetting, tournamentManager::isTournamentInProgress,
+                        tournamentManager::findTeamChangeRejection, () -> { }, uniqueId -> null),
                 windows,
                 List::of);
         player = createPlayer();

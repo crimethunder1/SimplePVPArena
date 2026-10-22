@@ -1453,6 +1453,10 @@ registrations-menu:
   tool-inventory-full: 'Dein Inventar ist voll, das Werkzeug für die Anmelde-Station konnte nicht ausgegeben werden'
   registration-removed: 'Die Anmeldung von {player} wurde entfernt'
   registrations-cleared: 'Die Anmeldungen wurden geleert'
+  coloured-teams-removed:
+    one: '{count} Team mit einer Farbe wurde entfernt'
+    other: '{count} Teams mit einer Farbe wurden entfernt'
+  team-mode-not-written: '{mode}, aber config.yml konnte nicht geschrieben werden: {reason}'
   form-confirmation:
     replaces: 'Alle vorhandenen Teams werden ersetzt'
     teams:
@@ -1463,6 +1467,7 @@ registrations-menu:
       one: '{count} Anmeldung wird entfernt'
       other: '{count} Anmeldungen werden entfernt'
     teams-stay: 'Die Teams bleiben, wie sie sind'
+    coloured-teams: 'Alle Teams mit einer Farbe werden entfernt, die Teams ohne Farbe bleiben'
   tile:
     player:
       lore: 'Klicke, um die Anmeldung zu entfernen'
@@ -1480,6 +1485,44 @@ registrations-menu:
     clear:
       title: 'Anmeldungen leeren'
       lore: 'Entfernt alle Anmeldungen, die Teams bleiben, wie sie sind'
+      lore-free-choice: 'Entfernt alle Anmeldungen und alle Teams mit einer Farbe, die Teams ohne Farbe bleiben'
+    team-mode:
+      title: 'Teammodus'
+      free-choice: 'Die Spieler wählen ihr Team'
+      random: 'Die Teams werden zufällig gebildet'
+      switch: 'Klicke zum Umschalten'
+team-choice:
+  register-first: 'Melde dich zuerst über die Station oder /tournament join an'
+  random-mode: 'Die Teams werden zufällig gebildet, ein Admin bildet sie'
+  closed: 'Während eines Turniers ist die Teamwahl geschlossen'
+  team-full: 'Dieses Team ist voll'
+  not-in-a-team: 'Du bist in keinem Team'
+  joined: 'Du bist Team {team} beigetreten'
+  member-joined: '{player} ist deinem Team beigetreten'
+  left: 'Du hast Team {team} verlassen'
+  menu:
+    title: 'Wähle dein Team'
+    tile:
+      bed:
+        title: 'Team {colour}'
+        no-members: 'Noch niemand'
+        places:
+          one: '{taken} von {count} Platz'
+          other: '{taken} von {count} Plätzen'
+        click-to-join: 'Klicke, um beizutreten'
+        your-team: 'Dein Team'
+      info:
+        title: 'Teamwahl'
+        registered-players:
+          one: '{count} Spieler ist angemeldet'
+          other: '{count} Spieler sind angemeldet'
+        team-size:
+          one: 'Ein Team hat Platz für {count} Spieler'
+          other: 'Ein Team hat Platz für {count} Spieler'
+        hint: 'Wähle ein Bett, um seinem Team beizutreten'
+      leave:
+        title: 'Dein Team verlassen'
+        lore: 'Klicke, um Team {team} zu verlassen'
 dry-run:
   report:
     rejected: 'Der Probelauf wurde nicht gestartet'
@@ -1694,6 +1737,7 @@ config:
     auto-match-pause-out-of-range:
       one: '{path} muss eine ganze Zahl zwischen {minimum} und {maximum} Sekunden sein, stattdessen gilt {count} Sekunde'
       other: '{path} muss eine ganze Zahl zwischen {minimum} und {maximum} Sekunden sein, stattdessen gelten {count} Sekunden'
+    team-mode-unknown: '{path} muss einer der Werte {modes} sein, stattdessen gilt {fallback}'
     cleaning-duration-negative: '{path} darf nicht negativ sein, stattdessen gelten {seconds} Sekunden. Mit null reinigst du ohne die beiden farbigen Phasen'
     cleaning-columns-negative:
       one: '{path} darf nicht negativ sein, stattdessen gilt {count} Spalte pro Tick. Mit null wird keine gezeichnet'
@@ -1722,6 +1766,7 @@ config:
       unequal-teams: 'ob das größere Team abstimmt, wer kämpft, wenn die Teams unterschiedlich viele Spieler online haben, und die Sekunden der Abstimmung, ab dem nächsten Match'
       team-size: 'die Teamgröße, außer ein Turnier läuft oder ein Team hat mehr Spieler als eine kleinere neue Größe'
       auto-match: 'ob der Auto-Match-Modus an ist, die Sekunden bis zum Beginn eines Auto-Matches und die Pause zwischen zwei Auto-Matches'
+      team-mode: 'ob die Spieler nach der Anmeldung ihr Team wählen oder die Teams zufällig gebildet werden'
       cleaning: 'die Blockmengen der Reinigung und des Ausgangszustands und die Partikel einer laufenden Reinigung'
       baseline-depth: 'die Tiefe unter dem Boden, bis zu der der nächste Ausgangszustand aufgenommen wird'
       cell-limit: 'die Zellgrenze der Arena-Berechnung'

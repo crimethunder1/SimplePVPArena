@@ -1453,6 +1453,10 @@ registrations-menu:
   tool-inventory-full: 'Your inventory is full, the registration station tool could not be handed out'
   registration-removed: 'The registration of {player} was removed'
   registrations-cleared: 'The registrations were cleared'
+  coloured-teams-removed:
+    one: '{count} team with a colour was removed'
+    other: '{count} teams with a colour were removed'
+  team-mode-not-written: '{mode}, but config.yml could not be written: {reason}'
   form-confirmation:
     replaces: 'Every existing team is replaced'
     teams:
@@ -1463,6 +1467,7 @@ registrations-menu:
       one: '{count} registration is removed'
       other: '{count} registrations are removed'
     teams-stay: 'The teams stay as they are'
+    coloured-teams: 'Every team with a colour is removed, the teams without a colour stay'
   tile:
     player:
       lore: 'Click to remove the registration'
@@ -1480,6 +1485,44 @@ registrations-menu:
     clear:
       title: 'Clear the registrations'
       lore: 'Removes every registration, the teams stay as they are'
+      lore-free-choice: 'Removes every registration and every team with a colour, the teams without a colour stay'
+    team-mode:
+      title: 'Team mode'
+      free-choice: 'Players choose their team'
+      random: 'Teams are formed at random'
+      switch: 'Click to switch'
+team-choice:
+  register-first: 'Register first with the station or /tournament join'
+  random-mode: 'The teams are formed at random, an admin forms them'
+  closed: 'The team choice is closed while a tournament is in progress'
+  team-full: 'This team is full'
+  not-in-a-team: 'You are not in a team'
+  joined: 'You joined team {team}'
+  member-joined: '{player} joined your team'
+  left: 'You left team {team}'
+  menu:
+    title: 'Choose your team'
+    tile:
+      bed:
+        title: 'Team {colour}'
+        no-members: 'No one yet'
+        places:
+          one: '{taken} of {count} place'
+          other: '{taken} of {count} places'
+        click-to-join: 'Click to join'
+        your-team: 'Your team'
+      info:
+        title: 'Team choice'
+        registered-players:
+          one: '{count} player is registered'
+          other: '{count} players are registered'
+        team-size:
+          one: 'A team has room for {count} player'
+          other: 'A team has room for {count} players'
+        hint: 'Choose a bed to join its team'
+      leave:
+        title: 'Leave your team'
+        lore: 'Click to leave team {team}'
 dry-run:
   report:
     rejected: 'The dry run was not started'
@@ -1694,6 +1737,7 @@ config:
     auto-match-pause-out-of-range:
       one: '{path} must be a whole number between {minimum} and {maximum} seconds, falling back to {count} second'
       other: '{path} must be a whole number between {minimum} and {maximum} seconds, falling back to {count} seconds'
+    team-mode-unknown: '{path} must be one of {modes}, falling back to {fallback}'
     cleaning-duration-negative: '{path} cannot be negative, falling back to {seconds} seconds. Use zero to clean without the two coloured phases'
     cleaning-columns-negative:
       one: '{path} cannot be negative, falling back to {count} column per tick. Use zero to draw none'
@@ -1722,6 +1766,7 @@ config:
       unequal-teams: 'whether the larger team votes who fights when the teams have different numbers of players online and the seconds of the vote, from the next match on'
       team-size: 'the team size, unless a tournament is in progress or a team has more players than a smaller new size'
       auto-match: 'whether the auto match mode is on, the seconds before an auto match starts and the pause between two auto matches'
+      team-mode: 'whether the players choose their team after registering or the teams are formed at random'
       cleaning: 'the cleaning and baseline batch sizes and the particles of a running cleaning'
       baseline-depth: 'the depth below the floor the next baseline is taken to'
       cell-limit: 'the cell limit of the arena calculation'

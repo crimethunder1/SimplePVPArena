@@ -30,6 +30,7 @@ class RegistrationsAdminMenuSnapshotTest {
                 48 | GRAY_DYE | Form random teams | At least 2 teams are needed, 0 players are registered
                 49 | OAK_DOOR | Back | Returns to the team list
                 51 | GRAY_DYE | Clear the registrations | No player is registered
+                52 | RED_BED | Team mode | Players choose their team / Click to switch
                 """, fixture.describeLastMenu());
     }
 
@@ -47,8 +48,10 @@ class RegistrationsAdminMenuSnapshotTest {
                 Page 1 of 1
                 48 | GRAY_DYE | Form random teams | At least 2 teams are needed, 1 player is registered
                 49 | OAK_DOOR | Back | Returns to the team list
-                51 | BARRIER | Clear the registrations | Removes every registration, the teams stay as they are / \
+                51 | BARRIER | Clear the registrations | \
+                Removes every registration and every team with a colour, the teams without a colour stay / \
                 Asks for a confirmation first
+                52 | RED_BED | Team mode | Players choose their team / Click to switch
                 """, fixture.describeLastMenu());
     }
 
@@ -71,8 +74,10 @@ class RegistrationsAdminMenuSnapshotTest {
                 48 | NETHER_STAR | Form random teams | \
                 Forms teams of the team size from every registered player at random / Asks for a confirmation first
                 49 | OAK_DOOR | Back | Returns to the team list
-                51 | BARRIER | Clear the registrations | Removes every registration, the teams stay as they are / \
+                51 | BARRIER | Clear the registrations | \
+                Removes every registration and every team with a colour, the teams without a colour stay / \
                 Asks for a confirmation first
+                52 | RED_BED | Team mode | Players choose their team / Click to switch
                 """, fixture.describeLastMenu());
     }
 
@@ -100,8 +105,10 @@ class RegistrationsAdminMenuSnapshotTest {
                 48 | NETHER_STAR | Form random teams | \
                 Forms teams of the team size from every registered player at random / Asks for a confirmation first
                 49 | OAK_DOOR | Back | Returns to the team list
-                51 | BARRIER | Clear the registrations | Removes every registration, the teams stay as they are / \
+                51 | BARRIER | Clear the registrations | \
+                Removes every registration and every team with a colour, the teams without a colour stay / \
                 Asks for a confirmation first
+                52 | RED_BED | Team mode | Players choose their team / Click to switch
                 53 | ARROW | Next page | Page 2 of 2
                 """, fixture.describeLastMenu());
     }
@@ -123,8 +130,10 @@ class RegistrationsAdminMenuSnapshotTest {
                 48 | NETHER_STAR | Form random teams | \
                 Forms teams of the team size from every registered player at random / Asks for a confirmation first
                 49 | OAK_DOOR | Back | Returns to the team list
-                51 | BARRIER | Clear the registrations | Removes every registration, the teams stay as they are / \
+                51 | BARRIER | Clear the registrations | \
+                Removes every registration and every team with a colour, the teams without a colour stay / \
                 Asks for a confirmation first
+                52 | RED_BED | Team mode | Players choose their team / Click to switch
                 """, fixture.describeLastMenu());
         fixture.click(PREVIOUS_PAGE_SLOT);
         assertEquals("Registrations (page 1)", fixture.lastMenu().title());
@@ -181,7 +190,8 @@ class RegistrationsAdminMenuSnapshotTest {
 
         assertEquals("""
                 Clear the registrations? | 27
-                4 | BOOK | Clear the registrations? | 3 registrations are removed / The teams stay as they are
+                4 | BOOK | Clear the registrations? | 3 registrations are removed / \
+                Every team with a colour is removed, the teams without a colour stay
                 11 | LIME_WOOL | Yes | Carries the action out
                 15 | RED_WOOL | No | Changes nothing and returns
                 """, fixture.describeLastMenu());

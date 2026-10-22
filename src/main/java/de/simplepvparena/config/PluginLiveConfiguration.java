@@ -21,6 +21,7 @@ import de.simplepvparena.match.UnequalTeamSettings;
 import de.simplepvparena.message.ConfigMessage;
 import de.simplepvparena.message.Messages;
 import de.simplepvparena.message.Placeholder;
+import de.simplepvparena.registration.TeamMode;
 import de.simplepvparena.team.TeamRegistry;
 import de.simplepvparena.team.TeamSizeSetting;
 import de.simplepvparena.tournament.AutoMatchSettings;
@@ -52,6 +53,7 @@ public final class PluginLiveConfiguration implements LiveConfiguration {
     private final Consumer<String> problemReporter;
     private final Consumer<String> languageApplier;
     private final Consumer<AutoMatchSettings> autoMatchSettingsApplier;
+    private final Consumer<TeamMode> teamModeApplier;
     private final Consumer<Boolean> areaInventoryEnabledApplier;
     private final Consumer<CustomVisualSettings> customVisualSettingsApplier;
 
@@ -74,6 +76,7 @@ public final class PluginLiveConfiguration implements LiveConfiguration {
                                    Consumer<String> problemReporter,
                                    Consumer<String> languageApplier,
                                    Consumer<AutoMatchSettings> autoMatchSettingsApplier,
+                                   Consumer<TeamMode> teamModeApplier,
                                    Consumer<Boolean> areaInventoryEnabledApplier,
                                    Consumer<CustomVisualSettings> customVisualSettingsApplier) {
         this.matchService = Objects.requireNonNull(matchService, "matchService");
@@ -97,6 +100,7 @@ public final class PluginLiveConfiguration implements LiveConfiguration {
         this.languageApplier = Objects.requireNonNull(languageApplier, "languageApplier");
         this.autoMatchSettingsApplier = Objects.requireNonNull(autoMatchSettingsApplier,
                 "autoMatchSettingsApplier");
+        this.teamModeApplier = Objects.requireNonNull(teamModeApplier, "teamModeApplier");
         this.areaInventoryEnabledApplier = Objects.requireNonNull(areaInventoryEnabledApplier,
                 "areaInventoryEnabledApplier");
         this.customVisualSettingsApplier = Objects.requireNonNull(customVisualSettingsApplier,
@@ -187,6 +191,11 @@ public final class PluginLiveConfiguration implements LiveConfiguration {
     @Override
     public void setAutoMatchSettings(AutoMatchSettings autoMatchSettings) {
         autoMatchSettingsApplier.accept(autoMatchSettings);
+    }
+
+    @Override
+    public void setTeamMode(TeamMode teamMode) {
+        teamModeApplier.accept(teamMode);
     }
 
     @Override

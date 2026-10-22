@@ -37,8 +37,10 @@ class GermanRegistrationsMenuSnapshotTest {
                 48 | NETHER_STAR | Zufallsteams bilden | Bildet aus allen Angemeldeten zufällig Teams in der Teamgröße / \
                 Fragt vorher nach einer Bestätigung
                 49 | OAK_DOOR | Zurück | Zurück zur Team-Liste
-                51 | BARRIER | Anmeldungen leeren | Entfernt alle Anmeldungen, die Teams bleiben, wie sie sind / \
+                51 | BARRIER | Anmeldungen leeren | \
+                Entfernt alle Anmeldungen und alle Teams mit einer Farbe, die Teams ohne Farbe bleiben / \
                 Fragt vorher nach einer Bestätigung
+                52 | RED_BED | Teammodus | Die Spieler wählen ihr Team / Klicke zum Umschalten
                 """, fixture.describeLastMenu());
     }
 
@@ -55,6 +57,7 @@ class GermanRegistrationsMenuSnapshotTest {
                 48 | GRAY_DYE | Zufallsteams bilden | Es braucht mindestens 2 Teams, angemeldet sind 0 Spieler
                 49 | OAK_DOOR | Zurück | Zurück zur Team-Liste
                 51 | GRAY_DYE | Anmeldungen leeren | Es ist kein Spieler angemeldet
+                52 | RED_BED | Teammodus | Die Spieler wählen ihr Team / Klicke zum Umschalten
                 """, fixture.describeLastMenu());
     }
 
@@ -75,7 +78,8 @@ class GermanRegistrationsMenuSnapshotTest {
         fixture.click(CLEAR_SLOT);
         assertEquals("""
                 Anmeldungen leeren? | 27
-                4 | BOOK | Anmeldungen leeren? | 3 Anmeldungen werden entfernt / Die Teams bleiben, wie sie sind
+                4 | BOOK | Anmeldungen leeren? | 3 Anmeldungen werden entfernt / \
+                Alle Teams mit einer Farbe werden entfernt, die Teams ohne Farbe bleiben
                 11 | LIME_WOOL | Ja | Führt die Aktion aus
                 15 | RED_WOOL | Nein | Ändert nichts und kehrt zurück
                 """, fixture.describeLastMenu());
