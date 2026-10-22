@@ -157,6 +157,7 @@ class BracketViewAccessTest {
             case TEAMS -> AdminMenuHolder.teams(0);
             case TEAM_ACTIONS -> AdminMenuHolder.teamActions("Alpha", 0);
             case TEAM_MEMBERS -> AdminMenuHolder.teamMembers("Alpha", 0);
+            case REGISTRATIONS -> AdminMenuHolder.registrations(0);
             case MATCH -> AdminMenuHolder.match();
             case FORCE_RESULT -> AdminMenuHolder.forceResult("round1-match1");
             case WAITING_MATCHES -> AdminMenuHolder.waitingMatches(0);

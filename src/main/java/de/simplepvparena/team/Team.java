@@ -8,6 +8,7 @@ import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -19,8 +20,13 @@ public final class Team {
 
     private final String teamName;
     private final List<TeamMember> members;
+    private final TeamColour colour;
 
     public Team(String teamName, List<TeamMember> members) {
+        this(teamName, members, null);
+    }
+
+    public Team(String teamName, List<TeamMember> members, TeamColour colour) {
         Objects.requireNonNull(teamName, "teamName");
         Objects.requireNonNull(members, "members");
         if (teamName.isBlank()) {
@@ -39,6 +45,7 @@ public final class Team {
         }
         this.teamName = teamName;
         this.members = copiedMembers;
+        this.colour = colour;
     }
 
     public String getTeamName() {
@@ -47,6 +54,10 @@ public final class Team {
 
     public List<TeamMember> getMembers() {
         return members;
+    }
+
+    public Optional<TeamColour> getColour() {
+        return Optional.ofNullable(colour);
     }
 
     public Set<UUID> getMemberUniqueIds() {

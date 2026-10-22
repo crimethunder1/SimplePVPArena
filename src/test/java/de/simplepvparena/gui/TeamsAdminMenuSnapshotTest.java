@@ -28,6 +28,7 @@ class TeamsAdminMenuSnapshotTest {
                 49 | OAK_DOOR | Back | Returns to the main menu
                 51 | LIME_WOOL | Add a team | Asks for <teamName> <player> [<player> ...] in the chat / \
                 Player names cannot be typed into an inventory / The menu closes so you can type
+                52 | WRITABLE_BOOK | Registrations | 0 players are registered / Click to open the registrations
                 """, fixture.describeLastMenu());
     }
 
@@ -47,6 +48,7 @@ class TeamsAdminMenuSnapshotTest {
                 49 | OAK_DOOR | Back | Returns to the main menu
                 51 | LIME_WOOL | Add a team | Asks for <teamName> <player> [<player> ...] in the chat / \
                 Player names cannot be typed into an inventory / The menu closes so you can type
+                52 | WRITABLE_BOOK | Registrations | 0 players are registered / Click to open the registrations
                 """, fixture.describeLastMenu());
     }
 
@@ -70,6 +72,7 @@ class TeamsAdminMenuSnapshotTest {
                 49 | OAK_DOOR | Back | Returns to the main menu
                 51 | LIME_WOOL | Add a team | Asks for <teamName> <player> [<player> ...] in the chat / \
                 Player names cannot be typed into an inventory / The menu closes so you can type
+                52 | WRITABLE_BOOK | Registrations | 0 players are registered / Click to open the registrations
                 """, fixture.describeLastMenu());
     }
 
@@ -87,6 +90,7 @@ class TeamsAdminMenuSnapshotTest {
                 49 | OAK_DOOR | Back | Returns to the main menu
                 51 | LIME_WOOL | Add a team | Asks for <teamName> <player> [<player> ...] in the chat / \
                 Player names cannot be typed into an inventory / The menu closes so you can type
+                52 | WRITABLE_BOOK | Registrations | 0 players are registered / Click to open the registrations
                 """, fixture.describeLastMenu());
     }
 
@@ -104,6 +108,7 @@ class TeamsAdminMenuSnapshotTest {
                 49 | OAK_DOOR | Back | Returns to the main menu
                 51 | LIME_WOOL | Add a team | Asks for <teamName> <player> [<player> ...] in the chat / \
                 Player names cannot be typed into an inventory / The menu closes so you can type
+                52 | WRITABLE_BOOK | Registrations | 0 players are registered / Click to open the registrations
                 53 | ARROW | Next page | Page 2 of 2
                 """, fixture.describeLastMenu());
     }
@@ -126,6 +131,7 @@ class TeamsAdminMenuSnapshotTest {
                 49 | OAK_DOOR | Back | Returns to the main menu
                 51 | LIME_WOOL | Add a team | Asks for <teamName> <player> [<player> ...] in the chat / \
                 Player names cannot be typed into an inventory / The menu closes so you can type
+                52 | WRITABLE_BOOK | Registrations | 0 players are registered / Click to open the registrations
                 """, fixture.describeLastMenu());
     }
 
@@ -169,6 +175,7 @@ class TeamsAdminMenuSnapshotTest {
                 49 | OAK_DOOR | Back | Returns to the main menu
                 51 | LIME_WOOL | Add a team | Asks for <teamName> <player> [<player> ...] in the chat / \
                 Player names cannot be typed into an inventory / The menu closes so you can type
+                52 | WRITABLE_BOOK | Registrations | 0 players are registered / Click to open the registrations
                 """, fixture.describeLastMenu());
     }
 
@@ -187,6 +194,7 @@ class TeamsAdminMenuSnapshotTest {
                 49 | OAK_DOOR | Back | Returns to the main menu
                 51 | LIME_WOOL | Add a team | Asks for <teamName> <player> [<player> ...] in the chat / \
                 Player names cannot be typed into an inventory / The menu closes so you can type
+                52 | WRITABLE_BOOK | Registrations | 0 players are registered / Click to open the registrations
                 """, fixture.describeLastMenu());
     }
 
@@ -207,6 +215,7 @@ class TeamsAdminMenuSnapshotTest {
                 49 | OAK_DOOR | Back | Returns to the main menu
                 51 | LIME_WOOL | Add a team | Asks for <teamName> <player> [<player> ...] in the chat / \
                 Player names cannot be typed into an inventory / The menu closes so you can type
+                52 | WRITABLE_BOOK | Registrations | 0 players are registered / Click to open the registrations
                 """, fixture.describeLastMenu());
     }
 

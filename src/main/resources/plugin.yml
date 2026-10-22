@@ -11,7 +11,7 @@ softdepend:
   - ItemsAdder
 commands:
   tournament:
-    description: Opens the tournament administration menu, /tournament bracket shows the bracket, /tournament spectate returns to the tribune
+    description: Opens the tournament administration menu, /tournament bracket shows the bracket, /tournament join and /tournament leave register for the next event and take the registration back, /tournament spectate returns to the tribune
     usage: /tournament
     aliases:
       - turnier
@@ -23,5 +23,5 @@ permissions:
     description: Allows returning to the tribune of the arena
     default: true
   tournament.view:
-    description: Allows opening the bracket menu with /tournament bracket, it only shows the rounds and matches and changes nothing, a player with tournament.admin may always open it
+    description: Allows opening the bracket menu with /tournament bracket, it only shows the rounds and matches and changes nothing, and registering for the next event with /tournament join and /tournament leave, a player with tournament.admin may always do both
     default: true

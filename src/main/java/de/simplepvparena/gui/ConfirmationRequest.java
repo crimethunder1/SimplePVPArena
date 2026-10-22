@@ -12,7 +12,9 @@ public enum ConfirmationRequest {
     DELETE_KIT(ConfirmationMessage.DELETE_KIT_QUESTION),
     REMOVE_TEAM(ConfirmationMessage.REMOVE_TEAM_QUESTION),
     CANCEL_TOURNAMENT(ConfirmationMessage.CANCEL_TOURNAMENT_QUESTION),
-    RESTART_MATCH(ConfirmationMessage.RESTART_MATCH_QUESTION);
+    RESTART_MATCH(ConfirmationMessage.RESTART_MATCH_QUESTION),
+    FORM_RANDOM_TEAMS(ConfirmationMessage.FORM_RANDOM_TEAMS_QUESTION),
+    CLEAR_REGISTRATIONS(ConfirmationMessage.CLEAR_REGISTRATIONS_QUESTION);
 
     private final MessageKey question;
 

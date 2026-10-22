@@ -80,6 +80,7 @@ import de.simplepvparena.listener.PlayerDeathListener;
 import de.simplepvparena.listener.PlayerInteractListener;
 import de.simplepvparena.listener.PlayerMoveListener;
 import de.simplepvparena.listener.PlayerRespawnListener;
+import de.simplepvparena.listener.RegistrationStationListener;
 import de.simplepvparena.listener.SpectatorBorderListener;
 import de.simplepvparena.listener.StartGateListener;
 import de.simplepvparena.match.CustomItemRoundStartEffects;
@@ -92,6 +93,12 @@ import de.simplepvparena.message.MessageCatalogLoader;
 import de.simplepvparena.message.Messages;
 import de.simplepvparena.message.Placeholder;
 import de.simplepvparena.message.PluginMessage;
+import de.simplepvparena.registration.FileRegistrationStorage;
+import de.simplepvparena.registration.RandomTeamFormation;
+import de.simplepvparena.registration.RegistrationList;
+import de.simplepvparena.registration.RegistrationService;
+import de.simplepvparena.registration.RegistrationStationService;
+import de.simplepvparena.registration.RegistrationStations;
 import de.simplepvparena.team.TeamMemberLookup;
 import de.simplepvparena.team.TeamRegistry;
 import de.simplepvparena.team.TeamSizeSetting;
@@ -99,6 +106,7 @@ import de.simplepvparena.team.TeamStorage;
 import de.simplepvparena.tournament.AdminNotifier;
 import de.simplepvparena.tournament.ArenaCleanup;
 import de.simplepvparena.tournament.AutoMatchService;
+import de.simplepvparena.tournament.AutoMatchState;
 import de.simplepvparena.tournament.AutomaticArenaCleanup;
 import de.simplepvparena.tournament.FileTournamentStateStorage;
 import de.simplepvparena.tournament.KitChoiceService;
@@ -108,14 +116,17 @@ import de.simplepvparena.visual.ConfiguredVisuals;
 import de.simplepvparena.visual.CustomVisuals;
 import de.simplepvparena.visual.CustomVisualsSelection;
 import de.simplepvparena.visual.ItemsAdderVisuals;
+import org.bukkit.Tag;
 import org.bukkit.command.PluginCommand;
 import org.bukkit.configuration.ConfigurationSection;
+import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.io.File;
 import java.util.function.Consumer;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.random.RandomGenerator;
 
 public final class SimplePVPArenaPlugin extends JavaPlugin {
 
@@ -127,6 +138,11 @@ public final class SimplePVPArenaPlugin extends JavaPlugin {
     private ArenaRegistry arenaRegistry;
     private TeamRegistry teamRegistry;
     private TeamStorage teamStorage;
+    private RegistrationList registrationList;
+    private FileRegistrationStorage registrationStorage;
+    private RegistrationStations registrationStations;
+    private RegistrationService registrationService;
+    private RegistrationStationService registrationStationService;
     private KitService kitService;
     private KitLibrary kitLibrary;
     private KitSaveService kitSaveService;
@@ -187,6 +203,13 @@ public final class SimplePVPArenaPlugin extends JavaPlugin {
         teamRegistry = new TeamRegistry();
         teamStorage = new TeamStorage(new File(getDataFolder(), TEAMS_FILE_NAME), getLogger());
         teamStorage.load(teamRegistry);
+
+        registrationList = new RegistrationList();
+        registrationStations = new RegistrationStations();
+        registrationStorage = new FileRegistrationStorage(
+                new File(getDataFolder(), FileRegistrationStorage.FILE_NAME).toPath(), getLogger(),
+                adminNotifier::notifyAdmins);
+        registrationStorage.load(registrationList, registrationStations);
 
         kitService = new KitService(this, new FilePlayerStateSnapshotStorage(
                 new File(getDataFolder(), FilePlayerStateSnapshotStorage.DIRECTORY_NAME).toPath(),
@@ -276,6 +299,14 @@ public final class SimplePVPArenaPlugin extends JavaPlugin {
         autoMatchService = new AutoMatchService(this, teamRegistry, arenaRegistry, matchService, tournamentManager,
                 kitLibrary, arenaCleanup, adminNotifier, arenaAudience);
         arenaSetupService.setArenaReservedForAutoMatch(autoMatchService::isAnnounced);
+        registrationService = new RegistrationService(registrationList,
+                tournamentManager::isTournamentInProgress, this::saveRegistrations);
+        registrationStationService = new RegistrationStationService(this, registrationStations,
+                registrationService, Tag.BUTTONS::isTagged, this::saveRegistrations, ItemStack::new);
+        RandomTeamFormation randomTeamFormation = new RandomTeamFormation(registrationService, teamRegistry,
+                teamSizeSetting, tournamentManager::isTournamentInProgress,
+                () -> autoMatchService.isAnnounced() || autoMatchService.getState() == AutoMatchState.RUNNING,
+                this::saveTeamConfiguration, getServer()::getPlayer, RandomGenerator.getDefault());
 
         tournamentDryRun = new TournamentDryRun(tournamentManager::getState,
                 matchService::hasActiveMatch, teamRegistry,
@@ -293,7 +324,8 @@ public final class SimplePVPArenaPlugin extends JavaPlugin {
                 autoMatchService, new AutoMatchConfigurationWriter(this::getConfig,
                         new File(getDataFolder(), CONFIGURATION_FILE_NAME), getLogger()),
                 borderParticleService, new ConfirmedBorderParticleConfigurationWriter(this::getConfig,
-                        new File(getDataFolder(), CONFIGURATION_FILE_NAME), getLogger()));
+                        new File(getDataFolder(), CONFIGURATION_FILE_NAME), getLogger()),
+                registrationService, registrationStationService, randomTeamFormation);
 
         configuredVisuals = new ConfiguredVisuals(CustomVisualsSelection.select(getServer().getPluginManager(),
                 PluginSettings.readItemsAdderEnabled(getConfig(), problem -> { }), this::createItemsAdderVisuals,
@@ -379,6 +411,10 @@ public final class SimplePVPArenaPlugin extends JavaPlugin {
         teamStorage.save(teamRegistry);
     }
 
+    public void saveRegistrations() {
+        registrationStorage.save(registrationList, registrationStations);
+    }
+
     public ConfigurationReloadReport reloadConfiguration() {
         return configurationReloadService.reloadFromFile();
     }
@@ -457,7 +493,7 @@ public final class SimplePVPArenaPlugin extends JavaPlugin {
             return;
         }
         TournamentCommand tournamentCommand = new TournamentCommand(matchService, spectatorService,
-                adminMenuService);
+                adminMenuService, registrationService);
         pluginCommand.setExecutor(tournamentCommand);
         pluginCommand.setTabCompleter(tournamentCommand);
     }
@@ -501,5 +537,7 @@ public final class SimplePVPArenaPlugin extends JavaPlugin {
         getServer().getPluginManager().registerEvents(
                 new AreaInventoryListener(this, areaInventoryService), this);
         getServer().getPluginManager().registerEvents(new FightStartTotemListener(fightStartEffects), this);
+        getServer().getPluginManager().registerEvents(
+                new RegistrationStationListener(registrationStationService), this);
     }
 }

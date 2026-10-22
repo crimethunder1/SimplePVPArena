@@ -24,7 +24,6 @@ class TeamsAdminMenuClickTest {
     private static final int BACK_SLOT = 49;
     private static final int UNUSED_SLOT_BESIDE_THE_BACK_TILE = 50;
     private static final int ADD_SLOT = 51;
-    private static final int UNUSED_SLOT_BESIDE_THE_ADD_TILE = 52;
     private static final int NEXT_PAGE_SLOT = 53;
 
     private final AdminMenuFixture fixture = new AdminMenuFixture();
@@ -68,8 +67,7 @@ class TeamsAdminMenuClickTest {
     void leavesTheMenuAsItIsWhenASlotWithoutATeamIsClicked() {
         fixture.registerTeams("Alpha", "Bravo", "Charlie");
 
-        for (int slot : List.of(3, LAST_TEAM_SLOT_OF_A_PAGE, UNUSED_SLOT_BESIDE_THE_BACK_TILE,
-                UNUSED_SLOT_BESIDE_THE_ADD_TILE)) {
+        for (int slot : List.of(3, LAST_TEAM_SLOT_OF_A_PAGE, UNUSED_SLOT_BESIDE_THE_BACK_TILE)) {
             fixture.openMenuFromTheMainMenu(MAIN_TEAMS_SLOT);
 
             assertNothingHappensOnAClickOn(slot);

@@ -20,7 +20,7 @@ The jar is written to `target/SimplePVPArena-1.0.0-SNAPSHOT.jar`. `mvn test` run
 
 ## Installation
 
-Copy the jar into the `plugins` folder of the server and start it. The plugin creates its folder with `config.yml` on the first start. Teams are stored in `teams.yml`, border blocks in `borders.yml` and start gates in `startgates.yml`. An entry of `teams.yml` that cannot be read is skipped, and the file as it was read is kept as `teams.yml.broken` so the next save does not lose it.
+Copy the jar into the `plugins` folder of the server and start it. The plugin creates its folder with `config.yml` on the first start. Teams are stored in `teams.yml`, border blocks in `borders.yml`, start gates in `startgates.yml`, and the registrations for the next event with the registration stations in `registrations.yml`. An entry of `teams.yml` that cannot be read is skipped, and the file as it was read is kept as `teams.yml.broken` so the next save does not lose it.
 
 A team has 1 to 8 players. Teams are added in the team menu of `/tournament` with one chat line, `<teamName> <player> [<player> ...]`, for example `Alpha Steve Alex`. The team name has 1 to 16 letters, digits, hyphens or underscores, and every player has to be online or known to the server.
 
@@ -35,8 +35,24 @@ The team size sets how many players a new team has at most, 2 by default (`match
 | `/tournament` (alias `/turnier`) | `tournament.admin` | op | Opens the menu that manages teams, the arena, border blocks, matches and the tournament |
 | `/tournament spectate` | `tournament.spectate` | everyone | Sends the player back to the tribune of the arena, not possible while fighting |
 | `/tournament bracket` | `tournament.view` | everyone | Opens the bracket as a menu with one page for every round, a player with `tournament.admin` may always open it |
+| `/tournament join` | `tournament.view` | everyone | Registers the player for the next event, see "Registration and random teams" |
+| `/tournament leave` | `tournament.view` | everyone | Takes the registration of the player back |
 
 The bracket menu shows a tile for every match of a round with its two teams and whether it waits for its teams, is ready to be played, runs or was won, and it names the champion once the tournament is over. It opens on the round of the running match, "Previous round" and "Next round" turn the pages. It only shows the bracket: a click on a match does nothing and nothing can be taken out. It reads the bracket when it opens and when the round is changed, an open menu does not follow a match that is decided meanwhile. The tile "Bracket" in the main menu of `/tournament` opens it as well, with a tile back to the main menu. Every other menu needs `tournament.admin`.
+
+## Registration and random teams
+
+Players register for the next event themselves, at a registration station or with `/tournament join`, and take the registration back with `/tournament leave`. The list keeps the order of the registrations, holds a player at most once and has no limit. Registering and leaving are closed while a tournament is running or paused ("Registration is closed while a tournament is in progress"). An admin registers like every other player.
+
+A registration station is any button of the world. The tile "Get the station tool" in the registrations menu hands out the registration station tool, a blaze rod that is recognised by a marker and never by its name. A right click with it on a button makes that button a station, a right click on a station makes it a normal button again, a click on anything else answers "Click a button". In the hand of a player without `tournament.admin` the tool does nothing and disappears from the inventory. Several stations are allowed, and a station can stand anywhere, also inside the area of effect, where the tool disappears on leaving like every item taken in there.
+
+A right click on a station registers the player and presses the button as usual, the redstone signal is not held back. A second click answers "You are already registered, sneak and click the station or type /tournament leave to leave", a right click while sneaking takes the registration back. A player without `tournament.admin` cannot break a station ("This is a registration station"), an admin who breaks it removes the station.
+
+The tile "Registrations" in the team menu opens the registrations menu. It shows a head for every registered player, a click on it removes that registration at once. The info tile names how many players are registered and how many teams that makes at the current team size. "Form random teams" asks for a confirmation and then replaces every existing team: the registered players are shuffled and split into teams of the team size, a smaller team takes the players that are left over (7 players at team size 2 make three teams of 2 and one team of 1). It is refused while a tournament is running or paused, while an auto match is announced or running, and when fewer than two teams would come out. The registrations stay, so the teams can be formed again. The admin reads how many teams were formed, every online player of a new team reads the team and the mates ("You play in team Red with Alex and Steve"). "Clear the registrations" removes every registration after a confirmation and leaves the teams alone.
+
+The first 16 random teams get a colour each and are named after it in the language of the server at that moment: Red, Blue, Green, Yellow, Orange, Purple, LightBlue, Pink, White, Gray, Black, Brown, Cyan, Lime, Magenta and LightGray (in German Rot, Blau, Grün, Gelb, Orange, Lila, Hellblau, Rosa, Weiß, Grau, Schwarz, Braun, Cyan, Lindgrün, Magenta and Hellgrau). Further teams are named `Team-17`, `Team-18` and so on and have no colour. The colour is stored as `colour` in `teams.yml` and kept when the team is renamed; teams added by hand and a `teams.yml` written before have no colour. During a match the names of the fighters show the colour of their team instead of the colour of their side (`match.team-colours`). A team without a colour, and both teams when they would show the same colour, keep the colours of the sides.
+
+`registrations.yml` holds the registered players with their unique id and last known name, and the stations with their world and block coordinates. It is written at once after every change and read at the start of the server. A file that cannot be read is renamed to `registrations.yml.broken` (an older `.broken` file is kept, the new one then carries a time stamp in its name), the registrations and stations start empty, and the log and the online admins read why.
 
 ## Configuration
 

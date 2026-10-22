@@ -10,6 +10,7 @@ public enum AdminMenuType {
     TEAMS(false),
     TEAM_ACTIONS(false),
     TEAM_MEMBERS(false),
+    REGISTRATIONS(false),
     MATCH(false),
     FORCE_RESULT(false),
     WAITING_MATCHES(false),

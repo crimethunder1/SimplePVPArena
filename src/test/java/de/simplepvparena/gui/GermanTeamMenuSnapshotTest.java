@@ -31,6 +31,7 @@ class GermanTeamMenuSnapshotTest {
                 51 | LIME_WOOL | Team hinzufügen | Fragt im Chat nach <Teamname> <Spieler> [<Spieler> ...] / \
                 Spielernamen lassen sich nicht in ein Inventar tippen / \
                 Das Menü schließt sich, damit du tippen kannst
+                52 | WRITABLE_BOOK | Anmeldungen | 0 Spieler sind angemeldet / Klicke, um die Anmeldungen zu öffnen
                 53 | ARROW | Nächste Seite | Seite 2 von 2
                 """, fixture.describeLastMenu());
     }
@@ -55,6 +56,7 @@ class GermanTeamMenuSnapshotTest {
                 51 | LIME_WOOL | Team hinzufügen | Fragt im Chat nach <Teamname> <Spieler> [<Spieler> ...] / \
                 Spielernamen lassen sich nicht in ein Inventar tippen / \
                 Das Menü schließt sich, damit du tippen kannst
+                52 | WRITABLE_BOOK | Anmeldungen | 0 Spieler sind angemeldet / Klicke, um die Anmeldungen zu öffnen
                 """, fixture.describeLastMenu());
     }
 

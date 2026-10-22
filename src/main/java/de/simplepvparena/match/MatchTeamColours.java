@@ -1,6 +1,7 @@
 package de.simplepvparena.match;
 
 import de.simplepvparena.team.Team;
+import de.simplepvparena.team.TeamColour;
 import de.simplepvparena.team.TeamMember;
 import net.kyori.adventure.text.format.NamedTextColor;
 
@@ -22,9 +23,19 @@ public final class MatchTeamColours {
     public static List<MatchTeamColour> of(Match match, TeamColourSettings settings) {
         Objects.requireNonNull(match, "match");
         Objects.requireNonNull(settings, "settings");
+        NamedTextColor firstColour = colourOf(match.getFirstTeam(), settings.firstTeamColour());
+        NamedTextColor secondColour = colourOf(match.getSecondTeam(), settings.secondTeamColour());
+        if (firstColour.equals(secondColour)) {
+            firstColour = settings.firstTeamColour();
+            secondColour = settings.secondTeamColour();
+        }
         return List.of(
-                colourOf(FIRST_TEAM_SCOREBOARD_NAME, match, match.getFirstTeam(), settings.firstTeamColour()),
-                colourOf(SECOND_TEAM_SCOREBOARD_NAME, match, match.getSecondTeam(), settings.secondTeamColour()));
+                colourOf(FIRST_TEAM_SCOREBOARD_NAME, match, match.getFirstTeam(), firstColour),
+                colourOf(SECOND_TEAM_SCOREBOARD_NAME, match, match.getSecondTeam(), secondColour));
+    }
+
+    private static NamedTextColor colourOf(Team team, NamedTextColor sideColour) {
+        return team.getColour().map(TeamColour::getTextColour).orElse(sideColour);
     }
 
     private static MatchTeamColour colourOf(String scoreboardTeamName, Match match, Team team,

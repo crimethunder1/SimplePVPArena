@@ -67,6 +67,10 @@ public final class AdminMenuHolder implements InventoryHolder {
                 null, pageIndex);
     }
 
+    public static AdminMenuHolder registrations(int pageIndex) {
+        return new AdminMenuHolder(AdminMenuType.REGISTRATIONS, null, null, pageIndex);
+    }
+
     public static AdminMenuHolder match() {
         return new AdminMenuHolder(AdminMenuType.MATCH, null, null, 0);
     }

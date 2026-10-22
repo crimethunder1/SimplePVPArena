@@ -122,7 +122,7 @@ class BracketViewCommandTest {
 
     @Test
     void completesBracketForEveryoneWhoMayViewIt() {
-        assertEquals(List.of("bracket"), command.onTabComplete(viewer.player(), null, "tournament",
+        assertEquals(List.of("bracket", "join", "leave"), command.onTabComplete(viewer.player(), null, "tournament",
                 new String[] {""}));
         assertEquals(List.of("bracket"), command.onTabComplete(viewer.player(), null, "tournament",
                 new String[] {"BR"}));

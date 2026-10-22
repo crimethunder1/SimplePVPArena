@@ -24,6 +24,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.OptionalInt;
 import java.util.function.BooleanSupplier;
+import java.util.function.IntSupplier;
 
 final class TeamsAdminMenu implements AdminMenu {
 
@@ -35,7 +36,10 @@ final class TeamsAdminMenu implements AdminMenu {
     private static final int TEAMS_LARGER_SLOT = 48;
     private static final int TEAMS_BACK_SLOT = 49;
     private static final int TEAMS_ADD_SLOT = 51;
+    private static final int TEAMS_REGISTRATIONS_SLOT = 52;
     private static final int TEAMS_NEXT_PAGE_SLOT = 53;
+
+    private static final Material REGISTRATIONS_MATERIAL = Material.WRITABLE_BOOK;
 
     private final AdminMenuNavigation navigation;
     private final TeamRegistry teamRegistry;
@@ -45,11 +49,12 @@ final class TeamsAdminMenu implements AdminMenu {
     private final TeamSizeSetting teamSizeSetting;
     private final BooleanSupplier tournamentInProgress;
     private final TeamSizeWriter teamSizeWriter;
+    private final IntSupplier registeredPlayerCount;
 
     TeamsAdminMenu(AdminMenuNavigation navigation, TeamRegistry teamRegistry, TeamMemberLookup teamMemberLookup,
                    ChatInputService chatInputService, Runnable teamConfigurationSaver,
                    TeamSizeSetting teamSizeSetting, BooleanSupplier tournamentInProgress,
-                   TeamSizeWriter teamSizeWriter) {
+                   TeamSizeWriter teamSizeWriter, IntSupplier registeredPlayerCount) {
         this.navigation = Objects.requireNonNull(navigation, "navigation");
         this.teamRegistry = Objects.requireNonNull(teamRegistry, "teamRegistry");
         this.teamMemberLookup = Objects.requireNonNull(teamMemberLookup, "teamMemberLookup");
@@ -58,6 +63,7 @@ final class TeamsAdminMenu implements AdminMenu {
         this.teamSizeSetting = Objects.requireNonNull(teamSizeSetting, "teamSizeSetting");
         this.tournamentInProgress = Objects.requireNonNull(tournamentInProgress, "tournamentInProgress");
         this.teamSizeWriter = Objects.requireNonNull(teamSizeWriter, "teamSizeWriter");
+        this.registeredPlayerCount = Objects.requireNonNull(registeredPlayerCount, "registeredPlayerCount");
     }
 
     @Override
@@ -96,6 +102,10 @@ final class TeamsAdminMenu implements AdminMenu {
         addLore.add(Messages.text(CommonMessage.MENU_CLOSES_TO_TYPE));
         canvas.set(TEAMS_ADD_SLOT, MenuItems.create(MenuItems.CONFIRM_MATERIAL,
                 Messages.text(TeamMenuMessage.ADD_TITLE), addLore));
+        canvas.set(TEAMS_REGISTRATIONS_SLOT, MenuItems.create(REGISTRATIONS_MATERIAL,
+                Messages.text(TeamMenuMessage.REGISTRATIONS_TITLE),
+                RegistrationsAdminMenu.describeRegisteredPlayers(registeredPlayerCount.getAsInt()),
+                Messages.text(TeamMenuMessage.REGISTRATIONS_LORE)));
         if (pagination.hasPreviousPage()) {
             canvas.set(TEAMS_PREVIOUS_PAGE_SLOT, MenuItems.previousPage(pagination));
         }
@@ -121,6 +131,7 @@ final class TeamsAdminMenu implements AdminMenu {
                 }
             }
             case TEAMS_ADD_SLOT -> askForTeamLine(player, pagination.pageIndex());
+            case TEAMS_REGISTRATIONS_SLOT -> navigation.open(player, AdminMenuHolder.registrations(0));
             case TEAMS_SMALLER_SLOT -> makeTeamsSmaller(player, holder);
             case TEAMS_LARGER_SLOT -> makeTeamsLarger(player, holder);
             case TEAMS_INFO_SLOT -> { }

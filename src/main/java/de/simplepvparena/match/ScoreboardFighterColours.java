@@ -22,6 +22,7 @@ public final class ScoreboardFighterColours implements FighterColours {
     private final Map<String, String> previousTeamNameByFighter = new LinkedHashMap<>();
 
     private TeamColourSettings settings = TeamColourSettings.defaults();
+    private Match colouredMatch;
     private boolean missingScoreboardReported;
 
     public ScoreboardFighterColours(Server server, Consumer<String> problemReporter) {
@@ -33,6 +34,12 @@ public final class ScoreboardFighterColours implements FighterColours {
     public void applySettings(TeamColourSettings settings) {
         this.settings = Objects.requireNonNull(settings, "settings");
         findMainScoreboard().ifPresent(scoreboard -> {
+            if (colouredMatch != null) {
+                for (MatchTeamColour matchTeamColour : MatchTeamColours.of(colouredMatch, settings)) {
+                    applyColour(scoreboard, matchTeamColour.scoreboardTeamName(), matchTeamColour.colour());
+                }
+                return;
+            }
             applyColour(scoreboard, MatchTeamColours.FIRST_TEAM_SCOREBOARD_NAME, settings.firstTeamColour());
             applyColour(scoreboard, MatchTeamColours.SECOND_TEAM_SCOREBOARD_NAME, settings.secondTeamColour());
         });
@@ -42,6 +49,7 @@ public final class ScoreboardFighterColours implements FighterColours {
     public void colourFighters(Match match) {
         findMainScoreboard().ifPresent(scoreboard -> {
             releaseEveryFighter(scoreboard);
+            colouredMatch = match;
             for (MatchTeamColour matchTeamColour : MatchTeamColours.of(match, settings)) {
                 Team scoreboardTeam = findOrRegisterTeam(scoreboard, matchTeamColour.scoreboardTeamName());
                 decorate(scoreboardTeam, matchTeamColour);
@@ -70,6 +78,7 @@ public final class ScoreboardFighterColours implements FighterColours {
             }
         }
         previousTeamNameByFighter.clear();
+        colouredMatch = null;
     }
 
     private void decorate(Team scoreboardTeam, MatchTeamColour matchTeamColour) {

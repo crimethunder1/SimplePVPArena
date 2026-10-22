@@ -281,6 +281,8 @@ confirmation:
     remove-team: 'Remove the team?'
     cancel-tournament: 'Cancel the tournament?'
     restart-match: 'Restart the match?'
+    form-random-teams: 'Form random teams?'
+    clear-registrations: 'Clear the registrations?'
 team:
   name-rule: '1 to {maximumLength} letters, digits, hyphens or underscores'
   name-missing: 'A team needs a name, a team name has {rule}'
@@ -323,6 +325,23 @@ team:
       other: '{largerTeams}. Remove them first'
     team-with-members: '{team} ({members})'
     team-with-member-count: '{team} ({memberCount})'
+  colour:
+    red: 'Red'
+    blue: 'Blue'
+    green: 'Green'
+    yellow: 'Yellow'
+    orange: 'Orange'
+    purple: 'Purple'
+    light-blue: 'LightBlue'
+    pink: 'Pink'
+    white: 'White'
+    gray: 'Gray'
+    black: 'Black'
+    brown: 'Brown'
+    cyan: 'Cyan'
+    lime: 'Lime'
+    magenta: 'Magenta'
+    light-gray: 'LightGray'
 teams-menu:
   title: 'Teams (page {page})'
   smallest-team-size: 'The smallest team size is {minimum}'
@@ -359,6 +378,9 @@ teams-menu:
       lore:
         - 'Asks for {usage} in the chat'
         - 'Player names cannot be typed into an inventory'
+    registrations:
+      title: 'Registrations'
+      lore: 'Click to open the registrations'
   add-input:
     description: 'the team to add'
     type: 'Type: {usage} in chat'
@@ -1333,6 +1355,71 @@ command:
     while-fighting: 'You cannot leave the arena while you are fighting'
     no-tribune-position: 'The arena has no usable tribune position'
     watching: 'You are now watching the arena'
+registration:
+  file:
+    set-aside: 'The file {file} could not be read ({reason}), it was set aside as {brokenFile}, the registrations and registration stations start empty'
+    not-set-aside: 'The file {file} could not be read ({reason}) and could not be set aside, the registrations and registration stations start empty and the next change overwrites the file'
+  registered: 'You are registered for the next event'
+  already-registered: 'You are already registered, sneak and click the station or type /tournament leave to leave'
+  unregistered: 'You are no longer registered'
+  not-registered: 'You are not registered'
+  closed: 'Registration is closed while a tournament is in progress'
+  tool:
+    name: 'Registration station tool'
+    lore: 'Click a button to make it a registration station, click a station to make it a normal button again'
+  station:
+    added: 'This button is now a registration station'
+    removed: 'This button is no longer a registration station'
+    click-a-button: 'Click a button'
+    protected: 'This is a registration station'
+  forming:
+    tournament-in-progress: 'Teams cannot be formed while a tournament is in progress'
+    auto-match: 'Teams cannot be formed while an auto match is announced or running'
+    too-few-players:
+      one: 'At least {minimum} teams are needed, {count} player is registered'
+      other: 'At least {minimum} teams are needed, {count} players are registered'
+    formed:
+      one: '{count} team was formed from {players} registered players'
+      other: '{count} teams were formed from {players} registered players'
+    playing-with-mates: 'You play in team {team} with {mates}'
+    playing-alone: 'You play alone as team {team}'
+registrations-menu:
+  title: 'Registrations (page {page})'
+  registered-players:
+    one: '{count} player is registered'
+    other: '{count} players are registered'
+  nobody-registered: 'No player is registered'
+  tool-handed-out: 'The registration station tool is in your inventory'
+  tool-inventory-full: 'Your inventory is full, the registration station tool could not be handed out'
+  registration-removed: 'The registration of {player} was removed'
+  registrations-cleared: 'The registrations were cleared'
+  form-confirmation:
+    replaces: 'Every existing team is replaced'
+    teams:
+      one: '{count} team is formed'
+      other: '{count} teams are formed'
+  clear-confirmation:
+    registrations:
+      one: '{count} registration is removed'
+      other: '{count} registrations are removed'
+    teams-stay: 'The teams stay as they are'
+  tile:
+    player:
+      lore: 'Click to remove the registration'
+    info:
+      title: 'Registrations'
+      team-count:
+        one: 'At the team size {teamSize} that makes {count} team'
+        other: 'At the team size {teamSize} that makes {count} teams'
+    tool:
+      title: 'Get the station tool'
+      lore: 'Puts the registration station tool into your inventory'
+    form:
+      title: 'Form random teams'
+      lore: 'Forms teams of the team size from every registered player at random'
+    clear:
+      title: 'Clear the registrations'
+      lore: 'Removes every registration, the teams stay as they are'
 dry-run:
   report:
     rejected: 'The dry run was not started'

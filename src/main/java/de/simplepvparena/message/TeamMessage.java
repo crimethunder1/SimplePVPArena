@@ -26,7 +26,23 @@ public enum TeamMessage implements MessageKey {
     TEAMS_SMALLER_THAN_SEVERAL_PLAYERS("team.size.smaller-teams.than-several-players", "count", "teamSize", "teams"),
     REMOVE_LARGER_TEAMS_FIRST("team.size.remove-larger-teams-first", "largerTeams"),
     TEAM_WITH_MEMBERS("team.size.team-with-members", "team", "members"),
-    TEAM_WITH_MEMBER_COUNT("team.size.team-with-member-count", "team", "memberCount");
+    TEAM_WITH_MEMBER_COUNT("team.size.team-with-member-count", "team", "memberCount"),
+    COLOUR_RED("team.colour.red"),
+    COLOUR_BLUE("team.colour.blue"),
+    COLOUR_GREEN("team.colour.green"),
+    COLOUR_YELLOW("team.colour.yellow"),
+    COLOUR_ORANGE("team.colour.orange"),
+    COLOUR_PURPLE("team.colour.purple"),
+    COLOUR_LIGHT_BLUE("team.colour.light-blue"),
+    COLOUR_PINK("team.colour.pink"),
+    COLOUR_WHITE("team.colour.white"),
+    COLOUR_GRAY("team.colour.gray"),
+    COLOUR_BLACK("team.colour.black"),
+    COLOUR_BROWN("team.colour.brown"),
+    COLOUR_CYAN("team.colour.cyan"),
+    COLOUR_LIME("team.colour.lime"),
+    COLOUR_MAGENTA("team.colour.magenta"),
+    COLOUR_LIGHT_GRAY("team.colour.light-gray");
 
     private final String path;
     private final Set<String> placeholderNames;

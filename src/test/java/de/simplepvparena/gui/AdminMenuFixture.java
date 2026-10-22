@@ -44,15 +44,22 @@ import de.simplepvparena.match.MatchService;
 import de.simplepvparena.message.TournamentMessages;
 import de.simplepvparena.permission.AdminPermission;
 import de.simplepvparena.permission.ViewPermission;
+import de.simplepvparena.registration.RandomTeamFormation;
+import de.simplepvparena.registration.RegistrationList;
+import de.simplepvparena.registration.RegistrationService;
+import de.simplepvparena.registration.RegistrationStationService;
+import de.simplepvparena.registration.RegistrationStations;
 import de.simplepvparena.support.FakeKitItemSerializer;
 import de.simplepvparena.support.FakeSerializedKits;
 import de.simplepvparena.support.InMemoryKitLibraryStorage;
+import de.simplepvparena.support.RecordingItemStack;
 import de.simplepvparena.support.SharedBukkitServer;
 import de.simplepvparena.support.TickingScheduler;
 import de.simplepvparena.team.TeamMember;
 import de.simplepvparena.team.TeamMemberLookup;
 import de.simplepvparena.team.TeamRegistry;
 import de.simplepvparena.tournament.AutoMatchService;
+import de.simplepvparena.tournament.AutoMatchState;
 import de.simplepvparena.tournament.AutomaticArenaCleanup;
 import de.simplepvparena.tournament.KitChoiceService;
 import de.simplepvparena.tournament.TournamentManager;
@@ -85,6 +92,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import java.util.logging.Logger;
+import java.util.random.RandomGenerator;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -130,6 +138,10 @@ final class AdminMenuFixture {
     private final List<Boolean> writtenAutoMatchModes = new ArrayList<>();
     private final List<Boolean> writtenBorderParticleSwitches = new ArrayList<>();
     private final TickingScheduler kitChoiceScheduler = new TickingScheduler();
+    private final RegistrationList registrationList = new RegistrationList();
+    private final RegistrationService registrationService;
+    private final RegistrationStations registrationStations = new RegistrationStations();
+    private final RegistrationStationService registrationStationService;
     private final KitChoiceService kitChoiceService;
     private final World world;
     private final Plugin plugin;
@@ -145,9 +157,12 @@ final class AdminMenuFixture {
     private final Player admin;
 
     private boolean adminPermissionGranted = true;
+    private boolean adminInventoryFull;
     private Location adminLocation;
     private int teamConfigurationSaveCount;
     private int arenaConfigurationSaveCount;
+    private int registrationSaveCount;
+    private RandomGenerator randomGenerator = new OrderKeepingRandomGenerator();
     private IOException teamSizeWriteFailure;
     private IOException autoMatchModeWriteFailure;
     private IOException borderParticleSwitchWriteFailure;
@@ -197,6 +212,11 @@ final class AdminMenuFixture {
                 kitLibrary, arenaCleanup, adminNotifications::add,
                 new ArenaAudience(() -> List.copyOf(onlinePlayers), arenaRegistry));
         arenaSetupService.setArenaReservedForAutoMatch(autoMatchService::isAnnounced);
+        registrationService = new RegistrationService(registrationList, tournamentManager::isTournamentInProgress,
+                () -> registrationSaveCount++);
+        registrationStationService = new RegistrationStationService(plugin, registrationStations,
+                registrationService, material -> material.name().endsWith("_BUTTON"), () -> registrationSaveCount++,
+                material -> new RecordingItemStack(material, 1));
         TournamentDryRun tournamentDryRun = new TournamentDryRun(tournamentManager::getState,
                 matchService::hasActiveMatch, teamRegistry,
                 new PluginDryRunArena(arenaRegistry.getArena(), arenaSetupService), kitService, gateMarks,
@@ -221,6 +241,13 @@ final class AdminMenuFixture {
                 this::writeAutoMatchMode,
                 borderParticleService,
                 this::writeBorderParticleSwitch,
+                registrationService,
+                registrationStationService,
+                new RandomTeamFormation(registrationService, teamRegistry, tournamentManager.getTeamSizeSetting(),
+                        tournamentManager::isTournamentInProgress,
+                        () -> autoMatchService.isAnnounced() || autoMatchService.getState() == AutoMatchState.RUNNING,
+                        this::saveTeamConfiguration, this::findOnlinePlayer,
+                        new SwitchableRandomGenerator()),
                 windows,
                 () -> List.copyOf(onlinePlayers));
     }
@@ -253,7 +280,8 @@ final class AdminMenuFixture {
 
     TournamentCommand createTournamentCommand() {
         return new TournamentCommand(matchService,
-                new SpectatorService(arenaRegistry, new SpectatorItemFactory(plugin)), menuService);
+                new SpectatorService(arenaRegistry, new SpectatorItemFactory(plugin)), menuService,
+                registrationService);
     }
 
     void letTheAdminLeave() {
@@ -294,6 +322,39 @@ final class AdminMenuFixture {
 
     List<String> adminNotifications() {
         return adminNotifications;
+    }
+
+    RegistrationList registrationList() {
+        return registrationList;
+    }
+
+    RegistrationService registrationService() {
+        return registrationService;
+    }
+
+    int registrationSaveCount() {
+        return registrationSaveCount;
+    }
+
+    RegistrationStationService registrationStationService() {
+        return registrationStationService;
+    }
+
+    void registerPlayers(String... playerNames) {
+        for (String playerName : playerNames) {
+            registrationList.register(UUID.randomUUID(), playerName);
+        }
+    }
+
+    void shuffleWith(RandomGenerator randomGenerator) {
+        this.randomGenerator = randomGenerator;
+    }
+
+    private Player findOnlinePlayer(UUID playerUniqueId) {
+        return onlinePlayers.stream()
+                .filter(player -> player.getUniqueId().equals(playerUniqueId))
+                .findFirst()
+                .orElse(null);
     }
 
     record OnlinePlayer(Player player, List<String> messages) {
@@ -460,6 +521,10 @@ final class AdminMenuFixture {
 
     void clearAdminInventory() {
         adminInventoryItems.clear();
+    }
+
+    void fillAdminInventory() {
+        adminInventoryFull = true;
     }
 
     void switchBorderSelectorModeOn() {
@@ -700,6 +765,9 @@ final class AdminMenuFixture {
         return SharedBukkitServer.proxy(PlayerInventory.class, (method, arguments) -> switch (method.getName()) {
             case "getItem" -> adminInventoryItems.get(arguments[0]);
             case "addItem" -> {
+                if (adminInventoryFull) {
+                    yield new HashMap<>(Map.of(0, ((ItemStack[]) arguments[0])[0]));
+                }
                 handedOutItems.addAll(List.of((ItemStack[]) arguments[0]));
                 yield new HashMap<Integer, ItemStack>();
             }
@@ -757,5 +825,31 @@ final class AdminMenuFixture {
         Logger logger = Logger.getLogger("AdminMenuFixture");
         logger.setUseParentHandlers(false);
         return logger;
+    }
+
+    private final class SwitchableRandomGenerator implements RandomGenerator {
+
+        @Override
+        public int nextInt(int bound) {
+            return randomGenerator.nextInt(bound);
+        }
+
+        @Override
+        public long nextLong() {
+            return randomGenerator.nextLong();
+        }
+    }
+
+    private static final class OrderKeepingRandomGenerator implements RandomGenerator {
+
+        @Override
+        public int nextInt(int bound) {
+            return bound - 1;
+        }
+
+        @Override
+        public long nextLong() {
+            throw new UnsupportedOperationException("only bounded integers are drawn");
+        }
     }
 }

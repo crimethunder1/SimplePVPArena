@@ -9,6 +9,7 @@ import de.simplepvparena.message.Messages;
 import de.simplepvparena.message.TournamentMessages;
 import de.simplepvparena.permission.AdminPermission;
 import de.simplepvparena.permission.ViewPermission;
+import de.simplepvparena.registration.RegistrationService;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.TabExecutor;
@@ -26,17 +27,22 @@ public final class TournamentCommand implements TabExecutor {
 
     private static final String SPECTATE_ARGUMENT = "spectate";
     private static final String BRACKET_ARGUMENT = "bracket";
+    private static final String JOIN_ARGUMENT = "join";
+    private static final String LEAVE_ARGUMENT = "leave";
 
     private final MatchService matchService;
     private final SpectatorService spectatorService;
     private final AdminMenuService adminMenuService;
+    private final RegistrationService registrationService;
 
     public TournamentCommand(MatchService matchService,
                              SpectatorService spectatorService,
-                             AdminMenuService adminMenuService) {
+                             AdminMenuService adminMenuService,
+                             RegistrationService registrationService) {
         this.matchService = Objects.requireNonNull(matchService, "matchService");
         this.spectatorService = Objects.requireNonNull(spectatorService, "spectatorService");
         this.adminMenuService = Objects.requireNonNull(adminMenuService, "adminMenuService");
+        this.registrationService = Objects.requireNonNull(registrationService, "registrationService");
     }
 
     @Override
@@ -48,6 +54,14 @@ public final class TournamentCommand implements TabExecutor {
         }
         if (arguments.length > 0 && arguments[0].toLowerCase(Locale.ROOT).equals(BRACKET_ARGUMENT)) {
             openBracketView(sender);
+            return true;
+        }
+        if (arguments.length > 0 && arguments[0].toLowerCase(Locale.ROOT).equals(JOIN_ARGUMENT)) {
+            handleRegistration(sender, true);
+            return true;
+        }
+        if (arguments.length > 0 && arguments[0].toLowerCase(Locale.ROOT).equals(LEAVE_ARGUMENT)) {
+            handleRegistration(sender, false);
             return true;
         }
         openAdminMenu(sender);
@@ -76,6 +90,22 @@ public final class TournamentCommand implements TabExecutor {
             return;
         }
         adminMenuService.openBracketView(player);
+    }
+
+    private void handleRegistration(CommandSender sender, boolean join) {
+        if (!(sender instanceof Player player)) {
+            TournamentMessages.sendError(sender, Messages.text(CommandMessage.ONLY_FOR_PLAYERS));
+            return;
+        }
+        if (!ViewPermission.mayView(player)) {
+            TournamentMessages.sendError(player, Messages.text(CommonMessage.COMMAND_NOT_ALLOWED));
+            return;
+        }
+        if (join) {
+            registrationService.join(player);
+            return;
+        }
+        registrationService.leave(player);
     }
 
     private void handleSpectate(CommandSender sender) {
@@ -112,6 +142,10 @@ public final class TournamentCommand implements TabExecutor {
         List<String> availableArguments = new ArrayList<>();
         if (ViewPermission.mayView(sender)) {
             availableArguments.add(BRACKET_ARGUMENT);
+        }
+        if (sender instanceof Player && ViewPermission.mayView(sender)) {
+            availableArguments.add(JOIN_ARGUMENT);
+            availableArguments.add(LEAVE_ARGUMENT);
         }
         if (sender.hasPermission(SPECTATE_PERMISSION)) {
             availableArguments.add(SPECTATE_ARGUMENT);

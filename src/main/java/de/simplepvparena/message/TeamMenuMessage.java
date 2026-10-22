@@ -17,6 +17,8 @@ public enum TeamMenuMessage implements MessageKey {
     LARGER_LORE("teams-menu.tile.larger.lore", "count"),
     ADD_TITLE("teams-menu.tile.add.title"),
     ADD_LORE("teams-menu.tile.add.lore", "usage"),
+    REGISTRATIONS_TITLE("teams-menu.tile.registrations.title"),
+    REGISTRATIONS_LORE("teams-menu.tile.registrations.lore"),
     SMALLEST_TEAM_SIZE("teams-menu.smallest-team-size", "minimum"),
     LARGEST_TEAM_SIZE("teams-menu.largest-team-size", "maximum"),
     TEAM_SIZE_CHANGED("teams-menu.team-size-changed", "matchUp"),

@@ -131,7 +131,17 @@ class ConvertedClassesHaveNoTextLiteralsTest {
             "match/FightStartTotems.java",
             "match/PaperFightStartTotems.java",
             "match/CustomItemRoundStartEffects.java",
-            "listener/FightStartTotemListener.java");
+            "listener/FightStartTotemListener.java",
+            "registration/RegistrationEntry.java",
+            "registration/RegistrationList.java",
+            "registration/RegistrationService.java",
+            "registration/RegistrationStation.java",
+            "registration/RegistrationStations.java",
+            "registration/RegistrationStationService.java",
+            "registration/RandomTeamFormation.java",
+            "listener/RegistrationStationListener.java",
+            "gui/RegistrationsAdminMenu.java",
+            "team/TeamColour.java");
 
     private static final Pattern STRING_LITERAL = Pattern.compile("\"((?:[^\"\\\\]|\\\\.)*)\"");
     private static final Pattern USAGE_TOKEN = Pattern.compile("<[^<>]*>");

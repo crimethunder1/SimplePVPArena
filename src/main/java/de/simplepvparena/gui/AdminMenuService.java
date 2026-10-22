@@ -12,6 +12,9 @@ import de.simplepvparena.input.ChatInputService;
 import de.simplepvparena.kit.KitLibrary;
 import de.simplepvparena.kit.KitSaveService;
 import de.simplepvparena.match.MatchService;
+import de.simplepvparena.registration.RandomTeamFormation;
+import de.simplepvparena.registration.RegistrationService;
+import de.simplepvparena.registration.RegistrationStationService;
 import de.simplepvparena.team.TeamMemberLookup;
 import de.simplepvparena.team.TeamRegistry;
 import de.simplepvparena.team.TeamSizeWriter;
@@ -50,12 +53,16 @@ public final class AdminMenuService {
                             AutoMatchService autoMatchService,
                             AutoMatchModeWriter autoMatchModeWriter,
                             BorderParticleService borderParticleService,
-                            ConfirmedBorderParticleWriter confirmedBorderParticleWriter) {
+                            ConfirmedBorderParticleWriter confirmedBorderParticleWriter,
+                            RegistrationService registrationService,
+                            RegistrationStationService registrationStationService,
+                            RandomTeamFormation randomTeamFormation) {
         this(plugin, tournamentManager, tournamentDryRun, teamRegistry, teamMemberLookup,
                 matchService, arenaSetupService, heightMarkerService, gateItemService, borderSelectorModes,
                 kitLibrary, kitSaveService, chatInputService, teamConfigurationSaver, configurationReloader,
                 teamSizeWriter, autoMatchService, autoMatchModeWriter, borderParticleService,
-                confirmedBorderParticleWriter, new InventoryAdminMenuWindows(plugin),
+                confirmedBorderParticleWriter, registrationService, registrationStationService,
+                randomTeamFormation, new InventoryAdminMenuWindows(plugin),
                 () -> plugin.getServer().getOnlinePlayers());
     }
 
@@ -79,6 +86,9 @@ public final class AdminMenuService {
                      AutoMatchModeWriter autoMatchModeWriter,
                      BorderParticleService borderParticleService,
                      ConfirmedBorderParticleWriter confirmedBorderParticleWriter,
+                     RegistrationService registrationService,
+                     RegistrationStationService registrationStationService,
+                     RandomTeamFormation randomTeamFormation,
                      AdminMenuWindows windows,
                      Supplier<Collection<? extends Player>> onlinePlayers) {
         Objects.requireNonNull(plugin, "plugin");
@@ -118,7 +128,9 @@ public final class AdminMenuService {
                 autoMatchModeWriter);
         TeamsAdminMenu teamsAdminMenu = new TeamsAdminMenu(navigator, teamRegistry, teamMemberLookup,
                 chatInputService, teamConfigurationSaver, tournamentManager.getTeamSizeSetting(),
-                tournamentManager::isTournamentInProgress, teamSizeWriter);
+                tournamentManager::isTournamentInProgress, teamSizeWriter, registrationService::getCount);
+        RegistrationsAdminMenu registrationsAdminMenu = new RegistrationsAdminMenu(navigator, registrationService,
+                registrationStationService, randomTeamFormation, tournamentManager.getTeamSizeSetting());
         ArenaAdminMenu arenaAdminMenu = new ArenaAdminMenu(navigator, arenaSetupService, heightMarkerService,
                 gateItemService, chatInputService, borderParticleService, confirmedBorderParticleWriter);
         bracketViewMenu = new BracketViewMenu(navigator, tournamentManager, matchService);
@@ -133,6 +145,10 @@ public final class AdminMenuService {
         confirmationAdminMenu.register(ConfirmationRequest.REMOVE_TEAM, teamActionsAdminMenu.removeConfirmation());
         confirmationAdminMenu.register(ConfirmationRequest.CANCEL_TOURNAMENT, matchAdminMenu.cancelConfirmation());
         confirmationAdminMenu.register(ConfirmationRequest.RESTART_MATCH, matchAdminMenu.restartConfirmation());
+        confirmationAdminMenu.register(ConfirmationRequest.FORM_RANDOM_TEAMS,
+                registrationsAdminMenu.formConfirmation());
+        confirmationAdminMenu.register(ConfirmationRequest.CLEAR_REGISTRATIONS,
+                registrationsAdminMenu.clearConfirmation());
         confirmationAdminMenu.requireEveryConfirmationRegistered();
         navigator.register(AdminMenuType.MAIN, mainAdminMenu);
         navigator.register(AdminMenuType.ARENA, arenaAdminMenu);
@@ -142,6 +158,7 @@ public final class AdminMenuService {
         navigator.register(AdminMenuType.TEAMS, teamsAdminMenu);
         navigator.register(AdminMenuType.TEAM_ACTIONS, teamActionsAdminMenu);
         navigator.register(AdminMenuType.TEAM_MEMBERS, teamMembersAdminMenu);
+        navigator.register(AdminMenuType.REGISTRATIONS, registrationsAdminMenu);
         navigator.register(AdminMenuType.MATCH, matchAdminMenu);
         navigator.register(AdminMenuType.FORCE_RESULT, forceResultAdminMenu);
         navigator.register(AdminMenuType.WAITING_MATCHES, waitingMatchesAdminMenu);

@@ -22,6 +22,7 @@ public final class TeamRegistry {
     private static final String TEAMS_KEY = "teams";
     private static final String TEAM_NAME_KEY = "name";
     private static final String MEMBERS_KEY = "members";
+    private static final String COLOUR_KEY = "colour";
     private static final String MEMBER_UNIQUE_ID_KEY = "unique-id";
     private static final String MEMBER_NAME_KEY = "name";
 
@@ -36,15 +37,23 @@ public final class TeamRegistry {
     }
 
     public Team registerTeam(String teamName, List<TeamMember> members) {
+        return registerTeam(teamName, members, null);
+    }
+
+    public Team registerTeam(String teamName, List<TeamMember> members, TeamColour colour) {
         Objects.requireNonNull(teamName, "teamName");
         Optional<String> nameRejection = findNameRejection(teamName);
         if (nameRejection.isPresent()) {
             throw new IllegalArgumentException(nameRejection.get());
         }
-        return register(teamName, members);
+        return register(teamName, members, colour);
     }
 
-    private Team register(String teamName, List<TeamMember> members) {
+    public static boolean isAllowedTeamName(String teamName) {
+        return findNameRejection(teamName).isEmpty();
+    }
+
+    private Team register(String teamName, List<TeamMember> members, TeamColour colour) {
         Objects.requireNonNull(teamName, "teamName");
         Objects.requireNonNull(members, "members");
         String key = toKey(teamName);
@@ -55,7 +64,7 @@ public final class TeamRegistry {
         for (TeamMember member : members) {
             rejectAlreadyRegisteredPlayer(member);
         }
-        Team team = new Team(teamName, members);
+        Team team = new Team(teamName, members, colour);
         teamsByLowerCaseName.put(key, team);
         return team;
     }
@@ -77,7 +86,7 @@ public final class TeamRegistry {
             throw new IllegalStateException(Messages.text(TeamMessage.ALREADY_EXISTS,
                     Placeholder.of("team", newName)));
         }
-        Team renamedTeam = new Team(newName, team.getMembers());
+        Team renamedTeam = new Team(newName, team.getMembers(), team.getColour().orElse(null));
         replaceTeam(key, newKey, renamedTeam);
         return renamedTeam;
     }
@@ -117,7 +126,7 @@ public final class TeamRegistry {
     }
 
     private Team replaceMembers(Team team, List<TeamMember> members) {
-        Team changedTeam = new Team(team.getTeamName(), members);
+        Team changedTeam = new Team(team.getTeamName(), members, team.getColour().orElse(null));
         String key = toKey(team.getTeamName());
         replaceTeam(key, key, changedTeam);
         return changedTeam;
@@ -198,6 +207,7 @@ public final class TeamRegistry {
             Map<String, Object> storedTeam = new LinkedHashMap<>();
             storedTeam.put(TEAM_NAME_KEY, team.getTeamName());
             storedTeam.put(MEMBERS_KEY, writeMembers(team));
+            team.getColour().ifPresent(colour -> storedTeam.put(COLOUR_KEY, colour.getStorageName()));
             storedTeams.add(storedTeam);
         }
         rootSection.set(TEAMS_KEY, storedTeams);
@@ -224,7 +234,7 @@ public final class TeamRegistry {
             return Optional.of(entryDescription + ": the team has no readable " + TEAM_NAME_KEY);
         }
         try {
-            register(teamName, readMembers(storedTeam.get(MEMBERS_KEY)));
+            register(teamName, readMembers(storedTeam.get(MEMBERS_KEY)), readColour(storedTeam.get(COLOUR_KEY)));
             return Optional.empty();
         } catch (IllegalArgumentException | IllegalStateException refusal) {
             return Optional.of("Team " + teamName + ": " + refusal.getMessage());
@@ -263,6 +273,15 @@ public final class TeamRegistry {
             throw new IllegalArgumentException(memberDescription + " has the invalid " + MEMBER_UNIQUE_ID_KEY + " "
                     + uniqueIdText);
         }
+    }
+
+    private TeamColour readColour(Object storedColour) {
+        if (storedColour == null) {
+            return null;
+        }
+        String colourName = readText(storedColour);
+        return TeamColour.ofStorageName(colourName).orElseThrow(() -> new IllegalArgumentException(
+                "the team has the unknown " + COLOUR_KEY + " " + storedColour));
     }
 
     private String readText(Object storedValue) {

@@ -403,7 +403,9 @@ class GermanMenuSnapshotTest {
                 ConfirmationRequest.DELETE_KIT, "Kit löschen?",
                 ConfirmationRequest.REMOVE_TEAM, "Team entfernen?",
                 ConfirmationRequest.CANCEL_TOURNAMENT, "Turnier abbrechen?",
-                ConfirmationRequest.RESTART_MATCH, "Match neu starten?"), questions);
+                ConfirmationRequest.RESTART_MATCH, "Match neu starten?",
+                ConfirmationRequest.FORM_RANDOM_TEAMS, "Zufallsteams bilden?",
+                ConfirmationRequest.CLEAR_REGISTRATIONS, "Anmeldungen leeren?"), questions);
     }
 
     private List<String> finalTileOfTheMainMenu() {

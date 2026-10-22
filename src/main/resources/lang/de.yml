@@ -281,6 +281,8 @@ confirmation:
     remove-team: 'Team entfernen?'
     cancel-tournament: 'Turnier abbrechen?'
     restart-match: 'Match neu starten?'
+    form-random-teams: 'Zufallsteams bilden?'
+    clear-registrations: 'Anmeldungen leeren?'
 team:
   name-rule: '1 bis {maximumLength} Buchstaben, Ziffern, Bindestriche oder Unterstriche'
   name-missing: 'Ein Team braucht einen Namen, ein Teamname hat {rule}'
@@ -323,6 +325,23 @@ team:
       other: '{largerTeams}. Entferne sie zuerst'
     team-with-members: '{team} ({members})'
     team-with-member-count: '{team} ({memberCount})'
+  colour:
+    red: 'Rot'
+    blue: 'Blau'
+    green: 'Grün'
+    yellow: 'Gelb'
+    orange: 'Orange'
+    purple: 'Lila'
+    light-blue: 'Hellblau'
+    pink: 'Rosa'
+    white: 'Weiß'
+    gray: 'Grau'
+    black: 'Schwarz'
+    brown: 'Braun'
+    cyan: 'Cyan'
+    lime: 'Lindgrün'
+    magenta: 'Magenta'
+    light-gray: 'Hellgrau'
 teams-menu:
   title: 'Teams (Seite {page})'
   smallest-team-size: 'Die kleinste Teamgröße ist {minimum}'
@@ -359,6 +378,9 @@ teams-menu:
       lore:
         - 'Fragt im Chat nach {usage}'
         - 'Spielernamen lassen sich nicht in ein Inventar tippen'
+    registrations:
+      title: 'Anmeldungen'
+      lore: 'Klicke, um die Anmeldungen zu öffnen'
   add-input:
     description: 'das neue Team'
     type: 'Gib im Chat ein: {usage}'
@@ -1333,6 +1355,71 @@ command:
     while-fighting: 'Du kannst die Arena nicht verlassen, während du kämpfst'
     no-tribune-position: 'Die Arena hat keine nutzbare Tribünenposition'
     watching: 'Du schaust jetzt der Arena zu'
+registration:
+  file:
+    set-aside: 'Die Datei {file} konnte nicht gelesen werden ({reason}), sie wurde als {brokenFile} beiseitegelegt, die Anmeldungen und Anmelde-Stationen beginnen leer'
+    not-set-aside: 'Die Datei {file} konnte nicht gelesen werden ({reason}) und ließ sich nicht beiseitelegen, die Anmeldungen und Anmelde-Stationen beginnen leer und die nächste Änderung überschreibt die Datei'
+  registered: 'Du bist für das nächste Event angemeldet'
+  already-registered: 'Du bist schon angemeldet, schleiche und klicke die Station oder gib /tournament leave ein, um dich abzumelden'
+  unregistered: 'Du bist nicht mehr angemeldet'
+  not-registered: 'Du bist nicht angemeldet'
+  closed: 'Während eines Turniers ist die Anmeldung geschlossen'
+  tool:
+    name: 'Werkzeug für die Anmelde-Station'
+    lore: 'Klicke einen Knopf an, um ihn zur Anmelde-Station zu machen, klicke eine Station an, um sie wieder zu einem normalen Knopf zu machen'
+  station:
+    added: 'Dieser Knopf ist jetzt eine Anmelde-Station'
+    removed: 'Dieser Knopf ist keine Anmelde-Station mehr'
+    click-a-button: 'Klicke einen Knopf an'
+    protected: 'Das ist eine Anmelde-Station'
+  forming:
+    tournament-in-progress: 'Während eines Turniers lassen sich keine Teams bilden'
+    auto-match: 'Während ein Auto-Match angesagt ist oder läuft, lassen sich keine Teams bilden'
+    too-few-players:
+      one: 'Es braucht mindestens {minimum} Teams, angemeldet ist {count} Spieler'
+      other: 'Es braucht mindestens {minimum} Teams, angemeldet sind {count} Spieler'
+    formed:
+      one: 'Aus {players} angemeldeten Spielern wurde {count} Team gebildet'
+      other: 'Aus {players} angemeldeten Spielern wurden {count} Teams gebildet'
+    playing-with-mates: 'Du spielst in Team {team} mit {mates}'
+    playing-alone: 'Du spielst allein als Team {team}'
+registrations-menu:
+  title: 'Anmeldungen (Seite {page})'
+  registered-players:
+    one: '{count} Spieler ist angemeldet'
+    other: '{count} Spieler sind angemeldet'
+  nobody-registered: 'Es ist kein Spieler angemeldet'
+  tool-handed-out: 'Das Werkzeug für die Anmelde-Station liegt in deinem Inventar'
+  tool-inventory-full: 'Dein Inventar ist voll, das Werkzeug für die Anmelde-Station konnte nicht ausgegeben werden'
+  registration-removed: 'Die Anmeldung von {player} wurde entfernt'
+  registrations-cleared: 'Die Anmeldungen wurden geleert'
+  form-confirmation:
+    replaces: 'Alle vorhandenen Teams werden ersetzt'
+    teams:
+      one: 'Es entsteht {count} Team'
+      other: 'Es entstehen {count} Teams'
+  clear-confirmation:
+    registrations:
+      one: '{count} Anmeldung wird entfernt'
+      other: '{count} Anmeldungen werden entfernt'
+    teams-stay: 'Die Teams bleiben, wie sie sind'
+  tile:
+    player:
+      lore: 'Klicke, um die Anmeldung zu entfernen'
+    info:
+      title: 'Anmeldungen'
+      team-count:
+        one: 'Bei der Teamgröße {teamSize} ergibt das {count} Team'
+        other: 'Bei der Teamgröße {teamSize} ergibt das {count} Teams'
+    tool:
+      title: 'Werkzeug für die Anmelde-Station holen'
+      lore: 'Legt das Werkzeug für die Anmelde-Station in dein Inventar'
+    form:
+      title: 'Zufallsteams bilden'
+      lore: 'Bildet aus allen Angemeldeten zufällig Teams in der Teamgröße'
+    clear:
+      title: 'Anmeldungen leeren'
+      lore: 'Entfernt alle Anmeldungen, die Teams bleiben, wie sie sind'
 dry-run:
   report:
     rejected: 'Der Probelauf wurde nicht gestartet'
