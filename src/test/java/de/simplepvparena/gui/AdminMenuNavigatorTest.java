@@ -46,6 +46,18 @@ class AdminMenuNavigatorTest {
     }
 
     @Test
+    void namesTheDecidedMatchesMenuWhenItIsNotRegistered() {
+        for (AdminMenuType menuType : EnumSet.complementOf(EnumSet.of(AdminMenuType.DECIDED_MATCHES))) {
+            navigator.register(menuType, new SilentMenu());
+        }
+
+        IllegalStateException failure = assertThrows(IllegalStateException.class,
+                navigator::requireEveryMenuRegistered);
+
+        assertTrue(failure.getMessage().endsWith("[DECIDED_MATCHES]"), failure.getMessage());
+    }
+
+    @Test
     void namesTheKitMenusWhenTheyAreNotRegistered() {
         for (AdminMenuType menuType : EnumSet.complementOf(EnumSet.of(AdminMenuType.KIT,
                 AdminMenuType.KIT_ACTIONS))) {

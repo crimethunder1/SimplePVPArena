@@ -28,6 +28,7 @@ class MatchAdminMenuSnapshotTest {
                 Two teams with a player each online get a match without a tournament / \
                 A running tournament has priority / Click to switch it on
                 19 | GRAY_DYE | Restart the match | No match is running
+                20 | GRAY_DYE | Take back a result | No tournament is in progress
                 22 | OAK_DOOR | Back | Returns to the main menu
                 """, fixture.describeLastMenu());
     }
@@ -53,6 +54,7 @@ class MatchAdminMenuSnapshotTest {
                 Two teams with a player each online get a match without a tournament / \
                 A running tournament has priority / Click to switch it on
                 19 | GRAY_DYE | Restart the match | No match is running
+                20 | GRAY_DYE | Take back a result | No tournament is in progress
                 22 | OAK_DOOR | Back | Returns to the main menu
                 """, fixture.describeLastMenu());
     }
@@ -87,6 +89,7 @@ class MatchAdminMenuSnapshotTest {
                 Stops the running match and begins it again with the same two teams / \
                 The score is back at 0 : 0, the kit choice and the countdown run again / \
                 Asks for a confirmation first
+                20 | BARRIER | Take back a result | Opens the decided matches whose following match has not started
                 22 | OAK_DOOR | Back | Returns to the main menu
                 """.formatted(fixture.runningFirstTeamName(), fixture.runningSecondTeamName()),
                 fixture.describeLastMenu());
@@ -122,6 +125,7 @@ class MatchAdminMenuSnapshotTest {
                 Stops the running match and begins it again with the same two teams / \
                 The score is back at 0 : 0, the kit choice and the countdown run again / \
                 Asks for a confirmation first
+                20 | BARRIER | Take back a result | Opens the decided matches whose following match has not started
                 22 | OAK_DOOR | Back | Returns to the main menu
                 """.formatted(fixture.runningFirstTeamName(), fixture.runningSecondTeamName()),
                 fixture.describeLastMenu());
@@ -154,6 +158,7 @@ class MatchAdminMenuSnapshotTest {
                 A tournament is running, the mode takes effect when it is over / \
                 Click to switch it on
                 19 | GRAY_DYE | Restart the match | No match is running
+                20 | BARRIER | Take back a result | Opens the decided matches whose following match has not started
                 22 | OAK_DOOR | Back | Returns to the main menu
                 """, fixture.describeLastMenu());
     }
@@ -183,6 +188,7 @@ class MatchAdminMenuSnapshotTest {
                 Two teams with a player each online get a match without a tournament / \
                 A running tournament has priority / Click to switch it on
                 19 | GRAY_DYE | Restart the match | No match is running
+                20 | GRAY_DYE | Take back a result | No tournament is in progress
                 22 | OAK_DOOR | Back | Returns to the main menu
                 """, fixture.describeLastMenu());
     }
@@ -218,6 +224,7 @@ class MatchAdminMenuSnapshotTest {
                 Stops the running match and begins it again with the same two teams / \
                 The score is back at 0 : 0, the kit choice and the countdown run again / \
                 Asks for a confirmation first
+                20 | BARRIER | Take back a result | Opens the decided matches whose following match has not started
                 22 | OAK_DOOR | Back | Returns to the main menu
                 """.formatted(fixture.runningFirstTeamName(), fixture.runningSecondTeamName()),
                 fixture.describeLastMenu());

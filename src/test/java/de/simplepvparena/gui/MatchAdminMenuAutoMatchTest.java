@@ -158,6 +158,8 @@ class MatchAdminMenuAutoMatchTest {
                 Stoppt das laufende Match und beginnt es mit denselben zwei Teams neu / \
                 Der Spielstand ist wieder 0 : 0, Kit-Wahl und Countdown laufen erneut / \
                 Fragt vorher nach einer Bestätigung
+                20 | BARRIER | Ergebnis zurücknehmen | \
+                Öffnet die entschiedenen Matches, deren Folgematch noch nicht begonnen hat
                 22 | OAK_DOOR | Zurück | Zurück zum Hauptmenü
                 """.formatted(fixture.runningFirstTeamName(), fixture.runningSecondTeamName()),
                 fixture.describeLastMenu());

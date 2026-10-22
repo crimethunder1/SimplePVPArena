@@ -164,6 +164,35 @@ public final class Bracket {
         advanceWinner(match);
     }
 
+    public void revokeWinner(String matchId) {
+        BracketMatch match = matchesById.get(matchId);
+        if (match == null) {
+            throw new IllegalArgumentException("unknown match " + matchId);
+        }
+        if (!match.isDecided()) {
+            throw new IllegalStateException("match " + matchId + " is not decided");
+        }
+        if (!matchesInDecisionOrder.contains(match)) {
+            throw new IllegalStateException("match " + matchId + " is decided by a bye");
+        }
+        Optional<BracketMatch> followUpMatch = findFollowUpMatch(match);
+        if (followUpMatch.filter(BracketMatch::isDecided).isPresent()) {
+            throw new IllegalStateException("the following match " + followUpMatch.get().getMatchId()
+                    + " is already decided");
+        }
+        match.clearWinnerTeamName();
+        matchesInDecisionOrder.remove(match);
+        followUpMatch.ifPresent(nextMatch -> nextMatch.clearParticipant(match.getPositionIndex() % 2));
+    }
+
+    public Optional<BracketMatch> findFollowUpMatch(BracketMatch match) {
+        int nextRoundIndex = match.getRoundIndex() + 1;
+        if (nextRoundIndex >= rounds.size()) {
+            return Optional.empty();
+        }
+        return Optional.of(rounds.get(nextRoundIndex).get(match.getPositionIndex() / 2));
+    }
+
     public boolean isComplete() {
         return getFinalMatch().isDecided();
     }
@@ -229,12 +258,8 @@ public final class Bracket {
     }
 
     private void advanceWinner(BracketMatch match) {
-        int nextRoundIndex = match.getRoundIndex() + 1;
-        if (nextRoundIndex >= rounds.size()) {
-            return;
-        }
-        BracketMatch followUpMatch = rounds.get(nextRoundIndex).get(match.getPositionIndex() / 2);
-        followUpMatch.assignParticipant(match.getPositionIndex() % 2, match.getWinnerTeamName().orElseThrow());
+        findFollowUpMatch(match).ifPresent(followUpMatch -> followUpMatch.assignParticipant(
+                match.getPositionIndex() % 2, match.getWinnerTeamName().orElseThrow()));
     }
 
     private static Set<String> collectFirstRoundByeTeams(List<BracketMatch> firstRound) {

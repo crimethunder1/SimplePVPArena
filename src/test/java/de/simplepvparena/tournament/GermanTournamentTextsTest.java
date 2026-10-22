@@ -75,6 +75,36 @@ class GermanTournamentTextsTest {
     }
 
     @Test
+    void answersTheTakingBackOfAResult() {
+        TournamentManagerFixture fixture = TournamentManagerFixture.withoutStorage(FOUR_TEAMS);
+        TournamentManager tournamentManager = fixture.tournamentManager();
+        assertEquals("Es läuft kein Turnier", tournamentManager.revokeMatchResult("round1-match1").message());
+        fixture.startTournament();
+
+        assertEquals("Match round1-match1 ist nicht entschieden",
+                tournamentManager.revokeMatchResult("round1-match1").message());
+        assertEquals("Das Ergebnis des Finales lässt sich nicht zurücknehmen",
+                tournamentManager.revokeMatchResult("round2-match1").message());
+        String winnerTeamName = fixture.forceRunningMatchForTheFirstTeam();
+        fixture.forceRunningMatchForTheFirstTeam();
+        assertTrue(tournamentManager.startFinalMatch().successful());
+        assertEquals("Das Folgematch round2-match1 läuft gerade",
+                tournamentManager.revokeMatchResult("round1-match1").message());
+        assertTrue(tournamentManager.restartRunningMatch().successful());
+        assertEquals("Match round1-match1 ist wieder offen",
+                tournamentManager.revokeMatchResult("round1-match1").message());
+        assertEquals(List.of("Das Ergebnis von Match round1-match1 wurde zurückgenommen, " + winnerTeamName
+                + " rückt nicht mehr vor"), fixture.adminMessagesContaining("zurückgenommen"));
+        assertEquals("Ein Freilos lässt sich nicht zurücknehmen", Messages.text(TournamentMessage.REVOKE_BYE));
+        assertEquals("Das Folgematch round2-match1 wurde schon gespielt",
+                Messages.text(TournamentMessage.REVOKE_FOLLOWING_MATCH_DECIDED,
+                        Placeholder.of("match", "round2-match1")));
+        assertEquals("Für das Folgematch round2-match1 wird gerade ein Kit gewählt",
+                Messages.text(TournamentMessage.REVOKE_FOLLOWING_MATCH_KIT_CHOICE,
+                        Placeholder.of("match", "round2-match1")));
+    }
+
+    @Test
     void refusesToChangeATeamDuringTheTournament() {
         TournamentManagerFixture fixture = TournamentManagerFixture.withoutStorage(FOUR_TEAMS);
         fixture.startTournament();

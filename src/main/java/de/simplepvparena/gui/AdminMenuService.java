@@ -134,10 +134,11 @@ public final class AdminMenuService {
                 teamRegistry);
         WaitingMatchResultAdminMenu waitingMatchResultAdminMenu = new WaitingMatchResultAdminMenu(navigator,
                 tournamentManager, teamRegistry);
+        DecidedMatchesAdminMenu decidedMatchesAdminMenu = new DecidedMatchesAdminMenu(navigator, tournamentManager);
         TournamentMenuStatus tournamentMenuStatus = new TournamentMenuStatus(tournamentManager, matchService);
         MatchAdminMenu matchAdminMenu = new MatchAdminMenu(navigator, tournamentManager, matchService,
-                tournamentMenuStatus, forceResultAdminMenu, waitingMatchesAdminMenu, autoMatchService,
-                autoMatchModeWriter);
+                tournamentMenuStatus, forceResultAdminMenu, waitingMatchesAdminMenu, decidedMatchesAdminMenu,
+                autoMatchService, autoMatchModeWriter);
         TeamsAdminMenu teamsAdminMenu = new TeamsAdminMenu(navigator, teamRegistry, teamMemberLookup,
                 chatInputService, teamConfigurationSaver, tournamentManager.getTeamSizeSetting(),
                 tournamentManager::isTournamentInProgress, teamSizeWriter, registrationService::getCount);
@@ -161,6 +162,8 @@ public final class AdminMenuService {
                 registrationsAdminMenu.formConfirmation());
         confirmationAdminMenu.register(ConfirmationRequest.CLEAR_REGISTRATIONS,
                 registrationsAdminMenu.clearConfirmation());
+        confirmationAdminMenu.register(ConfirmationRequest.REVOKE_RESULT,
+                decidedMatchesAdminMenu.revokeConfirmation());
         confirmationAdminMenu.requireEveryConfirmationRegistered();
         navigator.register(AdminMenuType.MAIN, mainAdminMenu);
         navigator.register(AdminMenuType.ARENA, arenaAdminMenu);
@@ -175,6 +178,7 @@ public final class AdminMenuService {
         navigator.register(AdminMenuType.FORCE_RESULT, forceResultAdminMenu);
         navigator.register(AdminMenuType.WAITING_MATCHES, waitingMatchesAdminMenu);
         navigator.register(AdminMenuType.WAITING_MATCH_RESULT, waitingMatchResultAdminMenu);
+        navigator.register(AdminMenuType.DECIDED_MATCHES, decidedMatchesAdminMenu);
         navigator.register(AdminMenuType.CONFIRMATION, confirmationAdminMenu);
         navigator.register(AdminMenuType.BRACKET_VIEW, bracketViewMenu);
         navigator.register(AdminMenuType.UNEQUAL_TEAM_VOTE, unequalTeamVoteMenu);

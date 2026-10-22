@@ -16,7 +16,8 @@ public enum ConfirmationMessage implements MessageKey {
     CANCEL_TOURNAMENT_QUESTION("confirmation.question.cancel-tournament"),
     RESTART_MATCH_QUESTION("confirmation.question.restart-match"),
     FORM_RANDOM_TEAMS_QUESTION("confirmation.question.form-random-teams"),
-    CLEAR_REGISTRATIONS_QUESTION("confirmation.question.clear-registrations");
+    CLEAR_REGISTRATIONS_QUESTION("confirmation.question.clear-registrations"),
+    REVOKE_RESULT_QUESTION("confirmation.question.revoke-result", "match");
 
     private final String path;
     private final Set<String> placeholderNames;

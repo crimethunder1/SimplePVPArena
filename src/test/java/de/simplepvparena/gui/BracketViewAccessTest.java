@@ -162,6 +162,7 @@ class BracketViewAccessTest {
             case FORCE_RESULT -> AdminMenuHolder.forceResult("round1-match1");
             case WAITING_MATCHES -> AdminMenuHolder.waitingMatches(0);
             case WAITING_MATCH_RESULT -> AdminMenuHolder.waitingMatchResult("round1-match1", 0);
+            case DECIDED_MATCHES -> AdminMenuHolder.decidedMatches(0);
             case CONFIRMATION -> AdminMenuHolder.confirmation(ConfirmationRequest.REMOVE_TEAM, "Alpha", 0);
             case BRACKET_VIEW -> AdminMenuHolder.bracketView(0, false);
             case UNEQUAL_TEAM_VOTE -> AdminMenuHolder.unequalTeamVote("round1-match1");

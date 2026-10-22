@@ -198,6 +198,9 @@ match-menu:
       lore:
         - 'Stops the running match and begins it again with the same two teams'
         - 'The score is back at 0 : 0, the kit choice and the countdown run again'
+    revoke-result:
+      title: 'Take back a result'
+      lore: 'Opens the decided matches whose following match has not started'
     auto-match:
       title: 'Auto match mode'
       mode-on: 'The mode is on'
@@ -244,6 +247,25 @@ waiting-match-result-menu:
     team:
       not-registered: 'No longer registered'
       lore: 'Decides the match for this team'
+decided-matches-menu:
+  title: 'Decided matches (page {page})'
+  confirmation:
+    - '{team} no longer advances'
+    - 'Match {match} is open again'
+  tile:
+    info:
+      title: 'Decided matches'
+      no-result-revocable: 'No result can be taken back'
+      count:
+        one: 'Results that can be taken back: {count}'
+        other: 'Results that can be taken back: {count}'
+    match:
+      teams: '{firstTeam} against {secondTeam}'
+      winner: 'Won by {team}'
+      played: 'Played'
+      walkover: 'Walkover'
+      forced: 'Decided by an admin'
+      hint: 'Click to take the result back'
 bracket-menu:
   title: 'Bracket (round {round})'
   round-of-rounds: 'Round {round} of {roundCount}'
@@ -283,6 +305,7 @@ confirmation:
     restart-match: 'Restart the match?'
     form-random-teams: 'Form random teams?'
     clear-registrations: 'Clear the registrations?'
+    revoke-result: 'Take back the result of {match}?'
 team:
   name-rule: '1 to {maximumLength} letters, digits, hyphens or underscores'
   name-missing: 'A team needs a name, a team name has {rule}'
@@ -1192,6 +1215,7 @@ tournament:
     cancelled: 'Tournament cancelled'
     restarted: 'Match {match} was stopped and begins again'
     final-restarted: 'The final was stopped, start it again with {action}'
+    revoked: 'Match {match} is open again'
   start:
     at-least-teams-required:
       one: 'At least {count} team is required'
@@ -1213,6 +1237,13 @@ tournament:
   unequal-team-vote-running: 'The players of match {match} are still voting who fights, wait until the vote is over'
   restart:
     auto-match: 'An auto match cannot be restarted'
+  revoke:
+    not-decided: 'Match {match} is not decided'
+    bye: 'A bye cannot be taken back'
+    final: 'The result of the final cannot be taken back'
+    following-match-decided: 'The following match {match} has already been played'
+    following-match-running: 'The following match {match} is running'
+    following-match-kit-choice: 'A kit is being chosen for the following match {match}'
   final:
     paused:
       - 'The tournament is paused'
@@ -1261,6 +1292,7 @@ tournament:
     cleaning-skipped: 'The arena was not cleaned after match {match}: {reason}. The next match starts in the arena as it is now'
     both-teams-missing: 'Both teams of match {match} are no longer registered, the tournament waits for you. Decide the match in the match menu of /tournament under "{tile}"'
     restarted: 'Match {match} was restarted'
+    revoked: 'The result of match {match} was taken back, {team} no longer advances'
   restore:
     unreadable: 'The saved tournament in {file} could not be read: {reason}. No tournament was restored'
     unreadable-without-reason: 'The saved tournament in {file} could not be read: unknown reason. No tournament was restored'

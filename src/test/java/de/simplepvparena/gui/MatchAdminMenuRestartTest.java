@@ -97,6 +97,7 @@ class MatchAdminMenuRestartTest {
                 Two teams with a player each online get a match without a tournament / \
                 A running tournament has priority / Click to switch it on
                 19 | GRAY_DYE | Restart the match | An auto match cannot be restarted
+                20 | GRAY_DYE | Take back a result | No tournament is in progress
                 22 | OAK_DOOR | Back | Returns to the main menu
                 """, fixture.describeLastMenu());
     }

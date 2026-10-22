@@ -32,6 +32,7 @@ final class MatchAdminMenu implements AdminMenu {
     private static final int MATCH_FORCE_RESULT_SLOT = 16;
     private static final int MATCH_AUTO_MATCH_SLOT = 17;
     private static final int MATCH_RESTART_SLOT = 19;
+    private static final int MATCH_REVOKE_RESULT_SLOT = 20;
 
     private final AdminMenuNavigation navigation;
     private final TournamentManager tournamentManager;
@@ -39,19 +40,21 @@ final class MatchAdminMenu implements AdminMenu {
     private final TournamentMenuStatus tournamentMenuStatus;
     private final ForceResultAdminMenu forceResultAdminMenu;
     private final WaitingMatchesAdminMenu waitingMatchesAdminMenu;
+    private final DecidedMatchesAdminMenu decidedMatchesAdminMenu;
     private final AutoMatchService autoMatchService;
     private final AutoMatchModeWriter autoMatchModeWriter;
 
     MatchAdminMenu(AdminMenuNavigation navigation, TournamentManager tournamentManager, MatchService matchService,
                    TournamentMenuStatus tournamentMenuStatus, ForceResultAdminMenu forceResultAdminMenu,
-                   WaitingMatchesAdminMenu waitingMatchesAdminMenu, AutoMatchService autoMatchService,
-                   AutoMatchModeWriter autoMatchModeWriter) {
+                   WaitingMatchesAdminMenu waitingMatchesAdminMenu, DecidedMatchesAdminMenu decidedMatchesAdminMenu,
+                   AutoMatchService autoMatchService, AutoMatchModeWriter autoMatchModeWriter) {
         this.navigation = Objects.requireNonNull(navigation, "navigation");
         this.tournamentManager = Objects.requireNonNull(tournamentManager, "tournamentManager");
         this.matchService = Objects.requireNonNull(matchService, "matchService");
         this.tournamentMenuStatus = Objects.requireNonNull(tournamentMenuStatus, "tournamentMenuStatus");
         this.forceResultAdminMenu = Objects.requireNonNull(forceResultAdminMenu, "forceResultAdminMenu");
         this.waitingMatchesAdminMenu = Objects.requireNonNull(waitingMatchesAdminMenu, "waitingMatchesAdminMenu");
+        this.decidedMatchesAdminMenu = Objects.requireNonNull(decidedMatchesAdminMenu, "decidedMatchesAdminMenu");
         this.autoMatchService = Objects.requireNonNull(autoMatchService, "autoMatchService");
         this.autoMatchModeWriter = Objects.requireNonNull(autoMatchModeWriter, "autoMatchModeWriter");
     }
@@ -105,6 +108,11 @@ final class MatchAdminMenu implements AdminMenu {
         canvas.set(MATCH_AUTO_MATCH_SLOT, MenuItems.create(Material.COMPARATOR,
                 Messages.text(MatchMenuMessage.AUTO_MATCH_TITLE), buildAutoMatchLore()));
         canvas.set(MATCH_RESTART_SLOT, buildRestartItem());
+        canvas.set(MATCH_REVOKE_RESULT_SLOT, tournamentManager.isTournamentInProgress()
+                ? MenuItems.create(Material.BARRIER, Messages.text(MatchMenuMessage.REVOKE_RESULT_TITLE),
+                        Messages.text(MatchMenuMessage.REVOKE_RESULT_LORE))
+                : MenuItems.unavailable(Messages.text(MatchMenuMessage.REVOKE_RESULT_TITLE),
+                        Messages.text(CommonMessage.NO_TOURNAMENT_IN_PROGRESS)));
         canvas.set(AdminMenuLayout.BACK_SLOT, MenuItems.back(MenuMessage.BACK_TO_MAIN_MENU));
     }
 
@@ -121,6 +129,7 @@ final class MatchAdminMenu implements AdminMenu {
             case MATCH_FORCE_RESULT_SLOT -> forceResultAdminMenu.openForceResultMenu(player);
             case MATCH_AUTO_MATCH_SLOT -> switchAutoMatchMode(player, holder);
             case MATCH_RESTART_SLOT -> askForTheRestart(player);
+            case MATCH_REVOKE_RESULT_SLOT -> decidedMatchesAdminMenu.openDecidedMatchesMenu(player);
             case AdminMenuLayout.BACK_SLOT -> navigation.open(player, AdminMenuHolder.main());
             default -> { }
         }

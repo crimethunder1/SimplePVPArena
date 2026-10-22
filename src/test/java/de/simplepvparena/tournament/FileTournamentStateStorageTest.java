@@ -198,6 +198,70 @@ class FileTournamentStateStorageTest {
     }
 
     @Test
+    void readsBackATournamentWhoseResultWasTakenBack(@TempDir Path pluginFolder) throws IOException {
+        Bracket bracket = Bracket.createSingleElimination(List.of("Alpha", "Bravo", "Charlie", "Delta"));
+        bracket.recordWinner("round1-match1", "Alpha");
+        bracket.recordWinner("round1-match2", "Charlie");
+        bracket.revokeWinner("round1-match2");
+        FileTournamentStateStorage storage = storageIn(pluginFolder);
+
+        storage.save(SavedTournament.capture(bracket, TournamentState.RUNNING, STARTED_AT, SAVED_AT,
+                Map.of("round1-match1", MatchDecisionKind.PLAYED, "round1-match2", MatchDecisionKind.FORCED)));
+
+        YamlConfiguration configuration = YamlConfiguration.loadConfiguration(
+                pluginFolder.resolve(FileTournamentStateStorage.FILE_NAME).toFile());
+        assertEquals(List.of(Map.of("match-id", "round1-match1", "winner", "Alpha", "decided-by", "played")),
+                configuration.getMapList("results"));
+        SavedTournament savedTournament = storage.find().savedTournament().orElseThrow();
+        assertEquals(List.of(new SavedMatchResult("round1-match1", "Alpha", Optional.of(MatchDecisionKind.PLAYED))),
+                savedTournament.results());
+        Bracket restored = savedTournament.restoreBracket();
+        assertTrue(restored.findMatch("round1-match2").orElseThrow().isPlayable());
+        assertEquals(Optional.of("Alpha"), restored.getFinalMatch().getFirstTeamName());
+        assertEquals(Optional.empty(), restored.getFinalMatch().getSecondTeamName());
+    }
+
+    @Test
+    void takesBackAResultOfAFileWrittenBeforeAndSavesItWithoutThatResult(@TempDir Path pluginFolder)
+            throws IOException {
+        writeStateFile(pluginFolder, """
+                format-version: 1
+                started-at: '2026-10-17T18:00:00Z'
+                saved-at: '2026-10-17T18:42:13Z'
+                state: PAUSED
+                first-round:
+                - match-id: round1-match1
+                  first: Alpha
+                  second: Delta
+                - match-id: round1-match2
+                  first: Bravo
+                  second: Charlie
+                results:
+                - match-id: round1-match1
+                  winner: Delta
+                - match-id: round1-match2
+                  winner: Bravo
+                  decided-by: walkover
+                """);
+        FileTournamentStateStorage storage = storageIn(pluginFolder);
+        SavedTournament oldTournament = storage.find().savedTournament().orElseThrow();
+        Bracket bracket = oldTournament.restoreBracket();
+
+        bracket.revokeWinner("round1-match1");
+        storage.save(SavedTournament.capture(bracket, oldTournament.state(), oldTournament.startedAt(), SAVED_AT,
+                Map.of("round1-match2", MatchDecisionKind.WALKOVER)));
+
+        SavedTournament savedTournament = storage.find().savedTournament().orElseThrow();
+        assertEquals(List.of(new SavedMatchResult("round1-match2", "Bravo",
+                Optional.of(MatchDecisionKind.WALKOVER))), savedTournament.results());
+        assertEquals(oldTournament.firstRound(), savedTournament.firstRound());
+        Bracket restored = savedTournament.restoreBracket();
+        assertTrue(restored.findMatch("round1-match1").orElseThrow().isPlayable());
+        assertEquals(Optional.empty(), restored.getFinalMatch().getFirstTeamName());
+        assertEquals(Optional.of("Bravo"), restored.getFinalMatch().getSecondTeamName());
+    }
+
+    @Test
     void deletesTheFile(@TempDir Path pluginFolder) throws IOException {
         FileTournamentStateStorage storage = storageIn(pluginFolder);
         storage.save(fiveTeamTournament());

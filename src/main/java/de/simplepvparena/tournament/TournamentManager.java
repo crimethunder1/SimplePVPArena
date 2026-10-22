@@ -362,6 +362,79 @@ public final class TournamentManager implements MatchCompletionHandler {
         return TournamentOperationResult.success(Messages.text(TournamentMessage.RESTARTED_REPLY, matchId));
     }
 
+    public Optional<String> findRevokeRejection(String matchId) {
+        if (bracket == null || !isTournamentInProgress()) {
+            return Optional.of(Messages.text(CommonMessage.NO_TOURNAMENT_IN_PROGRESS));
+        }
+        Optional<BracketMatch> bracketMatch = bracket.findMatch(matchId);
+        if (bracketMatch.isEmpty()) {
+            return Optional.of(Messages.text(TournamentMessage.UNKNOWN_MATCH, Placeholder.of("match", matchId)));
+        }
+        return findRevokeRejection(bracketMatch.get());
+    }
+
+    public List<BracketMatch> findRevocableMatches() {
+        if (bracket == null || !isTournamentInProgress()) {
+            return List.of();
+        }
+        return bracket.getAllMatches().stream()
+                .filter(bracketMatch -> findRevokeRejection(bracketMatch).isEmpty())
+                .toList();
+    }
+
+    public Optional<MatchDecisionKind> findDecisionKind(String matchId) {
+        return Optional.ofNullable(decisionKindsByMatchId.get(matchId));
+    }
+
+    public TournamentOperationResult revokeMatchResult(String matchId) {
+        Optional<String> rejection = findRevokeRejection(matchId);
+        if (rejection.isPresent()) {
+            return TournamentOperationResult.failure(rejection.get());
+        }
+        if (arenaCleanup.isCleaning() && !waitingForArenaCleaning) {
+            return TournamentOperationResult.failure(describeArenaBeingCleaned());
+        }
+        BracketMatch bracketMatch = bracket.findMatch(matchId).orElseThrow();
+        String winnerTeamName = bracketMatch.getWinnerTeamName().orElseThrow();
+        bracket.findFollowUpMatch(bracketMatch)
+                .ifPresent(followUpMatch -> matchIdsWarnedAboutMissingTeams.remove(followUpMatch.getMatchId()));
+        bracket.revokeWinner(bracketMatch.getMatchId());
+        decisionKindsByMatchId.remove(bracketMatch.getMatchId());
+        synchronizeFinalMatchStage();
+        saveState();
+        Placeholder revokedMatchId = Placeholder.of("match", bracketMatch.getMatchId());
+        adminNotifier.notifyAdmins(Messages.text(TournamentMessage.REVOKED_NOTICE, revokedMatchId,
+                Placeholder.of("team", winnerTeamName)));
+        startNextMatch();
+        return TournamentOperationResult.success(Messages.text(TournamentMessage.REVOKED_REPLY, revokedMatchId));
+    }
+
+    private Optional<String> findRevokeRejection(BracketMatch bracketMatch) {
+        if (bracket.isFinalMatch(bracketMatch)) {
+            return Optional.of(Messages.text(TournamentMessage.REVOKE_FINAL));
+        }
+        if (bracketMatch.getRoundIndex() == 0 && bracketMatch.hasExactlyOneParticipant()) {
+            return Optional.of(Messages.text(TournamentMessage.REVOKE_BYE));
+        }
+        if (!bracketMatch.isDecided()) {
+            return Optional.of(Messages.text(TournamentMessage.REVOKE_NOT_DECIDED,
+                    Placeholder.of("match", bracketMatch.getMatchId())));
+        }
+        BracketMatch followUpMatch = bracket.findFollowUpMatch(bracketMatch).orElseThrow();
+        Placeholder followUpMatchId = Placeholder.of("match", followUpMatch.getMatchId());
+        if (followUpMatch.isDecided()) {
+            return Optional.of(Messages.text(TournamentMessage.REVOKE_FOLLOWING_MATCH_DECIDED, followUpMatchId));
+        }
+        if (matchService.findMatchById(followUpMatch.getMatchId()).isPresent()) {
+            return Optional.of(Messages.text(TournamentMessage.REVOKE_FOLLOWING_MATCH_RUNNING, followUpMatchId));
+        }
+        if (kitChoiceService.getPending().filter(pending -> pending.matchId().equals(followUpMatch.getMatchId()))
+                .isPresent()) {
+            return Optional.of(Messages.text(TournamentMessage.REVOKE_FOLLOWING_MATCH_KIT_CHOICE, followUpMatchId));
+        }
+        return Optional.empty();
+    }
+
     private static String describeTeamNotInMatch(String teamName, String matchId) {
         return Messages.text(TournamentMessage.TEAM_NOT_IN_MATCH, Placeholder.of("team", teamName),
                 Placeholder.of("match", matchId));

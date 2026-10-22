@@ -443,6 +443,35 @@ class ArenaCleaningBetweenMatchesTest {
         assertEquals(Optional.of(stuckWinnerTeamName), stuckMatch.getWinnerTeamName());
     }
 
+    @Test
+    void refusesToTakeBackAResultWhileACleaningFromTheArenaMenuRunsAndAcceptsItAfterwards() {
+        Fixture fixture = new Fixture();
+        fixture.startTournament();
+        fixture.decideRunningMatch();
+        fixture.cleanup.finishCleaning(CLEAN_OUTCOME);
+        fixture.decideRunningMatch();
+        fixture.cleanup.finishCleaning(CLEAN_OUTCOME);
+        assertFalse(fixture.matchService.hasActiveMatch());
+        BracketMatch firstMatch = fixture.tournamentManager.getBracket().orElseThrow()
+                .findMatch("round1-match1").orElseThrow();
+        fixture.cleanup.startCleaningFromTheArenaMenu();
+
+        TournamentOperationResult refusal = fixture.tournamentManager.revokeMatchResult("round1-match1");
+
+        assertFalse(refusal.successful(),
+                "taking the result back may not start the match into a cleaning started from the arena menu");
+        assertEquals(EXPECTED_CLEANING_REFUSAL, refusal.message());
+        assertTrue(firstMatch.isDecided(), "the refused taking back leaves the bracket as it is");
+        assertFalse(fixture.matchService.hasActiveMatch());
+
+        fixture.cleanup.finishCleaning(CLEAN_OUTCOME);
+
+        TournamentOperationResult revocation = fixture.tournamentManager.revokeMatchResult("round1-match1");
+        assertTrue(revocation.successful(), revocation.message());
+        assertFalse(firstMatch.isDecided());
+        assertEquals("round1-match1", fixture.runningMatchId());
+    }
+
     private static final class Fixture {
 
         private static final String WORLD_NAME = "tournament-flow";

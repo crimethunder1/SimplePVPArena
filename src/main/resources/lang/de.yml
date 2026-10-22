@@ -198,6 +198,9 @@ match-menu:
       lore:
         - 'Stoppt das laufende Match und beginnt es mit denselben zwei Teams neu'
         - 'Der Spielstand ist wieder 0 : 0, Kit-Wahl und Countdown laufen erneut'
+    revoke-result:
+      title: 'Ergebnis zurücknehmen'
+      lore: 'Öffnet die entschiedenen Matches, deren Folgematch noch nicht begonnen hat'
     auto-match:
       title: 'Auto-Match-Modus'
       mode-on: 'Der Modus ist an'
@@ -244,6 +247,25 @@ waiting-match-result-menu:
     team:
       not-registered: 'Nicht mehr registriert'
       lore: 'Entscheidet das Match für dieses Team'
+decided-matches-menu:
+  title: 'Entschiedene Matches (Seite {page})'
+  confirmation:
+    - '{team} rückt nicht mehr vor'
+    - 'Match {match} ist wieder offen'
+  tile:
+    info:
+      title: 'Entschiedene Matches'
+      no-result-revocable: 'Kein Ergebnis lässt sich zurücknehmen'
+      count:
+        one: 'Zurücknehmbare Ergebnisse: {count}'
+        other: 'Zurücknehmbare Ergebnisse: {count}'
+    match:
+      teams: '{firstTeam} gegen {secondTeam}'
+      winner: 'Gewonnen von {team}'
+      played: 'Gespielt'
+      walkover: 'Kampflos'
+      forced: 'Von einem Admin entschieden'
+      hint: 'Klicke, um das Ergebnis zurückzunehmen'
 bracket-menu:
   title: 'Turnierbaum (Turnierrunde {round})'
   round-of-rounds: 'Turnierrunde {round} von {roundCount}'
@@ -283,6 +305,7 @@ confirmation:
     restart-match: 'Match neu starten?'
     form-random-teams: 'Zufallsteams bilden?'
     clear-registrations: 'Anmeldungen leeren?'
+    revoke-result: 'Ergebnis von {match} zurücknehmen?'
 team:
   name-rule: '1 bis {maximumLength} Buchstaben, Ziffern, Bindestriche oder Unterstriche'
   name-missing: 'Ein Team braucht einen Namen, ein Teamname hat {rule}'
@@ -1192,6 +1215,7 @@ tournament:
     cancelled: 'Turnier abgebrochen'
     restarted: 'Match {match} wurde gestoppt und beginnt neu'
     final-restarted: 'Das Finale wurde gestoppt, starte es erneut mit {action}'
+    revoked: 'Match {match} ist wieder offen'
   start:
     at-least-teams-required:
       one: 'Mindestens {count} Team ist nötig'
@@ -1213,6 +1237,13 @@ tournament:
   unequal-team-vote-running: 'Die Spieler von Match {match} stimmen noch ab, wer kämpft, warte, bis die Abstimmung vorbei ist'
   restart:
     auto-match: 'Ein Auto-Match lässt sich nicht neu starten'
+  revoke:
+    not-decided: 'Match {match} ist nicht entschieden'
+    bye: 'Ein Freilos lässt sich nicht zurücknehmen'
+    final: 'Das Ergebnis des Finales lässt sich nicht zurücknehmen'
+    following-match-decided: 'Das Folgematch {match} wurde schon gespielt'
+    following-match-running: 'Das Folgematch {match} läuft gerade'
+    following-match-kit-choice: 'Für das Folgematch {match} wird gerade ein Kit gewählt'
   final:
     paused:
       - 'Das Turnier ist pausiert'
@@ -1261,6 +1292,7 @@ tournament:
     cleaning-skipped: 'Die Arena wurde nach Match {match} nicht gereinigt: {reason}. Das nächste Match beginnt in der Arena, wie sie jetzt ist'
     both-teams-missing: 'Beide Teams von Match {match} sind nicht mehr registriert, das Turnier wartet auf dich. Entscheide das Match im Match-Menü von /tournament unter "{tile}"'
     restarted: 'Match {match} wurde neu gestartet'
+    revoked: 'Das Ergebnis von Match {match} wurde zurückgenommen, {team} rückt nicht mehr vor'
   restore:
     unreadable: 'Das gespeicherte Turnier in {file} konnte nicht gelesen werden: {reason}. Es wurde kein Turnier wiederhergestellt'
     unreadable-without-reason: 'Das gespeicherte Turnier in {file} konnte nicht gelesen werden, der Grund ist unbekannt. Es wurde kein Turnier wiederhergestellt'

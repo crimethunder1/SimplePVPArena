@@ -155,6 +155,7 @@ class UnequalTeamVoteAccessTest {
             case FORCE_RESULT -> AdminMenuHolder.forceResult("M1");
             case WAITING_MATCHES -> AdminMenuHolder.waitingMatches(0);
             case WAITING_MATCH_RESULT -> AdminMenuHolder.waitingMatchResult("M1", 0);
+            case DECIDED_MATCHES -> AdminMenuHolder.decidedMatches(0);
             case CONFIRMATION -> AdminMenuHolder.confirmation(ConfirmationRequest.REMOVE_TEAM, "Alpha", 0);
             case BRACKET_VIEW -> AdminMenuHolder.bracketView(0, false);
             case UNEQUAL_TEAM_VOTE -> VOTE_OF_M1;

@@ -43,7 +43,7 @@ final class ConfirmationAdminMenu implements AdminMenu {
 
     @Override
     public String title(AdminMenuHolder holder) {
-        return holder.getConfirmationRequest().orElseThrow().getTitle();
+        return holder.getConfirmationRequest().orElseThrow().getTitle(holder.getSubject());
     }
 
     @Override
@@ -54,7 +54,7 @@ final class ConfirmationAdminMenu implements AdminMenu {
     @Override
     public void fill(Player player, AdminMenuHolder holder, AdminMenuCanvas canvas) {
         ConfirmationRequest request = holder.getConfirmationRequest().orElseThrow();
-        canvas.set(AdminMenuLayout.INFO_SLOT, MenuItems.info(request.getTitle(),
+        canvas.set(AdminMenuLayout.INFO_SLOT, MenuItems.info(request.getTitle(holder.getSubject()),
                 buildConfirmationLore(request, holder)));
         canvas.set(CONFIRM_YES_SLOT, MenuItems.create(MenuItems.CONFIRM_MATERIAL,
                 Messages.text(ConfirmationMessage.CONFIRM_TITLE), Messages.lines(ConfirmationMessage.CONFIRM_LORE)));

@@ -88,6 +88,10 @@ public final class AdminMenuHolder implements InventoryHolder {
                 null, pageIndex);
     }
 
+    public static AdminMenuHolder decidedMatches(int pageIndex) {
+        return new AdminMenuHolder(AdminMenuType.DECIDED_MATCHES, null, null, pageIndex);
+    }
+
     public static AdminMenuHolder confirmation(ConfirmationRequest confirmationRequest, String subject,
                                                int pageIndex) {
         return new AdminMenuHolder(AdminMenuType.CONFIRMATION, subject,

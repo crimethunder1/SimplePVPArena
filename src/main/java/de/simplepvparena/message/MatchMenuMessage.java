@@ -33,6 +33,8 @@ public enum MatchMenuMessage implements MessageKey {
     FINAL_OVER("match-menu.tile.final.over"),
     RESTART_TITLE("match-menu.tile.restart.title"),
     RESTART_LORE("match-menu.tile.restart.lore"),
+    REVOKE_RESULT_TITLE("match-menu.tile.revoke-result.title"),
+    REVOKE_RESULT_LORE("match-menu.tile.revoke-result.lore"),
     AUTO_MATCH_TITLE("match-menu.tile.auto-match.title"),
     AUTO_MATCH_MODE_ON("match-menu.tile.auto-match.mode-on"),
     AUTO_MATCH_MODE_OFF("match-menu.tile.auto-match.mode-off"),

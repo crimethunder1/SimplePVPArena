@@ -237,6 +237,26 @@ class UnequalTeamVoteMatchTest {
     }
 
     @Test
+    void refusesToTakeBackASemifinalWhileTheFinalistsVote() {
+        harness.addTeam("Alpha", "Anna", "Ben");
+        harness.addTeam("Bravo", "Cleo");
+        harness.addTeam("Charlie", "Dora");
+        harness.addTeam("Delta", "Emil");
+        assertTrue(harness.tournamentManager().startTournament(false).successful());
+        decideTheRunningMatchForAlphaWhenItPlays();
+        decideTheRunningMatchForAlphaWhenItPlays();
+        assertTrue(harness.tournamentManager().startFinalMatch().successful());
+        assertEquals(MatchState.PREPARING, harness.runningMatch().getState());
+        assertTrue(harness.voteService().isPending());
+
+        TournamentOperationResult revocation = harness.tournamentManager().revokeMatchResult("round1-match1");
+
+        assertFalse(revocation.successful());
+        assertEquals("The following match round2-match1 is running", revocation.message());
+        assertTrue(harness.voteService().isPending(), "the vote goes on");
+    }
+
+    @Test
     void refusesTeamChangesOfBothTeamsWhileThePlayersVote() {
         harness.addTeam("Alpha", "Anna", "Ben");
         harness.addTeam("Bravo", "Cleo");
@@ -369,5 +389,13 @@ class UnequalTeamVoteMatchTest {
 
     private static String describeScore(Match match, String firstTeamName, String secondTeamName) {
         return match.getScore().getPoints(firstTeamName) + ":" + match.getScore().getPoints(secondTeamName);
+    }
+
+    private void decideTheRunningMatchForAlphaWhenItPlays() {
+        Match match = harness.runningMatch();
+        String winnerTeamName = match.findTeamByName("Alpha").isPresent()
+                ? "Alpha"
+                : match.getFirstTeam().getTeamName();
+        assertTrue(harness.tournamentManager().forceMatchResult(match.getMatchId(), winnerTeamName).successful());
     }
 }

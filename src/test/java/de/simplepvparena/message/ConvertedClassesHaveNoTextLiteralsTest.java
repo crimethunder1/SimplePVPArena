@@ -31,6 +31,7 @@ class ConvertedClassesHaveNoTextLiteralsTest {
             "gui/ForceResultAdminMenu.java",
             "gui/WaitingMatchesAdminMenu.java",
             "gui/WaitingMatchResultAdminMenu.java",
+            "gui/DecidedMatchesAdminMenu.java",
             "gui/BracketViewMenu.java",
             "gui/ConfirmationAdminMenu.java",
             "gui/ConfirmationRequest.java",

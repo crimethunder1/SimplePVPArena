@@ -10,6 +10,7 @@ import java.util.EnumMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -217,6 +218,7 @@ class GermanMenuSnapshotTest {
                 Zwei Teams mit je einem Spieler online bekommen ein Match ohne Turnier / \
                 Ein laufendes Turnier hat Vorrang / Klicke, um ihn einzuschalten
                 19 | GRAY_DYE | Match neu starten | Es läuft kein Match
+                20 | GRAY_DYE | Ergebnis zurücknehmen | Es läuft kein Turnier
                 22 | OAK_DOOR | Zurück | Zurück zum Hauptmenü
                 """, fixture.describeLastMenu());
     }
@@ -250,6 +252,8 @@ class GermanMenuSnapshotTest {
                 Stoppt das laufende Match und beginnt es mit denselben zwei Teams neu / \
                 Der Spielstand ist wieder 0 : 0, Kit-Wahl und Countdown laufen erneut / \
                 Fragt vorher nach einer Bestätigung
+                20 | BARRIER | Ergebnis zurücknehmen | \
+                Öffnet die entschiedenen Matches, deren Folgematch noch nicht begonnen hat
                 22 | OAK_DOOR | Zurück | Zurück zum Hauptmenü
                 """.formatted(fixture.runningFirstTeamName(), fixture.runningSecondTeamName()),
                 fixture.describeLastMenu());
@@ -393,7 +397,7 @@ class GermanMenuSnapshotTest {
     void asksEveryConfirmationQuestionInGerman() {
         Map<ConfirmationRequest, String> questions = new EnumMap<>(ConfirmationRequest.class);
         for (ConfirmationRequest request : ConfirmationRequest.values()) {
-            questions.put(request, request.getTitle());
+            questions.put(request, request.getTitle(Optional.of("round1-match2")));
         }
 
         assertEquals(Map.of(
@@ -405,7 +409,8 @@ class GermanMenuSnapshotTest {
                 ConfirmationRequest.CANCEL_TOURNAMENT, "Turnier abbrechen?",
                 ConfirmationRequest.RESTART_MATCH, "Match neu starten?",
                 ConfirmationRequest.FORM_RANDOM_TEAMS, "Zufallsteams bilden?",
-                ConfirmationRequest.CLEAR_REGISTRATIONS, "Anmeldungen leeren?"), questions);
+                ConfirmationRequest.CLEAR_REGISTRATIONS, "Anmeldungen leeren?",
+                ConfirmationRequest.REVOKE_RESULT, "Ergebnis von round1-match2 zurücknehmen?"), questions);
     }
 
     private List<String> finalTileOfTheMainMenu() {

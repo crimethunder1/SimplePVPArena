@@ -96,6 +96,22 @@ public final class BracketMatch {
         winnerTeamName = Objects.requireNonNull(teamName, "teamName");
     }
 
+    void clearWinnerTeamName() {
+        winnerTeamName = null;
+    }
+
+    void clearParticipant(int slotIndex) {
+        if (slotIndex == FIRST_SLOT_INDEX) {
+            firstTeamName = null;
+            return;
+        }
+        if (slotIndex == SECOND_SLOT_INDEX) {
+            secondTeamName = null;
+            return;
+        }
+        throw new IllegalArgumentException("slotIndex must be " + FIRST_SLOT_INDEX + " or " + SECOND_SLOT_INDEX);
+    }
+
     String getSingleParticipant() {
         return firstTeamName != null ? firstTeamName : secondTeamName;
     }

@@ -15,6 +15,7 @@ public enum AdminMenuType {
     FORCE_RESULT(false),
     WAITING_MATCHES(false),
     WAITING_MATCH_RESULT(false),
+    DECIDED_MATCHES(false),
     CONFIRMATION(false),
     BRACKET_VIEW(true),
     UNEQUAL_TEAM_VOTE(false, true);
