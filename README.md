@@ -1,6 +1,6 @@
 # SimplePVPArena
 
-A Paper plugin that runs a team versus team single elimination tournament in one arena on the server. Admins register teams, mark the border of the fight area, set the spawns and start the matches from an inventory menu. The plugin handles rounds, the round time limit with sudden death, the start gate, the kit and the cleaning of the arena after every match.
+A Paper plugin that runs a team versus team single elimination tournament in one arena on the server. Players register and choose their team, or admins add the teams and form them at random. Admins mark the border of the fight area, set the spawns and start the matches from an inventory menu. The plugin handles the bracket, the rounds, the round time limit with sudden death, the start gate and the countdown before the fight, the kits and the kit choice, the cleaning of the arena after every match, auto matches without a tournament and a live placement.
 
 ## Requirements
 
@@ -20,7 +20,23 @@ The jar is written to `target/SimplePVPArena-1.0.0-SNAPSHOT.jar`. `mvn test` run
 
 ## Installation
 
-Copy the jar into the `plugins` folder of the server and start it. The plugin creates its folder with `config.yml` on the first start. Teams are stored in `teams.yml`, border blocks in `borders.yml`, start gates in `startgates.yml`, and the registrations for the next event with the registration stations in `registrations.yml`. An entry of `teams.yml` that cannot be read is skipped, and the file as it was read is kept as `teams.yml.broken` so the next save does not lose it.
+Copy the jar into the `plugins` folder of the server and start it. The plugin creates its folder with `config.yml` on the first start. Teams are stored in `teams.yml`, border blocks in `borders.yml`, start gates in `startgates.yml`, and the registrations for the next event with the registration stations in `registrations.yml`. An entry of `teams.yml` that cannot be read is skipped, and the file as it was read is kept as `teams.yml.broken` so the next save does not lose it. Every file the plugin writes is listed in "Files in the plugin folder".
+
+## Updating from an older version
+
+Stop the server, replace the jar and start it again. An existing `config.yml` is not extended: an entry it lacks uses its default, the comments of the shipped file are not added. To change such an entry, add it by hand with the name from "Configuration". Do not delete `config.yml` to get a fresh one, it also holds the calculated fight area, the spawns and the place of the standings board.
+
+These defaults change the behaviour of a server that updates from a version without the entry:
+
+- `match.reconnect-seconds: 60`: a fighter who loses the connection during a round has 60 seconds to come back instead of being eliminated at once. `0` brings the old behaviour back.
+- `match.countdown-seconds: 3`: the fighters are blind and cannot be hurt for three seconds before every fight, the round time limit starts after them. `0` brings the old behaviour back.
+- `arena.area-inventory.enabled: true`: every player, admins included, hands in the whole inventory inside the area of effect and gets it back on leaving. `false` keeps the inventory with the player.
+- `match.unequal-teams.mode: vote`: when the two teams of a match have different numbers of players online, the larger team votes who fights. `all` lets every online player fight as before.
+- `registration.team-mode: free-choice`: a player who registers gets the menu of beds to choose a team. `random` opens nothing, an admin forms the teams.
+
+A `kit` section that an older version saved in `config.yml` is taken over into `kits.yml` once, see "Kits and the kit choice". The language files in the `lang` folder are never overwritten, new texts come from the shipped files until they are added by hand, see "Languages". A `teams.yml` written before has no team colours.
+
+## Teams
 
 A team has 1 to 8 players. Teams are added in the team menu of `/tournament` with one chat line, `<teamName> <player> [<player> ...]`, for example `Alpha Steve Alex`. The team name has 1 to 16 letters, digits, hyphens or underscores, and every player has to be online or known to the server.
 
@@ -41,6 +57,43 @@ The team size sets how many players a new team has at most, 2 by default (`match
 | `/tournament vote` | none | the players of the voting team | Opens the vote on who fights again while the larger team of a match votes, see "Teams with different numbers of players online" |
 
 The bracket menu shows a tile for every match of a round with its two teams and whether it waits for its teams, is ready to be played, runs or was won, and it names the champion once the tournament is over. It opens on the round of the running match, "Previous round" and "Next round" turn the pages. It only shows the bracket: a click on a match does nothing and nothing can be taken out. It reads the bracket when it opens and when the round is changed, an open menu does not follow a match that is decided meanwhile. The tile "Bracket" in the main menu of `/tournament` opens it as well, with a tile back to the main menu. Every other menu needs `tournament.admin`.
+
+## Tournament
+
+The match menu of `/tournament` ("Match and tournament") starts, pauses, continues and cancels the tournament. "Start the tournament" needs at least two teams and an even number of them, "Force start" starts with an uneven number. The arena has to be ready, with a calculated fight area and the tribune spawn; "Dry run of the pipeline" also names a missing team spawn. The bracket is padded to the next power of two, the teams without a first round opponent advance at once and these byes are spread evenly over the bracket.
+
+The matches are played one after another on the one arena. A match is won by the first team with two points, a team scores a point when the other team has no active fighter left. After every point both teams are sent back to their spawns and get the kit again. A round has a time limit (`match.round-timeout-seconds`); when it runs out, sudden death hurts every active fighter every second with a growing damage. The final has no time limit and no sudden death by default (`match.disable-sudden-death-in-final`). When a match is decided the arena is cleaned and the next open match follows, after its kit choice. The final never starts by itself: once both finalists are known, the online admins are told and "Start the final" starts it.
+
+"Pause the tournament" starts no further match until "Continue the tournament", the round timer of a running round waits meanwhile. "Cancel the tournament" stops the running match and the bracket. "Force a result" decides the running match for one of its teams, "Decide a waiting match" decides a match that is not running, "Restart the match" stops the running tournament match and begins it again at 0 : 0 with the kit choice and the countdown, and "Take back a result" opens the decided matches whose following match has not started yet. "Tournament status" in the main menu writes the state, the rounds and the running match into the chat, "Dry run of the pipeline" checks the arena, the spawns, the kit, the start gate and the cleaning without starting anything.
+
+The bracket and its results are written to `tournament.yml` after the start, after every decided match and after every pause and continue; cancelling the tournament and its end remove the file. After a restart of the server the tournament comes back with the same bracket and results, always paused, and "Continue the tournament" carries on. A match that was running when the server stopped starts again from the beginning. A `tournament.yml` that cannot be read is renamed to `tournament.yml.broken`, no tournament is restored and the reason is named.
+
+## Arena setup
+
+The arena has a fight area, the spawns of both teams and the tribune spawn, all set in the arena menu of `/tournament`.
+
+- **Border blocks.** "Mark border blocks by clicking them" in the main menu switches a mode on in which every right click of the admin marks a block as a border block or takes the mark away. The marked blocks form the wall around the fight area and are stored in `borders.yml`. While the mode is on, chests, doors and other blocks stay shut.
+- **Fight area.** "Calculate the fight area" fills the room inside the closed wall from the position of the admin, up to `arena.shape-maximum-cells` cells. The recognised wall is shown for `border.wall-preview-seconds`. When the fill escapes through a gap, the calculation fails and the admin gets a compass and a particle trail towards the gap. "Diagnose with a higher cell limit" runs one calculation with a typed limit and leaves `config.yml` untouched.
+- **Height of the fight area.** "Mark the height of the fight area" hands out an item; a block placed with it marks the lowest point, the item then marks the highest point, and the placed blocks disappear again. The next calculation takes both as the floor and the ceiling of the fight area.
+- **Spawns.** "Set the first team spawn" and "Set the second team spawn" take the position of the admin inside the fight area, "Set the tribune spawn" a position outside of it and inside the area of effect.
+- **Start gate.** "Give start gate blocks" asks for a material and an amount from 1 to 64 in the chat and hands out that many start gate blocks, with a full inventory only what fits, and the message names the blocks that arrived. A box built around a team spawn and closed with them is the start gate, stored in `startgates.yml`. Every round start puts the whole gate back and takes it apart from the top over `match.start-gate-duration-seconds`. Without a placed gate block a round starts without a gate.
+- **Cleaning.** The calculation reads the blocks of the fight area and the layers under its floor (`arena.baseline-depth-below-floor`) as the baseline. After every match the cleaning writes the baseline back, so everything built or broken during the match is undone; "Clean the arena" starts the same cleaning by hand. The baseline is kept in memory only: after a restart of the server, and for a fight area larger than a baseline covers, the arena is not cleaned between the matches and the admins are told, "Clean the arena" then sets every block of the fight area to air. A new calculation takes the baseline again.
+- **Reset.** "Reset the arena" drops the fight area, the three spawns and the standings board after a confirmation, the blocks and the border blocks stay. It is refused while a match runs.
+- **Border particles.** The tile "Border particles" shows or hides the marker at the confirmed border wall.
+
+## Kits and the kit choice
+
+The kits live in `kits.yml` and are created from the inventory of an admin, replaced, deleted and chosen as the default kit in the kit menu of `/tournament`. A kit name has 1 to 32 letters, digits, hyphens or underscores. The first kit becomes the default kit, the default kit and the last kit cannot be deleted. Every fighter receives the default kit at the start of a round. At the start of a match the inventory and the state of every fighter are saved in `player-snapshots/<uuid>.yml` and given back after the match. A `kit` section that an older version saved in `config.yml` is taken over into `kits.yml` once as the kit `default`. A `kits.yml` that cannot be read is renamed to `kits.yml.broken`, and there is no kit until one is created.
+
+Before every tournament match, the final included, every online admin gets the popup "Choose the kit for <match>" and the chat line with the match and its teams. The first click on a kit counts for this match only, the default kit stays as it is. After 30 seconds without a choice the default kit is used, a reminder comes with 10 seconds left. With only one kit the match starts at once with it, without a kit with an empty one, and without an online admin at once with the default kit. The tile "Choose the kit for the next match" in the main menu opens the popup again while the choice is open. An auto match always uses the default kit.
+
+## Reconnect
+
+A fighter of the running round who loses the connection is not eliminated at once. The fighter stays in the round for `match.reconnect-seconds` (60 by default) and keeps kit, inventory, health and effects, and the team counts as alive. The players of the area read "Steve lost the connection, 60 seconds to come back". A fighter who is back in time fights on where they left, "Steve is back". When the time runs out, "Steve did not come back and is eliminated". Every fighter has one window per round: a fighter who comes back and leaves again in the same round is eliminated at once. A fighter who leaves during sudden death is eliminated at once. `0` eliminates at once.
+
+## Start animation
+
+Right before the fight of every round the fighters are blind and cannot be hurt for `match.countdown-seconds` (3 by default, 0 to 10). The players of the area read the titles 3, 2, 1 and "Fight!". With a start gate the countdown is the last seconds of the gate countdown. At "Fight!" the blindness ends, every fighter sees the totem animation, and the round time limit starts. `0` turns the animation off, the time limit then starts with the round. With ItemsAdder the titles can be images and the totem an own item, see "ItemsAdder (optional)".
 
 ## Registration and random teams
 
@@ -66,19 +119,102 @@ The team choice is closed while a tournament is running or paused. A team cannot
 
 ## Configuration
 
-`config.yml` has `language` at the top (see "Languages") and seven sections, each value is described by a comment in the file:
+`config.yml` has `language` at the top (see "Languages") and seven sections, each value is described by a comment in the file. The tables list every value with its default.
 
-- `match`: delay between rounds, round time limit, the seconds before the limit in which the action bar counts down to sudden death (`sudden-death-warning-seconds`, 45), the sudden death damage in its first second and the damage added for every further second (`sudden-death-damage-per-second`, 2.0, and `sudden-death-damage-increase-per-second`, 1.0), whether the final runs without sudden death, start gate duration, a countdown right before the fight of every round in which the fighters are blind and cannot be hurt and after which the round time limit starts (`countdown-seconds`, 3, 0 to 10, 0 turns it off), the seconds a fighter who loses the connection during a round has to come back before being eliminated (`reconnect-seconds`, 60, 0 to 600, 0 eliminates at once as before), what happens when the two teams of a match have different numbers of players online (`unequal-teams.mode`, `vote` or `all`, default `vote`, and `unequal-teams.vote-seconds`, 30, 5 to 120), the team size (`team-size`, 2 players) and team colours
-- `auto-match`: whether two teams that each have a player online get a match without a tournament (`enabled`, false, also switched by the tile "Auto match mode" in the match menu), the seconds between the announcement of such a match and its start (`start-delay-seconds`, 10, 3 to 120) and the pause after it and its cleaning (`pause-seconds`, 20, 0 to 300)
-- `registration`: whether the players choose their team in a menu of beds after registering or an admin forms the teams at random (`team-mode`, `free-choice` or `random`, default `free-choice`, also switched by the tile "Team mode" in the registrations menu), see "Choosing a team"
-- `arena`: cleaning speed and particles, the blocks read per tick while the baseline of the fight area is taken (`baseline-blocks-per-tick`, 16384) and the layers the baseline covers and the cleaning restores, counted from the ground surface of the fight area down (`baseline-depth-below-floor`, 11, 0 to 64, from the next calculation), flood fill limit, safety zone radius, the margin of the area of effect (`effect-margin`, 96 blocks), whether joining players are sent to the tribune (`teleport-on-join`, true), whether every player hands in the inventory inside the area of effect (`area-inventory.enabled`, true, see "Inventory in the area of effect"), plus the fight area, the spawns and the place of the standings board the plugin writes itself
-- `border`: particle display of border blocks (the ticks between two redraws, the view radius and the most blocks and connection lines shown to one player), the seconds the outline of a recognised wall is shown after a calculation (`wall-preview-seconds`, 4) and the marker of a confirmed wall, with whether that marker is shown (`confirmed-particle.enabled`, true, also switched by the tile "Border particles" in the arena menu; false hides only the marker, the outline shown after a calculation stays)
-- `items-adder`: whether ItemsAdder is used (`enabled`, true), optional images for the countdown, an optional item for the totem at the start of the fight and an optional item floating above every registration station (`station-item`), taken from ItemsAdder, see "ItemsAdder (optional)"
-- `placement`: whether the players inside the area of effect see the live placement as a sidebar (`sidebar.enabled`, true) and whether the standings board at the tribune is shown (`board.enabled`, true), see "Live placement"
+| Value | Default | Effect |
+| --- | --- | --- |
+| `language` | `en` | `en` or `de`, see "Languages" |
 
-Changes can be applied while the server runs with the "Reload config.yml" item in the main menu of `/tournament`. A changed `team-size` is taken over only under the rules of the team menu, otherwise the old size stays and the log and the online admins read why. At the start of the server the value of `config.yml` is always taken over, also during a restored tournament; a team with more players is then named in the log and to the online admins and keeps its players.
+`match`:
 
-The kits live in `kits.yml` and are created from the inventory of an admin, replaced, deleted and chosen as the default kit in the kit menu of `/tournament`. Every fighter receives the default kit at the start of a round. A `kit` section that an older version saved in `config.yml` is taken over into `kits.yml` once as the kit `default`.
+| Value | Default | Effect |
+| --- | --- | --- |
+| `round-reset-delay-ticks` | `100` | Ticks between the end of a round and the start of the next one, 20 ticks are one second |
+| `round-timeout-seconds` | `300` | Time limit of a round, sudden death starts when it runs out, at least 1 |
+| `sudden-death-warning-seconds` | `45` | Seconds before the time limit in which the action bar counts down to sudden death |
+| `sudden-death-damage-per-second` | `2.0` | Damage every active fighter takes in the first second of sudden death |
+| `sudden-death-damage-increase-per-second` | `1.0` | Damage added for every further second of sudden death |
+| `disable-sudden-death-in-final` | `true` | The rounds of the final have no time limit and no sudden death |
+| `start-gate-duration-seconds` | `10` | Seconds a placed start gate takes to open layer by layer, at least 1 |
+| `countdown-seconds` | `3` | Countdown right before the fight of every round, 0 to 10, 0 turns it off, see "Start animation" |
+| `reconnect-seconds` | `60` | Seconds a fighter who loses the connection during a round has to come back, 0 to 600, 0 eliminates at once, see "Reconnect" |
+| `unequal-teams.mode` | `vote` | `vote` or `all`, see "Teams with different numbers of players online", from the next match |
+| `unequal-teams.vote-seconds` | `30` | Seconds the vote lasts, 5 to 120 |
+| `team-size` | `2` | Players per team, 1 to 8, see "Teams" |
+| `team-colours.first-team` | `red` | Scoreboard colour of the first team of a match, a Minecraft colour name |
+| `team-colours.second-team` | `aqua` | Scoreboard colour of the second team, different from the first |
+
+`auto-match`, see "Auto match mode":
+
+| Value | Default | Effect |
+| --- | --- | --- |
+| `enabled` | `false` | Two teams that each have a player online get a match while no tournament is in progress, also switched by the tile "Auto match mode" in the match menu |
+| `start-delay-seconds` | `10` | Seconds between the announcement of an auto match and its start, 3 to 120 |
+| `pause-seconds` | `20` | Pause after an auto match and its cleaning before the next one is announced, 0 to 300 |
+
+`registration`:
+
+| Value | Default | Effect |
+| --- | --- | --- |
+| `team-mode` | `free-choice` | `free-choice` or `random`, also switched by the tile "Team mode" in the registrations menu, see "Choosing a team" |
+
+`arena`:
+
+| Value | Default | Effect |
+| --- | --- | --- |
+| `clean-blocks-per-tick` | `4096` | Blocks written per tick while the arena is cleaned |
+| `baseline-blocks-per-tick` | `16384` | Blocks read per tick while the baseline of the fight area is taken |
+| `baseline-depth-below-floor` | `11` | Layers the baseline covers and the cleaning restores, counted from the ground surface of the fight area down, 0 to 64, from the next calculation |
+| `clean-particle.enabled` | `true` | Particles show a running cleaning, false cleans without them |
+| `clean-particle.type` | `DUST` | Particle type, a colour carrying type such as `DUST` shows the red and the green phase |
+| `clean-particle.total-duration-seconds` | `6.0` | Seconds of both phases together, at most 120, 0 skips both |
+| `clean-particle.columns-per-tick` | `24` | Particle columns drawn per tick, at most 64, 0 draws none |
+| `shape-maximum-cells` | `50000` | Most cells the flood fill may visit when it calculates the fight area |
+| `safety-zone-radius` | `64` | Blocks around the arena outline in which players who do not fight take no environmental damage or hunger, 0 turns it off |
+| `effect-margin` | `96` | Blocks added around the fight area for the area of effect, 0 to 512, see "Area of effect" |
+| `teleport-on-join` | `true` | A player who joins is sent to the tribune once the arena is fully configured |
+| `area-inventory.enabled` | `true` | Every player hands in the inventory inside the area of effect, see "Inventory in the area of effect" |
+| `shape`, `spawns`, `standings-board` | `{}` | The fight area, the spawns and the place of the standings board, written by the plugin |
+
+`border`:
+
+| Value | Default | Effect |
+| --- | --- | --- |
+| `particle-period-ticks` | `30` | Ticks between two redraws of the border particles |
+| `particle-view-radius` | `12` | Distance around a player in which border blocks are shown |
+| `particle-maximum-blocks-per-player` | `24` | Most border blocks shown to one player per redraw |
+| `particle-maximum-lines-per-player` | `48` | Most connection lines between border columns shown to one player, 0 hides them |
+| `wall-preview-seconds` | `4` | Seconds the outline of a recognised wall is shown after a calculation |
+| `confirmed-particle.enabled` | `true` | The marker on every block of a confirmed wall, also switched by the tile "Border particles" in the arena menu; false hides only the marker, the outline shown after a calculation stays |
+| `confirmed-particle.type` | `END_ROD` | Particle type of the marker |
+| `confirmed-particle.height` | `0.25` | Height in blocks of the particle stream above the block, 0 draws a single particle |
+| `confirmed-particle.colour.red`, `.green`, `.blue` | `255` | RGB colour from 0 to 255, used only by colour carrying types such as `DUST` |
+
+`items-adder`: whether ItemsAdder is used, the images of the countdown, the item of the totem and the item above every registration station, every value with its default in "ItemsAdder (optional)".
+
+`placement`, see "Live placement":
+
+| Value | Default | Effect |
+| --- | --- | --- |
+| `sidebar.enabled` | `true` | Every player inside the area of effect sees the placement as a sidebar |
+| `board.enabled` | `true` | The standings board at the tribune is shown, false removes it and keeps its place |
+
+Changes can be applied while the server runs with the "Reload config.yml" item in the main menu of `/tournament`. A changed `team-size` is taken over only under the rules of the team menu, otherwise the old size stays and the log and the online admins read why. At the start of the server the value of `config.yml` is always taken over, also during a restored tournament; a team with more players is then named in the log and to the online admins and keeps its players. The reload leaves the calculated fight area, the spawns, the border blocks, the teams and a running match untouched. A value that cannot be used falls back to its default, the log and the answer of the reload name it.
+
+## Files in the plugin folder
+
+| File | Content |
+| --- | --- |
+| `config.yml` | The settings, the calculated fight area, the spawns and the place of the standings board |
+| `lang/en.yml`, `lang/de.yml` | The texts, copied on the first start and never overwritten, see "Languages" |
+| `teams.yml` | The teams with their players and colours, an unreadable entry is skipped and the file kept as `teams.yml.broken` |
+| `kits.yml` | The kits and the default kit, an unreadable file is renamed to `kits.yml.broken` |
+| `tournament.yml` | The bracket and the results of a running or paused tournament, an unreadable file is renamed to `tournament.yml.broken` |
+| `registrations.yml` | The registered players and the registration stations, an unreadable file is renamed to `registrations.yml.broken` |
+| `startgates.yml` | The placed start gate blocks |
+| `borders.yml` | The marked border blocks |
+| `area-inventories/<uuid>.yml` | The inventory a player handed in inside the area of effect, removed when it is given back, an unreadable file is renamed to `<uuid>.yml.broken` |
+| `player-snapshots/<uuid>.yml` | The inventory and state of a fighter from before the kit, given back after the match, an unreadable file is renamed to `<uuid>.yml.broken` |
 
 ## Teams with different numbers of players online
 

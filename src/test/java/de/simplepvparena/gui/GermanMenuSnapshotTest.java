@@ -68,8 +68,8 @@ class GermanMenuSnapshotTest {
                 Für das Kit und das echte Ankommen nach dem / Teleport bleibt ein echter Testspieler nötig / \
                 Gesperrt, solange ein Turnier oder ein Match läuft / \
                 Das Menü schließt sich, damit du die Antwort lesen kannst
-                20 | COMPARATOR | config.yml neu laden | Liest config.yml erneut und wendet sie sofort an / \
-                Rundenzeitlimit, Blockmengen der Reinigung, Zellenlimit, / Schutzzone und Wandpartikel / \
+                20 | COMPARATOR | config.yml neu laden | Liest config.yml erneut und wendet sie an / \
+                Die Antwort nennt, was angewendet wurde / \
                 Die Arena, die Teams und ein laufendes Match bleiben unberührt / \
                 Das Menü schließt sich, damit du die Antwort lesen kannst
                 22 | BARRIER | Schließen | Schließt das Menü
@@ -92,8 +92,7 @@ class GermanMenuSnapshotTest {
                 fixture.lastMenu().findTile(AdminMenuLayout.INFO_SLOT).orElseThrow().loreLines());
         assertEquals(List.of("Starten, pausieren, abbrechen und ein Ergebnis erzwingen", runningMatch),
                 fixture.lastMenu().findTile(MAIN_MATCH_SLOT).orElseThrow().loreLines());
-        assertEquals(List.of("Liest config.yml erneut und wendet sie sofort an",
-                "Rundenzeitlimit, Blockmengen der Reinigung, Zellenlimit,", "Schutzzone und Wandpartikel",
+        assertEquals(List.of("Liest config.yml erneut und wendet sie an", "Die Antwort nennt, was angewendet wurde",
                 "Die Arena, die Teams und ein laufendes Match bleiben unberührt",
                 "Ein Match läuft: das neue Rundenzeitlimit", "gilt ab der nächsten Runde",
                 "Das Menü schließt sich, damit du die Antwort lesen kannst"),

@@ -104,9 +104,8 @@ main-menu:
     reload:
       title: 'config.yml neu laden'
       lore:
-        - 'Liest config.yml erneut und wendet sie sofort an'
-        - 'Rundenzeitlimit, Blockmengen der Reinigung, Zellenlimit,'
-        - 'Schutzzone und Wandpartikel'
+        - 'Liest config.yml erneut und wendet sie an'
+        - 'Die Antwort nennt, was angewendet wurde'
         - 'Die Arena, die Teams und ein laufendes Match bleiben unberührt'
       match-running:
         - 'Ein Match läuft: das neue Rundenzeitlimit'

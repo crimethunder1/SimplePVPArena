@@ -76,6 +76,7 @@ import net.kyori.adventure.audience.Audience;
 import net.kyori.adventure.chat.SignedMessage;
 import net.kyori.adventure.text.Component;
 import org.bukkit.Location;
+import org.bukkit.Material;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.Server;
 import org.bukkit.World;
@@ -112,6 +113,7 @@ final class AdminMenuFixture {
     private static final int WALL_MAXIMUM = 6;
     private static final int WALL_TOP_Y = GROUND_Y + 3;
     private static final int SEED_COORDINATE = 3;
+    private static final int UNLIMITED_INVENTORY_ROOM = -1;
 
     private static final Logger LOGGER = createQuietLogger();
 
@@ -168,6 +170,7 @@ final class AdminMenuFixture {
 
     private boolean adminPermissionGranted = true;
     private boolean adminInventoryFull;
+    private int adminInventoryRoom = UNLIMITED_INVENTORY_ROOM;
     private Location adminLocation;
     private int teamConfigurationSaveCount;
     private int arenaConfigurationSaveCount;
@@ -254,7 +257,8 @@ final class AdminMenuFixture {
                         this::saveTeamConfiguration, this::writeTeamSize),
                 new AdminMenuDependencies.ArenaServices(arenaSetupService,
                         new ArenaHeightMarkerService(plugin, heightMarkers),
-                        new StartGateItemService(plugin, gateMarks, gateDuration, () -> { }),
+                        new StartGateItemService(plugin, gateMarks, gateDuration, () -> { },
+                                material -> material == Material.BARRIER, RecordingItemStack::new),
                         borderSelectorModes, borderParticleService, this::writeBorderParticleSwitch),
                 new AdminMenuDependencies.KitServices(kitLibrary,
                         new KitSaveService(kitLibrary, new FakeKitItemSerializer())),
@@ -602,6 +606,10 @@ final class AdminMenuFixture {
         adminInventoryFull = true;
     }
 
+    void leaveRoomInAdminInventoryFor(int itemCount) {
+        adminInventoryRoom = itemCount;
+    }
+
     void switchBorderSelectorModeOn() {
         assertTrue(borderSelectorModes.toggle(adminUniqueId));
     }
@@ -865,11 +873,31 @@ final class AdminMenuFixture {
                 if (adminInventoryFull) {
                     yield new HashMap<>(Map.of(0, ((ItemStack[]) arguments[0])[0]));
                 }
+                if (adminInventoryRoom != UNLIMITED_INVENTORY_ROOM) {
+                    yield addItemsUpToTheRoomLeft((ItemStack[]) arguments[0]);
+                }
                 handedOutItems.addAll(List.of((ItemStack[]) arguments[0]));
                 yield new HashMap<Integer, ItemStack>();
             }
             default -> throw new UnsupportedOperationException("PlayerInventory." + method.getName());
         });
+    }
+
+    private HashMap<Integer, ItemStack> addItemsUpToTheRoomLeft(ItemStack[] itemStacks) {
+        HashMap<Integer, ItemStack> itemsWithoutRoom = new HashMap<>();
+        for (int index = 0; index < itemStacks.length; index++) {
+            ItemStack itemStack = itemStacks[index];
+            int fittingAmount = Math.min(itemStack.getAmount(), adminInventoryRoom);
+            adminInventoryRoom -= fittingAmount;
+            if (fittingAmount > 0) {
+                handedOutItems.add(new RecordingItemStack(itemStack.getType(), fittingAmount));
+            }
+            if (fittingAmount < itemStack.getAmount()) {
+                itemsWithoutRoom.put(index, new RecordingItemStack(itemStack.getType(),
+                        itemStack.getAmount() - fittingAmount));
+            }
+        }
+        return itemsWithoutRoom;
     }
 
     private Plugin createPlugin(Server server) {

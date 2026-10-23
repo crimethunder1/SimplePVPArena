@@ -38,8 +38,8 @@ class MainAdminMenuSnapshotTest {
                 no block, no file and no fighter is touched / A real test player stays necessary for the kit / \
                 and the teleport really arriving / Refused while a tournament or a match runs / \
                 The menu closes so you can read the answer
-                20 | COMPARATOR | Reload config.yml | Reads config.yml again and applies it live / \
-                Round timeout, cleaning batch sizes, cell limit, / safety zone and border particles / \
+                20 | COMPARATOR | Reload config.yml | Reads config.yml again and applies it / \
+                The reply lists what was applied / \
                 The arena, the teams and a running match stay untouched / The menu closes so you can read the answer
                 22 | BARRIER | Close | Closes the menu
                 24 | DIAMOND_CHESTPLATE | Kits | Kits: 0 / Default kit: none / \
@@ -78,8 +78,8 @@ class MainAdminMenuSnapshotTest {
                 no block, no file and no fighter is touched / A real test player stays necessary for the kit / \
                 and the teleport really arriving / Refused while a tournament or a match runs / \
                 The menu closes so you can read the answer
-                20 | COMPARATOR | Reload config.yml | Reads config.yml again and applies it live / \
-                Round timeout, cleaning batch sizes, cell limit, / safety zone and border particles / \
+                20 | COMPARATOR | Reload config.yml | Reads config.yml again and applies it / \
+                The reply lists what was applied / \
                 The arena, the teams and a running match stay untouched / The menu closes so you can read the answer
                 22 | BARRIER | Close | Closes the menu
                 24 | DIAMOND_CHESTPLATE | Kits | Kits: 0 / Default kit: none / \
@@ -115,8 +115,8 @@ class MainAdminMenuSnapshotTest {
                 18 | GRAY_DYE | Dry run of the pipeline | A tournament is in progress, the dry run is a check for \
                 before an event / It registers two test teams and would put them into the registry of a running \
                 bracket / Wait until the event is over or cancel it in the match menu of /tournament
-                20 | COMPARATOR | Reload config.yml | Reads config.yml again and applies it live / \
-                Round timeout, cleaning batch sizes, cell limit, / safety zone and border particles / \
+                20 | COMPARATOR | Reload config.yml | Reads config.yml again and applies it / \
+                The reply lists what was applied / \
                 The arena, the teams and a running match stay untouched / \
                 A match is running: the new round timeout / arrives with the next round / \
                 The menu closes so you can read the answer
@@ -156,8 +156,8 @@ class MainAdminMenuSnapshotTest {
                 18 | GRAY_DYE | Dry run of the pipeline | A tournament is in progress, the dry run is a check for \
                 before an event / It registers two test teams and would put them into the registry of a running \
                 bracket / Wait until the event is over or cancel it in the match menu of /tournament
-                20 | COMPARATOR | Reload config.yml | Reads config.yml again and applies it live / \
-                Round timeout, cleaning batch sizes, cell limit, / safety zone and border particles / \
+                20 | COMPARATOR | Reload config.yml | Reads config.yml again and applies it / \
+                The reply lists what was applied / \
                 The arena, the teams and a running match stay untouched / \
                 A match is running: the new round timeout / arrives with the next round / \
                 The menu closes so you can read the answer
@@ -196,8 +196,8 @@ class MainAdminMenuSnapshotTest {
                 18 | GRAY_DYE | Dry run of the pipeline | A tournament is in progress, the dry run is a check for \
                 before an event / It registers two test teams and would put them into the registry of a running \
                 bracket / Wait until the event is over or cancel it in the match menu of /tournament
-                20 | COMPARATOR | Reload config.yml | Reads config.yml again and applies it live / \
-                Round timeout, cleaning batch sizes, cell limit, / safety zone and border particles / \
+                20 | COMPARATOR | Reload config.yml | Reads config.yml again and applies it / \
+                The reply lists what was applied / \
                 The arena, the teams and a running match stay untouched / The menu closes so you can read the answer
                 22 | BARRIER | Close | Closes the menu
                 24 | DIAMOND_CHESTPLATE | Kits | Kits: 0 / Default kit: none / \
@@ -234,8 +234,8 @@ class MainAdminMenuSnapshotTest {
                 18 | GRAY_DYE | Dry run of the pipeline | A tournament is in progress, the dry run is a check for \
                 before an event / It registers two test teams and would put them into the registry of a running \
                 bracket / Wait until the event is over or cancel it in the match menu of /tournament
-                20 | COMPARATOR | Reload config.yml | Reads config.yml again and applies it live / \
-                Round timeout, cleaning batch sizes, cell limit, / safety zone and border particles / \
+                20 | COMPARATOR | Reload config.yml | Reads config.yml again and applies it / \
+                The reply lists what was applied / \
                 The arena, the teams and a running match stay untouched / \
                 A match is running: the new round timeout / arrives with the next round / \
                 The menu closes so you can read the answer
@@ -280,8 +280,8 @@ class MainAdminMenuSnapshotTest {
                 no block, no file and no fighter is touched / A real test player stays necessary for the kit / \
                 and the teleport really arriving / Refused while a tournament or a match runs / \
                 The menu closes so you can read the answer
-                20 | COMPARATOR | Reload config.yml | Reads config.yml again and applies it live / \
-                Round timeout, cleaning batch sizes, cell limit, / safety zone and border particles / \
+                20 | COMPARATOR | Reload config.yml | Reads config.yml again and applies it / \
+                The reply lists what was applied / \
                 The arena, the teams and a running match stay untouched / The menu closes so you can read the answer
                 22 | BARRIER | Close | Closes the menu
                 24 | DIAMOND_CHESTPLATE | Kits | Kits: 0 / Default kit: none / \
@@ -321,8 +321,8 @@ class MainAdminMenuSnapshotTest {
                 no block, no file and no fighter is touched / A real test player stays necessary for the kit / \
                 and the teleport really arriving / Refused while a tournament or a match runs / \
                 The menu closes so you can read the answer
-                20 | COMPARATOR | Reload config.yml | Reads config.yml again and applies it live / \
-                Round timeout, cleaning batch sizes, cell limit, / safety zone and border particles / \
+                20 | COMPARATOR | Reload config.yml | Reads config.yml again and applies it / \
+                The reply lists what was applied / \
                 The arena, the teams and a running match stay untouched / The menu closes so you can read the answer
                 22 | BARRIER | Close | Closes the menu
                 24 | DIAMOND_CHESTPLATE | Kits | Kits: 0 / Default kit: none / \

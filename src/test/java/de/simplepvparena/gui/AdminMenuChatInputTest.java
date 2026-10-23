@@ -1,6 +1,7 @@
 package de.simplepvparena.gui;
 
 import de.simplepvparena.team.Team;
+import org.bukkit.inventory.ItemStack;
 import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
@@ -22,6 +23,8 @@ class AdminMenuChatInputTest {
     private static final int TEAMS_NEXT_PAGE_SLOT = 53;
 
     private static final String NOT_ALLOWED = "You are not allowed to use the tournament menu";
+    private static final String START_GATE_INVENTORY_FULL =
+            "Your inventory is full, not every gate block could be handed out";
 
     private final AdminMenuFixture fixture = new AdminMenuFixture();
 
@@ -484,6 +487,70 @@ class AdminMenuChatInputTest {
     }
 
     @Test
+    void handsOutEveryStartGateBlockAndNamesTheWholeAmount() {
+        askForTheStartGateBlocks();
+
+        fixture.typeInChat("barrier 32");
+        fixture.runNextTick();
+
+        assertEquals(List.of(String.join("\n",
+                "You received 32 BARRIER start gate blocks",
+                "Build the box around a team spawn out of whatever your map is made of and close it with these blocks",
+                "Every one of them you place is part of the gate right away, breaking one takes it out again",
+                "Every round start puts the whole gate back and takes it apart again from the top")),
+                fixture.messages());
+        assertEquals(List.of(32), handedOutAmounts());
+        assertTrue(fixture.isMenuClosed());
+    }
+
+    @Test
+    void namesOnlyTheStartGateBlocksThatFitIntoTheInventory() {
+        askForTheStartGateBlocks();
+        fixture.leaveRoomInAdminInventoryFor(20);
+
+        fixture.typeInChat("barrier 32");
+        fixture.runNextTick();
+
+        assertEquals(List.of(START_GATE_INVENTORY_FULL, String.join("\n",
+                "You received 20 BARRIER start gate blocks",
+                "Build the box around a team spawn out of whatever your map is made of and close it with these blocks",
+                "Every one of them you place is part of the gate right away, breaking one takes it out again",
+                "Every round start puts the whole gate back and takes it apart again from the top")),
+                fixture.messages());
+        assertEquals(List.of(20), handedOutAmounts());
+    }
+
+    @Test
+    void namesASingleStartGateBlockThatFitIntoTheInventory() {
+        askForTheStartGateBlocks();
+        fixture.leaveRoomInAdminInventoryFor(1);
+
+        fixture.typeInChat("barrier 32");
+        fixture.runNextTick();
+
+        assertEquals(List.of(START_GATE_INVENTORY_FULL, String.join("\n",
+                "You received 1 BARRIER start gate block",
+                "Build the box around a team spawn out of whatever your map is made of and close it with this block",
+                "It is part of the gate right away once you place it, breaking it takes it out again",
+                "Every round start puts the whole gate back and takes it apart again from the top")),
+                fixture.messages());
+        assertEquals(List.of(1), handedOutAmounts());
+    }
+
+    @Test
+    void sendsOnlyTheWarningWhenNoStartGateBlockFitsIntoTheInventory() {
+        askForTheStartGateBlocks();
+        fixture.fillAdminInventory();
+
+        fixture.typeInChat("barrier 32");
+        fixture.runNextTick();
+
+        assertEquals(List.of(START_GATE_INVENTORY_FULL), fixture.messages());
+        assertTrue(fixture.handedOutItems().isEmpty());
+        assertTrue(fixture.isMenuClosed());
+    }
+
+    @Test
     void asksForATeamOfTheCurrentTeamSize() {
         List<String> expectedSizeLines = List.of(
                 "A team has 1 player, a team name has 1 to 16 letters, digits, hyphens or underscores",
@@ -600,6 +667,10 @@ class AdminMenuChatInputTest {
         openTheArenaMenuOfAReadyArena();
         fixture.click(ARENA_START_GATE_SLOT);
         fixture.messages().clear();
+    }
+
+    private List<Integer> handedOutAmounts() {
+        return fixture.handedOutItems().stream().map(ItemStack::getAmount).toList();
     }
 
     private void openTheArenaMenuOfAReadyArena() {

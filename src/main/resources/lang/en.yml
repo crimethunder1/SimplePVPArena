@@ -104,9 +104,8 @@ main-menu:
     reload:
       title: 'Reload config.yml'
       lore:
-        - 'Reads config.yml again and applies it live'
-        - 'Round timeout, cleaning batch sizes, cell limit,'
-        - 'safety zone and border particles'
+        - 'Reads config.yml again and applies it'
+        - 'The reply lists what was applied'
         - 'The arena, the teams and a running match stay untouched'
       match-running:
         - 'A match is running: the new round timeout'

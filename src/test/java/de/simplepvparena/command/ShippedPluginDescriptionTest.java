@@ -13,11 +13,47 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
 import java.nio.charset.StandardCharsets;
+import java.util.List;
+import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class ShippedPluginDescriptionTest {
+
+    private static final List<String> SUBCOMMANDS = List.of("bracket", "spectate", "join", "leave", "team", "vote");
+
+    @Test
+    void namesThePluginItsAuthorItsMainClassAndTheApiVersion() {
+        PluginDescriptionFile description = shippedDescription();
+
+        assertEquals("SimplePVPArena", description.getName());
+        assertEquals("de.simplepvparena.SimplePVPArenaPlugin", description.getMain());
+        assertEquals("26.2", description.getAPIVersion());
+        assertEquals(List.of("crimethunder"), description.getAuthors());
+    }
+
+    @Test
+    void loadsAfterItemsAdderWithoutDependingOnIt() {
+        PluginDescriptionFile description = shippedDescription();
+
+        assertTrue(description.getSoftDepend().contains("ItemsAdder"), description.getSoftDepend().toString());
+        assertTrue(description.getDepend().isEmpty(), description.getDepend().toString());
+    }
+
+    @Test
+    void describesTheTournamentCommandWithEverySubcommand() {
+        Map<String, Object> tournamentCommand = shippedDescription().getCommands().get("tournament");
+        assertNotNull(tournamentCommand, "the command tournament is missing from plugin.yml");
+        String commandDescription = (String) tournamentCommand.get("description");
+        String usage = (String) tournamentCommand.get("usage");
+
+        assertEquals("/<command> [bracket|spectate|join|leave|team|vote]", usage);
+        for (String subcommand : SUBCOMMANDS) {
+            assertTrue(commandDescription.contains("/tournament " + subcommand), subcommand);
+        }
+    }
 
     @Test
     void grantsTheAdminPermissionToOperatorsByDefault() {

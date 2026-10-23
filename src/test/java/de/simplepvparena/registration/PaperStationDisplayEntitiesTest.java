@@ -53,7 +53,7 @@ class PaperStationDisplayEntitiesTest {
     }
 
     @Test
-    void theItemDisplayIsMarkedNotSavedAndKeepsItsFixedDirection() {
+    void theItemDisplayIsMarkedNotSavedAndTurnsToEveryViewer() {
         FakeItemStack stationItem = new FakeItemStack("station item");
         ItemDisplay display = display(ItemDisplay.class);
         Location location = new Location(world(display), 10.5D, 65.7D, 20.5D);
@@ -61,7 +61,7 @@ class PaperStationDisplayEntitiesTest {
         Entity spawned = displayEntities.spawnItemDisplay(location, stationItem);
 
         assertSame(display, spawned);
-        assertEquals(List.of("spawn ItemDisplay at 10.5 65.7 20.5", "setPersistent false",
+        assertEquals(List.of("spawn ItemDisplay at 10.5 65.7 20.5", "setPersistent false", "setBillboard CENTER",
                 "setItemStack " + stationItem), calls);
         assertEquals(Map.of(MARKER_KEY, (byte) 1), persistentData);
     }

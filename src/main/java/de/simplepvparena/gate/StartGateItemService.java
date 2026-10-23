@@ -16,6 +16,8 @@ import org.bukkit.plugin.Plugin;
 
 import java.util.List;
 import java.util.Objects;
+import java.util.function.BiFunction;
+import java.util.function.Predicate;
 
 public final class StartGateItemService {
 
@@ -27,13 +29,28 @@ public final class StartGateItemService {
     private final StartGateMarks gateMarks;
     private final StartGateDuration duration;
     private final Runnable gateMarkChangeListener;
+    private final Predicate<Material> placeableBlock;
+    private final BiFunction<Material, Integer, ItemStack> itemStackFactory;
 
     public StartGateItemService(Plugin plugin, StartGateMarks gateMarks, StartGateDuration duration,
                                 Runnable gateMarkChangeListener) {
+        this(plugin, gateMarks, duration, gateMarkChangeListener,
+                material -> material.isBlock() && material.isItem() && !material.isAir(), ItemStack::new);
+    }
+
+    public StartGateItemService(Plugin plugin, StartGateMarks gateMarks, StartGateDuration duration,
+                                Runnable gateMarkChangeListener, Predicate<Material> placeableBlock,
+                                BiFunction<Material, Integer, ItemStack> itemStackFactory) {
         this.gateKey = new NamespacedKey(Objects.requireNonNull(plugin, "plugin"), GATE_KEY_NAME);
         this.gateMarks = Objects.requireNonNull(gateMarks, "gateMarks");
         this.duration = Objects.requireNonNull(duration, "duration");
         this.gateMarkChangeListener = Objects.requireNonNull(gateMarkChangeListener, "gateMarkChangeListener");
+        this.placeableBlock = Objects.requireNonNull(placeableBlock, "placeableBlock");
+        this.itemStackFactory = Objects.requireNonNull(itemStackFactory, "itemStackFactory");
+    }
+
+    public boolean isPlaceableBlock(Material material) {
+        return placeableBlock.test(material);
     }
 
     public NamespacedKey getGateKey() {
@@ -41,7 +58,7 @@ public final class StartGateItemService {
     }
 
     public ItemStack createGateItem(BlockItemRequest request) {
-        return labelled(new ItemStack(request.material(), request.amount()));
+        return labelled(itemStackFactory.apply(request.material(), request.amount()));
     }
 
     ItemStack labelled(ItemStack itemStack) {

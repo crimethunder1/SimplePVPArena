@@ -29,6 +29,7 @@ public final class PaperStationDisplayEntities implements StationDisplayEntities
     public Entity spawnItemDisplay(Location location, ItemStack itemStack) {
         return location.getWorld().spawn(location, ItemDisplay.class, display -> {
             mark(display);
+            display.setBillboard(Display.Billboard.CENTER);
             display.setItemStack(itemStack);
         });
     }

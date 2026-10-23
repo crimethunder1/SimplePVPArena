@@ -214,7 +214,7 @@ final class ArenaAdminMenu implements AdminMenu {
             return;
         }
         BlockItemRequestResult requestResult = BlockItemRequest.parseLine(line,
-                ArenaAdminMenu::isPlaceableBlock);
+                gateItemService::isPlaceableBlock);
         if (!requestResult.isAccepted()) {
             TournamentMessages.sendError(player, requestResult.getRejectionMessage().orElseThrow());
             navigation.open(player, AdminMenuHolder.arena());
@@ -223,11 +223,16 @@ final class ArenaAdminMenu implements AdminMenu {
         BlockItemRequest request = requestResult.getRequest().orElseThrow();
         Map<Integer, ItemStack> itemsThatDidNotFit = player.getInventory()
                 .addItem(gateItemService.createGateItem(request));
+        int handedOutAmount = request.amount() - itemsThatDidNotFit.values().stream()
+                .mapToInt(ItemStack::getAmount)
+                .sum();
         if (!itemsThatDidNotFit.isEmpty()) {
             TournamentMessages.sendWarning(player, Messages.text(ArenaMenuMessage.START_GATE_INVENTORY_FULL));
         }
-        TournamentMessages.sendSuccess(player, Messages.plural(ArenaMenuMessage.START_GATE_HANDED_OUT,
-                request.amount(), Placeholder.of("material", request.material().name())));
+        if (handedOutAmount > 0) {
+            TournamentMessages.sendSuccess(player, Messages.plural(ArenaMenuMessage.START_GATE_HANDED_OUT,
+                    handedOutAmount, Placeholder.of("material", request.material().name())));
+        }
     }
 
     private void askForCleaningConfirmation(Player player) {
@@ -342,10 +347,6 @@ final class ArenaAdminMenu implements AdminMenu {
     private MenuTile buildSpawnItem(Material material, ArenaSpawnType spawnType, MessageKey title) {
         return MenuItems.create(material, Messages.text(title), Messages.lines(ArenaMenuMessage.SPAWN_LORE,
                 Placeholder.of("placement", spawnType.getPlacementHint())));
-    }
-
-    private static boolean isPlaceableBlock(Material material) {
-        return material.isBlock() && material.isItem() && !material.isAir();
     }
 
     private void askForDebugCellLimitLine(Player player) {
