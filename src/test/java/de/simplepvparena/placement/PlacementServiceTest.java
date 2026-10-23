@@ -2,7 +2,6 @@ package de.simplepvparena.placement;
 
 import de.simplepvparena.arena.Arena;
 import de.simplepvparena.match.Match;
-import de.simplepvparena.team.Team;
 import de.simplepvparena.team.TeamColour;
 import de.simplepvparena.team.TeamMember;
 import de.simplepvparena.team.TeamRegistry;

@@ -133,7 +133,8 @@ class FileAreaInventoryStorageTest {
         Files.createDirectories(inventoryDirectory());
         Path inventoryFile = inventoryDirectory().resolve(playerUniqueId + ".yml");
         Files.writeString(inventoryFile, "format-version: 7\ncontents: AAAA\n", StandardCharsets.UTF_8);
-        assertEquals(AreaInventoryLookup.Outcome.BROKEN, storageIn(inventoryDirectory()).find(playerUniqueId).outcome());
+        assertEquals(AreaInventoryLookup.Outcome.BROKEN,
+                storageIn(inventoryDirectory()).find(playerUniqueId).outcome());
 
         Files.writeString(inventoryFile, "format-version: 1\ncontents: AAAA\n", StandardCharsets.UTF_8);
         AreaInventoryLookup lookup = storageIn(inventoryDirectory()).find(playerUniqueId);

@@ -129,6 +129,10 @@ public final class AutoMatchService implements MatchCompletionHandler, AutoMatch
     }
 
     private void followRenamedTeam(String formerTeamName, String newTeamName) {
+        Long lastAutoMatchNumber = lastAutoMatchNumberByTeamKey.remove(toKey(formerTeamName));
+        if (lastAutoMatchNumber != null) {
+            lastAutoMatchNumberByTeamKey.put(toKey(newTeamName), lastAutoMatchNumber);
+        }
         if (!winsByTeamName.containsKey(formerTeamName)) {
             return;
         }

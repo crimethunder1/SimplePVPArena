@@ -186,7 +186,7 @@ final class UnequalTeamVoteHarness {
         Match match = runningMatch();
         matchService().handlePlayerEliminated(player.uniqueId());
         if (match.getState() == MatchState.BETWEEN_ROUNDS) {
-            arena.advanceTicksWithRepeatingTasks(1L);
+            arena.runTick();
         }
     }
 

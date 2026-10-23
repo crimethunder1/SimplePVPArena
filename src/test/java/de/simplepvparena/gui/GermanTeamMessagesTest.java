@@ -136,7 +136,7 @@ class GermanTeamMessagesTest {
                 "Gib im Chat ein: <Neuer Name>",
                 "Ein Teamname hat " + GERMAN_NAME_RULE,
                 "Beispiel: Phoenix",
-                "Das Team behält seine Spieler und seinen Platz in der Team-Liste",
+                "Das Team behält seine Spieler und seinen Platz in der Teamliste",
                 GERMAN_PROMPT_FOOTER), prompt);
         assertEquals("Die Eingabe für den neuen Namen von Team Alpha wurde abgebrochen, nichts wurde geändert",
                 germanWord);

@@ -87,8 +87,8 @@ class FileRegistrationStorageTest {
         reloadedStations.add(new RegistrationStation("lobby", 0, 0, 0));
         storage().load(new RegistrationList(), reloadedStations);
 
-        assertEquals(List.of(new RegistrationStation("world", 10, 64, -20), new RegistrationStation("event", -3, 70, 5)),
-                reloadedStations.stations());
+        assertEquals(List.of(new RegistrationStation("world", 10, 64, -20),
+                new RegistrationStation("event", -3, 70, 5)), reloadedStations.stations());
         assertTrue(Files.readString(registrationFile(), StandardCharsets.UTF_8).contains("""
                 stations:
                 - world: world

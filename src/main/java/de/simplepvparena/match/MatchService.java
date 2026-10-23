@@ -872,8 +872,8 @@ public final class MatchService {
     }
 
     private void announceStartGateSecond(Match match, int remainingSeconds) {
-        showCountdownTitle(match, remainingSeconds, Component.text(StartGateCountdown.describeSubtitle(remainingSeconds),
-                TournamentMessages.DETAIL_COLOUR));
+        showCountdownTitle(match, remainingSeconds, Component.text(
+                StartGateCountdown.describeSubtitle(remainingSeconds), TournamentMessages.DETAIL_COLOUR));
     }
 
     private void announceCountdownSecond(Match match, int remainingSeconds) {

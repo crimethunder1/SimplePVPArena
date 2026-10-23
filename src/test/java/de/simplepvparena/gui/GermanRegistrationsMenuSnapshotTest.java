@@ -34,9 +34,10 @@ class GermanRegistrationsMenuSnapshotTest {
                 Legt das Werkzeug für die Anmelde-Station in dein Inventar
                 47 | BOOK | Anmeldungen | 3 Spieler sind angemeldet / Bei der Teamgröße 2 ergibt das 2 Teams / \
                 Seite 1 von 1
-                48 | NETHER_STAR | Zufallsteams bilden | Bildet aus allen Angemeldeten zufällig Teams in der Teamgröße / \
+                48 | NETHER_STAR | Zufallsteams bilden | Bildet aus allen Angemeldeten zufällig Teams \
+                in der Teamgröße / \
                 Fragt vorher nach einer Bestätigung
-                49 | OAK_DOOR | Zurück | Zurück zur Team-Liste
+                49 | OAK_DOOR | Zurück | Zurück zur Teamliste
                 51 | BARRIER | Anmeldungen leeren | \
                 Entfernt alle Anmeldungen und alle Teams mit einer Farbe, die Teams ohne Farbe bleiben / \
                 Fragt vorher nach einer Bestätigung
@@ -55,7 +56,7 @@ class GermanRegistrationsMenuSnapshotTest {
                 47 | BOOK | Anmeldungen | 0 Spieler sind angemeldet / Bei der Teamgröße 2 ergibt das 0 Teams / \
                 Seite 1 von 1
                 48 | GRAY_DYE | Zufallsteams bilden | Es braucht mindestens 2 Teams, angemeldet sind 0 Spieler
-                49 | OAK_DOOR | Zurück | Zurück zur Team-Liste
+                49 | OAK_DOOR | Zurück | Zurück zur Teamliste
                 51 | GRAY_DYE | Anmeldungen leeren | Es ist kein Spieler angemeldet
                 52 | RED_BED | Teammodus | Die Spieler wählen ihr Team / Klicke zum Umschalten
                 """, fixture.describeLastMenu());

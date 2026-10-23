@@ -101,7 +101,8 @@ public final class Match {
     }
 
     public void chooseFighters(Team team, Collection<UUID> fighterUniqueIds) {
-        if (!firstTeam.equals(team) && !secondTeam.equals(team)) {
+        Optional<Team> teamOfThisMatch = findTeamByName(team.getTeamName());
+        if (teamOfThisMatch.isEmpty()) {
             throw new IllegalArgumentException(team.getTeamName() + " does not take part in match " + matchId);
         }
         if (fighterUniqueIds.isEmpty()) {
@@ -109,12 +110,13 @@ public final class Match {
             chosenFighterUniqueIds = List.of();
             return;
         }
-        teamWithChosenFighters = team;
+        teamWithChosenFighters = teamOfThisMatch.get();
         chosenFighterUniqueIds = List.copyOf(fighterUniqueIds);
     }
 
     public Optional<List<UUID>> findChosenFighters(Team team) {
-        if (teamWithChosenFighters == null || !teamWithChosenFighters.equals(team)) {
+        if (teamWithChosenFighters == null
+                || !TeamRegistry.isSameTeamName(teamWithChosenFighters.getTeamName(), team.getTeamName())) {
             return Optional.empty();
         }
         return Optional.of(chosenFighterUniqueIds);
@@ -143,10 +145,10 @@ public final class Match {
     }
 
     public Optional<Team> findTeamByName(String teamName) {
-        if (firstTeam.getTeamName().equalsIgnoreCase(teamName)) {
+        if (TeamRegistry.isSameTeamName(firstTeam.getTeamName(), teamName)) {
             return Optional.of(firstTeam);
         }
-        if (secondTeam.getTeamName().equalsIgnoreCase(teamName)) {
+        if (TeamRegistry.isSameTeamName(secondTeam.getTeamName(), teamName)) {
             return Optional.of(secondTeam);
         }
         return Optional.empty();

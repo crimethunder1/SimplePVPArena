@@ -48,7 +48,8 @@ class PlayerStateTextsTest {
                 "Das gespeicherte Inventar und der Zustand von Steve konnten nicht wiederhergestellt werden "
                         + "(disk full), der gespeicherte Zustand bleibt für den nächsten Versuch erhalten",
                 "Das Inventar und der Zustand von Steve konnten nicht auf die Festplatte geschrieben werden "
-                        + "(disk full), sie liegen nur im Speicher und gehen verloren, wenn der Server unerwartet stoppt",
+                        + "(disk full), sie liegen nur im Speicher und gehen verloren, wenn der Server unerwartet "
+                        + "stoppt",
                 "Das gespeicherte Inventar und der Zustand von Steve wurden wiederhergestellt, aber die Datei konnte "
                         + "nicht gelöscht werden (disk full)",
                 "Das gespeicherte Inventar und der Zustand von Steve wurden wiederhergestellt, aber die Datei konnte "

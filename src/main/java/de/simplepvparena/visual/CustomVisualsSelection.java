@@ -18,7 +18,7 @@ public final class CustomVisualsSelection {
     public static CustomVisuals select(PluginManager pluginManager, boolean itemsAdderEnabled,
                                        Supplier<CustomVisuals> itemsAdderVisualsFactory,
                                        Consumer<String> infoLogger) {
-        if (!pluginManager.isPluginEnabled(ITEMS_ADDER_PLUGIN_NAME)) {
+        if (!isItemsAdderEnabled(pluginManager)) {
             return new VanillaVisuals();
         }
         if (!itemsAdderEnabled) {
@@ -29,5 +29,9 @@ public final class CustomVisualsSelection {
         infoLogger.accept(Messages.text(VisualMessage.ITEMS_ADDER_USED,
                 Placeholder.of("section", CustomVisualSettings.SECTION_CONFIGURATION_PATH)));
         return itemsAdderVisualsFactory.get();
+    }
+
+    public static boolean isItemsAdderEnabled(PluginManager pluginManager) {
+        return pluginManager.isPluginEnabled(ITEMS_ADDER_PLUGIN_NAME);
     }
 }

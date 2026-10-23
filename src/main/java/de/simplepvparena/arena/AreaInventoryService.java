@@ -146,6 +146,7 @@ public final class AreaInventoryService implements EffectAreaPresence {
     }
 
     private void deposit(Player player) {
+        player.closeInventory();
         ItemStack[] contents = player.getInventory().getContents();
         Optional<CraftingInventory> craftingGrid = findCraftingGrid(player);
         List<ItemStack> looseItems = collectLooseItems(player, craftingGrid);

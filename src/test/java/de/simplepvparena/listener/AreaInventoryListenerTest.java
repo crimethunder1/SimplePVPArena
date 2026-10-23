@@ -319,15 +319,17 @@ class AreaInventoryListenerTest {
     }
 
     private boolean isOpeningCancelled(ArenaMatchHarness.FakePlayer player, InventoryType inventoryType) {
-        Inventory inventory = ArenaMatchHarness.proxy(Inventory.class, (method, arguments) -> switch (method.getName()) {
-            case "getType" -> inventoryType;
-            default -> throw new UnsupportedOperationException("Inventory." + method.getName());
-        });
-        InventoryView view = ArenaMatchHarness.proxy(InventoryView.class, (method, arguments) -> switch (method.getName()) {
-            case "getTopInventory" -> inventory;
-            case "getPlayer" -> player.player();
-            default -> throw new UnsupportedOperationException("InventoryView." + method.getName());
-        });
+        Inventory inventory = ArenaMatchHarness.proxy(Inventory.class,
+                (method, arguments) -> switch (method.getName()) {
+                    case "getType" -> inventoryType;
+                    default -> throw new UnsupportedOperationException("Inventory." + method.getName());
+                });
+        InventoryView view = ArenaMatchHarness.proxy(InventoryView.class,
+                (method, arguments) -> switch (method.getName()) {
+                    case "getTopInventory" -> inventory;
+                    case "getPlayer" -> player.player();
+                    default -> throw new UnsupportedOperationException("InventoryView." + method.getName());
+                });
         InventoryOpenEvent event = new InventoryOpenEvent(view);
         listener.onInventoryOpen(event);
         return event.isCancelled();

@@ -243,10 +243,15 @@ final class ArenaMatchHarness {
 
     void runTick() {
         for (ScheduledTask task : new ArrayList<>(scheduledTasks)) {
-            scheduledTasks.remove(task);
-            if (!task.cancelled) {
-                task.runnable.run();
+            if (task.cancelled) {
+                scheduledTasks.remove(task);
+                repeatingTasks.remove(task);
+                continue;
             }
+            if (task.periodTicks == 0L) {
+                scheduledTasks.remove(task);
+            }
+            task.runnable.run();
         }
     }
 
@@ -522,6 +527,8 @@ final class ArenaMatchHarness {
         private RuntimeException playerDataSaveFailure;
         private int playerDataSaveCount;
         private boolean keepingItemsSetBySlot;
+        private boolean keepingLooseItemsOnClose;
+        private int closeInventoryCount;
         private Runnable damageReaction = () -> { };
 
         private FakePlayer(String playerName, Location location) {
@@ -604,6 +611,10 @@ final class ArenaMatchHarness {
                     yield null;
                 }
                 case "getOpenInventory" -> openInventory();
+                case "closeInventory" -> {
+                    closeOpenInventory();
+                    yield null;
+                }
                 case "getWorld" -> this.location.getWorld();
                 case "getPersistentDataContainer" -> SharedBukkitServer.createPersistentDataContainer(persistentData);
                 case "saveData" -> {
@@ -718,6 +729,14 @@ final class ArenaMatchHarness {
             this.openInventoryType = inventoryType;
         }
 
+        void keepLooseItemsOnClose() {
+            this.keepingLooseItemsOnClose = true;
+        }
+
+        int closeInventoryCount() {
+            return closeInventoryCount;
+        }
+
         int level() {
             return level;
         }
@@ -796,6 +815,28 @@ final class ArenaMatchHarness {
                 }
             }
             return -1;
+        }
+
+        private void closeOpenInventory() {
+            closeInventoryCount++;
+            if (keepingLooseItemsOnClose) {
+                return;
+            }
+            List<ItemStack> looseItems = new ArrayList<>();
+            if (itemOnCursor != null) {
+                looseItems.add(itemOnCursor);
+            }
+            for (ItemStack itemStack : craftingGrid) {
+                if (itemStack != null) {
+                    looseItems.add(itemStack);
+                }
+            }
+            itemOnCursor = null;
+            craftingGrid = new ItemStack[CRAFTING_GRID_SLOT_COUNT];
+            openInventoryType = InventoryType.CRAFTING;
+            for (ItemStack itemWithoutRoom : addToFreeStorageSlots(looseItems.toArray(new ItemStack[0])).values()) {
+                location.getWorld().dropItem(location, itemWithoutRoom);
+            }
         }
 
         private Object openInventory() {

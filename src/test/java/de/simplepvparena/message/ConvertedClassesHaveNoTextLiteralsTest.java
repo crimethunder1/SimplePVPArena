@@ -129,7 +129,7 @@ class ConvertedClassesHaveNoTextLiteralsTest {
             "visual/CustomVisualsSelection.java",
             "visual/ConfiguredVisuals.java",
             "match/CountdownImages.java",
-            "match/CustomItemRoundStartEffects.java",
+            "match/ConfiguredRoundStartEffects.java",
             "registration/RegistrationEntry.java",
             "registration/RegistrationList.java",
             "registration/RegistrationService.java",

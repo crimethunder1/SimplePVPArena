@@ -116,9 +116,7 @@ public final class TeamChoiceService implements RegistrationObserver {
             return;
         }
         Optional<String> rejection = findAccessRejection(playerUniqueId)
-                .or(() -> currentTeam.filter(team -> team.getColour().isEmpty())
-                        .map(team -> Messages.text(TeamChoiceMessage.ASSIGNED_BY_ADMIN,
-                                Placeholder.of("team", team.getTeamName()))))
+                .or(() -> findAssignedByAdminRejection(currentTeam))
                 .or(() -> currentTeam.flatMap(team -> teamChangeRejection.apply(team.getTeamName())))
                 .or(() -> targetTeam.filter(this::isFull).map(team -> Messages.text(TeamChoiceMessage.TEAM_FULL)))
                 .or(() -> targetTeam.flatMap(team -> teamChangeRejection.apply(team.getTeamName())));
@@ -144,7 +142,8 @@ public final class TeamChoiceService implements RegistrationObserver {
         Optional<String> rejection = findAccessRejection(playerUniqueId)
                 .or(() -> currentTeam.isEmpty()
                         ? Optional.of(Messages.text(TeamChoiceMessage.NOT_IN_A_TEAM))
-                        : teamChangeRejection.apply(currentTeam.get().getTeamName()));
+                        : findAssignedByAdminRejection(currentTeam))
+                .or(() -> teamChangeRejection.apply(currentTeam.get().getTeamName()));
         if (rejection.isPresent()) {
             TournamentMessages.sendError(player, rejection.get());
             return;
@@ -229,8 +228,14 @@ public final class TeamChoiceService implements RegistrationObserver {
         return team.getMembers().size() >= teamSizeSetting.getTeamSize();
     }
 
+    private static Optional<String> findAssignedByAdminRejection(Optional<Team> currentTeam) {
+        return currentTeam.filter(team -> team.getColour().isEmpty())
+                .map(team -> Messages.text(TeamChoiceMessage.ASSIGNED_BY_ADMIN,
+                        Placeholder.of("team", team.getTeamName())));
+    }
+
     private static boolean isSameTeam(Team firstTeam, Team secondTeam) {
-        return firstTeam.getTeamName().equalsIgnoreCase(secondTeam.getTeamName());
+        return TeamRegistry.isSameTeamName(firstTeam.getTeamName(), secondTeam.getTeamName());
     }
 
     private String nameNewTeam(TeamColour colour) {

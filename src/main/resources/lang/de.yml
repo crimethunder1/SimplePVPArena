@@ -20,7 +20,7 @@ menu:
     main-menu: 'Zurück zum Hauptmenü'
     match-menu: 'Zurück zum Match-Menü'
     waiting-matches: 'Zurück zu den wartenden Matches'
-    team-list: 'Zurück zur Team-Liste'
+    team-list: 'Zurück zur Teamliste'
     team-options: 'Zurück zu den Optionen von Team {team}'
     kit-list: 'Zurück zur Kit-Liste'
   page:
@@ -105,7 +105,7 @@ main-menu:
       title: 'config.yml neu laden'
       lore:
         - 'Liest config.yml erneut und wendet sie sofort an'
-        - 'Rundenzeitlimit, Blockmengen der Reinigung, Zellgrenze,'
+        - 'Rundenzeitlimit, Blockmengen der Reinigung, Zellenlimit,'
         - 'Schutzzone und Wandpartikel'
         - 'Die Arena, die Teams und ein laufendes Match bleiben unberührt'
       match-running:
@@ -445,7 +445,7 @@ team-actions-menu:
       title: 'Team umbenennen'
       lore:
         - 'Fragt im Chat nach dem neuen Namen'
-        - 'Das Team behält seinen Platz in der Team-Liste'
+        - 'Das Team behält seinen Platz in der Teamliste'
     add-player:
       title: 'Spieler hinzufügen'
       lore: 'Fragt im Chat nach dem Namen des Spielers'
@@ -466,7 +466,7 @@ team-actions-menu:
       - 'Gib im Chat ein: <Neuer Name>'
       - 'Ein Teamname hat {rule}'
       - 'Beispiel: Phoenix'
-      - 'Das Team behält seine Spieler und seinen Platz in der Team-Liste'
+      - 'Das Team behält seine Spieler und seinen Platz in der Teamliste'
   add-player-input:
     description: 'den neuen Spieler von Team {team}'
     type: 'Gib im Chat ein: <Spieler>'
@@ -1791,7 +1791,7 @@ config:
       team-mode: 'ob die Spieler nach der Anmeldung ihr Team wählen oder die Teams zufällig gebildet werden'
       cleaning: 'die Blockmengen der Reinigung und des Ausgangszustands und die Partikel einer laufenden Reinigung'
       baseline-depth: 'die Tiefe unter dem Boden, bis zu der der nächste Ausgangszustand aufgenommen wird'
-      cell-limit: 'die Zellgrenze der Arena-Berechnung'
+      cell-limit: 'das Zellenlimit der Arena-Berechnung'
       safety-zone: 'der Radius der Schutzzone'
       effect-margin: 'der Rand des Wirkungsbereichs um die Kampffläche'
       teleport-on-join: 'ob Spieler, die dem Server beitreten, auf die Tribüne geschickt werden'

@@ -5,7 +5,6 @@ import de.simplepvparena.message.Messages;
 import de.simplepvparena.message.Placeholder;
 import de.simplepvparena.support.RecordingItemStack;
 import de.simplepvparena.support.UseLanguage;
-import org.bukkit.Material;
 import org.junit.jupiter.api.Test;
 
 import java.util.Arrays;

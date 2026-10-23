@@ -13,6 +13,7 @@ import java.util.UUID;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class TeamNameComparisonTest {
@@ -42,6 +43,35 @@ class TeamNameComparisonTest {
         assertSame(bravo, match.getOpponentOf(new Team("ALPHA", List.of(steve))));
         assertSame(alpha, match.getOpponentOf(new Team("bravo", List.of(alex))));
         assertSame(bravo, match.getOpponentOf(alpha));
+    }
+
+    @Test
+    void aMatchFindsItsTeamByTheNameLikeTheTeamRegistry() {
+        Team alpha = new Team("Alpha", List.of(steve));
+        Team bravo = new Team("Bravo", List.of(alex));
+        Match match = Match.regularMatch("M1", alpha, bravo, new ArenaRegistry().getArena());
+
+        assertSame(alpha, match.findTeamByName("ALPHA").orElseThrow());
+        assertSame(bravo, match.findTeamByName("bravo").orElseThrow());
+        assertEquals(Optional.empty(), match.findTeamByName("Charlie"));
+        assertEquals(Optional.empty(), match.findTeamByName(null));
+    }
+
+    @Test
+    void theChosenFightersBelongToTheTeamOfTheMatchWithTheSameName() {
+        Team alpha = new Team("Alpha", List.of(steve));
+        Team bravo = new Team("Bravo", List.of(alex));
+        Match match = Match.regularMatch("M1", alpha, bravo, new ArenaRegistry().getArena());
+
+        match.chooseFighters(new Team("alpha", List.of(steve)), List.of(steve.uniqueId()));
+
+        assertSame(alpha, match.findTeamWithChosenFighters().orElseThrow());
+        assertEquals(Optional.of(List.of(steve.uniqueId())), match.findChosenFighters(alpha));
+        assertEquals(Optional.of(List.of(steve.uniqueId())), match.findChosenFighters(new Team("ALPHA",
+                List.of(steve))));
+        assertEquals(Optional.empty(), match.findChosenFighters(bravo));
+        assertThrows(IllegalArgumentException.class, () -> match.chooseFighters(new Team("Charlie",
+                List.of(steve)), List.of(steve.uniqueId())));
     }
 
     @Test

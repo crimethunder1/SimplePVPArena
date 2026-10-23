@@ -246,30 +246,26 @@ final class AdminMenuFixture {
         admin = createAdmin();
         onlinePlayers.add(admin);
         Server server = plugin.getServer();
-        menuService = new AdminMenuService(plugin, tournamentManager, tournamentDryRun, teamRegistry,
-                new TeamMemberLookup(server),
-                matchService, arenaSetupService, new ArenaHeightMarkerService(plugin, heightMarkers),
-                new StartGateItemService(plugin, gateMarks, gateDuration, () -> { }),
-                borderSelectorModes,
-                kitLibrary,
-                new KitSaveService(kitLibrary, new FakeKitItemSerializer()),
-                chatInputService, this::saveTeamConfiguration,
+        menuService = new AdminMenuService(new AdminMenuDependencies(plugin, chatInputService,
                 this::reloadConfiguration,
-                this::writeTeamSize,
-                autoMatchService,
-                this::writeAutoMatchMode,
-                borderParticleService,
-                this::writeBorderParticleSwitch,
-                registrationService,
-                registrationStationService,
-                new RandomTeamFormation(registrationService, teamRegistry, tournamentManager.getTeamSizeSetting(),
-                        tournamentManager::isTournamentInProgress,
-                        () -> autoMatchService.isAnnounced() || autoMatchService.getState() == AutoMatchState.RUNNING,
-                        this::saveTeamConfiguration, this::findOnlinePlayer,
-                        new SwitchableRandomGenerator()),
-                teamModeSetting,
-                this::writeTeamMode,
-                teamChoiceService,
+                new AdminMenuDependencies.TournamentServices(tournamentManager, tournamentDryRun, matchService,
+                        autoMatchService, this::writeAutoMatchMode),
+                new AdminMenuDependencies.TeamServices(teamRegistry, new TeamMemberLookup(server),
+                        this::saveTeamConfiguration, this::writeTeamSize),
+                new AdminMenuDependencies.ArenaServices(arenaSetupService,
+                        new ArenaHeightMarkerService(plugin, heightMarkers),
+                        new StartGateItemService(plugin, gateMarks, gateDuration, () -> { }),
+                        borderSelectorModes, borderParticleService, this::writeBorderParticleSwitch),
+                new AdminMenuDependencies.KitServices(kitLibrary,
+                        new KitSaveService(kitLibrary, new FakeKitItemSerializer())),
+                new AdminMenuDependencies.RegistrationServices(registrationService, registrationStationService,
+                        new RandomTeamFormation(registrationService, teamRegistry,
+                                tournamentManager.getTeamSizeSetting(), tournamentManager::isTournamentInProgress,
+                                () -> autoMatchService.isAnnounced()
+                                        || autoMatchService.getState() == AutoMatchState.RUNNING,
+                                this::saveTeamConfiguration, this::findOnlinePlayer,
+                                new SwitchableRandomGenerator()),
+                        teamModeSetting, this::writeTeamMode, teamChoiceService)),
                 windows,
                 () -> List.copyOf(onlinePlayers));
     }
@@ -302,9 +298,13 @@ final class AdminMenuFixture {
     }
 
     TournamentCommand createTournamentCommand() {
+        return createTournamentCommand(LOGGER);
+    }
+
+    TournamentCommand createTournamentCommand(Logger logger) {
         return new TournamentCommand(matchService,
                 new SpectatorService(arenaRegistry, new SpectatorItemFactory(plugin)), menuService,
-                registrationService);
+                registrationService, logger);
     }
 
     void letTheAdminLeave() {

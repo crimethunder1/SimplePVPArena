@@ -14,7 +14,7 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-class CustomItemRoundStartEffectsTest {
+class ConfiguredRoundStartEffectsTest {
 
     private static final String TOTEM_IDENTIFIER = "simplepvparena:totem";
     private static final CustomVisualSettings WITH_TOTEM = new CustomVisualSettings(true, "", "", "", "",
@@ -24,7 +24,7 @@ class CustomItemRoundStartEffectsTest {
     private final List<String> warnings = new ArrayList<>();
     private final RecordingCustomVisuals customVisuals = new RecordingCustomVisuals();
     private final ConfiguredVisuals configuredVisuals = new ConfiguredVisuals(customVisuals, warnings::add);
-    private final CustomItemRoundStartEffects effects = new CustomItemRoundStartEffects(
+    private final ConfiguredRoundStartEffects effects = new ConfiguredRoundStartEffects(
             new VanillaRoundStartEffects(), configuredVisuals::playTotemAnimation);
     private final Player fighter = player("Fighter");
 
@@ -66,7 +66,7 @@ class CustomItemRoundStartEffectsTest {
     void withoutItemsAdderTheVanillaTotemPlaysEvenWithATotemItem() {
         ConfiguredVisuals vanillaVisuals = new ConfiguredVisuals(new VanillaVisuals(), warnings::add);
         vanillaVisuals.applySettings(WITH_TOTEM);
-        CustomItemRoundStartEffects vanillaEffects = new CustomItemRoundStartEffects(new VanillaRoundStartEffects(),
+        ConfiguredRoundStartEffects vanillaEffects = new ConfiguredRoundStartEffects(new VanillaRoundStartEffects(),
                 vanillaVisuals::playTotemAnimation);
 
         vanillaEffects.playFightStartAnimation(fighter);
@@ -104,7 +104,7 @@ class CustomItemRoundStartEffectsTest {
     @Test
     void blindsAndUnblindsLikeTheVanillaEffects() {
         RecordingVanillaEffects vanilla = new RecordingVanillaEffects();
-        CustomItemRoundStartEffects delegating = new CustomItemRoundStartEffects(vanilla, player -> false);
+        ConfiguredRoundStartEffects delegating = new ConfiguredRoundStartEffects(vanilla, player -> false);
 
         delegating.blind(fighter, 80);
         delegating.removeBlindness(fighter);
@@ -116,7 +116,7 @@ class CustomItemRoundStartEffectsTest {
     @Test
     void aPlayedCustomTotemLeavesOnlyTheBlindnessToTheVanillaEffects() {
         RecordingVanillaEffects vanilla = new RecordingVanillaEffects();
-        CustomItemRoundStartEffects delegating = new CustomItemRoundStartEffects(vanilla, player -> true);
+        ConfiguredRoundStartEffects delegating = new ConfiguredRoundStartEffects(vanilla, player -> true);
 
         delegating.blind(fighter, 80);
         delegating.playFightStartAnimation(fighter);

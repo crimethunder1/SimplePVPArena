@@ -45,7 +45,8 @@ class TeamRegistryTest {
         TeamRegistry registry = new TeamRegistry();
         registry.registerTeam("alpha", List.of(firstMember, secondMember));
 
-        assertThrows(IllegalStateException.class, () -> registry.registerTeam("ALPHA", List.of(thirdMember, fourthMember)));
+        assertThrows(IllegalStateException.class,
+                () -> registry.registerTeam("ALPHA", List.of(thirdMember, fourthMember)));
     }
 
     @Test
@@ -53,7 +54,8 @@ class TeamRegistryTest {
         TeamRegistry registry = new TeamRegistry();
         registry.registerTeam("alpha", List.of(firstMember, secondMember));
 
-        assertThrows(IllegalStateException.class, () -> registry.registerTeam("bravo", List.of(firstMember, thirdMember)));
+        assertThrows(IllegalStateException.class,
+                () -> registry.registerTeam("bravo", List.of(firstMember, thirdMember)));
     }
 
     @Test

@@ -146,7 +146,8 @@ class CountdownImageTest {
         }
         assertEquals(List.of(THREE_IMAGE + " / The gate comes down layer by layer",
                 TWO_IMAGE + " / The gate comes down layer by layer",
-                ONE_IMAGE + " / The gate comes down layer by layer", FIGHT_IMAGE + " / The gate is open"), titleTexts.subList(7, 11));
+                ONE_IMAGE + " / The gate comes down layer by layer", FIGHT_IMAGE + " / The gate is open"),
+                titleTexts.subList(7, 11));
     }
 
     @Test

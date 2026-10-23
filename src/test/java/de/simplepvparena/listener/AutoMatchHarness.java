@@ -188,7 +188,7 @@ final class AutoMatchHarness {
         String losingTeamName = match.getOpponentOf(match.findTeamByName(teamName).orElseThrow()).getTeamName();
         matchService().handlePlayerEliminated(fighterOf(losingTeamName).uniqueId());
         if (match.getState() == MatchState.BETWEEN_ROUNDS) {
-            arena.advanceTicksWithRepeatingTasks(1L);
+            arena.runTick();
         }
     }
 

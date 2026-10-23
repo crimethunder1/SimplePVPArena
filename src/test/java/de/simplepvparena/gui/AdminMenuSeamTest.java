@@ -125,46 +125,51 @@ class AdminMenuSeamTest {
                 matchService::hasActiveMatch, teamRegistry,
                 new PluginDryRunArena(arenaRegistry.getArena(), arenaSetupService), kitService, gateMarks,
                 gateDuration);
-        menuService = new AdminMenuService(plugin, tournamentManager, tournamentDryRun, teamRegistry,
-                new TeamMemberLookup(server),
-                matchService, arenaSetupService, new ArenaHeightMarkerService(plugin, heightMarkers),
-                new StartGateItemService(plugin, gateMarks, gateDuration, () -> { }),
-                new BorderSelectorModeRegistry(),
-                kitLibrary,
-                new KitSaveService(kitLibrary, new FakeKitItemSerializer()),
-                new ChatInputService(plugin), () -> { },
+        menuService = new AdminMenuService(new AdminMenuDependencies(plugin, new ChatInputService(plugin),
                 () -> {
                     throw new UnsupportedOperationException("the configuration is not reloaded in this test");
                 },
-                teamSize -> {
-                    throw new UnsupportedOperationException("the team size is not written in this test");
-                },
-                new AutoMatchService(plugin, teamRegistry, arenaRegistry, matchService, tournamentManager,
-                        kitLibrary, new AutomaticArenaCleanup(arenaSetupService, cleaningService), message -> { },
-                        new ArenaAudience(List::of, arenaRegistry)),
-                enabled -> {
-                    throw new UnsupportedOperationException("the auto match mode is not written in this test");
-                },
-                new BorderParticleService(plugin, new BorderMarkIndex(), silentVisualEffect,
-                        matchService::isActiveFighter, new ArenaBorderConfirmation(arenaRegistry.getArena()::hasShape)),
-                enabled -> {
-                    throw new UnsupportedOperationException("the border particles are not written in this test");
-                },
-                registrationService,
-                new RegistrationStationService(plugin, new RegistrationStations(), registrationService,
-                        material -> false, () -> { }, material -> {
-                            throw new UnsupportedOperationException("no tool is handed out in this test");
+                new AdminMenuDependencies.TournamentServices(tournamentManager, tournamentDryRun, matchService,
+                        new AutoMatchService(plugin, teamRegistry, arenaRegistry, matchService, tournamentManager,
+                                kitLibrary, new AutomaticArenaCleanup(arenaSetupService, cleaningService),
+                                message -> { }, new ArenaAudience(List::of, arenaRegistry)),
+                        enabled -> {
+                            throw new UnsupportedOperationException(
+                                    "the auto match mode is not written in this test");
                         }),
-                new RandomTeamFormation(registrationService, teamRegistry, tournamentManager.getTeamSizeSetting(),
-                        tournamentManager::isTournamentInProgress, () -> false, () -> { }, uniqueId -> null,
-                        RandomGenerator.getDefault()),
-                teamModeSetting,
-                teamMode -> {
-                    throw new UnsupportedOperationException("the team mode is not written in this test");
-                },
-                new TeamChoiceService(registrationService, teamRegistry, tournamentManager.getTeamSizeSetting(),
-                        teamModeSetting, tournamentManager::isTournamentInProgress,
-                        tournamentManager::findTeamChangeRejection, () -> { }, uniqueId -> null),
+                new AdminMenuDependencies.TeamServices(teamRegistry, new TeamMemberLookup(server), () -> { },
+                        teamSize -> {
+                            throw new UnsupportedOperationException("the team size is not written in this test");
+                        }),
+                new AdminMenuDependencies.ArenaServices(arenaSetupService,
+                        new ArenaHeightMarkerService(plugin, heightMarkers),
+                        new StartGateItemService(plugin, gateMarks, gateDuration, () -> { }),
+                        new BorderSelectorModeRegistry(),
+                        new BorderParticleService(plugin, new BorderMarkIndex(), silentVisualEffect,
+                                matchService::isActiveFighter,
+                                new ArenaBorderConfirmation(arenaRegistry.getArena()::hasShape)),
+                        enabled -> {
+                            throw new UnsupportedOperationException(
+                                    "the border particles are not written in this test");
+                        }),
+                new AdminMenuDependencies.KitServices(kitLibrary,
+                        new KitSaveService(kitLibrary, new FakeKitItemSerializer())),
+                new AdminMenuDependencies.RegistrationServices(registrationService,
+                        new RegistrationStationService(plugin, new RegistrationStations(), registrationService,
+                                material -> false, () -> { }, material -> {
+                                    throw new UnsupportedOperationException("no tool is handed out in this test");
+                                }),
+                        new RandomTeamFormation(registrationService, teamRegistry,
+                                tournamentManager.getTeamSizeSetting(), tournamentManager::isTournamentInProgress,
+                                () -> false, () -> { }, uniqueId -> null, RandomGenerator.getDefault()),
+                        teamModeSetting,
+                        teamMode -> {
+                            throw new UnsupportedOperationException("the team mode is not written in this test");
+                        },
+                        new TeamChoiceService(registrationService, teamRegistry,
+                                tournamentManager.getTeamSizeSetting(), teamModeSetting,
+                                tournamentManager::isTournamentInProgress, tournamentManager::findTeamChangeRejection,
+                                () -> { }, uniqueId -> null))),
                 windows,
                 List::of);
         player = createPlayer();

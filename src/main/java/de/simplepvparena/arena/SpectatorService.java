@@ -61,7 +61,7 @@ public final class SpectatorService {
         return sendToTribune(player);
     }
 
-    public void giveSpectatorToggleItem(Player player) {
+    private void giveSpectatorToggleItem(Player player) {
         ItemStack toggleItem = spectatorItems.createSpectatorToggleItem();
         player.getInventory().setItem(SPECTATOR_TOGGLE_ITEM_SLOT, toggleItem);
     }

@@ -5,7 +5,9 @@ import de.simplepvparena.gui.AdminMenuService;
 import de.simplepvparena.match.MatchService;
 import de.simplepvparena.message.CommandMessage;
 import de.simplepvparena.message.CommonMessage;
+import de.simplepvparena.message.ListenerMessage;
 import de.simplepvparena.message.Messages;
+import de.simplepvparena.message.Placeholder;
 import de.simplepvparena.message.TournamentMessages;
 import de.simplepvparena.permission.AdminPermission;
 import de.simplepvparena.permission.ViewPermission;
@@ -20,6 +22,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public final class TournamentCommand implements TabExecutor {
 
@@ -36,15 +40,18 @@ public final class TournamentCommand implements TabExecutor {
     private final SpectatorService spectatorService;
     private final AdminMenuService adminMenuService;
     private final RegistrationService registrationService;
+    private final Logger logger;
 
     public TournamentCommand(MatchService matchService,
                              SpectatorService spectatorService,
                              AdminMenuService adminMenuService,
-                             RegistrationService registrationService) {
+                             RegistrationService registrationService,
+                             Logger logger) {
         this.matchService = Objects.requireNonNull(matchService, "matchService");
         this.spectatorService = Objects.requireNonNull(spectatorService, "spectatorService");
         this.adminMenuService = Objects.requireNonNull(adminMenuService, "adminMenuService");
         this.registrationService = Objects.requireNonNull(registrationService, "registrationService");
+        this.logger = Objects.requireNonNull(logger, "logger");
     }
 
     @Override
@@ -151,7 +158,15 @@ public final class TournamentCommand implements TabExecutor {
             TournamentMessages.sendError(player, Messages.text(CommandMessage.SPECTATE_WHILE_FIGHTING));
             return;
         }
-        if (!spectatorService.sendToTribune(player)) {
+        boolean sentToTribune;
+        try {
+            sentToTribune = spectatorService.sendToTribune(player);
+        } catch (RuntimeException failure) {
+            logger.log(Level.WARNING, Messages.text(ListenerMessage.NOT_SENT_TO_TRIBUNE,
+                    Placeholder.of("player", player.getName())), failure);
+            sentToTribune = false;
+        }
+        if (!sentToTribune) {
             TournamentMessages.sendError(player, Messages.text(CommandMessage.SPECTATE_NO_TRIBUNE_POSITION));
             return;
         }

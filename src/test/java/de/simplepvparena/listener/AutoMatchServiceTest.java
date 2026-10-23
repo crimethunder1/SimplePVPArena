@@ -426,6 +426,20 @@ class AutoMatchServiceTest {
     }
 
     @Test
+    void aRenamedTeamKeepsItsPlaceInTheWaitingOrder() {
+        AutoMatchHarness harness = new AutoMatchHarness("Alpha", "Bravo", "Charlie");
+        harness.switchOnWithPause(0);
+        harness.advanceUntilTheAutoMatchRuns();
+        harness.winMatch("Bravo");
+        harness.finishCleaning();
+
+        harness.teamRegistry().renameTeam("bravo", "Dragons");
+
+        assertEquals(List.of("Charlie", "Alpha"), harness.autoMatchService().findPairing().orElseThrow().stream()
+                .map(Team::getTeamName).toList());
+    }
+
+    @Test
     void stoppingTheServiceRemovesItsTimer() {
         AutoMatchHarness harness = new AutoMatchHarness("Alpha", "Bravo");
         harness.switchOn();

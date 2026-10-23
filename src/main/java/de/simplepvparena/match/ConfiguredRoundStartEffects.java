@@ -5,12 +5,12 @@ import org.bukkit.entity.Player;
 import java.util.Objects;
 import java.util.function.Predicate;
 
-public final class CustomItemRoundStartEffects implements RoundStartEffects {
+public final class ConfiguredRoundStartEffects implements RoundStartEffects {
 
     private final RoundStartEffects vanillaEffects;
     private final Predicate<Player> customTotemAnimation;
 
-    public CustomItemRoundStartEffects(RoundStartEffects vanillaEffects, Predicate<Player> customTotemAnimation) {
+    public ConfiguredRoundStartEffects(RoundStartEffects vanillaEffects, Predicate<Player> customTotemAnimation) {
         this.vanillaEffects = Objects.requireNonNull(vanillaEffects, "vanillaEffects");
         this.customTotemAnimation = Objects.requireNonNull(customTotemAnimation, "customTotemAnimation");
     }

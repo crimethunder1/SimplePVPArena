@@ -59,8 +59,8 @@ class TeamSizeSettingTest {
     @Test
     void allowsEveryTeamSizeFromOneToEightWithoutTeamsAndWithoutATournament() {
         for (int teamSize = 1; teamSize <= 8; teamSize++) {
-            assertEquals(Optional.empty(), TeamSizeSetting.findChangeRejection(TeamSizeSetting.DEFAULT_TEAM_SIZE, teamSize,
-                    false, teamRegistry), "a team size of " + teamSize);
+            assertEquals(Optional.empty(), TeamSizeSetting.findChangeRejection(TeamSizeSetting.DEFAULT_TEAM_SIZE,
+                    teamSize, false, teamRegistry), "a team size of " + teamSize);
         }
     }
 

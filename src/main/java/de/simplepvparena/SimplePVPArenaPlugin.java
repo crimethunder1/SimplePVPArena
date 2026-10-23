@@ -48,6 +48,7 @@ import de.simplepvparena.gate.StartGateMarkStorage;
 import de.simplepvparena.gate.StartGateMarks;
 import de.simplepvparena.gate.StartGateOpeningService;
 import de.simplepvparena.gate.VanillaStartGateVisualEffect;
+import de.simplepvparena.gui.AdminMenuDependencies;
 import de.simplepvparena.gui.AdminMenuService;
 import de.simplepvparena.input.ChatInputService;
 import de.simplepvparena.kit.BukkitItemStackCodec;
@@ -86,7 +87,7 @@ import de.simplepvparena.listener.RegistrationStationListener;
 import de.simplepvparena.listener.RegistrationStationWorldListener;
 import de.simplepvparena.listener.SpectatorBorderListener;
 import de.simplepvparena.listener.StartGateListener;
-import de.simplepvparena.match.CustomItemRoundStartEffects;
+import de.simplepvparena.match.ConfiguredRoundStartEffects;
 import de.simplepvparena.match.FighterColours;
 import de.simplepvparena.match.MatchService;
 import de.simplepvparena.match.ScoreboardFighterColours;
@@ -349,25 +350,29 @@ public final class SimplePVPArenaPlugin extends JavaPlugin {
 
         chatInputService = new ChatInputService(this);
         TeamMemberLookup teamMemberLookup = new TeamMemberLookup(getServer());
-        adminMenuService = new AdminMenuService(this, tournamentManager, tournamentDryRun, teamRegistry,
-                teamMemberLookup, matchService, arenaSetupService,
-                arenaHeightMarkerService, startGateItemService,
-                borderSelectorModes, kitLibrary, kitSaveService, chatInputService, this::saveTeamConfiguration,
-                this::reloadConfiguration, new TeamSizeConfigurationWriter(this::getConfig,
-                        new File(getDataFolder(), CONFIGURATION_FILE_NAME), getLogger()),
-                autoMatchService, new AutoMatchConfigurationWriter(this::getConfig,
-                        new File(getDataFolder(), CONFIGURATION_FILE_NAME), getLogger()),
-                borderParticleService, new ConfirmedBorderParticleConfigurationWriter(this::getConfig,
-                        new File(getDataFolder(), CONFIGURATION_FILE_NAME), getLogger()),
-                registrationService, registrationStationService, randomTeamFormation, teamModeSetting,
-                new TeamModeConfigurationWriter(this::getConfig, new File(getDataFolder(), CONFIGURATION_FILE_NAME),
-                        getLogger()), teamChoiceService);
+        adminMenuService = new AdminMenuService(new AdminMenuDependencies(this, chatInputService,
+                this::reloadConfiguration,
+                new AdminMenuDependencies.TournamentServices(tournamentManager, tournamentDryRun, matchService,
+                        autoMatchService, new AutoMatchConfigurationWriter(this::getConfig,
+                                new File(getDataFolder(), CONFIGURATION_FILE_NAME), getLogger())),
+                new AdminMenuDependencies.TeamServices(teamRegistry, teamMemberLookup, this::saveTeamConfiguration,
+                        new TeamSizeConfigurationWriter(this::getConfig,
+                                new File(getDataFolder(), CONFIGURATION_FILE_NAME), getLogger())),
+                new AdminMenuDependencies.ArenaServices(arenaSetupService, arenaHeightMarkerService,
+                        startGateItemService, borderSelectorModes, borderParticleService,
+                        new ConfirmedBorderParticleConfigurationWriter(this::getConfig,
+                                new File(getDataFolder(), CONFIGURATION_FILE_NAME), getLogger())),
+                new AdminMenuDependencies.KitServices(kitLibrary, kitSaveService),
+                new AdminMenuDependencies.RegistrationServices(registrationService, registrationStationService,
+                        randomTeamFormation, teamModeSetting, new TeamModeConfigurationWriter(this::getConfig,
+                                new File(getDataFolder(), CONFIGURATION_FILE_NAME), getLogger()),
+                        teamChoiceService)));
 
         configuredVisuals = new ConfiguredVisuals(CustomVisualsSelection.select(getServer().getPluginManager(),
                 PluginSettings.readItemsAdderEnabled(getConfig(), problem -> { }), this::createItemsAdderVisuals,
                 getLogger()::info), getLogger()::warning);
         matchService.setCountdownImages(configuredVisuals);
-        matchService.setRoundStartEffects(new CustomItemRoundStartEffects(new VanillaRoundStartEffects(),
+        matchService.setRoundStartEffects(new ConfiguredRoundStartEffects(new VanillaRoundStartEffects(),
                 configuredVisuals::playTotemAnimation));
 
         configurationReloadService = new ConfigurationReloadService(this::getConfig, this::reloadConfig,
@@ -557,7 +562,7 @@ public final class SimplePVPArenaPlugin extends JavaPlugin {
             return;
         }
         TournamentCommand tournamentCommand = new TournamentCommand(matchService, spectatorService,
-                adminMenuService, registrationService);
+                adminMenuService, registrationService, getLogger());
         pluginCommand.setExecutor(tournamentCommand);
         pluginCommand.setTabCompleter(tournamentCommand);
     }

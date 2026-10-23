@@ -2,9 +2,7 @@ package de.simplepvparena.gui;
 
 import de.simplepvparena.arena.ArenaHeightMarkerService;
 import de.simplepvparena.arena.ArenaSetupService;
-import de.simplepvparena.border.BorderParticleService;
 import de.simplepvparena.border.BorderSelectorModeRegistry;
-import de.simplepvparena.border.ConfirmedBorderParticleWriter;
 import de.simplepvparena.config.ConfigurationReloadReport;
 import de.simplepvparena.diagnostics.TournamentDryRun;
 import de.simplepvparena.gate.StartGateItemService;
@@ -17,17 +15,11 @@ import de.simplepvparena.match.UnequalTeamVoteService;
 import de.simplepvparena.message.Messages;
 import de.simplepvparena.message.TournamentMessages;
 import de.simplepvparena.message.UnequalTeamVoteMessage;
-import de.simplepvparena.registration.RandomTeamFormation;
 import de.simplepvparena.registration.RegistrationService;
-import de.simplepvparena.registration.RegistrationStationService;
 import de.simplepvparena.registration.TeamChoiceService;
-import de.simplepvparena.registration.TeamModeSetting;
-import de.simplepvparena.registration.TeamModeWriter;
 import de.simplepvparena.team.TeamMemberLookup;
 import de.simplepvparena.team.TeamRegistry;
 import de.simplepvparena.team.TeamSizeWriter;
-import de.simplepvparena.tournament.AutoMatchModeWriter;
-import de.simplepvparena.tournament.AutoMatchService;
 import de.simplepvparena.tournament.KitChoiceService;
 import de.simplepvparena.tournament.TournamentManager;
 import org.bukkit.entity.Player;
@@ -47,81 +39,37 @@ public final class AdminMenuService {
     private final TeamChoiceService teamChoiceService;
     private final TeamChoiceMenuPresenter teamChoiceMenuPresenter;
 
-    public AdminMenuService(Plugin plugin,
-                            TournamentManager tournamentManager,
-                            TournamentDryRun tournamentDryRun,
-                            TeamRegistry teamRegistry,
-                            TeamMemberLookup teamMemberLookup,
-                            MatchService matchService,
-                            ArenaSetupService arenaSetupService,
-                            ArenaHeightMarkerService heightMarkerService,
-                            StartGateItemService gateItemService,
-                            BorderSelectorModeRegistry borderSelectorModes,
-                            KitLibrary kitLibrary,
-                            KitSaveService kitSaveService,
-                            ChatInputService chatInputService,
-                            Runnable teamConfigurationSaver,
-                            Supplier<ConfigurationReloadReport> configurationReloader,
-                            TeamSizeWriter teamSizeWriter,
-                            AutoMatchService autoMatchService,
-                            AutoMatchModeWriter autoMatchModeWriter,
-                            BorderParticleService borderParticleService,
-                            ConfirmedBorderParticleWriter confirmedBorderParticleWriter,
-                            RegistrationService registrationService,
-                            RegistrationStationService registrationStationService,
-                            RandomTeamFormation randomTeamFormation,
-                            TeamModeSetting teamModeSetting,
-                            TeamModeWriter teamModeWriter,
-                            TeamChoiceService teamChoiceService) {
-        this(plugin, tournamentManager, tournamentDryRun, teamRegistry, teamMemberLookup,
-                matchService, arenaSetupService, heightMarkerService, gateItemService, borderSelectorModes,
-                kitLibrary, kitSaveService, chatInputService, teamConfigurationSaver, configurationReloader,
-                teamSizeWriter, autoMatchService, autoMatchModeWriter, borderParticleService,
-                confirmedBorderParticleWriter, registrationService, registrationStationService,
-                randomTeamFormation, teamModeSetting, teamModeWriter, teamChoiceService,
-                new InventoryAdminMenuWindows(plugin), () -> plugin.getServer().getOnlinePlayers());
+    public AdminMenuService(AdminMenuDependencies dependencies) {
+        this(dependencies, new InventoryAdminMenuWindows(dependencies.plugin()),
+                () -> dependencies.plugin().getServer().getOnlinePlayers());
     }
 
-    AdminMenuService(Plugin plugin,
-                     TournamentManager tournamentManager,
-                     TournamentDryRun tournamentDryRun,
-                     TeamRegistry teamRegistry,
-                     TeamMemberLookup teamMemberLookup,
-                     MatchService matchService,
-                     ArenaSetupService arenaSetupService,
-                     ArenaHeightMarkerService heightMarkerService,
-                     StartGateItemService gateItemService,
-                     BorderSelectorModeRegistry borderSelectorModes,
-                     KitLibrary kitLibrary,
-                     KitSaveService kitSaveService,
-                     ChatInputService chatInputService,
-                     Runnable teamConfigurationSaver,
-                     Supplier<ConfigurationReloadReport> configurationReloader,
-                     TeamSizeWriter teamSizeWriter,
-                     AutoMatchService autoMatchService,
-                     AutoMatchModeWriter autoMatchModeWriter,
-                     BorderParticleService borderParticleService,
-                     ConfirmedBorderParticleWriter confirmedBorderParticleWriter,
-                     RegistrationService registrationService,
-                     RegistrationStationService registrationStationService,
-                     RandomTeamFormation randomTeamFormation,
-                     TeamModeSetting teamModeSetting,
-                     TeamModeWriter teamModeWriter,
-                     TeamChoiceService teamChoiceService,
+    AdminMenuService(AdminMenuDependencies dependencies,
                      AdminMenuWindows windows,
                      Supplier<Collection<? extends Player>> onlinePlayers) {
-        Objects.requireNonNull(plugin, "plugin");
+        Plugin plugin = Objects.requireNonNull(dependencies.plugin(), "plugin");
+        AdminMenuDependencies.TournamentServices tournament = dependencies.tournament();
+        AdminMenuDependencies.TeamServices teams = dependencies.teams();
+        AdminMenuDependencies.ArenaServices arena = dependencies.arena();
+        AdminMenuDependencies.KitServices kits = dependencies.kits();
+        AdminMenuDependencies.RegistrationServices registration = dependencies.registration();
         this.navigator = new AdminMenuNavigator(windows);
-        Objects.requireNonNull(tournamentManager, "tournamentManager");
-        Objects.requireNonNull(tournamentDryRun, "tournamentDryRun");
-        Objects.requireNonNull(teamRegistry, "teamRegistry");
-        Objects.requireNonNull(teamMemberLookup, "teamMemberLookup");
-        Objects.requireNonNull(matchService, "matchService");
-        Objects.requireNonNull(arenaSetupService, "arenaSetupService");
-        Objects.requireNonNull(heightMarkerService, "heightMarkerService");
-        Objects.requireNonNull(gateItemService, "gateItemService");
-        Objects.requireNonNull(borderSelectorModes, "borderSelectorModes");
-        Objects.requireNonNull(chatInputService, "chatInputService");
+        TournamentManager tournamentManager = Objects.requireNonNull(tournament.tournamentManager(),
+                "tournamentManager");
+        TournamentDryRun tournamentDryRun = Objects.requireNonNull(tournament.tournamentDryRun(), "tournamentDryRun");
+        TeamRegistry teamRegistry = Objects.requireNonNull(teams.teamRegistry(), "teamRegistry");
+        TeamMemberLookup teamMemberLookup = Objects.requireNonNull(teams.teamMemberLookup(), "teamMemberLookup");
+        MatchService matchService = Objects.requireNonNull(tournament.matchService(), "matchService");
+        ArenaSetupService arenaSetupService = Objects.requireNonNull(arena.arenaSetupService(), "arenaSetupService");
+        ArenaHeightMarkerService heightMarkerService = Objects.requireNonNull(arena.heightMarkerService(),
+                "heightMarkerService");
+        StartGateItemService gateItemService = Objects.requireNonNull(arena.gateItemService(), "gateItemService");
+        BorderSelectorModeRegistry borderSelectorModes = Objects.requireNonNull(arena.borderSelectorModes(),
+                "borderSelectorModes");
+        ChatInputService chatInputService = Objects.requireNonNull(dependencies.chatInputService(),
+                "chatInputService");
+        KitLibrary kitLibrary = kits.kitLibrary();
+        KitSaveService kitSaveService = kits.kitSaveService();
         KitAdminMenu kitAdminMenu = new KitAdminMenu(navigator, kitLibrary, kitSaveService, chatInputService);
         KitActionsAdminMenu kitActionsAdminMenu = new KitActionsAdminMenu(navigator, kitLibrary, kitSaveService,
                 matchService::hasActiveMatch);
@@ -132,14 +80,17 @@ public final class AdminMenuService {
         UnequalTeamVoteMenu unequalTeamVoteMenu = new UnequalTeamVoteMenu(navigator, unequalTeamVoteService);
         unequalTeamVoteMenuPresenter = new UnequalTeamVoteMenuPresenter(navigator, onlinePlayers);
         unequalTeamVoteService.setPresenter(unequalTeamVoteMenuPresenter);
-        this.teamChoiceService = Objects.requireNonNull(teamChoiceService, "teamChoiceService");
+        this.teamChoiceService = Objects.requireNonNull(registration.teamChoiceService(), "teamChoiceService");
         TeamChoiceMenu teamChoiceMenu = new TeamChoiceMenu(navigator, teamChoiceService);
         teamChoiceMenuPresenter = new TeamChoiceMenuPresenter(navigator, teamChoiceService, onlinePlayers,
                 task -> plugin.getServer().getScheduler().runTask(plugin, task));
         teamChoiceService.setPresenter(teamChoiceMenuPresenter);
-        Objects.requireNonNull(teamConfigurationSaver, "teamConfigurationSaver");
-        Objects.requireNonNull(configurationReloader, "configurationReloader");
-        Objects.requireNonNull(teamSizeWriter, "teamSizeWriter");
+        Runnable teamConfigurationSaver = Objects.requireNonNull(teams.teamConfigurationSaver(),
+                "teamConfigurationSaver");
+        Supplier<ConfigurationReloadReport> configurationReloader = Objects.requireNonNull(
+                dependencies.configurationReloader(), "configurationReloader");
+        TeamSizeWriter teamSizeWriter = Objects.requireNonNull(teams.teamSizeWriter(), "teamSizeWriter");
+        RegistrationService registrationService = registration.registrationService();
         TeamActionsAdminMenu teamActionsAdminMenu = new TeamActionsAdminMenu(navigator, teamRegistry,
                 teamMemberLookup, chatInputService, teamConfigurationSaver, tournamentManager);
         TeamMembersAdminMenu teamMembersAdminMenu = new TeamMembersAdminMenu(navigator, teamRegistry,
@@ -154,15 +105,17 @@ public final class AdminMenuService {
         TournamentMenuStatus tournamentMenuStatus = new TournamentMenuStatus(tournamentManager, matchService);
         MatchAdminMenu matchAdminMenu = new MatchAdminMenu(navigator, tournamentManager, matchService,
                 tournamentMenuStatus, forceResultAdminMenu, waitingMatchesAdminMenu, decidedMatchesAdminMenu,
-                autoMatchService, autoMatchModeWriter);
+                tournament.autoMatchService(), tournament.autoMatchModeWriter());
         TeamsAdminMenu teamsAdminMenu = new TeamsAdminMenu(navigator, teamRegistry, teamMemberLookup,
                 chatInputService, teamConfigurationSaver, tournamentManager.getTeamSizeSetting(),
                 tournamentManager::isTournamentInProgress, teamSizeWriter, registrationService::getCount);
         RegistrationsAdminMenu registrationsAdminMenu = new RegistrationsAdminMenu(navigator, registrationService,
-                registrationStationService, randomTeamFormation, tournamentManager.getTeamSizeSetting(),
-                teamModeSetting, teamModeWriter, teamChoiceService);
+                registration.registrationStationService(), registration.randomTeamFormation(),
+                tournamentManager.getTeamSizeSetting(), registration.teamModeSetting(), registration.teamModeWriter(),
+                teamChoiceService);
         ArenaAdminMenu arenaAdminMenu = new ArenaAdminMenu(navigator, arenaSetupService, heightMarkerService,
-                gateItemService, chatInputService, borderParticleService, confirmedBorderParticleWriter);
+                gateItemService, chatInputService, arena.borderParticleService(),
+                arena.confirmedBorderParticleWriter());
         bracketViewMenu = new BracketViewMenu(navigator, tournamentManager, matchService);
         MainAdminMenu mainAdminMenu = new MainAdminMenu(navigator, tournamentManager, tournamentDryRun, teamRegistry,
                 matchService, arenaSetupService, borderSelectorModes, configurationReloader, tournamentMenuStatus,

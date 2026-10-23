@@ -86,7 +86,7 @@ class GermanConfigTextsTest {
                 "  ob die Spieler nach der Anmeldung ihr Team wählen oder die Teams zufällig gebildet werden",
                 "  die Blockmengen der Reinigung und des Ausgangszustands und die Partikel einer laufenden Reinigung",
                 "  die Tiefe unter dem Boden, bis zu der der nächste Ausgangszustand aufgenommen wird",
-                "  die Zellgrenze der Arena-Berechnung",
+                "  das Zellenlimit der Arena-Berechnung",
                 "  der Radius der Schutzzone",
                 "  der Rand des Wirkungsbereichs um die Kampffläche",
                 "  ob Spieler, die dem Server beitreten, auf die Tribüne geschickt werden",

@@ -122,10 +122,11 @@ class GermanAreaInventoryMessagesTest {
     }
 
     private static InventoryView enderChestViewOf(ArenaMatchHarness.FakePlayer player) {
-        Inventory enderChest = ArenaMatchHarness.proxy(Inventory.class, (method, arguments) -> switch (method.getName()) {
-            case "getType" -> InventoryType.ENDER_CHEST;
-            default -> throw new UnsupportedOperationException("Inventory." + method.getName());
-        });
+        Inventory enderChest = ArenaMatchHarness.proxy(Inventory.class,
+                (method, arguments) -> switch (method.getName()) {
+                    case "getType" -> InventoryType.ENDER_CHEST;
+                    default -> throw new UnsupportedOperationException("Inventory." + method.getName());
+                });
         return ArenaMatchHarness.proxy(InventoryView.class, (method, arguments) -> switch (method.getName()) {
             case "getTopInventory" -> enderChest;
             case "getPlayer" -> player.player();

@@ -88,13 +88,13 @@ class GermanTeamMenuSnapshotTest {
                 Team Alpha | 27
                 4 | BOOK | Alpha | Mitglieder: Alpha-first, Alpha-second / Spieler: 2 von 2
                 10 | NAME_TAG | Team umbenennen | Fragt im Chat nach dem neuen Namen / \
-                Das Team behält seinen Platz in der Team-Liste / Das Menü schließt sich, damit du tippen kannst
+                Das Team behält seinen Platz in der Teamliste / Das Menü schließt sich, damit du tippen kannst
                 11 | GRAY_DYE | Spieler hinzufügen | Das Team hat bereits 2 Spieler, die Teamgröße ist 2
                 12 | RED_DYE | Spieler entfernen | Zeigt die Spieler von Alpha / \
                 Ein Klick auf einen Spieler entfernt ihn
                 13 | RED_WOOL | Team entfernen | Entfernt Alpha aus den registrierten Teams / \
                 Fragt vorher nach einer Bestätigung
-                22 | OAK_DOOR | Zurück | Zurück zur Team-Liste
+                22 | OAK_DOOR | Zurück | Zurück zur Teamliste
                 """, fixture.describeLastMenu());
     }
 
@@ -109,13 +109,13 @@ class GermanTeamMenuSnapshotTest {
                 Team Solo | 27
                 4 | BOOK | Solo | Mitglieder: Steve / Spieler: 1 von 3
                 10 | NAME_TAG | Team umbenennen | Fragt im Chat nach dem neuen Namen / \
-                Das Team behält seinen Platz in der Team-Liste / Das Menü schließt sich, damit du tippen kannst
+                Das Team behält seinen Platz in der Teamliste / Das Menü schließt sich, damit du tippen kannst
                 11 | LIME_DYE | Spieler hinzufügen | Fragt im Chat nach dem Namen des Spielers / \
                 Das Menü schließt sich, damit du tippen kannst
                 12 | GRAY_DYE | Spieler entfernen | Ein Team behält mindestens 1 Spieler, entferne stattdessen das Team
                 13 | RED_WOOL | Team entfernen | Entfernt Solo aus den registrierten Teams / \
                 Fragt vorher nach einer Bestätigung
-                22 | OAK_DOOR | Zurück | Zurück zur Team-Liste
+                22 | OAK_DOOR | Zurück | Zurück zur Teamliste
                 """, fixture.describeLastMenu());
     }
 
@@ -135,7 +135,7 @@ class GermanTeamMenuSnapshotTest {
                 12 | GRAY_DYE | Spieler entfernen | Dieses Team ist nicht mehr registriert
                 13 | RED_WOOL | Team entfernen | Entfernt Alpha aus den registrierten Teams / \
                 Fragt vorher nach einer Bestätigung
-                22 | OAK_DOOR | Zurück | Zurück zur Team-Liste
+                22 | OAK_DOOR | Zurück | Zurück zur Teamliste
                 """, fixture.describeLastMenu());
     }
 

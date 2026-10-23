@@ -175,7 +175,7 @@ public final class TournamentManager implements MatchCompletionHandler {
     }
 
     public TournamentOperationResult startTournament(boolean allowUnevenTeamCount) {
-        if (state == TournamentState.RUNNING || state == TournamentState.PAUSED) {
+        if (isTournamentInProgress()) {
             return TournamentOperationResult.failure(Messages.text(CommonMessage.TOURNAMENT_ALREADY_IN_PROGRESS));
         }
         if (autoMatchReservation.occupiesTheArena()) {
@@ -250,7 +250,7 @@ public final class TournamentManager implements MatchCompletionHandler {
     }
 
     public TournamentOperationResult cancelTournament() {
-        if (state != TournamentState.RUNNING && state != TournamentState.PAUSED) {
+        if (!isTournamentInProgress()) {
             return TournamentOperationResult.failure(Messages.text(CommonMessage.NO_TOURNAMENT_IN_PROGRESS));
         }
         kitChoiceService.cancel();
@@ -447,7 +447,7 @@ public final class TournamentManager implements MatchCompletionHandler {
     }
 
     public TournamentOperationResult startFinalMatch() {
-        if (bracket == null || (state != TournamentState.RUNNING && state != TournamentState.PAUSED)) {
+        if (bracket == null || !isTournamentInProgress()) {
             return TournamentOperationResult.failure(Messages.text(CommonMessage.NO_TOURNAMENT_IN_PROGRESS));
         }
         if (state == TournamentState.PAUSED) {
@@ -745,7 +745,7 @@ public final class TournamentManager implements MatchCompletionHandler {
     }
 
     private void saveState() {
-        if (bracket == null || (state != TournamentState.RUNNING && state != TournamentState.PAUSED)) {
+        if (bracket == null || !isTournamentInProgress()) {
             return;
         }
         try {

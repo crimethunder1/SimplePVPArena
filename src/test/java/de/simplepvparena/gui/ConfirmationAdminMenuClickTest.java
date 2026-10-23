@@ -371,21 +371,24 @@ class ConfirmationAdminMenuClickTest {
         fixture.configureArena();
         fixture.openMenuFromTheMainMenu(MAIN_ARENA_SLOT);
         fixture.click(ARENA_CLEAN_SLOT);
-        assertEquals(Optional.of(ConfirmationRequest.CLEAN_ARENA), fixture.lastMenu().holder().getConfirmationRequest());
+        assertEquals(Optional.of(ConfirmationRequest.CLEAN_ARENA),
+                fixture.lastMenu().holder().getConfirmationRequest());
     }
 
     private void openTheResetConfirmation() {
         fixture.configureArena();
         fixture.openMenuFromTheMainMenu(MAIN_ARENA_SLOT);
         fixture.click(ARENA_RESET_SLOT);
-        assertEquals(Optional.of(ConfirmationRequest.RESET_ARENA), fixture.lastMenu().holder().getConfirmationRequest());
+        assertEquals(Optional.of(ConfirmationRequest.RESET_ARENA),
+                fixture.lastMenu().holder().getConfirmationRequest());
     }
 
     private void openTheReplacementConfirmationOfTheFirstKit() {
         fixture.openMenuFromTheMainMenu(MAIN_KIT_SLOT);
         fixture.click(KITS_FIRST_KIT_SLOT);
         fixture.click(KIT_REPLACE_SLOT);
-        assertEquals(Optional.of(ConfirmationRequest.REPLACE_KIT), fixture.lastMenu().holder().getConfirmationRequest());
+        assertEquals(Optional.of(ConfirmationRequest.REPLACE_KIT),
+                fixture.lastMenu().holder().getConfirmationRequest());
         fixture.messages().clear();
     }
 
@@ -393,7 +396,8 @@ class ConfirmationAdminMenuClickTest {
         fixture.openMenuFromTheMainMenu(MAIN_TEAMS_SLOT);
         fixture.click(TEAMS_FIRST_TEAM_SLOT);
         fixture.click(TEAM_REMOVE_SLOT);
-        assertEquals(Optional.of(ConfirmationRequest.REMOVE_TEAM), fixture.lastMenu().holder().getConfirmationRequest());
+        assertEquals(Optional.of(ConfirmationRequest.REMOVE_TEAM),
+                fixture.lastMenu().holder().getConfirmationRequest());
     }
 
     private void openTheCancelConfirmationOfARunningTournament() {

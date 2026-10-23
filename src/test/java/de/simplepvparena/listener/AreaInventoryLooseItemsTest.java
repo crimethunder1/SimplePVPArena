@@ -1,5 +1,6 @@
 package de.simplepvparena.listener;
 
+import de.simplepvparena.arena.AreaInventoryLookup;
 import de.simplepvparena.support.FakeItemStack;
 import org.bukkit.event.inventory.InventoryType;
 import org.bukkit.inventory.ItemStack;
@@ -35,6 +36,7 @@ class AreaInventoryLooseItemsTest {
     @Test
     void savesTheItemOnTheCursorAndTheCraftingGridOnEnteringAndEmptiesBoth() {
         ArenaMatchHarness.FakePlayer player = fixture.addPlayerOutsideWithItems("Crafter");
+        player.keepLooseItemsOnClose();
         player.holdOnCursor(TORCH);
         player.putIntoCraftingGrid(PLANKS, null, STICK, null);
 
@@ -49,6 +51,7 @@ class AreaInventoryLooseItemsTest {
     @Test
     void givesTheLooseItemsBackIntoFreeSlotsOnLeaving() {
         ArenaMatchHarness.FakePlayer player = fixture.addPlayerOutsideWithItems("Crafter");
+        player.keepLooseItemsOnClose();
         player.holdOnCursor(TORCH);
         player.putIntoCraftingGrid(PLANKS, STICK);
         fixture.service().reconcile(player.player(), fixture.inside());
@@ -72,6 +75,7 @@ class AreaInventoryLooseItemsTest {
             fullContents[slotIndex] = new FakeItemStack("cobblestone " + slotIndex);
         }
         player.setContents(fullContents);
+        player.keepLooseItemsOnClose();
         player.holdOnCursor(TORCH);
         player.putIntoCraftingGrid(PLANKS);
         fixture.service().reconcile(player.player(), fixture.inside());
@@ -86,6 +90,7 @@ class AreaInventoryLooseItemsTest {
     @Test
     void leavesTheGridOfAnotherOpenInventoryAloneAndSavesOnlyTheCursor() {
         ArenaMatchHarness.FakePlayer player = fixture.addPlayerOutsideWithItems("Worker");
+        player.keepLooseItemsOnClose();
         player.openInventoryOfType(InventoryType.WORKBENCH);
         player.holdOnCursor(TORCH);
         player.putIntoCraftingGrid(PLANKS);
@@ -95,6 +100,70 @@ class AreaInventoryLooseItemsTest {
         assertNull(player.itemOnCursor());
         assertEquals(PLANKS, player.craftingGrid()[0]);
         assertEquals(List.of(TORCH), fixture.findSavedInventory(player).looseItems());
+    }
+
+    @Test
+    void closesAnOpenWorkbenchBeforeSavingSoItsGridAndTheCursorAreSavedWithTheInventory() {
+        ArenaMatchHarness.FakePlayer player = fixture.addPlayerOutsideWithItems("Worker");
+        player.openInventoryOfType(InventoryType.WORKBENCH);
+        player.holdOnCursor(TORCH);
+        player.putIntoCraftingGrid(PLANKS, null, STICK);
+
+        fixture.service().reconcile(player.player(), fixture.inside());
+
+        ItemStack[] expectedContents = AreaInventoryFixture.ownContents();
+        expectedContents[1] = TORCH;
+        expectedContents[2] = PLANKS;
+        expectedContents[3] = STICK;
+        AreaInventoryLookup savedInventory = fixture.findSavedInventory(player);
+        assertEquals(1, player.closeInventoryCount());
+        assertArrayEquals(expectedContents, savedInventory.contents().orElseThrow());
+        assertEquals(List.of(), savedInventory.looseItems());
+        assertArrayEquals(AreaInventoryFixture.emptyContents(), player.contents());
+        assertNull(player.itemOnCursor());
+        assertArrayEquals(new ItemStack[ArenaMatchHarness.CRAFTING_GRID_SLOT_COUNT], player.craftingGrid());
+
+        fixture.service().reconcile(player.player(), fixture.outside());
+
+        assertArrayEquals(expectedContents, player.contents());
+        assertEquals(List.of(), harness.droppedItems());
+    }
+
+    @Test
+    void closesTheOwnInventoryViewBeforeSavingSoTheSmallGridAndTheCursorAreSavedWithTheInventory() {
+        ArenaMatchHarness.FakePlayer player = fixture.addPlayerOutsideWithItems("Crafter");
+        player.holdOnCursor(TORCH);
+        player.putIntoCraftingGrid(PLANKS, STICK);
+
+        fixture.service().reconcile(player.player(), fixture.inside());
+
+        ItemStack[] expectedContents = AreaInventoryFixture.ownContents();
+        expectedContents[1] = TORCH;
+        expectedContents[2] = PLANKS;
+        expectedContents[3] = STICK;
+        AreaInventoryLookup savedInventory = fixture.findSavedInventory(player);
+        assertArrayEquals(expectedContents, savedInventory.contents().orElseThrow());
+        assertEquals(List.of(), savedInventory.looseItems());
+    }
+
+    @Test
+    void leavesWhatTheClosedViewCannotPutBackAtTheFeetOfThePlayerInsideTheArea() {
+        ArenaMatchHarness.FakePlayer player = fixture.addPlayerOutsideWithItems("Hoarder");
+        ItemStack[] fullContents = new ItemStack[ArenaMatchHarness.INVENTORY_SLOT_COUNT];
+        for (int slotIndex = 0; slotIndex < ArenaMatchHarness.STORAGE_SLOT_COUNT - 1; slotIndex++) {
+            fullContents[slotIndex] = new FakeItemStack("cobblestone " + slotIndex);
+        }
+        player.setContents(fullContents);
+        player.openInventoryOfType(InventoryType.WORKBENCH);
+        player.holdOnCursor(TORCH);
+        player.putIntoCraftingGrid(PLANKS);
+        player.moveTo(fixture.inside());
+
+        fixture.service().reconcile(player.player(), fixture.inside());
+
+        ItemStack[] savedContents = fixture.findSavedInventory(player).contents().orElseThrow();
+        assertEquals(TORCH, savedContents[ArenaMatchHarness.STORAGE_SLOT_COUNT - 1]);
+        assertEquals(List.of(new ArenaMatchHarness.DroppedItem(fixture.inside(), PLANKS)), harness.droppedItems());
     }
 
     @Test
