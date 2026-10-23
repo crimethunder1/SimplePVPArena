@@ -304,6 +304,8 @@ confirmation:
     restart-match: 'Match neu starten?'
     form-random-teams: 'Zufallsteams bilden?'
     clear-registrations: 'Anmeldungen leeren?'
+    clear-border-marks: 'Wandmarkierungen löschen?'
+    clear-start-gate-marks: 'Starttor-Markierungen löschen?'
     revoke-result: 'Ergebnis von {match} zurücknehmen?'
 team:
   name-rule: '1 bis {maximumLength} Buchstaben, Ziffern, Bindestriche oder Unterstriche'
@@ -764,6 +766,20 @@ arena:
     configuration-removed:
       - 'Die Konfiguration der Arena wurde entfernt'
       - 'Ihre Blöcke und die Wandblöcke bleiben unberührt'
+  marks:
+    nothing-marked: 'Es ist nichts markiert'
+    border-forgotten:
+      one: '{count} Wandmarkierung wurde vergessen'
+      other: '{count} Wandmarkierungen wurden vergessen'
+    border-forgotten-not-written:
+      one: '{count} Wandmarkierung wurde vergessen, aber borders.yml konnte nicht geschrieben werden: {reason}'
+      other: '{count} Wandmarkierungen wurden vergessen, aber borders.yml konnte nicht geschrieben werden: {reason}'
+    start-gate-forgotten:
+      one: '{count} Starttor-Markierung wurde vergessen'
+      other: '{count} Starttor-Markierungen wurden vergessen'
+    start-gate-forgotten-not-written:
+      one: '{count} Starttor-Markierung wurde vergessen, aber startgates.yml konnte nicht geschrieben werden: {reason}'
+      other: '{count} Starttor-Markierungen wurden vergessen, aber startgates.yml konnte nicht geschrieben werden: {reason}'
   cleaning:
     without-fight-area:
       - 'Die Kampffläche ist nicht berechnet, es gibt nichts zu reinigen'
@@ -904,6 +920,25 @@ arena-menu:
       remove-lore:
         - 'Steht bei {position}'
         - 'Klicke, um sie zu entfernen'
+    clear-border-marks:
+      title: 'Wandmarkierungen löschen'
+      lore:
+        - 'Vergisst jeden markierten Wandblock'
+        - 'Die Blöcke in der Welt bleiben, wie sie sind'
+        - 'Die berechnete Kampffläche bleibt, für eine neue Berechnung müssen Wandblöcke neu markiert werden'
+      marked:
+        one: '{count} Wandblock ist markiert'
+        other: '{count} Wandblöcke sind markiert'
+      none-marked: 'Es ist kein Wandblock markiert'
+    clear-start-gate-marks:
+      title: 'Starttor-Markierungen löschen'
+      lore:
+        - 'Vergisst jeden markierten Starttor-Block'
+        - 'Die Blöcke in der Welt bleiben, wie sie sind, die Runden beginnen ohne Starttor'
+      marked:
+        one: '{count} Starttor-Block ist markiert'
+        other: '{count} Starttor-Blöcke sind markiert'
+      none-marked: 'Es ist kein Starttor-Block markiert'
   cleaning:
     affected-blocks:
       one: '{count} Block ist betroffen'
@@ -915,6 +950,14 @@ arena-menu:
     - 'Die Kampffläche, alle drei Spawns und die Platzierungstafel werden verworfen'
     - 'Die Blöcke der Arena und die Wandblöcke bleiben unberührt'
     - 'Bis zur nächsten Berechnung lässt sich kein Turnier starten'
+  clear-marks-confirmation:
+    border-forgotten:
+      one: '{count} Wandmarkierung wird vergessen'
+      other: '{count} Wandmarkierungen werden vergessen'
+    start-gate-forgotten:
+      one: '{count} Starttor-Markierung wird vergessen'
+      other: '{count} Starttor-Markierungen werden vergessen'
+    blocks-stay: 'Die Blöcke in der Welt bleiben, wie sie sind'
   height-marker:
     inventory-full: 'Dein Inventar ist voll, die Höhenmarke konnte nicht ausgegeben werden'
     handed-out:

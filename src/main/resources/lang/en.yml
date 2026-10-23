@@ -304,6 +304,8 @@ confirmation:
     restart-match: 'Restart the match?'
     form-random-teams: 'Form random teams?'
     clear-registrations: 'Clear the registrations?'
+    clear-border-marks: 'Clear the border marks?'
+    clear-start-gate-marks: 'Clear the start gate marks?'
     revoke-result: 'Take back the result of {match}?'
 team:
   name-rule: '1 to {maximumLength} letters, digits, hyphens or underscores'
@@ -764,6 +766,20 @@ arena:
     configuration-removed:
       - 'The arena configuration was removed'
       - 'Its blocks and the border blocks stay untouched'
+  marks:
+    nothing-marked: 'Nothing is marked'
+    border-forgotten:
+      one: '{count} border mark was forgotten'
+      other: '{count} border marks were forgotten'
+    border-forgotten-not-written:
+      one: '{count} border mark was forgotten, but borders.yml could not be written: {reason}'
+      other: '{count} border marks were forgotten, but borders.yml could not be written: {reason}'
+    start-gate-forgotten:
+      one: '{count} start gate mark was forgotten'
+      other: '{count} start gate marks were forgotten'
+    start-gate-forgotten-not-written:
+      one: '{count} start gate mark was forgotten, but startgates.yml could not be written: {reason}'
+      other: '{count} start gate marks were forgotten, but startgates.yml could not be written: {reason}'
   cleaning:
     without-fight-area:
       - 'The fight area is not calculated, there is nothing to clean'
@@ -904,6 +920,25 @@ arena-menu:
       remove-lore:
         - 'Stands at {position}'
         - 'Click to remove it'
+    clear-border-marks:
+      title: 'Clear the border marks'
+      lore:
+        - 'Forgets every marked border block'
+        - 'The blocks in the world stay as they are'
+        - 'The calculated fight area stays, a new calculation needs marked border blocks again'
+      marked:
+        one: '{count} border block is marked'
+        other: '{count} border blocks are marked'
+      none-marked: 'No border blocks are marked'
+    clear-start-gate-marks:
+      title: 'Clear the start gate marks'
+      lore:
+        - 'Forgets every marked start gate block'
+        - 'The blocks in the world stay as they are, the rounds start without a start gate'
+      marked:
+        one: '{count} start gate block is marked'
+        other: '{count} start gate blocks are marked'
+      none-marked: 'No start gate blocks are marked'
   cleaning:
     affected-blocks:
       one: '{count} block is affected'
@@ -915,6 +950,14 @@ arena-menu:
     - 'The fight area, all three spawns and the standings board are dropped'
     - 'The blocks of the arena and the border blocks stay untouched'
     - 'No tournament can be started until it is calculated again'
+  clear-marks-confirmation:
+    border-forgotten:
+      one: '{count} border mark is forgotten'
+      other: '{count} border marks are forgotten'
+    start-gate-forgotten:
+      one: '{count} start gate mark is forgotten'
+      other: '{count} start gate marks are forgotten'
+    blocks-stay: 'The blocks in the world stay as they are'
   height-marker:
     inventory-full: 'Your inventory is full, the height marker could not be handed out'
     handed-out:

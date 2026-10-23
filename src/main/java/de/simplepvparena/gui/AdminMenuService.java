@@ -115,7 +115,7 @@ public final class AdminMenuService {
                 teamChoiceService);
         ArenaAdminMenu arenaAdminMenu = new ArenaAdminMenu(navigator, arenaSetupService, heightMarkerService,
                 gateItemService, chatInputService, arena.borderParticleService(),
-                arena.confirmedBorderParticleWriter());
+                arena.confirmedBorderParticleWriter(), arena.borderMarkClearing(), arena.startGateMarkClearing());
         bracketViewMenu = new BracketViewMenu(navigator, tournamentManager, matchService);
         MainAdminMenu mainAdminMenu = new MainAdminMenu(navigator, tournamentManager, tournamentDryRun, teamRegistry,
                 matchService, arenaSetupService, borderSelectorModes, configurationReloader, tournamentMenuStatus,
@@ -123,6 +123,10 @@ public final class AdminMenuService {
         ConfirmationAdminMenu confirmationAdminMenu = new ConfirmationAdminMenu(navigator);
         confirmationAdminMenu.register(ConfirmationRequest.CLEAN_ARENA, arenaAdminMenu.cleanConfirmation());
         confirmationAdminMenu.register(ConfirmationRequest.RESET_ARENA, arenaAdminMenu.resetConfirmation());
+        confirmationAdminMenu.register(ConfirmationRequest.CLEAR_BORDER_MARKS,
+                arenaAdminMenu.clearBorderMarksConfirmation());
+        confirmationAdminMenu.register(ConfirmationRequest.CLEAR_START_GATE_MARKS,
+                arenaAdminMenu.clearStartGateMarksConfirmation());
         confirmationAdminMenu.register(ConfirmationRequest.REPLACE_KIT, kitActionsAdminMenu.replaceConfirmation());
         confirmationAdminMenu.register(ConfirmationRequest.DELETE_KIT, kitActionsAdminMenu.deleteConfirmation());
         confirmationAdminMenu.register(ConfirmationRequest.REMOVE_TEAM, teamActionsAdminMenu.removeConfirmation());

@@ -5,6 +5,7 @@ import de.simplepvparena.arena.ArenaHeightMarkerService;
 import de.simplepvparena.arena.ArenaSetupService;
 import de.simplepvparena.arena.ArenaShapeFloodFill;
 import de.simplepvparena.arena.ArenaSpawnType;
+import de.simplepvparena.arena.MarkClearing;
 import de.simplepvparena.border.BorderParticleService;
 import de.simplepvparena.border.ConfirmedBorderParticleWriter;
 import de.simplepvparena.gate.StartGateItemService;
@@ -39,10 +40,12 @@ final class ArenaAdminMenu implements AdminMenu {
     private static final int ARENA_TRIBUNE_SPAWN_SLOT = 14;
     private static final int ARENA_CLEAN_SLOT = 15;
     private static final int ARENA_RESET_SLOT = 16;
+    private static final int ARENA_CLEAR_BORDER_MARKS_SLOT = 17;
     private static final int ARENA_HEIGHT_MARKER_SLOT = 19;
     private static final int ARENA_START_GATE_SLOT = 20;
     private static final int ARENA_BORDER_PARTICLES_SLOT = 21;
     private static final int ARENA_STANDINGS_BOARD_SLOT = 23;
+    private static final int ARENA_CLEAR_START_GATE_MARKS_SLOT = 25;
     private static final Material START_GATE_TILE_MATERIAL = Material.IRON_BARS;
     private static final Material BORDER_PARTICLES_TILE_MATERIAL = Material.BLAZE_POWDER;
     private static final Material STANDINGS_BOARD_TILE_MATERIAL = Material.OAK_SIGN;
@@ -54,11 +57,14 @@ final class ArenaAdminMenu implements AdminMenu {
     private final ChatInputService chatInputService;
     private final BorderParticleService borderParticleService;
     private final ConfirmedBorderParticleWriter confirmedBorderParticleWriter;
+    private final MarkClearing borderMarkClearing;
+    private final MarkClearing startGateMarkClearing;
 
     ArenaAdminMenu(AdminMenuNavigation navigation, ArenaSetupService arenaSetupService,
                    ArenaHeightMarkerService heightMarkerService, StartGateItemService gateItemService,
                    ChatInputService chatInputService, BorderParticleService borderParticleService,
-                   ConfirmedBorderParticleWriter confirmedBorderParticleWriter) {
+                   ConfirmedBorderParticleWriter confirmedBorderParticleWriter, MarkClearing borderMarkClearing,
+                   MarkClearing startGateMarkClearing) {
         this.navigation = Objects.requireNonNull(navigation, "navigation");
         this.arenaSetupService = Objects.requireNonNull(arenaSetupService, "arenaSetupService");
         this.heightMarkerService = Objects.requireNonNull(heightMarkerService, "heightMarkerService");
@@ -67,6 +73,8 @@ final class ArenaAdminMenu implements AdminMenu {
         this.borderParticleService = Objects.requireNonNull(borderParticleService, "borderParticleService");
         this.confirmedBorderParticleWriter = Objects.requireNonNull(confirmedBorderParticleWriter,
                 "confirmedBorderParticleWriter");
+        this.borderMarkClearing = Objects.requireNonNull(borderMarkClearing, "borderMarkClearing");
+        this.startGateMarkClearing = Objects.requireNonNull(startGateMarkClearing, "startGateMarkClearing");
     }
 
     @Override
@@ -103,7 +111,10 @@ final class ArenaAdminMenu implements AdminMenu {
                 buildCleaningTileLore()));
         canvas.set(ARENA_RESET_SLOT, MenuItems.create(MenuItems.DESTRUCTIVE_MATERIAL,
                 Messages.text(ArenaMenuMessage.RESET_TITLE), buildResetTileLore()));
+        canvas.set(ARENA_CLEAR_BORDER_MARKS_SLOT, MarkClearingTile.BORDER_MARKS.build(borderMarkClearing));
         canvas.set(ARENA_STANDINGS_BOARD_SLOT, buildStandingsBoardTile());
+        canvas.set(ARENA_CLEAR_START_GATE_MARKS_SLOT,
+                MarkClearingTile.START_GATE_MARKS.build(startGateMarkClearing));
         canvas.set(AdminMenuLayout.BACK_SLOT, MenuItems.back(MenuMessage.BACK_TO_MAIN_MENU));
     }
 
@@ -123,7 +134,11 @@ final class ArenaAdminMenu implements AdminMenu {
             case ARENA_TRIBUNE_SPAWN_SLOT -> setSpawn(player, holder, ArenaSpawnType.TRIBUNE);
             case ARENA_CLEAN_SLOT -> askForCleaningConfirmation(player);
             case ARENA_RESET_SLOT -> askForResetConfirmation(player);
+            case ARENA_CLEAR_BORDER_MARKS_SLOT -> askForMarkClearingConfirmation(player, MarkClearingTile.BORDER_MARKS,
+                    borderMarkClearing);
             case ARENA_STANDINGS_BOARD_SLOT -> switchStandingsBoard(player, holder);
+            case ARENA_CLEAR_START_GATE_MARKS_SLOT -> askForMarkClearingConfirmation(player,
+                    MarkClearingTile.START_GATE_MARKS, startGateMarkClearing);
             case AdminMenuLayout.BACK_SLOT -> navigation.open(player, AdminMenuHolder.main());
             default -> { }
         }
@@ -158,6 +173,33 @@ final class ArenaAdminMenu implements AdminMenu {
             @Override
             public void carryOut(Player player, AdminMenuHolder holder) {
                 clearConfiguration(player);
+            }
+
+            @Override
+            public AdminMenuHolder returnMenu(AdminMenuHolder holder) {
+                return AdminMenuHolder.arena();
+            }
+        };
+    }
+
+    AdminMenuConfirmation clearBorderMarksConfirmation() {
+        return markClearingConfirmation(MarkClearingTile.BORDER_MARKS, borderMarkClearing);
+    }
+
+    AdminMenuConfirmation clearStartGateMarksConfirmation() {
+        return markClearingConfirmation(MarkClearingTile.START_GATE_MARKS, startGateMarkClearing);
+    }
+
+    private AdminMenuConfirmation markClearingConfirmation(MarkClearingTile tile, MarkClearing clearing) {
+        return new AdminMenuConfirmation() {
+            @Override
+            public List<String> describe(AdminMenuHolder holder) {
+                return tile.describeConfirmation(clearing);
+            }
+
+            @Override
+            public void carryOut(Player player, AdminMenuHolder holder) {
+                clearing.clearEveryMark(player);
             }
 
             @Override
@@ -251,6 +293,15 @@ final class ArenaAdminMenu implements AdminMenu {
             return;
         }
         navigation.open(player, AdminMenuHolder.confirmation(ConfirmationRequest.RESET_ARENA, null, 0));
+    }
+
+    private void askForMarkClearingConfirmation(Player player, MarkClearingTile tile, MarkClearing clearing) {
+        Optional<String> rejection = clearing.findRejection();
+        if (rejection.isPresent()) {
+            TournamentMessages.sendError(player, rejection.get());
+            return;
+        }
+        navigation.open(player, AdminMenuHolder.confirmation(tile.getConfirmationRequest(), null, 0));
     }
 
     private List<String> buildDiagnoseLore() {

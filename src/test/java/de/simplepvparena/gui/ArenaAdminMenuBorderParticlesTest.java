@@ -137,6 +137,7 @@ class ArenaAdminMenuBorderParticlesTest {
                 16 | BARRIER | Arena zurücksetzen | Verwirft die Kampffläche, alle drei Spawns und die \
                 Platzierungstafel / \
                 Die Blöcke und die Wandblöcke bleiben unberührt / Fragt vorher nach einer Bestätigung
+                17 | GRAY_DYE | Wandmarkierungen löschen | Es ist nichts markiert
                 19 | TARGET | Höhe der Kampffläche markieren | Gibt dir das Item, das den tiefsten und den / \
                 höchsten Punkt der Kampffläche markiert / Setze damit einen Block, nur seine Höhe wird gemerkt / \
                 und der Block verschwindet wieder / Die nächste Berechnung übernimmt sie als Boden / \
@@ -155,6 +156,7 @@ class ArenaAdminMenuBorderParticlesTest {
                 22 | OAK_DOOR | Zurück | Zurück zum Hauptmenü
                 23 | OAK_SIGN | Platzierungstafel hier aufstellen | Stellt die Tafel zwei Blöcke über dem Block auf, / \
                 auf dem du stehst, am besten an der Tribüne / Sie zeigt die Turnierrunde, das Match und die Platzierung
+                25 | GRAY_DYE | Starttor-Markierungen löschen | Es ist nichts markiert
                 """, fixture.describeLastMenu());
     }
 

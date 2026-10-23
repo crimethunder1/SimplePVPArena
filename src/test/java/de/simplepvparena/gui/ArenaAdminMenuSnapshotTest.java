@@ -40,6 +40,7 @@ class ArenaAdminMenuSnapshotTest {
                 15 | TNT | Clean the arena | No fight area is calculated, there is nothing to clean
                 16 | BARRIER | Reset the arena | Drops the fight area, all three spawns and the standings board / \
                 The blocks and the border blocks stay untouched / Asks for a confirmation first
+                17 | GRAY_DYE | Clear the border marks | Nothing is marked
                 19 | TARGET | Mark the height of the fight area | Hands you the item that marks the lowest and the / \
                 highest point of the fight area / Place a block with it, only its height is kept / \
                 and the block disappears again / The next calculation takes them over as the floor / \
@@ -58,6 +59,7 @@ class ArenaAdminMenuSnapshotTest {
                 22 | OAK_DOOR | Back | Returns to the main menu
                 23 | OAK_SIGN | Place the standings board here | Puts the board two blocks above the block / \
                 you stand on, best at the tribune / It shows the round, the match and the placement
+                25 | GRAY_DYE | Clear the start gate marks | Nothing is marked
                 """, fixture.describeLastMenu());
     }
 
@@ -118,6 +120,10 @@ class ArenaAdminMenuSnapshotTest {
                 Asks for a confirmation first
                 16 | BARRIER | Reset the arena | Drops the fight area, all three spawns and the standings board / \
                 The blocks and the border blocks stay untouched / Asks for a confirmation first
+                17 | TNT_MINECART | Clear the border marks | Forgets every marked border block / \
+                The blocks in the world stay as they are / \
+                The calculated fight area stays, a new calculation needs marked border blocks again / \
+                96 border blocks are marked / Asks for a confirmation first
                 19 | TARGET | Mark the height of the fight area | Hands you the item that marks the lowest and the / \
                 highest point of the fight area / Place a block with it, only its height is kept / \
                 and the block disappears again / The next calculation takes them over as the floor / \
@@ -136,6 +142,7 @@ class ArenaAdminMenuSnapshotTest {
                 22 | OAK_DOOR | Back | Returns to the main menu
                 23 | OAK_SIGN | Place the standings board here | Puts the board two blocks above the block / \
                 you stand on, best at the tribune / It shows the round, the match and the placement
+                25 | GRAY_DYE | Clear the start gate marks | Nothing is marked
                 """, fixture.describeLastMenu());
     }
 
@@ -173,6 +180,8 @@ class ArenaAdminMenuSnapshotTest {
                 Asks for a confirmation first
                 16 | BARRIER | Reset the arena | Drops the fight area, all three spawns and the standings board / \
                 The blocks and the border blocks stay untouched / Asks for a confirmation first
+                17 | GRAY_DYE | Clear the border marks | \
+                A match is running, the arena can only be reset between matches
                 19 | TARGET | Mark the height of the fight area | Hands you the item that marks the lowest and the / \
                 highest point of the fight area / Place a block with it, only its height is kept / \
                 and the block disappears again / The next calculation takes them over as the floor / \
@@ -191,6 +200,7 @@ class ArenaAdminMenuSnapshotTest {
                 22 | OAK_DOOR | Back | Returns to the main menu
                 23 | OAK_SIGN | Place the standings board here | Puts the board two blocks above the block / \
                 you stand on, best at the tribune / It shows the round, the match and the placement
+                25 | GRAY_DYE | Clear the start gate marks | Nothing is marked
                 """, fixture.describeLastMenu());
     }
 

@@ -97,6 +97,23 @@ class BorderParticleServiceTest {
     }
 
     @Test
+    void drawsNothingAtTheConfirmedWallOnceEveryMarkIsClearedAndKeepsRunning() {
+        markWall();
+        borderConfirmation.confirmCalculation();
+        service.start();
+        runOneRedraw();
+        drawnEffects.clear();
+
+        borderMarks.clear();
+        borderConfirmation.invalidate();
+        runOneRedraw();
+
+        assertEquals(List.of(), drawnEffects);
+        assertTrue(service.isRunning());
+        assertTrue(service.isConfirmedParticleEnabled());
+    }
+
+    @Test
     void showsTheParticlesAgainOnceTheWallIsMarkedAnewAfterTheConfirmation() {
         markWall();
         borderConfirmation.confirmCalculation();

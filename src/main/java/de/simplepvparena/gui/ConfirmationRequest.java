@@ -18,6 +18,8 @@ public enum ConfirmationRequest {
     RESTART_MATCH(ConfirmationMessage.RESTART_MATCH_QUESTION),
     FORM_RANDOM_TEAMS(ConfirmationMessage.FORM_RANDOM_TEAMS_QUESTION),
     CLEAR_REGISTRATIONS(ConfirmationMessage.CLEAR_REGISTRATIONS_QUESTION),
+    CLEAR_BORDER_MARKS(ConfirmationMessage.CLEAR_BORDER_MARKS_QUESTION),
+    CLEAR_START_GATE_MARKS(ConfirmationMessage.CLEAR_START_GATE_MARKS_QUESTION),
     REVOKE_RESULT(ConfirmationMessage.REVOKE_RESULT_QUESTION, "match");
 
     private final MessageKey question;

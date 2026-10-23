@@ -13,6 +13,8 @@ import de.simplepvparena.arena.ArenaRegistry;
 import de.simplepvparena.arena.ArenaSetupService;
 import de.simplepvparena.arena.ArenaShape;
 import de.simplepvparena.arena.ArenaShapeFloodFill;
+import de.simplepvparena.arena.MarkClearing;
+import de.simplepvparena.arena.MarkClearingKind;
 import de.simplepvparena.arena.PositionSnapshot;
 import de.simplepvparena.arena.SpectatorItemFactory;
 import de.simplepvparena.arena.SpectatorService;
@@ -108,6 +110,7 @@ final class AdminMenuFixture {
     private static final int GROUND_Y = 64;
     private static final double INSIDE_COORDINATE = 3.5D;
     private static final double OUTSIDE_COORDINATE = 11.5D;
+    private static final int OUTSIDE_COORDINATE_BLOCK = 11;
 
     private static final int WALL_MINIMUM = 0;
     private static final int WALL_MAXIMUM = 6;
@@ -145,6 +148,7 @@ final class AdminMenuFixture {
     private final List<Boolean> writtenAutoMatchModes = new ArrayList<>();
     private final List<Boolean> writtenBorderParticleSwitches = new ArrayList<>();
     private final List<TeamMode> writtenTeamModes = new ArrayList<>();
+    private final List<String> markClearingWarnings = new ArrayList<>();
     private final TeamModeSetting teamModeSetting = new TeamModeSetting();
     private final TickingScheduler kitChoiceScheduler = new TickingScheduler();
     private final TickingScheduler voteScheduler = new TickingScheduler();
@@ -175,12 +179,15 @@ final class AdminMenuFixture {
     private int teamConfigurationSaveCount;
     private int arenaConfigurationSaveCount;
     private int registrationSaveCount;
+    private int borderMarkWriteCount;
+    private int startGateMarkWriteCount;
     private RandomGenerator randomGenerator = new OrderKeepingRandomGenerator();
     private IOException teamSizeWriteFailure;
     private IOException autoMatchModeWriteFailure;
     private IOException borderParticleSwitchWriteFailure;
     private IOException teamModeWriteFailure;
     private IOException arenaConfigurationWriteFailure;
+    private IOException markWriteFailure;
 
     AdminMenuFixture() {
         this(false);
@@ -259,7 +266,13 @@ final class AdminMenuFixture {
                         new ArenaHeightMarkerService(plugin, heightMarkers),
                         new StartGateItemService(plugin, gateMarks, gateDuration, () -> { },
                                 material -> material == Material.BARRIER, RecordingItemStack::new),
-                        borderSelectorModes, borderParticleService, this::writeBorderParticleSwitch),
+                        borderSelectorModes, borderParticleService, this::writeBorderParticleSwitch,
+                        new MarkClearing(MarkClearingKind.BORDER_MARKS, borderMarks::getMarkedBlockCount,
+                                this::forgetEveryBorderMark, arenaSetupService::findResetRejection,
+                                markClearingWarnings::add),
+                        new MarkClearing(MarkClearingKind.START_GATE_MARKS, gateMarks::getMarkedBlockCount,
+                                this::forgetEveryStartGateMark, arenaSetupService::findResetRejection,
+                                markClearingWarnings::add)),
                 new AdminMenuDependencies.KitServices(kitLibrary,
                         new KitSaveService(kitLibrary, new FakeKitItemSerializer())),
                 new AdminMenuDependencies.RegistrationServices(registrationService, registrationStationService,
@@ -499,6 +512,36 @@ final class AdminMenuFixture {
 
     void failArenaConfigurationWrites(IOException failure) {
         arenaConfigurationWriteFailure = failure;
+    }
+
+    void failMarkWrites(IOException failure) {
+        markWriteFailure = failure;
+    }
+
+    BorderMarkIndex borderMarks() {
+        return borderMarks;
+    }
+
+    StartGateMarks gateMarks() {
+        return gateMarks;
+    }
+
+    int borderMarkWriteCount() {
+        return borderMarkWriteCount;
+    }
+
+    int startGateMarkWriteCount() {
+        return startGateMarkWriteCount;
+    }
+
+    List<String> markClearingWarnings() {
+        return markClearingWarnings;
+    }
+
+    void markStartGateBlocks(int blockCount) {
+        for (int blockX = 0; blockX < blockCount; blockX++) {
+            gateMarks.mark(WORLD_NAME, blockX, GROUND_Y + 1, OUTSIDE_COORDINATE_BLOCK, Material.BARRIER);
+        }
     }
 
     void failTeamModeWrites(IOException failure) {
@@ -829,6 +872,22 @@ final class AdminMenuFixture {
             throw borderParticleSwitchWriteFailure;
         }
         writtenBorderParticleSwitches.add(enabled);
+    }
+
+    private void forgetEveryBorderMark() throws IOException {
+        borderMarks.clear();
+        if (markWriteFailure != null) {
+            throw markWriteFailure;
+        }
+        borderMarkWriteCount++;
+    }
+
+    private void forgetEveryStartGateMark() throws IOException {
+        gateMarks.clear();
+        if (markWriteFailure != null) {
+            throw markWriteFailure;
+        }
+        startGateMarkWriteCount++;
     }
 
     private void writeArenaConfiguration() throws IOException {

@@ -48,6 +48,20 @@ public final class StartGateMarkStorage {
     }
 
     public void save(StartGateMarks gateMarks) {
+        try {
+            write(gateMarks);
+        } catch (IOException failure) {
+            logger.log(Level.SEVERE, "Could not write " + gatesFile.getName() + ", the start gate is not persisted",
+                    failure);
+        }
+    }
+
+    public void clearEveryMark(StartGateMarks gateMarks) throws IOException {
+        gateMarks.clear();
+        write(gateMarks);
+    }
+
+    public void write(StartGateMarks gateMarks) throws IOException {
         YamlConfiguration configuration = new YamlConfiguration();
         List<Map<String, Object>> worldEntries = new ArrayList<>();
         for (String worldName : gateMarks.getWorldNames()) {
@@ -63,15 +77,9 @@ public final class StartGateMarkStorage {
         configuration.set(GATE_KEY, worldEntries);
         File parentDirectory = gatesFile.getParentFile();
         if (parentDirectory != null && !parentDirectory.isDirectory() && !parentDirectory.mkdirs()) {
-            logger.severe("Could not create the directory of " + gatesFile.getName()
-                    + ", the start gate is not persisted");
-            return;
+            throw new IOException("Could not create the directory of " + gatesFile.getName());
         }
-        try {
-            configuration.save(gatesFile);
-        } catch (IOException failure) {
-            logger.log(Level.SEVERE, "Could not write " + gatesFile.getName(), failure);
-        }
+        configuration.save(gatesFile);
     }
 
     private void readWorldEntry(Map<String, Map<Long, Material>> readMarksByWorld, Map<?, ?> worldEntry) {

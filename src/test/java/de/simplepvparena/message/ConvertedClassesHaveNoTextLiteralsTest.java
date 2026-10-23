@@ -175,7 +175,10 @@ class ConvertedClassesHaveNoTextLiteralsTest {
             "placement/PlacementBoard.java",
             "placement/PlacementBoardEntities.java",
             "placement/PaperPlacementBoardEntities.java",
-            "listener/PlacementBoardWorldListener.java");
+            "listener/PlacementBoardWorldListener.java",
+            "arena/MarkClearing.java",
+            "arena/MarkClearingKind.java",
+            "arena/MarkForgetting.java");
 
     private static final Pattern STRING_LITERAL = Pattern.compile("\"((?:[^\"\\\\]|\\\\.)*)\"");
     private static final Pattern USAGE_TOKEN = Pattern.compile("<[^<>]*>");

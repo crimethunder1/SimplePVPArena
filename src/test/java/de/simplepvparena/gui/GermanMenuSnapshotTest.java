@@ -399,17 +399,19 @@ class GermanMenuSnapshotTest {
             questions.put(request, request.getTitle(Optional.of("round1-match2")));
         }
 
-        assertEquals(Map.of(
-                ConfirmationRequest.CLEAN_ARENA, "Arena reinigen?",
-                ConfirmationRequest.RESET_ARENA, "Arena zurücksetzen?",
-                ConfirmationRequest.REPLACE_KIT, "Kit durch dein Inventar ersetzen?",
-                ConfirmationRequest.DELETE_KIT, "Kit löschen?",
-                ConfirmationRequest.REMOVE_TEAM, "Team entfernen?",
-                ConfirmationRequest.CANCEL_TOURNAMENT, "Turnier abbrechen?",
-                ConfirmationRequest.RESTART_MATCH, "Match neu starten?",
-                ConfirmationRequest.FORM_RANDOM_TEAMS, "Zufallsteams bilden?",
-                ConfirmationRequest.CLEAR_REGISTRATIONS, "Anmeldungen leeren?",
-                ConfirmationRequest.REVOKE_RESULT, "Ergebnis von round1-match2 zurücknehmen?"), questions);
+        assertEquals(Map.ofEntries(
+                Map.entry(ConfirmationRequest.CLEAN_ARENA, "Arena reinigen?"),
+                Map.entry(ConfirmationRequest.RESET_ARENA, "Arena zurücksetzen?"),
+                Map.entry(ConfirmationRequest.REPLACE_KIT, "Kit durch dein Inventar ersetzen?"),
+                Map.entry(ConfirmationRequest.DELETE_KIT, "Kit löschen?"),
+                Map.entry(ConfirmationRequest.REMOVE_TEAM, "Team entfernen?"),
+                Map.entry(ConfirmationRequest.CANCEL_TOURNAMENT, "Turnier abbrechen?"),
+                Map.entry(ConfirmationRequest.RESTART_MATCH, "Match neu starten?"),
+                Map.entry(ConfirmationRequest.FORM_RANDOM_TEAMS, "Zufallsteams bilden?"),
+                Map.entry(ConfirmationRequest.CLEAR_REGISTRATIONS, "Anmeldungen leeren?"),
+                Map.entry(ConfirmationRequest.CLEAR_BORDER_MARKS, "Wandmarkierungen löschen?"),
+                Map.entry(ConfirmationRequest.CLEAR_START_GATE_MARKS, "Starttor-Markierungen löschen?"),
+                Map.entry(ConfirmationRequest.REVOKE_RESULT, "Ergebnis von round1-match2 zurücknehmen?")), questions);
     }
 
     private List<String> finalTileOfTheMainMenu() {

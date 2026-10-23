@@ -2,6 +2,7 @@ package de.simplepvparena.gui;
 
 import de.simplepvparena.arena.ArenaHeightMarkerService;
 import de.simplepvparena.arena.ArenaSetupService;
+import de.simplepvparena.arena.MarkClearing;
 import de.simplepvparena.border.BorderParticleService;
 import de.simplepvparena.border.BorderSelectorModeRegistry;
 import de.simplepvparena.border.ConfirmedBorderParticleWriter;
@@ -55,7 +56,9 @@ public record AdminMenuDependencies(Plugin plugin,
                                 StartGateItemService gateItemService,
                                 BorderSelectorModeRegistry borderSelectorModes,
                                 BorderParticleService borderParticleService,
-                                ConfirmedBorderParticleWriter confirmedBorderParticleWriter) {
+                                ConfirmedBorderParticleWriter confirmedBorderParticleWriter,
+                                MarkClearing borderMarkClearing,
+                                MarkClearing startGateMarkClearing) {
     }
 
     public record KitServices(KitLibrary kitLibrary, KitSaveService kitSaveService) {

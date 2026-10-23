@@ -41,6 +41,20 @@ public final class BorderMarkStorage {
     }
 
     public void save(BorderMarkIndex borderMarks) {
+        try {
+            write(borderMarks);
+        } catch (IOException failure) {
+            logger.log(Level.SEVERE, "Could not write " + bordersFile.getName() + ", border marks are not persisted",
+                    failure);
+        }
+    }
+
+    public void clearEveryMark(BorderMarkIndex borderMarks) throws IOException {
+        borderMarks.clear();
+        write(borderMarks);
+    }
+
+    public void write(BorderMarkIndex borderMarks) throws IOException {
         YamlConfiguration configuration = new YamlConfiguration();
         List<Map<String, Object>> worldEntries = new ArrayList<>();
         for (String worldName : borderMarks.getWorldNames()) {
@@ -56,15 +70,9 @@ public final class BorderMarkStorage {
         configuration.set(WORLDS_KEY, worldEntries);
         File parentDirectory = bordersFile.getParentFile();
         if (parentDirectory != null && !parentDirectory.isDirectory() && !parentDirectory.mkdirs()) {
-            logger.severe("Could not create the directory of " + bordersFile.getName()
-                    + ", border marks are not persisted");
-            return;
+            throw new IOException("Could not create the directory of " + bordersFile.getName());
         }
-        try {
-            configuration.save(bordersFile);
-        } catch (IOException failure) {
-            logger.log(Level.SEVERE, "Could not write " + bordersFile.getName(), failure);
-        }
+        configuration.save(bordersFile);
     }
 
     private void readWorldEntry(BorderMarkIndex borderMarks, Map<?, ?> worldEntry) {

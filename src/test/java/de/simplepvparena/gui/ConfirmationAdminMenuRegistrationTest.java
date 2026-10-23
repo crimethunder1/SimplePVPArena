@@ -69,6 +69,20 @@ class ConfirmationAdminMenuRegistrationTest {
     }
 
     @Test
+    void namesTheConfirmationsOfClearingTheMarksWhenTheyAreNotRegistered() {
+        for (ConfirmationRequest request : EnumSet.complementOf(EnumSet.of(ConfirmationRequest.CLEAR_BORDER_MARKS,
+                ConfirmationRequest.CLEAR_START_GATE_MARKS))) {
+            confirmationAdminMenu.register(request, new SilentConfirmation());
+        }
+
+        IllegalStateException failure = assertThrows(IllegalStateException.class,
+                confirmationAdminMenu::requireEveryConfirmationRegistered);
+
+        assertTrue(failure.getMessage().endsWith("[CLEAR_BORDER_MARKS, CLEAR_START_GATE_MARKS]"),
+                failure.getMessage());
+    }
+
+    @Test
     void namesTheConfirmationOfTakingBackAResultWhenItIsNotRegistered() {
         for (ConfirmationRequest request : EnumSet.complementOf(EnumSet.of(ConfirmationRequest.REVOKE_RESULT))) {
             confirmationAdminMenu.register(request, new SilentConfirmation());

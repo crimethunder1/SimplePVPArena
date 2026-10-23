@@ -19,6 +19,8 @@ import de.simplepvparena.arena.ArenaSetupService;
 import de.simplepvparena.arena.ArenaTemporaryEntityRemover;
 import de.simplepvparena.arena.BukkitArenaTemporaryEntityRemover;
 import de.simplepvparena.arena.FileAreaInventoryStorage;
+import de.simplepvparena.arena.MarkClearing;
+import de.simplepvparena.arena.MarkClearingKind;
 import de.simplepvparena.arena.SpectatorItemFactory;
 import de.simplepvparena.arena.SpectatorService;
 import de.simplepvparena.arena.VanillaArenaCleaningVisualEffect;
@@ -136,6 +138,7 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.function.Consumer;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -361,7 +364,13 @@ public final class SimplePVPArenaPlugin extends JavaPlugin {
                 new AdminMenuDependencies.ArenaServices(arenaSetupService, arenaHeightMarkerService,
                         startGateItemService, borderSelectorModes, borderParticleService,
                         new ConfirmedBorderParticleConfigurationWriter(this::getConfig,
-                                new File(getDataFolder(), CONFIGURATION_FILE_NAME), getLogger())),
+                                new File(getDataFolder(), CONFIGURATION_FILE_NAME), getLogger()),
+                        new MarkClearing(MarkClearingKind.BORDER_MARKS, borderMarkIndex::getMarkedBlockCount,
+                                this::forgetEveryBorderMark, arenaSetupService::findResetRejection,
+                                getLogger()::warning),
+                        new MarkClearing(MarkClearingKind.START_GATE_MARKS, startGateMarks::getMarkedBlockCount,
+                                () -> startGateMarkStorage.clearEveryMark(startGateMarks),
+                                arenaSetupService::findResetRejection, getLogger()::warning)),
                 new AdminMenuDependencies.KitServices(kitLibrary, kitSaveService),
                 new AdminMenuDependencies.RegistrationServices(registrationService, registrationStationService,
                         randomTeamFormation, teamModeSetting, new TeamModeConfigurationWriter(this::getConfig,
@@ -495,6 +504,11 @@ public final class SimplePVPArenaPlugin extends JavaPlugin {
 
     public void onStartGateMarksChanged() {
         startGateMarkStorage.save(startGateMarks);
+    }
+
+    private void forgetEveryBorderMark() throws IOException {
+        arenaBorderConfirmation.invalidate();
+        borderMarkStorage.clearEveryMark(borderMarkIndex);
     }
 
     public TournamentManager getTournamentManager() {

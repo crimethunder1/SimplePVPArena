@@ -20,6 +20,7 @@ import java.util.logging.Logger;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class StartGateMarkStorageTest {
@@ -94,6 +95,62 @@ class StartGateMarkStorageTest {
     }
 
     @Test
+    void forgetsEveryMarkInMemoryAndInTheFile(@TempDir Path pluginFolder) throws IOException {
+        StartGateMarks gateMarks = markedGate();
+        StartGateMarkStorage storage = storageIn(pluginFolder);
+        storage.save(gateMarks);
+
+        storage.clearEveryMark(gateMarks);
+
+        assertTrue(gateMarks.isEmpty());
+        StartGateMarks reloadedMarks = markedGate();
+        storage.load(reloadedMarks);
+        assertEquals(0, reloadedMarks.getMarkedBlockCount());
+        assertEquals("gate: []\n", Files.readString(pluginFolder.resolve(StartGateMarkStorage.FILE_NAME),
+                StandardCharsets.UTF_8));
+    }
+
+    @Test
+    void writesTheClearedGateTheWayAnEmptyGateIsSaved(@TempDir Path pluginFolder) throws IOException {
+        Path clearedFolder = Files.createDirectory(pluginFolder.resolve("cleared"));
+        Path emptyFolder = Files.createDirectory(pluginFolder.resolve("empty"));
+        StartGateMarks gateMarks = markedGate();
+        StartGateMarkStorage clearedStorage = storageIn(clearedFolder);
+        clearedStorage.save(gateMarks);
+
+        clearedStorage.clearEveryMark(gateMarks);
+        storageIn(emptyFolder).save(new StartGateMarks());
+
+        assertEquals(Files.readString(emptyFolder.resolve(StartGateMarkStorage.FILE_NAME), StandardCharsets.UTF_8),
+                Files.readString(clearedFolder.resolve(StartGateMarkStorage.FILE_NAME), StandardCharsets.UTF_8));
+    }
+
+    @Test
+    void keepsTheGateForgottenWhenTheFileCannotBeWritten(@TempDir Path pluginFolder) throws IOException {
+        Files.createDirectory(pluginFolder.resolve(StartGateMarkStorage.FILE_NAME));
+        StartGateMarks gateMarks = markedGate();
+        StartGateMarkStorage storage = storageIn(pluginFolder);
+        loggedMessages.clear();
+
+        assertThrows(IOException.class, () -> storage.clearEveryMark(gateMarks));
+
+        assertTrue(gateMarks.isEmpty());
+        assertTrue(Files.isDirectory(pluginFolder.resolve(StartGateMarkStorage.FILE_NAME)));
+        assertEquals(List.of(), loggedMessages, "the caller reports the failure");
+    }
+
+    @Test
+    void savesWithoutThrowingAndLogsAFailedWrite(@TempDir Path pluginFolder) throws IOException {
+        Files.createDirectory(pluginFolder.resolve(StartGateMarkStorage.FILE_NAME));
+        StartGateMarks gateMarks = markedGate();
+
+        storageIn(pluginFolder).save(gateMarks);
+
+        assertEquals(2, gateMarks.getMarkedBlockCount());
+        assertEquals(List.of("Could not write startgates.yml, the start gate is not persisted"), loggedMessages);
+    }
+
+    @Test
     void readsAndWritesTheLineOfASingleMark() {
         long encodedPosition = BlockPositionCodec.encode(-8, 65, 320);
 
@@ -119,6 +176,13 @@ class StartGateMarkStorageTest {
         assertTrue(StartGateMarkLine.parse("").isEmpty());
         assertTrue(StartGateMarkLine.parse(null).isEmpty());
         assertTrue(StartGateMarkLine.parse(encodedPosition + " BARRIER 3").isEmpty());
+    }
+
+    private static StartGateMarks markedGate() {
+        StartGateMarks gateMarks = new StartGateMarks();
+        gateMarks.mark(WORLD, 10, 65, 20, Material.BARRIER);
+        gateMarks.mark(OTHER_WORLD, 1, 2, 3, Material.GLASS);
+        return gateMarks;
     }
 
     private StartGateMarkStorage storageIn(Path pluginFolder) {

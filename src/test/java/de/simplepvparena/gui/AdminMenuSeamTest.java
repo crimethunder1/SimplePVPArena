@@ -11,6 +11,8 @@ import de.simplepvparena.arena.ArenaHeightMarkerService;
 import de.simplepvparena.arena.ArenaHeightMarkers;
 import de.simplepvparena.arena.ArenaRegistry;
 import de.simplepvparena.arena.ArenaSetupService;
+import de.simplepvparena.arena.MarkClearing;
+import de.simplepvparena.arena.MarkClearingKind;
 import de.simplepvparena.arena.SpectatorService;
 import de.simplepvparena.border.BorderMarkIndex;
 import de.simplepvparena.border.BorderParticleService;
@@ -151,7 +153,13 @@ class AdminMenuSeamTest {
                         enabled -> {
                             throw new UnsupportedOperationException(
                                     "the border particles are not written in this test");
-                        }),
+                        },
+                        new MarkClearing(MarkClearingKind.BORDER_MARKS, () -> 0, () -> {
+                            throw new UnsupportedOperationException("no border mark is cleared in this test");
+                        }, arenaSetupService::findResetRejection, warning -> { }),
+                        new MarkClearing(MarkClearingKind.START_GATE_MARKS, gateMarks::getMarkedBlockCount, () -> {
+                            throw new UnsupportedOperationException("no start gate mark is cleared in this test");
+                        }, arenaSetupService::findResetRejection, warning -> { })),
                 new AdminMenuDependencies.KitServices(kitLibrary,
                         new KitSaveService(kitLibrary, new FakeKitItemSerializer())),
                 new AdminMenuDependencies.RegistrationServices(registrationService,
