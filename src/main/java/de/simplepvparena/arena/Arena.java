@@ -18,6 +18,7 @@ public final class Arena {
     private PositionSnapshot firstTeamSpawn;
     private PositionSnapshot secondTeamSpawn;
     private PositionSnapshot tribuneSpawn;
+    private PositionSnapshot standingsBoard;
 
     public void setShape(ArenaShape shape) {
         this.shape = shape;
@@ -137,6 +138,14 @@ public final class Arena {
         return Optional.ofNullable(tribuneSpawn);
     }
 
+    public void setStandingsBoard(PositionSnapshot position) {
+        standingsBoard = position;
+    }
+
+    public Optional<PositionSnapshot> getStandingsBoard() {
+        return Optional.ofNullable(standingsBoard);
+    }
+
     public Optional<PositionSnapshot> getConfiguredSpawn(ArenaSpawnType spawnType) {
         return switch (spawnType) {
             case FIRST_TEAM -> getConfiguredFirstTeamSpawn();
@@ -166,6 +175,7 @@ public final class Arena {
         firstTeamSpawn = null;
         secondTeamSpawn = null;
         tribuneSpawn = null;
+        standingsBoard = null;
     }
 
     private Optional<PositionSnapshot> getShapeCenter() {

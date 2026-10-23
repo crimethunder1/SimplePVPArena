@@ -70,4 +70,8 @@ public interface LiveConfiguration {
     void setAreaInventoryEnabled(boolean enabled);
 
     void setCustomVisualSettings(CustomVisualSettings settings);
+
+    void setPlacementSidebarEnabled(boolean enabled);
+
+    void setPlacementBoardEnabled(boolean enabled);
 }

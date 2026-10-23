@@ -6,6 +6,7 @@ import org.bukkit.World;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemFactory;
 import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.scoreboard.Criteria;
 import org.bukkit.persistence.PersistentDataContainer;
 
 import java.lang.reflect.Field;
@@ -73,7 +74,15 @@ public final class SharedBukkitServer {
             case "getName" -> "SharedBukkitServer";
             case "getVersion", "getBukkitVersion" -> "test";
             case "getItemFactory" -> itemFactory;
+            case "getScoreboardCriteria" -> createCriteria((String) arguments[0]);
             default -> throw new UnsupportedOperationException("Bukkit." + method.getName());
+        });
+    }
+
+    private static Criteria createCriteria(String criteriaName) {
+        return proxy(Criteria.class, (method, arguments) -> switch (method.getName()) {
+            case "getName" -> criteriaName;
+            default -> throw new UnsupportedOperationException("Criteria." + method.getName());
         });
     }
 

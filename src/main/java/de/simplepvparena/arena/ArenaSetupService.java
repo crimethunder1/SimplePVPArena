@@ -25,6 +25,8 @@ import java.util.function.Consumer;
 
 public final class ArenaSetupService {
 
+    private static final double BLOCK_CENTRE = 0.5D;
+
     private final ActiveArenaState activeArena;
     private final MatchService matchService;
     private final SpectatorBorderService spectatorBorderService;
@@ -38,6 +40,7 @@ public final class ArenaSetupService {
     private int maximumArenaCellCount = ArenaShapeFloodFill.DEFAULT_MAXIMUM_CELL_COUNT;
     private BooleanSupplier arenaReservedForMatch = () -> false;
     private BooleanSupplier arenaReservedForAutoMatch = () -> false;
+    private Runnable standingsBoardListener = () -> { };
 
     public ArenaSetupService(ActiveArenaState activeArena,
                              MatchService matchService,
@@ -70,6 +73,10 @@ public final class ArenaSetupService {
     public void setArenaReservedForAutoMatch(BooleanSupplier arenaReservedForAutoMatch) {
         this.arenaReservedForAutoMatch = Objects.requireNonNull(arenaReservedForAutoMatch,
                 "arenaReservedForAutoMatch");
+    }
+
+    public void setStandingsBoardListener(Runnable standingsBoardListener) {
+        this.standingsBoardListener = Objects.requireNonNull(standingsBoardListener, "standingsBoardListener");
     }
 
     public int getMaximumArenaCellCount() {
@@ -255,6 +262,26 @@ public final class ArenaSetupService {
         reportMissingConfiguration(admin, arena);
     }
 
+    public Optional<PositionSnapshot> findStandingsBoard() {
+        return activeArena.getArena().getStandingsBoard();
+    }
+
+    public void placeStandingsBoard(Player admin) {
+        Location location = admin.getLocation();
+        PositionSnapshot position = new PositionSnapshot(location.getWorld().getName(),
+                location.getBlockX() + BLOCK_CENTRE, location.getBlockY(), location.getBlockZ() + BLOCK_CENTRE,
+                location.getYaw(), 0.0F);
+        activeArena.getArena().setStandingsBoard(position);
+        arenaConfigurationSaver.run();
+        standingsBoardListener.run();
+    }
+
+    public void removeStandingsBoard() {
+        activeArena.getArena().setStandingsBoard(null);
+        arenaConfigurationSaver.run();
+        standingsBoardListener.run();
+    }
+
     private Optional<String> findEffectAreaRejection(ArenaSpawnType spawnType, PositionSnapshot position) {
         if (spawnType != ArenaSpawnType.TRIBUNE) {
             return Optional.empty();
@@ -295,6 +322,7 @@ public final class ArenaSetupService {
         activeArena.clear();
         arenaBaselineService.discardSnapshot();
         arenaConfigurationSaver.run();
+        standingsBoardListener.run();
         TournamentMessages.sendSuccess(sender, Messages.text(ArenaSetupMessage.CONFIGURATION_REMOVED));
     }
 

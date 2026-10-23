@@ -56,6 +56,8 @@ public final class PluginLiveConfiguration implements LiveConfiguration {
     private final Consumer<TeamMode> teamModeApplier;
     private final Consumer<Boolean> areaInventoryEnabledApplier;
     private final Consumer<CustomVisualSettings> customVisualSettingsApplier;
+    private final Consumer<Boolean> placementSidebarEnabledApplier;
+    private final Consumer<Boolean> placementBoardEnabledApplier;
 
     public PluginLiveConfiguration(MatchService matchService,
                                    StartGateDuration startGateDuration,
@@ -78,7 +80,9 @@ public final class PluginLiveConfiguration implements LiveConfiguration {
                                    Consumer<AutoMatchSettings> autoMatchSettingsApplier,
                                    Consumer<TeamMode> teamModeApplier,
                                    Consumer<Boolean> areaInventoryEnabledApplier,
-                                   Consumer<CustomVisualSettings> customVisualSettingsApplier) {
+                                   Consumer<CustomVisualSettings> customVisualSettingsApplier,
+                                   Consumer<Boolean> placementSidebarEnabledApplier,
+                                   Consumer<Boolean> placementBoardEnabledApplier) {
         this.matchService = Objects.requireNonNull(matchService, "matchService");
         this.startGateDuration = Objects.requireNonNull(startGateDuration, "startGateDuration");
         this.fighterColours = Objects.requireNonNull(fighterColours, "fighterColours");
@@ -105,6 +109,10 @@ public final class PluginLiveConfiguration implements LiveConfiguration {
                 "areaInventoryEnabledApplier");
         this.customVisualSettingsApplier = Objects.requireNonNull(customVisualSettingsApplier,
                 "customVisualSettingsApplier");
+        this.placementSidebarEnabledApplier = Objects.requireNonNull(placementSidebarEnabledApplier,
+                "placementSidebarEnabledApplier");
+        this.placementBoardEnabledApplier = Objects.requireNonNull(placementBoardEnabledApplier,
+                "placementBoardEnabledApplier");
     }
 
     @Override
@@ -285,5 +293,15 @@ public final class PluginLiveConfiguration implements LiveConfiguration {
     @Override
     public void setCustomVisualSettings(CustomVisualSettings settings) {
         customVisualSettingsApplier.accept(settings);
+    }
+
+    @Override
+    public void setPlacementSidebarEnabled(boolean enabled) {
+        placementSidebarEnabledApplier.accept(enabled);
+    }
+
+    @Override
+    public void setPlacementBoardEnabled(boolean enabled) {
+        placementBoardEnabledApplier.accept(enabled);
     }
 }

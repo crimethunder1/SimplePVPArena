@@ -25,7 +25,7 @@ import java.util.function.LongSupplier;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 
-public final class AreaInventoryService {
+public final class AreaInventoryService implements EffectAreaPresence {
 
     public static final String ENABLED_CONFIGURATION_PATH = "arena.area-inventory.enabled";
     public static final boolean DEFAULT_ENABLED = true;
@@ -96,10 +96,12 @@ public final class AreaInventoryService {
         }
     }
 
+    @Override
     public void reconcile(Player player) {
         reconcile(player, player.getLocation());
     }
 
+    @Override
     public void reconcile(Player player, Location location) {
         if (isWearingKit(player)) {
             return;

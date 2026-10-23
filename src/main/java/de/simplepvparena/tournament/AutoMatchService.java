@@ -19,6 +19,7 @@ import org.bukkit.scheduler.BukkitTask;
 
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -42,6 +43,7 @@ public final class AutoMatchService implements MatchCompletionHandler, AutoMatch
     private final AdminNotifier adminNotifier;
     private final ArenaAudience arenaAudience;
     private final Map<String, Long> lastAutoMatchNumberByTeamKey = new HashMap<>();
+    private final Map<String, Integer> winsByTeamName = new LinkedHashMap<>();
 
     private AutoMatchSettings settings = AutoMatchSettings.defaults();
     private AutoMatchState state = AutoMatchState.IDLE;
@@ -121,6 +123,10 @@ public final class AutoMatchService implements MatchCompletionHandler, AutoMatch
         }
     }
 
+    public Map<String, Integer> getWinsByTeamName() {
+        return Map.copyOf(winsByTeamName);
+    }
+
     public Optional<List<Team>> findPairing() {
         List<Team> teamsByWaitingTime = teamRegistry.getTeams().stream()
                 .filter(this::hasFreeOnlineMember)
@@ -146,6 +152,9 @@ public final class AutoMatchService implements MatchCompletionHandler, AutoMatch
 
     @Override
     public void onMatchCompleted(Match match, String winnerTeamName) {
+        if (match.isAutoMatch() && winnerTeamName != null) {
+            winsByTeamName.merge(winnerTeamName, 1, Integer::sum);
+        }
         if (state == AutoMatchState.RUNNING && match == runningMatch) {
             finishRunningMatch();
             stopTimerWhenIdle();

@@ -86,6 +86,8 @@ arena:
   shape: {}
   # Spawns of both teams and the tribune, written by the plugin.
   spawns: {}
+  # Place of the standings board, written by the plugin.
+  standings-board: {}
 
 # Particle display of border blocks for players who are not fighting.
 border:
@@ -127,3 +129,14 @@ items-adder:
   totem-item: ''
   # Item of ItemsAdder floating above every registration station. Empty or an ID ItemsAdder does not know shows a short text above the station instead. Suggested ID: simplepvparena:station.
   station-item: ''
+
+# Live placement of the tournament and of the auto matches.
+placement:
+  # Sidebar for the players inside the area of effect.
+  sidebar:
+    # When true, every player inside the area of effect sees the round, the running match and the teams still in, or the wins of the auto matches, at the side of the screen. false gives every player the former scoreboard back.
+    enabled: true
+  # Text board above the place an admin chose with the standings board tile of the arena menu.
+  board:
+    # When true, the board shows the same and who is out in which round. false removes it, the place stays saved.
+    enabled: true

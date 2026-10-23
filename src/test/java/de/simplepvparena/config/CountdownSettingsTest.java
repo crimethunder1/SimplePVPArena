@@ -230,6 +230,6 @@ class CountdownSettingsTest {
                         playerUniqueId -> false, borderConfirmation),
                 wallPreview, borderVisualEffect, new TeamSizeSetting(), new TeamRegistry(), () -> false,
                 notice -> { }, problems::add, language -> { }, autoMatchSettings -> { }, teamMode -> { },
-                enabled -> { }, settings -> { });
+                enabled -> { }, settings -> { }, enabled -> { }, enabled -> { });
     }
 }

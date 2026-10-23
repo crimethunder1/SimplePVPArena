@@ -33,7 +33,7 @@ class ShippedLanguageFilesTest {
             DryRunCheckMessage.class, ConfigMessage.class, PluginMessage.class, BracketViewMessage.class,
             AutoMatchMessage.class, AreaInventoryMessage.class, VisualMessage.class, RegistrationMessage.class,
             RegistrationMenuMessage.class, UnequalTeamVoteMessage.class, DecidedMatchMessage.class,
-            TeamChoiceMessage.class);
+            TeamChoiceMessage.class, PlacementMessage.class);
 
     private static final Pattern PLACEHOLDER = Pattern.compile("\\{([A-Za-z0-9_-]+)}");
     private static final Pattern VALUE_LINE = Pattern.compile("^\\s*(- |[a-z0-9-]+: )(.*)$");

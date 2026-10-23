@@ -84,6 +84,7 @@ public final class MatchService {
 
     private MatchCompletionHandler matchCompletionHandler = (match, winnerTeamName) -> { };
     private MatchCompletionHandler autoMatchCompletionHandler = (match, winnerTeamName) -> { };
+    private Runnable matchProgressListener = () -> { };
     private RoundStartEffects roundStartEffects = new VanillaRoundStartEffects();
     private CountdownImages countdownImages = CountdownImages.NONE;
     private ArenaAudience arenaAudience;
@@ -127,6 +128,10 @@ public final class MatchService {
     public void setAutoMatchCompletionHandler(MatchCompletionHandler autoMatchCompletionHandler) {
         this.autoMatchCompletionHandler = Objects.requireNonNull(autoMatchCompletionHandler,
                 "autoMatchCompletionHandler");
+    }
+
+    public void setMatchProgressListener(Runnable matchProgressListener) {
+        this.matchProgressListener = Objects.requireNonNull(matchProgressListener, "matchProgressListener");
     }
 
     public void setArenaAudience(ArenaAudience arenaAudience) {
@@ -379,6 +384,7 @@ public final class MatchService {
         cancelledMatch.setState(MatchState.CANCELLED);
         activeMatch = null;
         releaseParticipants(cancelledMatch);
+        matchProgressListener.run();
     }
 
     public void pauseRoundTimer() {
@@ -465,6 +471,7 @@ public final class MatchService {
         preparePlayers(match.getFirstTeam(), firstTeamPlayers, match.getArena().getFirstTeamSpawn());
         preparePlayers(match.getSecondTeam(), secondTeamPlayers, match.getArena().getSecondTeamSpawn());
         fighterColours.colourFighters(match);
+        matchProgressListener.run();
         int roundCountdownSeconds = countdownSeconds;
         startGates.openAtRoundStart(remainingSeconds -> announceStartGateSecond(match, remainingSeconds));
         int gateCountdownSeconds = startGates.getCountdownSeconds();
@@ -636,6 +643,7 @@ public final class MatchService {
             return;
         }
         match.setState(MatchState.BETWEEN_ROUNDS);
+        matchProgressListener.run();
         announceRoundTitle(match, Messages.text(MatchMessage.ROUND_WON_TITLE, Placeholder.of("team", winnerTeamName),
                 Placeholder.of("round", match.getRoundNumber())));
         scheduleNextRound(match);
@@ -675,6 +683,7 @@ public final class MatchService {
                 ? autoMatchCompletionHandler
                 : matchCompletionHandler;
         completionHandler.onMatchCompleted(match, winnerTeamName);
+        matchProgressListener.run();
     }
 
     private boolean isTimeLimited(Match match) {

@@ -152,6 +152,8 @@ class ArenaAdminMenuBorderParticlesTest {
                 21 | BLAZE_POWDER | Wandpartikel | Die Partikel sind ausgeblendet / \
                 Nur die Partikel an der bestätigten Arenawand / Klicke, um sie anzuzeigen
                 22 | OAK_DOOR | Zurück | Zurück zum Hauptmenü
+                23 | OAK_SIGN | Platzierungstafel hier aufstellen | Stellt die Tafel zwei Blöcke über dem Block auf, / \
+                auf dem du stehst, am besten an der Tribüne / Sie zeigt die Turnierrunde, das Match und die Platzierung
                 """, fixture.describeLastMenu());
     }
 

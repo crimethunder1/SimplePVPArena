@@ -62,7 +62,9 @@ public record PluginSettings(long roundResetDelayTicks,
                              ConfirmedBorderParticleSettings confirmedBorderParticleSettings,
                              boolean confirmedBorderParticleEnabled,
                              boolean areaInventoryEnabled,
-                             CustomVisualSettings customVisualSettings) {
+                             CustomVisualSettings customVisualSettings,
+                             boolean placementSidebarEnabled,
+                             boolean placementBoardEnabled) {
 
     public static final String KIT_SECTION_PATH = "kit";
 
@@ -99,9 +101,13 @@ public record PluginSettings(long roundResetDelayTicks,
     public static final String BORDER_PARTICLE_MAXIMUM_BLOCKS_PATH = "border.particle-maximum-blocks-per-player";
     public static final String BORDER_PARTICLE_MAXIMUM_LINES_PATH = "border.particle-maximum-lines-per-player";
     public static final String BORDER_WALL_PREVIEW_SECONDS_PATH = "border.wall-preview-seconds";
+    public static final String PLACEMENT_SIDEBAR_ENABLED_PATH = "placement.sidebar.enabled";
+    public static final String PLACEMENT_BOARD_ENABLED_PATH = "placement.board.enabled";
 
     public static final long DEFAULT_ROUND_RESET_DELAY_TICKS = 100L;
     public static final int DEFAULT_WALL_PREVIEW_SECONDS = 4;
+    public static final boolean DEFAULT_PLACEMENT_SIDEBAR_ENABLED = true;
+    public static final boolean DEFAULT_PLACEMENT_BOARD_ENABLED = true;
 
     public static final long TICKS_PER_SECOND = 20L;
 
@@ -154,7 +160,9 @@ public record PluginSettings(long roundResetDelayTicks,
             CustomVisualSettings.ONE_IMAGE_CONFIGURATION_PATH,
             CustomVisualSettings.FIGHT_IMAGE_CONFIGURATION_PATH,
             CustomVisualSettings.TOTEM_ITEM_CONFIGURATION_PATH,
-            CustomVisualSettings.STATION_ITEM_CONFIGURATION_PATH);
+            CustomVisualSettings.STATION_ITEM_CONFIGURATION_PATH,
+            PLACEMENT_SIDEBAR_ENABLED_PATH,
+            PLACEMENT_BOARD_ENABLED_PATH);
 
     public static PluginSettings defaults() {
         return new PluginSettings(DEFAULT_ROUND_RESET_DELAY_TICKS,
@@ -184,7 +192,9 @@ public record PluginSettings(long roundResetDelayTicks,
                 ConfirmedBorderParticleSettings.defaults(),
                 BorderParticleService.DEFAULT_CONFIRMED_PARTICLE_ENABLED,
                 AreaInventoryService.DEFAULT_ENABLED,
-                CustomVisualSettings.defaults());
+                CustomVisualSettings.defaults(),
+                DEFAULT_PLACEMENT_SIDEBAR_ENABLED,
+                DEFAULT_PLACEMENT_BOARD_ENABLED);
     }
 
     public static PluginSettings read(ConfigurationSection configuration, Consumer<String> problemReporter) {
@@ -224,7 +234,11 @@ public record PluginSettings(long roundResetDelayTicks,
                 readConfirmedBorderParticleSettings(configuration, problemReporter),
                 readConfirmedBorderParticleEnabled(configuration, problemReporter),
                 readAreaInventoryEnabled(configuration, problemReporter),
-                readCustomVisualSettings(configuration, problemReporter));
+                readCustomVisualSettings(configuration, problemReporter),
+                readPlacementEnabled(configuration, PLACEMENT_SIDEBAR_ENABLED_PATH,
+                        DEFAULT_PLACEMENT_SIDEBAR_ENABLED, problemReporter),
+                readPlacementEnabled(configuration, PLACEMENT_BOARD_ENABLED_PATH,
+                        DEFAULT_PLACEMENT_BOARD_ENABLED, problemReporter));
         readLanguage(configuration, problemReporter);
         return settings;
     }
@@ -282,6 +296,8 @@ public record PluginSettings(long roundResetDelayTicks,
         liveConfiguration.setConfirmedBorderParticleEnabled(confirmedBorderParticleEnabled);
         liveConfiguration.setAreaInventoryEnabled(areaInventoryEnabled);
         liveConfiguration.setCustomVisualSettings(customVisualSettings);
+        liveConfiguration.setPlacementSidebarEnabled(placementSidebarEnabled);
+        liveConfiguration.setPlacementBoardEnabled(placementBoardEnabled);
     }
 
     public static boolean readItemsAdderEnabled(ConfigurationSection configuration,
@@ -692,5 +708,18 @@ public record PluginSettings(long roundResetDelayTicks,
                 Placeholder.of("path", ARENA_AREA_INVENTORY_ENABLED_PATH),
                 Placeholder.of("fallback", AreaInventoryService.DEFAULT_ENABLED)));
         return AreaInventoryService.DEFAULT_ENABLED;
+    }
+
+    private static boolean readPlacementEnabled(ConfigurationSection configuration, String path,
+                                                boolean defaultEnabled, Consumer<String> problemReporter) {
+        if (!configuration.isSet(path)) {
+            return defaultEnabled;
+        }
+        if (configuration.isBoolean(path)) {
+            return configuration.getBoolean(path);
+        }
+        problemReporter.accept(Messages.text(ConfigMessage.PLACEMENT_ENABLED_NOT_A_TRUTH_VALUE,
+                Placeholder.of("path", path), Placeholder.of("fallback", defaultEnabled)));
+        return defaultEnabled;
     }
 }

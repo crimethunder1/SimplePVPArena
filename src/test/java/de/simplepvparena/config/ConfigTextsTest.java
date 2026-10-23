@@ -154,6 +154,7 @@ class ConfigTextsTest {
                 "  the border particles, their limits and the confirmed border marker",
                 "  the IDs of the ItemsAdder images and items and whether they are used, a switch between ItemsAdder "
                         + "and the own visuals of the plugin needs a restart",
+                "  whether the placement is shown as a sidebar in the area of effect and as a board at the tribune",
                 "The calculated fight area, the spawns, the border blocks, the teams and a running match stay "
                         + "untouched",
                 "Entries that could not be used and fell back to their default:",

@@ -28,6 +28,7 @@ public final class ArenaRegistry {
     private static final String FIRST_TEAM_SPAWN_KEY = "first-team";
     private static final String SECOND_TEAM_SPAWN_KEY = "second-team";
     private static final String TRIBUNE_SPAWN_KEY = "tribune";
+    private static final String STANDINGS_BOARD_SECTION = "standings-board";
 
     private final Arena arena = new Arena();
 
@@ -130,6 +131,7 @@ public final class ArenaRegistry {
         }
         readShape(arenaSection.getConfigurationSection(SHAPE_SECTION)).ifPresent(arena::setShape);
         readSpawns(arenaSection.getConfigurationSection(SPAWNS_SECTION));
+        readPosition(arenaSection.getConfigurationSection(STANDINGS_BOARD_SECTION)).ifPresent(arena::setStandingsBoard);
     }
 
     public void saveToConfiguration(ConfigurationSection rootSection) {
@@ -142,6 +144,7 @@ public final class ArenaRegistry {
         arenaSection.set(LEGACY_REGIONS_SECTION, null);
         arenaSection.set(SHAPE_SECTION, null);
         arenaSection.set(SPAWNS_SECTION, null);
+        arenaSection.set(STANDINGS_BOARD_SECTION, null);
         ConfigurationSection shapeSection = arenaSection.createSection(SHAPE_SECTION);
         arena.getShape().ifPresent(shape -> writeShape(shapeSection, shape));
         ConfigurationSection spawnsSection = arenaSection.createSection(SPAWNS_SECTION);
@@ -151,6 +154,8 @@ public final class ArenaRegistry {
                 position -> writePosition(spawnsSection.createSection(SECOND_TEAM_SPAWN_KEY), position));
         arena.getConfiguredTribuneSpawn().ifPresent(
                 position -> writePosition(spawnsSection.createSection(TRIBUNE_SPAWN_KEY), position));
+        ConfigurationSection standingsBoardSection = arenaSection.createSection(STANDINGS_BOARD_SECTION);
+        arena.getStandingsBoard().ifPresent(position -> writePosition(standingsBoardSection, position));
     }
 
     private Optional<ArenaShape> readShape(ConfigurationSection shapeSection) {

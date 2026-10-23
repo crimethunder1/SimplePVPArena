@@ -360,6 +360,6 @@ class TeamSizeSettingsTest {
                         playerUniqueId -> false, borderConfirmation),
                 wallPreview, borderVisualEffect, teamSizeSetting, teamRegistry, () -> tournamentInProgress,
                 adminNotices::add, logLines::add, language -> { }, autoMatchSettings -> { }, teamMode -> { },
-                enabled -> { }, settings -> { });
+                enabled -> { }, settings -> { }, enabled -> { }, enabled -> { });
     }
 }

@@ -218,6 +218,6 @@ class LanguageSettingsTest {
                         playerUniqueId -> false, borderConfirmation),
                 wallPreview, borderVisualEffect, new TeamSizeSetting(), new TeamRegistry(), () -> false,
                 notice -> { }, problems::add, languageApplier, autoMatchSettings -> { }, teamMode -> { },
-                enabled -> { }, settings -> { });
+                enabled -> { }, settings -> { }, enabled -> { }, enabled -> { });
     }
 }

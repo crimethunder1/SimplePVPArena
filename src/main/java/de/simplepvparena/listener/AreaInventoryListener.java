@@ -1,6 +1,7 @@
 package de.simplepvparena.listener;
 
 import de.simplepvparena.arena.AreaInventoryService;
+import de.simplepvparena.arena.EffectAreaPresence;
 import de.simplepvparena.message.AreaInventoryMessage;
 import de.simplepvparena.message.Messages;
 import de.simplepvparena.message.TournamentMessages;
@@ -20,36 +21,44 @@ import org.bukkit.event.player.PlayerRespawnEvent;
 import org.bukkit.event.player.PlayerTeleportEvent;
 import org.bukkit.plugin.Plugin;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 
 public final class AreaInventoryListener implements Listener {
 
     private final Plugin plugin;
     private final AreaInventoryService areaInventoryService;
+    private final List<EffectAreaPresence> presences = new ArrayList<>();
 
-    public AreaInventoryListener(Plugin plugin, AreaInventoryService areaInventoryService) {
+    public AreaInventoryListener(Plugin plugin, AreaInventoryService areaInventoryService,
+                                 EffectAreaPresence... furtherPresences) {
         this.plugin = Objects.requireNonNull(plugin, "plugin");
         this.areaInventoryService = Objects.requireNonNull(areaInventoryService, "areaInventoryService");
+        presences.add(areaInventoryService);
+        for (EffectAreaPresence furtherPresence : furtherPresences) {
+            presences.add(Objects.requireNonNull(furtherPresence, "furtherPresence"));
+        }
     }
 
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void onPlayerMove(PlayerMoveEvent event) {
         Location destination = event.getTo();
         if (hasChangedBlock(event.getFrom(), destination)) {
-            areaInventoryService.reconcile(event.getPlayer(), destination);
+            reconcile(event.getPlayer(), destination);
         }
     }
 
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void onPlayerTeleport(PlayerTeleportEvent event) {
         if (event.getTo() != null) {
-            areaInventoryService.reconcile(event.getPlayer(), event.getTo());
+            reconcile(event.getPlayer(), event.getTo());
         }
     }
 
     @EventHandler(priority = EventPriority.MONITOR)
     public void onPlayerChangedWorld(PlayerChangedWorldEvent event) {
-        areaInventoryService.reconcile(event.getPlayer());
+        reconcile(event.getPlayer(), event.getPlayer().getLocation());
     }
 
     @EventHandler(priority = EventPriority.MONITOR)
@@ -57,14 +66,14 @@ public final class AreaInventoryListener implements Listener {
         Player player = event.getPlayer();
         plugin.getServer().getScheduler().runTask(plugin, () -> {
             if (player.isOnline()) {
-                areaInventoryService.reconcile(player);
+                reconcile(player, player.getLocation());
             }
         });
     }
 
     @EventHandler(priority = EventPriority.HIGHEST)
     public void onPlayerJoin(PlayerJoinEvent event) {
-        areaInventoryService.reconcile(event.getPlayer());
+        reconcile(event.getPlayer(), event.getPlayer().getLocation());
     }
 
     @EventHandler(ignoreCancelled = true)
@@ -98,6 +107,12 @@ public final class AreaInventoryListener implements Listener {
         event.getDrops().clear();
         if (!areaInventoryService.hasDeposited(player)) {
             event.setKeepInventory(true);
+        }
+    }
+
+    private void reconcile(Player player, Location location) {
+        for (EffectAreaPresence presence : presences) {
+            presence.reconcile(player, location);
         }
     }
 

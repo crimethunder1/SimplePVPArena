@@ -894,6 +894,16 @@ arena-menu:
         - 'Only the particles at the confirmed border wall'
       click-to-hide: 'Click to hide them'
       click-to-show: 'Click to show them'
+    standings-board:
+      place-title: 'Place the standings board here'
+      place-lore:
+        - 'Puts the board two blocks above the block'
+        - 'you stand on, best at the tribune'
+        - 'It shows the round, the match and the placement'
+      remove-title: 'Remove the standings board'
+      remove-lore:
+        - 'Stands at {position}'
+        - 'Click to remove it'
   cleaning:
     affected-blocks:
       one: '{count} block is affected'
@@ -935,6 +945,9 @@ arena-menu:
     switched-to-hidden: 'Border particles are hidden'
     switched-to-shown-not-written: 'Border particles are shown, but config.yml could not be written: {reason}'
     switched-to-hidden-not-written: 'Border particles are hidden, but config.yml could not be written: {reason}'
+  standings-board:
+    placed: 'The standings board stands here now'
+    removed: 'The standings board was removed'
   diagnosis-input:
     description: 'the diagnosis cell limit'
     prompt:
@@ -1755,6 +1768,7 @@ config:
     area-inventory-enabled-not-a-truth-value: '{path} must be true or false, falling back to {fallback}'
     items-adder-enabled-not-a-truth-value: '{path} must be true or false, falling back to {fallback}'
     items-adder-identifier-not-text: '{path} must be an ID in quotes such as {example} or empty, falling back to empty, the own title or effect of the plugin is used'
+    placement-enabled-not-a-truth-value: '{path} must be true or false, falling back to {fallback}'
   reload:
     reloaded: 'config.yml was reloaded and applied'
     category:
@@ -1776,6 +1790,7 @@ config:
       area-inventory: 'whether players hand in their inventory in the area of effect, false gives every inventory back at once'
       border: 'the border particles, their limits and the confirmed border marker'
       items-adder: 'the IDs of the ItemsAdder images and items and whether they are used, a switch between ItemsAdder and the own visuals of the plugin needs a restart'
+      placement: 'whether the placement is shown as a sidebar in the area of effect and as a board at the tribune'
     untouched: 'The calculated fight area, the spawns, the border blocks, the teams and a running match stay untouched'
     unusable-entries: 'Entries that could not be used and fell back to their default:'
   notice:
@@ -1786,3 +1801,24 @@ config:
     tribune-outside-of-the-effect-area: '{warning}. Nothing was dropped, set the tribune spawn again closer to the fight area or raise {path} in config.yml'
 plugin:
   kits-not-loaded: 'The kits could not be loaded ({reason}), there is no kit until one is created in the kit menu of /tournament'
+placement:
+  title:
+    tournament: 'Tournament'
+    auto-match: 'Auto match'
+  round: 'Round {round} of {rounds}'
+  paused: 'Paused'
+  over: 'Over'
+  match: '{firstTeam} {firstPoints} : {secondPoints} {secondTeam}'
+  no-match: 'No match is running'
+  waiting-for-auto-match: 'Waiting for the next auto match'
+  still-in:
+    one: 'Still in: {count} team'
+    other: 'Still in: {count} teams'
+  more:
+    one: 'and {count} more'
+    other: 'and {count} more'
+  wins:
+    one: '{team}: {count} win'
+    other: '{team}: {count} wins'
+  place: '{place}. {teams}'
+  out-in-round: 'Out in round {round}: {teams}'

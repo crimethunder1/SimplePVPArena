@@ -75,6 +75,7 @@ import de.simplepvparena.listener.BorderSelectorListener;
 import de.simplepvparena.listener.ChatInputListener;
 import de.simplepvparena.listener.FriendlyFireListener;
 import de.simplepvparena.listener.GlobalPvpLockListener;
+import de.simplepvparena.listener.PlacementBoardWorldListener;
 import de.simplepvparena.listener.PlayerConnectionListener;
 import de.simplepvparena.listener.PlayerDeathListener;
 import de.simplepvparena.listener.PlayerInteractListener;
@@ -94,6 +95,10 @@ import de.simplepvparena.message.MessageCatalogLoader;
 import de.simplepvparena.message.Messages;
 import de.simplepvparena.message.Placeholder;
 import de.simplepvparena.message.PluginMessage;
+import de.simplepvparena.placement.PaperPlacementBoardEntities;
+import de.simplepvparena.placement.PlacementBoard;
+import de.simplepvparena.placement.PlacementService;
+import de.simplepvparena.placement.PlacementSidebar;
 import de.simplepvparena.registration.FileRegistrationStorage;
 import de.simplepvparena.registration.PaperStationDisplayEntities;
 import de.simplepvparena.registration.RandomTeamFormation;
@@ -189,6 +194,8 @@ public final class SimplePVPArenaPlugin extends JavaPlugin {
     private ConfigurationReloadService configurationReloadService;
     private AreaInventoryService areaInventoryService;
     private ConfiguredVisuals configuredVisuals;
+    private PlacementSidebar placementSidebar;
+    private PlacementBoard placementBoard;
 
     @Override
     public void onEnable() {
@@ -310,6 +317,15 @@ public final class SimplePVPArenaPlugin extends JavaPlugin {
         autoMatchService = new AutoMatchService(this, teamRegistry, arenaRegistry, matchService, tournamentManager,
                 kitLibrary, arenaCleanup, adminNotifier, arenaAudience);
         arenaSetupService.setArenaReservedForAutoMatch(autoMatchService::isAnnounced);
+        PlacementService placementService = new PlacementService(tournamentManager::getState,
+                tournamentManager::getBracket, matchService::getActiveMatch, autoMatchService::isEnabled,
+                autoMatchService::getWinsByTeamName, teamRegistry::findTeam);
+        placementSidebar = new PlacementSidebar(this, arenaRegistry::findEffectArea,
+                placementService::findStandings);
+        placementBoard = new PlacementBoard(this, arenaRegistry.getArena()::getStandingsBoard, getServer()::getWorld,
+                new PaperPlacementBoardEntities(this), placementService::findStandings);
+        matchService.setMatchProgressListener(this::onPlacementChanged);
+        arenaSetupService.setStandingsBoardListener(placementBoard::refresh);
         registrationService = new RegistrationService(registrationList,
                 tournamentManager::isTournamentInProgress, this::saveRegistrations);
         registrationStationService = new RegistrationStationService(this, registrationStations,
@@ -360,7 +376,7 @@ public final class SimplePVPArenaPlugin extends JavaPlugin {
                         adminNotifier::notifyAdmins,
                         getLogger()::warning, messageCatalogLoader::useLanguage, autoMatchService::applySettings,
                         teamModeSetting::setTeamMode, areaInventoryService::setEnabled,
-                        configuredVisuals::applySettings),
+                        configuredVisuals::applySettings, placementSidebar::setEnabled, placementBoard::setEnabled),
                 getLogger()::warning);
         configurationReloadService.applyStoredConfiguration();
 
@@ -378,6 +394,9 @@ public final class SimplePVPArenaPlugin extends JavaPlugin {
         arenaMobRemovalService.start();
         chatInputService.start();
         areaInventoryService.start();
+        placementSidebar.start();
+        placementBoard.refresh();
+        placementBoard.start();
         registrationStationButtonCheck.checkLoadedStations();
         registrationStationDisplays.showAll();
         getServer().getScheduler().runTaskTimer(this, registrationStationDisplays::refreshOnceReady,
@@ -422,6 +441,14 @@ public final class SimplePVPArenaPlugin extends JavaPlugin {
         if (startGateOpeningService != null) {
             startGateOpeningService.stopAndRestore();
         }
+        if (placementSidebar != null) {
+            placementSidebar.stop();
+            placementSidebar.giveEveryScoreboardBack();
+        }
+        if (placementBoard != null) {
+            placementBoard.stop();
+            placementBoard.hide();
+        }
         if (fighterColours != null) {
             fighterColours.clearColours();
         }
@@ -450,7 +477,13 @@ public final class SimplePVPArenaPlugin extends JavaPlugin {
     public ConfigurationReloadReport reloadConfiguration() {
         ConfigurationReloadReport report = configurationReloadService.reloadFromFile();
         registrationStationDisplays.refreshAll();
+        placementBoard.rebuild();
         return report;
+    }
+
+    public void onPlacementChanged() {
+        placementSidebar.refresh();
+        placementBoard.refresh();
     }
 
     public void onBorderMarksChanged() {
@@ -569,11 +602,12 @@ public final class SimplePVPArenaPlugin extends JavaPlugin {
         getServer().getPluginManager().registerEvents(
                 new ArenaDamageListener(matchService, spectatorService, arenaRegistry, getServer()), this);
         getServer().getPluginManager().registerEvents(
-                new AreaInventoryListener(this, areaInventoryService), this);
+                new AreaInventoryListener(this, areaInventoryService, placementSidebar), this);
         getServer().getPluginManager().registerEvents(
                 new RegistrationStationListener(registrationStationService), this);
         getServer().getPluginManager().registerEvents(
                 new RegistrationStationWorldListener(registrationStationDisplays, registrationStationButtonCheck),
                 this);
+        getServer().getPluginManager().registerEvents(new PlacementBoardWorldListener(placementBoard), this);
     }
 }

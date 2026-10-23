@@ -41,8 +41,10 @@ final class ArenaAdminMenu implements AdminMenu {
     private static final int ARENA_HEIGHT_MARKER_SLOT = 19;
     private static final int ARENA_START_GATE_SLOT = 20;
     private static final int ARENA_BORDER_PARTICLES_SLOT = 21;
+    private static final int ARENA_STANDINGS_BOARD_SLOT = 23;
     private static final Material START_GATE_TILE_MATERIAL = Material.IRON_BARS;
     private static final Material BORDER_PARTICLES_TILE_MATERIAL = Material.BLAZE_POWDER;
+    private static final Material STANDINGS_BOARD_TILE_MATERIAL = Material.OAK_SIGN;
 
     private final AdminMenuNavigation navigation;
     private final ArenaSetupService arenaSetupService;
@@ -100,6 +102,7 @@ final class ArenaAdminMenu implements AdminMenu {
                 buildCleaningTileLore()));
         canvas.set(ARENA_RESET_SLOT, MenuItems.create(MenuItems.DESTRUCTIVE_MATERIAL,
                 Messages.text(ArenaMenuMessage.RESET_TITLE), buildResetTileLore()));
+        canvas.set(ARENA_STANDINGS_BOARD_SLOT, buildStandingsBoardTile());
         canvas.set(AdminMenuLayout.BACK_SLOT, MenuItems.back(MenuMessage.BACK_TO_MAIN_MENU));
     }
 
@@ -119,6 +122,7 @@ final class ArenaAdminMenu implements AdminMenu {
             case ARENA_TRIBUNE_SPAWN_SLOT -> setSpawn(player, holder, ArenaSpawnType.TRIBUNE);
             case ARENA_CLEAN_SLOT -> askForCleaningConfirmation(player);
             case ARENA_RESET_SLOT -> askForResetConfirmation(player);
+            case ARENA_STANDINGS_BOARD_SLOT -> switchStandingsBoard(player, holder);
             case AdminMenuLayout.BACK_SLOT -> navigation.open(player, AdminMenuHolder.main());
             default -> { }
         }
@@ -288,6 +292,28 @@ final class ArenaAdminMenu implements AdminMenu {
                     ? ArenaMenuMessage.BORDER_PARTICLES_SWITCHED_TO_SHOWN_NOT_WRITTEN
                     : ArenaMenuMessage.BORDER_PARTICLES_SWITCHED_TO_HIDDEN_NOT_WRITTEN,
                     Placeholder.of("reason", describeFailure(failure))));
+        }
+        navigation.refresh(player, holder);
+    }
+
+    private MenuTile buildStandingsBoardTile() {
+        return arenaSetupService.findStandingsBoard()
+                .map(place -> MenuItems.create(STANDINGS_BOARD_TILE_MATERIAL,
+                        Messages.text(ArenaMenuMessage.STANDINGS_BOARD_REMOVE_TITLE),
+                        Messages.lines(ArenaMenuMessage.STANDINGS_BOARD_REMOVE_LORE,
+                                Placeholder.of("position", place.describe()))))
+                .orElseGet(() -> MenuItems.create(STANDINGS_BOARD_TILE_MATERIAL,
+                        Messages.text(ArenaMenuMessage.STANDINGS_BOARD_PLACE_TITLE),
+                        Messages.lines(ArenaMenuMessage.STANDINGS_BOARD_PLACE_LORE)));
+    }
+
+    private void switchStandingsBoard(Player player, AdminMenuHolder holder) {
+        if (arenaSetupService.findStandingsBoard().isPresent()) {
+            arenaSetupService.removeStandingsBoard();
+            TournamentMessages.sendSuccess(player, Messages.text(ArenaMenuMessage.STANDINGS_BOARD_REMOVED));
+        } else {
+            arenaSetupService.placeStandingsBoard(player);
+            TournamentMessages.sendSuccess(player, Messages.text(ArenaMenuMessage.STANDINGS_BOARD_PLACED));
         }
         navigation.refresh(player, holder);
     }

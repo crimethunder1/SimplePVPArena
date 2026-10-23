@@ -894,6 +894,16 @@ arena-menu:
         - 'Nur die Partikel an der bestätigten Arenawand'
       click-to-hide: 'Klicke, um sie auszublenden'
       click-to-show: 'Klicke, um sie anzuzeigen'
+    standings-board:
+      place-title: 'Platzierungstafel hier aufstellen'
+      place-lore:
+        - 'Stellt die Tafel zwei Blöcke über dem Block auf,'
+        - 'auf dem du stehst, am besten an der Tribüne'
+        - 'Sie zeigt die Turnierrunde, das Match und die Platzierung'
+      remove-title: 'Platzierungstafel entfernen'
+      remove-lore:
+        - 'Steht bei {position}'
+        - 'Klicke, um sie zu entfernen'
   cleaning:
     affected-blocks:
       one: '{count} Block ist betroffen'
@@ -935,6 +945,9 @@ arena-menu:
     switched-to-hidden: 'Die Wandpartikel sind ausgeblendet'
     switched-to-shown-not-written: 'Die Wandpartikel werden angezeigt, aber config.yml konnte nicht geschrieben werden: {reason}'
     switched-to-hidden-not-written: 'Die Wandpartikel sind ausgeblendet, aber config.yml konnte nicht geschrieben werden: {reason}'
+  standings-board:
+    placed: 'Die Platzierungstafel steht jetzt hier'
+    removed: 'Die Platzierungstafel wurde entfernt'
   diagnosis-input:
     description: 'die Diagnose mit einem höheren Zellenlimit'
     prompt:
@@ -1755,6 +1768,7 @@ config:
     area-inventory-enabled-not-a-truth-value: '{path} muss true oder false sein, stattdessen gilt {fallback}'
     items-adder-enabled-not-a-truth-value: '{path} muss true oder false sein, stattdessen gilt {fallback}'
     items-adder-identifier-not-text: '{path} muss eine ID in Anführungszeichen wie {example} oder leer sein, stattdessen bleibt der Wert leer und es gilt der eigene Titel oder Effekt des Plugins'
+    placement-enabled-not-a-truth-value: '{path} muss true oder false sein, stattdessen gilt {fallback}'
   reload:
     reloaded: 'config.yml wurde neu geladen und angewendet'
     category:
@@ -1776,6 +1790,7 @@ config:
       area-inventory: 'ob Spieler im Wirkungsbereich ihr Inventar abgeben, mit false bekommt jeder sein Inventar sofort zurück'
       border: 'die Wandpartikel, ihre Grenzen und die Markierung der bestätigten Arenawand'
       items-adder: 'die IDs der Bilder und Items aus ItemsAdder und ob sie genutzt werden, ein Wechsel zwischen ItemsAdder und den eigenen Anzeigen des Plugins braucht einen Neustart'
+      placement: 'ob die Platzierung als Seitenleiste im Wirkungsbereich und als Tafel an der Tribüne gezeigt wird'
     untouched: 'Die berechnete Kampffläche, die Spawns, die Wandblöcke, die Teams und ein laufendes Match bleiben unberührt'
     unusable-entries: 'Einträge, die nicht genutzt werden konnten und auf ihren Standardwert zurückgefallen sind:'
   notice:
@@ -1786,3 +1801,24 @@ config:
     tribune-outside-of-the-effect-area: '{warning}. Es wurde nichts verworfen, setze den Tribünen-Spawn näher an der Kampffläche neu oder erhöhe {path} in config.yml'
 plugin:
   kits-not-loaded: 'Die Kits konnten nicht geladen werden ({reason}), es gibt kein Kit, bis im Kit-Menü von /tournament eines angelegt wird'
+placement:
+  title:
+    tournament: 'Turnier'
+    auto-match: 'Auto-Match'
+  round: 'Turnierrunde {round} von {rounds}'
+  paused: 'Pausiert'
+  over: 'Vorbei'
+  match: '{firstTeam} {firstPoints} : {secondPoints} {secondTeam}'
+  no-match: 'Es läuft kein Match'
+  waiting-for-auto-match: 'Warte auf das nächste Auto-Match'
+  still-in:
+    one: 'Noch dabei: {count} Team'
+    other: 'Noch dabei: {count} Teams'
+  more:
+    one: 'und {count} weiteres'
+    other: 'und {count} weitere'
+  wins:
+    one: '{team}: {count} Sieg'
+    other: '{team}: {count} Siege'
+  place: '{place}. {teams}'
+  out-in-round: 'Ausgeschieden in Turnierrunde {round}: {teams}'

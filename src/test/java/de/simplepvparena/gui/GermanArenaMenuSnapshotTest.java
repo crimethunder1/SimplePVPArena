@@ -53,6 +53,8 @@ class GermanArenaMenuSnapshotTest {
             21 | BLAZE_POWDER | Wandpartikel | Die Partikel werden angezeigt / \
             Nur die Partikel an der bestätigten Arenawand / Klicke, um sie auszublenden
             22 | OAK_DOOR | Zurück | Zurück zum Hauptmenü
+            23 | OAK_SIGN | Platzierungstafel hier aufstellen | Stellt die Tafel zwei Blöcke über dem Block auf, / \
+            auf dem du stehst, am besten an der Tribüne / Sie zeigt die Turnierrunde, das Match und die Platzierung
             """;
     private static final String INFO_OF_A_READY_ARENA = "4 | BOOK | Arena | Arena bereit / "
             + "  Kampffläche: admin-menu mit 25 Zellen zwischen 1/1 und 5/5, von y 64 bis y 67, berechnet auf y 64 / "

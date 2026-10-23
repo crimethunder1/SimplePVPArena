@@ -159,7 +159,22 @@ class ConvertedClassesHaveNoTextLiteralsTest {
             "registration/TeamChoicePresenter.java",
             "registration/TeamChoiceService.java",
             "gui/TeamChoiceMenu.java",
-            "gui/TeamChoiceMenuPresenter.java");
+            "gui/TeamChoiceMenuPresenter.java",
+            "placement/PlacementService.java",
+            "placement/PlacementStandings.java",
+            "placement/PlacementPhase.java",
+            "placement/PlacementTeam.java",
+            "placement/PlacementMatch.java",
+            "placement/PlacementRank.java",
+            "placement/PlacementElimination.java",
+            "placement/AutoMatchWinCount.java",
+            "placement/PlacementLines.java",
+            "placement/PlacementSidebar.java",
+            "arena/EffectAreaPresence.java",
+            "placement/PlacementBoard.java",
+            "placement/PlacementBoardEntities.java",
+            "placement/PaperPlacementBoardEntities.java",
+            "listener/PlacementBoardWorldListener.java");
 
     private static final Pattern STRING_LITERAL = Pattern.compile("\"((?:[^\"\\\\]|\\\\.)*)\"");
     private static final Pattern USAGE_TOKEN = Pattern.compile("<[^<>]*>");

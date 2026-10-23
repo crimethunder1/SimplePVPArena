@@ -45,6 +45,8 @@ final class RecordingLiveConfiguration implements LiveConfiguration {
     static final String CONFIRMED_PARTICLE_ENABLED = "confirmedBorderParticleEnabled";
     static final String AREA_INVENTORY_ENABLED = "areaInventoryEnabled";
     static final String CUSTOM_VISUALS = "customVisualSettings";
+    static final String PLACEMENT_SIDEBAR_ENABLED = "placementSidebarEnabled";
+    static final String PLACEMENT_BOARD_ENABLED = "placementBoardEnabled";
 
     static final List<String> EVERY_APPLIED_VALUE = List.of(
             LANGUAGE,
@@ -54,7 +56,8 @@ final class RecordingLiveConfiguration implements LiveConfiguration {
             CLEANING_PARTICLE, MAXIMUM_CELL_COUNT, SAFETY_ZONE_RADIUS, EFFECT_MARGIN, TELEPORT_ON_JOIN,
             PARTICLE_PERIOD, PARTICLE_VIEW_RADIUS,
             PARTICLE_MAXIMUM_BLOCKS, PARTICLE_MAXIMUM_LINES, WALL_PREVIEW_DURATION, CONFIRMED_PARTICLE,
-            CONFIRMED_PARTICLE_ENABLED, AREA_INVENTORY_ENABLED, CUSTOM_VISUALS);
+            CONFIRMED_PARTICLE_ENABLED, AREA_INVENTORY_ENABLED, CUSTOM_VISUALS, PLACEMENT_SIDEBAR_ENABLED,
+            PLACEMENT_BOARD_ENABLED);
 
     private final Map<String, Object> appliedValues = new LinkedHashMap<>();
     private final StartGateDuration startGateDuration = new StartGateDuration();
@@ -208,6 +211,16 @@ final class RecordingLiveConfiguration implements LiveConfiguration {
     @Override
     public void setCustomVisualSettings(CustomVisualSettings settings) {
         appliedValues.put(CUSTOM_VISUALS, settings);
+    }
+
+    @Override
+    public void setPlacementSidebarEnabled(boolean enabled) {
+        appliedValues.put(PLACEMENT_SIDEBAR_ENABLED, enabled);
+    }
+
+    @Override
+    public void setPlacementBoardEnabled(boolean enabled) {
+        appliedValues.put(PLACEMENT_BOARD_ENABLED, enabled);
     }
 
     StartGateDuration startGateDuration() {

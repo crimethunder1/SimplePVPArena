@@ -66,14 +66,15 @@ The team choice is closed while a tournament is running or paused. A team cannot
 
 ## Configuration
 
-`config.yml` has six sections, each value is described by a comment in the file:
+`config.yml` has seven sections, each value is described by a comment in the file:
 
 - `match`: delay between rounds, round time limit, sudden death damage, whether the final runs without sudden death, start gate duration, a countdown right before the fight of every round in which the fighters are blind and cannot be hurt and after which the round time limit starts (`countdown-seconds`, 3, 0 to 10, 0 turns it off), the seconds a fighter who loses the connection during a round has to come back before being eliminated (`reconnect-seconds`, 60, 0 to 600, 0 eliminates at once as before), what happens when the two teams of a match have different numbers of players online (`unequal-teams.mode`, `vote` or `all`, default `vote`, and `unequal-teams.vote-seconds`, 30, 5 to 120), the team size (`team-size`, 2 players) and team colours
 - `auto-match`: whether two teams that each have a player online get a match without a tournament (`enabled`, false, also switched by the tile "Auto match mode" in the match menu), the seconds between the announcement of such a match and its start (`start-delay-seconds`, 10, 3 to 120) and the pause after it and its cleaning (`pause-seconds`, 20, 0 to 300)
 - `registration`: whether the players choose their team in a menu of beds after registering or an admin forms the teams at random (`team-mode`, `free-choice` or `random`, default `free-choice`, also switched by the tile "Team mode" in the registrations menu), see "Choosing a team"
-- `arena`: cleaning speed and particles, flood fill limit, safety zone radius, the margin of the area of effect (`effect-margin`, 96 blocks), whether joining players are sent to the tribune (`teleport-on-join`, true), whether every player hands in the inventory inside the area of effect (`area-inventory.enabled`, true, see "Inventory in the area of effect"), plus the fight area and spawns the plugin writes itself
+- `arena`: cleaning speed and particles, flood fill limit, safety zone radius, the margin of the area of effect (`effect-margin`, 96 blocks), whether joining players are sent to the tribune (`teleport-on-join`, true), whether every player hands in the inventory inside the area of effect (`area-inventory.enabled`, true, see "Inventory in the area of effect"), plus the fight area, the spawns and the place of the standings board the plugin writes itself
 - `border`: particle display of border blocks and the marker of a confirmed wall, with whether that marker is shown (`confirmed-particle.enabled`, true, also switched by the tile "Border particles" in the arena menu; false hides only the marker, the outline shown after a calculation stays)
 - `items-adder`: optional images for the countdown and an optional item for the totem at the start of the fight, taken from ItemsAdder, see "ItemsAdder (optional)"
+- `placement`: whether the players inside the area of effect see the live placement as a sidebar (`sidebar.enabled`, true) and whether the standings board at the tribune is shown (`board.enabled`, true), see "Live placement"
 
 Changes can be applied while the server runs with the "Reload config.yml" item in the main menu of `/tournament`. A changed `team-size` is taken over only under the rules of the team menu, otherwise the old size stays and the log and the online admins read why. At the start of the server the value of `config.yml` is always taken over, also during a restored tournament; a team with more players is then named in the log and to the online admins and keeps its players.
 
@@ -86,6 +87,15 @@ When the two teams of a match have different numbers of players online right bef
 ## Auto match mode
 
 The tile "Auto match mode" in the match menu of `/tournament` switches the mode on and off and writes `auto-match.enabled` into `config.yml`. While it is on and no tournament is in progress, two teams that each have a player online get a match of their own: both teams and the players around the arena read "Auto match: Alpha against Bravo begins in 10 seconds", the match `auto-1` starts with the default kit and follows every rule of a normal match, the arena is cleaned afterwards and the next pair is announced after the pause. With more than two teams the two that have waited longest play next. A tournament has priority: it cannot be started while an auto match runs, it cancels an announced one, and the auto matches carry on once it is over. An auto match never enters the bracket or `tournament.yml`.
+
+## Live placement
+
+While a tournament runs, is paused or is over, and while the auto match mode is on and no tournament is in progress, the plugin shows the placement in two places. Without either of them both stay hidden.
+
+- **Sidebar.** Every player inside the area of effect sees a sidebar "Tournament" or "Auto match" without numbers at the edge. During a tournament it shows "Round 2 of 3" ("Paused", "Over"), the running match as "Alpha 1 : 0 Bravo" with the team names in their colour (white without one) or "No match is running", "Still in: 4 teams" and up to eight of these teams with "and 2 more"; after the end the first places. In the auto match mode it shows the running auto match or "Waiting for the next auto match" and the ten teams with the most wins since the start of the server ("Alpha: 3 wins"). The sidebar lives on a scoreboard of its own for every such player, which also carries the team colours of the fighters, so their names keep their colour. On leaving the area the player gets the former scoreboard back.
+- **Standings board.** The tile "Place the standings board here" in the arena menu saves the block the admin stands on; the board floats two blocks above it. A second click on the tile, now "Remove the standings board", removes it, and the reset of the arena removes it as well. The board shows the same as the sidebar, during a tournament also who is out in which round ("Out in round 1: Charlie and Delta"), and after the end the whole placement. The board is never saved in the world, it is put back after a restart.
+
+The places of a finished tournament: 1 for the winner, 2 for the loser of the final, and the losers of an earlier round share the place "teams that survived that round plus 1": 3 for the semi final, 5 for the quarter final, 9 before that. A team that advanced without an opponent did not lose. The wins of the auto matches are kept in memory and start at zero with every start of the server.
 
 ## Languages
 
