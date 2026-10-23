@@ -1,6 +1,7 @@
 package de.simplepvparena.arena;
 
 import de.simplepvparena.message.AreaInventoryMessage;
+import de.simplepvparena.message.FailureDescriptions;
 import de.simplepvparena.message.Messages;
 import de.simplepvparena.message.Placeholder;
 import de.simplepvparena.message.TournamentMessages;
@@ -155,7 +156,7 @@ public final class AreaInventoryService implements EffectAreaPresence {
         } catch (IOException | RuntimeException writeFailure) {
             warnAtMostOncePerInterval(player, Messages.text(AreaInventoryMessage.NOT_WRITTEN,
                     Placeholder.of("player", player.getName()),
-                    Placeholder.of("reason", describeFailure(writeFailure))));
+                    Placeholder.of("reason", FailureDescriptions.describe(writeFailure))));
             return;
         }
         player.getPersistentDataContainer().set(depositedKey, PersistentDataType.BYTE, DEPOSITED_VALUE);
@@ -169,7 +170,7 @@ public final class AreaInventoryService implements EffectAreaPresence {
         } catch (RuntimeException clearFailure) {
             warningReporter.accept(Messages.text(AreaInventoryMessage.NOT_CLEARED,
                     Placeholder.of("player", player.getName()),
-                    Placeholder.of("reason", describeFailure(clearFailure))));
+                    Placeholder.of("reason", FailureDescriptions.describe(clearFailure))));
             return;
         }
         String keptSafe = Messages.text(AreaInventoryMessage.KEPT_SAFE);
@@ -225,7 +226,7 @@ public final class AreaInventoryService implements EffectAreaPresence {
         } catch (RuntimeException restoreFailure) {
             warnAtMostOncePerInterval(player, Messages.text(AreaInventoryMessage.NOT_RESTORED,
                     Placeholder.of("player", player.getName()),
-                    Placeholder.of("reason", describeFailure(restoreFailure))));
+                    Placeholder.of("reason", FailureDescriptions.describe(restoreFailure))));
             return;
         }
         removeMarker(player);
@@ -279,7 +280,7 @@ public final class AreaInventoryService implements EffectAreaPresence {
         } catch (RuntimeException saveFailure) {
             warningReporter.accept(Messages.text(AreaInventoryMessage.PLAYER_DATA_NOT_SAVED,
                     Placeholder.of("player", player.getName()), Placeholder.of("file", fileName),
-                    Placeholder.of("reason", describeFailure(saveFailure))));
+                    Placeholder.of("reason", FailureDescriptions.describe(saveFailure))));
             return false;
         }
     }
@@ -290,7 +291,7 @@ public final class AreaInventoryService implements EffectAreaPresence {
         } catch (IOException deleteFailure) {
             warningReporter.accept(Messages.text(AreaInventoryMessage.FILE_NOT_DELETED,
                     Placeholder.of("player", player.getName()), Placeholder.of("file", fileName),
-                    Placeholder.of("reason", describeFailure(deleteFailure))));
+                    Placeholder.of("reason", FailureDescriptions.describe(deleteFailure))));
         }
     }
 
@@ -307,9 +308,5 @@ public final class AreaInventoryService implements EffectAreaPresence {
         }
         lastWarningMillisByPlayer.put(player.getUniqueId(), now);
         warningReporter.accept(warning);
-    }
-
-    private static String describeFailure(Exception failure) {
-        return failure.getMessage() == null ? failure.getClass().getSimpleName() : failure.getMessage();
     }
 }

@@ -6,6 +6,7 @@ import de.simplepvparena.border.SpectatorBorderService;
 import de.simplepvparena.match.MatchService;
 import de.simplepvparena.message.ArenaMenuMessage;
 import de.simplepvparena.message.ArenaSetupMessage;
+import de.simplepvparena.message.FailureDescriptions;
 import de.simplepvparena.message.MessageKey;
 import de.simplepvparena.message.Messages;
 import de.simplepvparena.message.Placeholder;
@@ -443,12 +444,8 @@ public final class ArenaSetupService {
             arenaConfigurationWriter.write();
         } catch (IOException failure) {
             TournamentMessages.sendWarning(admin, Messages.text(ArenaSetupMessage.CONFIGURATION_NOT_WRITTEN,
-                    Placeholder.of("reason", describeFailure(failure))));
+                    Placeholder.of("reason", FailureDescriptions.describe(failure))));
         }
-    }
-
-    private static String describeFailure(IOException failure) {
-        return failure.getMessage() == null ? failure.getClass().getSimpleName() : failure.getMessage();
     }
 
     private static Placeholder calculateAction() {

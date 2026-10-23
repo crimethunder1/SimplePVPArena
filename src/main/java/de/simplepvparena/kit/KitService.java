@@ -1,5 +1,6 @@
 package de.simplepvparena.kit;
 
+import de.simplepvparena.message.FailureDescriptions;
 import de.simplepvparena.message.Messages;
 import de.simplepvparena.message.Placeholder;
 import de.simplepvparena.message.PlayerStateMessage;
@@ -131,7 +132,8 @@ public final class KitService {
             restoreSnapshot(player, snapshot);
         } catch (RuntimeException failure) {
             warningReporter.accept(Messages.text(PlayerStateMessage.NOT_RESTORED,
-                    Placeholder.of("player", player.getName()), Placeholder.of("reason", describeFailure(failure))));
+                    Placeholder.of("player", player.getName()),
+                    Placeholder.of("reason", FailureDescriptions.describe(failure))));
             return;
         }
         removeMarker(player);
@@ -147,7 +149,8 @@ public final class KitService {
             snapshotStorage.save(player.getUniqueId(), snapshot);
         } catch (IOException failure) {
             warningReporter.accept(Messages.text(PlayerStateMessage.NOT_WRITTEN,
-                    Placeholder.of("player", player.getName()), Placeholder.of("reason", describeFailure(failure))));
+                    Placeholder.of("player", player.getName()),
+                    Placeholder.of("reason", FailureDescriptions.describe(failure))));
         }
     }
 
@@ -177,15 +180,12 @@ public final class KitService {
         } catch (IOException setAsideFailure) {
             warningReporter.accept(Messages.text(PlayerStateMessage.FILE_NOT_DELETED,
                     Placeholder.of("player", player.getName()),
-                    Placeholder.of("reason", describeFailure(deleteFailure))));
+                    Placeholder.of("reason", FailureDescriptions.describe(deleteFailure))));
             return;
         }
         warningReporter.accept(Messages.text(PlayerStateMessage.SET_ASIDE,
-                Placeholder.of("player", player.getName()), Placeholder.of("reason", describeFailure(deleteFailure))));
-    }
-
-    static String describeFailure(Exception failure) {
-        return failure.getMessage() == null ? failure.getClass().getSimpleName() : failure.getMessage();
+                Placeholder.of("player", player.getName()),
+                Placeholder.of("reason", FailureDescriptions.describe(deleteFailure))));
     }
 
     private void removeMarker(Player player) {

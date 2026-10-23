@@ -8,6 +8,7 @@ import de.simplepvparena.match.MatchCompletionHandler;
 import de.simplepvparena.match.MatchService;
 import de.simplepvparena.match.UnequalTeamsMode;
 import de.simplepvparena.message.CommonMessage;
+import de.simplepvparena.message.FailureDescriptions;
 import de.simplepvparena.message.MatchMenuMessage;
 import de.simplepvparena.message.Messages;
 import de.simplepvparena.message.Placeholder;
@@ -753,7 +754,7 @@ public final class TournamentManager implements MatchCompletionHandler {
                     decisionKindsByMatchId));
         } catch (IOException | RuntimeException saveFailure) {
             adminNotifier.notifyAdmins(Messages.text(TournamentMessage.SAVE_FAILURE,
-                    Placeholder.of("reason", describeFailure(saveFailure))));
+                    Placeholder.of("reason", FailureDescriptions.describe(saveFailure))));
         }
     }
 
@@ -762,12 +763,8 @@ public final class TournamentManager implements MatchCompletionHandler {
             stateStorage.delete();
         } catch (IOException | RuntimeException deleteFailure) {
             adminNotifier.notifyAdmins(Messages.text(TournamentMessage.DELETE_FAILURE,
-                    Placeholder.of("reason", describeFailure(deleteFailure))));
+                    Placeholder.of("reason", FailureDescriptions.describe(deleteFailure))));
         }
-    }
-
-    private static String describeFailure(Exception failure) {
-        return failure.getMessage() == null ? failure.getClass().getSimpleName() : failure.getMessage();
     }
 
     private void synchronizeFinalMatchStage() {

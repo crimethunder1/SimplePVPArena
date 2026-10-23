@@ -2,6 +2,7 @@ package de.simplepvparena.gui;
 
 import de.simplepvparena.input.ChatInputService;
 import de.simplepvparena.message.CommonMessage;
+import de.simplepvparena.message.FailureDescriptions;
 import de.simplepvparena.message.MenuMessage;
 import de.simplepvparena.message.Messages;
 import de.simplepvparena.message.Placeholder;
@@ -188,7 +189,7 @@ final class TeamsAdminMenu implements AdminMenu {
             TournamentMessages.sendSuccess(player, Messages.text(TeamMenuMessage.TEAM_SIZE_CHANGED, matchUp));
         } catch (IOException failure) {
             TournamentMessages.sendWarning(player, Messages.text(TeamMenuMessage.TEAM_SIZE_NOT_WRITTEN, matchUp,
-                    Placeholder.of("reason", describeFailure(failure))));
+                    Placeholder.of("reason", FailureDescriptions.describe(failure))));
         }
         navigation.refresh(player, holder);
     }
@@ -199,10 +200,6 @@ final class TeamsAdminMenu implements AdminMenu {
 
     private static String describeLargestTeamSize() {
         return Messages.text(TeamMenuMessage.LARGEST_TEAM_SIZE, Placeholder.of("maximum", Team.MAXIMUM_MEMBER_COUNT));
-    }
-
-    private static String describeFailure(IOException failure) {
-        return failure.getMessage() == null ? failure.getClass().getSimpleName() : failure.getMessage();
     }
 
     private void openTeamActions(Player player, List<Team> teams, MenuPagination pagination, int slot) {

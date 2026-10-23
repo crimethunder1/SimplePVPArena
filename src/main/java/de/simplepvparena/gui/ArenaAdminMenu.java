@@ -13,6 +13,7 @@ import de.simplepvparena.input.BlockItemRequestResult;
 import de.simplepvparena.input.ChatInputService;
 import de.simplepvparena.message.ArenaMenuMessage;
 import de.simplepvparena.message.CommonMessage;
+import de.simplepvparena.message.FailureDescriptions;
 import de.simplepvparena.message.MenuMessage;
 import de.simplepvparena.message.MessageKey;
 import de.simplepvparena.message.Messages;
@@ -291,7 +292,7 @@ final class ArenaAdminMenu implements AdminMenu {
             TournamentMessages.sendWarning(player, Messages.text(enabled
                     ? ArenaMenuMessage.BORDER_PARTICLES_SWITCHED_TO_SHOWN_NOT_WRITTEN
                     : ArenaMenuMessage.BORDER_PARTICLES_SWITCHED_TO_HIDDEN_NOT_WRITTEN,
-                    Placeholder.of("reason", describeFailure(failure))));
+                    Placeholder.of("reason", FailureDescriptions.describe(failure))));
         }
         navigation.refresh(player, holder);
     }
@@ -316,10 +317,6 @@ final class ArenaAdminMenu implements AdminMenu {
             TournamentMessages.sendSuccess(player, Messages.text(ArenaMenuMessage.STANDINGS_BOARD_PLACED));
         }
         navigation.refresh(player, holder);
-    }
-
-    private static String describeFailure(IOException failure) {
-        return failure.getMessage() == null ? failure.getClass().getSimpleName() : failure.getMessage();
     }
 
     private List<String> buildResetTileLore() {

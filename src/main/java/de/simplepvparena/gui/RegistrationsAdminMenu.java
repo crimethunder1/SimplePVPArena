@@ -1,6 +1,7 @@
 package de.simplepvparena.gui;
 
 import de.simplepvparena.message.CommonMessage;
+import de.simplepvparena.message.FailureDescriptions;
 import de.simplepvparena.message.MenuMessage;
 import de.simplepvparena.message.Messages;
 import de.simplepvparena.message.Placeholder;
@@ -234,13 +235,9 @@ final class RegistrationsAdminMenu implements AdminMenu {
         } catch (IOException failure) {
             TournamentMessages.sendWarning(player, Messages.text(RegistrationMenuMessage.TEAM_MODE_NOT_WRITTEN,
                     Placeholder.of("mode", describeTeamMode(teamMode)),
-                    Placeholder.of("reason", describeFailure(failure))));
+                    Placeholder.of("reason", FailureDescriptions.describe(failure))));
         }
         navigation.refresh(player, holder);
-    }
-
-    private static String describeFailure(IOException failure) {
-        return failure.getMessage() == null ? failure.getClass().getSimpleName() : failure.getMessage();
     }
 
     private void askForFormingConfirmation(Player player, int pageIndex) {

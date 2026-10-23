@@ -3,6 +3,7 @@ package de.simplepvparena.gui;
 import de.simplepvparena.match.Match;
 import de.simplepvparena.match.MatchService;
 import de.simplepvparena.message.CommonMessage;
+import de.simplepvparena.message.FailureDescriptions;
 import de.simplepvparena.message.MatchMenuMessage;
 import de.simplepvparena.message.MenuMessage;
 import de.simplepvparena.message.Messages;
@@ -258,13 +259,9 @@ final class MatchAdminMenu implements AdminMenu {
             TournamentMessages.sendWarning(player, Messages.text(enabled
                     ? MatchMenuMessage.AUTO_MATCH_SWITCHED_ON_NOT_WRITTEN
                     : MatchMenuMessage.AUTO_MATCH_SWITCHED_OFF_NOT_WRITTEN,
-                    Placeholder.of("reason", describeFailure(failure))));
+                    Placeholder.of("reason", FailureDescriptions.describe(failure))));
         }
         navigation.refresh(player, holder);
-    }
-
-    private static String describeFailure(IOException failure) {
-        return failure.getMessage() == null ? failure.getClass().getSimpleName() : failure.getMessage();
     }
 
     private void runOperation(Player player, AdminMenuHolder holder,
