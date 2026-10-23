@@ -63,6 +63,7 @@ public enum ConfigMessage implements MessageKey {
     UNUSABLE_ENTRIES("config.reload.unusable-entries"),
     TEAM_SIZE_NOT_TAKEN_OVER("config.notice.team-size-not-taken-over", "rejection", "teamSize", "path", "matchUp"),
     LARGER_TEAMS_AT_START("config.notice.larger-teams-at-start", "teams", "teamSize", "path"),
+    LARGER_TEAMS_AT_START_VOTING("config.notice.larger-teams-at-start-voting", "teams", "teamSize", "path"),
     TRIBUNE_OUTSIDE_OF_THE_EFFECT_AREA("config.notice.tribune-outside-of-the-effect-area", "warning", "path");
 
     private final String path;

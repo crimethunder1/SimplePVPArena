@@ -20,6 +20,7 @@ public enum ArenaSetupMessage implements MessageKey {
     DEBUG_CELL_LIMIT_OUT_OF_RANGE("arena.debug-cell-limit.out-of-range", "minimum", "maximum"),
     ARENA_RESERVED_FOR_MATCH("arena.reserved-for-match"),
     ARENA_RESERVED_FOR_AUTO_MATCH("arena.reserved-for-auto-match"),
+    CONFIGURATION_NOT_WRITTEN("arena.configuration-not-written", "reason"),
     CALCULATION_DURING_MATCH("arena.calculation.during-match"),
     DIAGNOSIS_RUN("arena.calculation.diagnosis-run", "count", "maximumCellCount", "path"),
     CALCULATED("arena.calculation.calculated", "fightArea"),

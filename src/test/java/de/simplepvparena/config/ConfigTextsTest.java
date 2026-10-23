@@ -122,6 +122,21 @@ class ConfigTextsTest {
     }
 
     @Test
+    void saysThatTheLargerTeamVotesInTheModeVote() {
+        Placeholder teamSize = Placeholder.of("teamSize", 2);
+        Placeholder path = Placeholder.of("path", PluginSettings.TEAM_SIZE_PATH);
+
+        assertEquals("x. The team size 2 of match.team-size in config.yml applies anyway since the start, this team "
+                        + "keeps its players and the larger team votes who fights",
+                Messages.plural(ConfigMessage.LARGER_TEAMS_AT_START_VOTING, 1, Placeholder.of("teams", "x"),
+                        teamSize, path));
+        assertEquals("x. The team size 2 of match.team-size in config.yml applies anyway since the start, these "
+                        + "teams keep their players and the larger team votes who fights",
+                Messages.plural(ConfigMessage.LARGER_TEAMS_AT_START_VOTING, 2, Placeholder.of("teams", "x"),
+                        teamSize, path));
+    }
+
+    @Test
     void writesTheReloadAnswerWithItsBrokenEntriesLineByLine() {
         MemoryConfiguration configuration = new MemoryConfiguration();
         configuration.set(PluginSettings.ARENA_SAFETY_ZONE_RADIUS_PATH, -1);

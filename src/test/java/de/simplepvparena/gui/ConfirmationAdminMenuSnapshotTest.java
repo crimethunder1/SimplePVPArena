@@ -56,7 +56,7 @@ class ConfirmationAdminMenuSnapshotTest {
 
         assertEquals("""
                 Reset the arena? | 27
-                4 | BOOK | Reset the arena? | The fight area and all three spawns are dropped / \
+                4 | BOOK | Reset the arena? | The fight area, all three spawns and the standings board are dropped / \
                 The blocks of the arena and the border blocks stay untouched / \
                 No tournament can be started until it is calculated again
                 11 | LIME_WOOL | Yes | Carries the action out

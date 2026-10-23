@@ -56,6 +56,7 @@ public enum TournamentMessage implements MessageKey {
     NO_BASELINE("tournament.notice.no-baseline", "action"),
     SMALLER_TEAMS("tournament.notice.smaller-teams", "teams"),
     LARGER_TEAMS("tournament.notice.larger-teams", "teams"),
+    LARGER_TEAMS_VOTING("tournament.notice.larger-teams-voting", "teams"),
     CLEANING_SKIPPED_AFTER_FINAL("tournament.notice.cleaning-skipped-after-final", "match", "reason", "action"),
     CLEANING_SKIPPED("tournament.notice.cleaning-skipped", "match", "reason"),
     BOTH_TEAMS_MISSING("tournament.notice.both-teams-missing", "match", "tile"),

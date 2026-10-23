@@ -6,6 +6,7 @@ import de.simplepvparena.arena.ArenaRegistry;
 import de.simplepvparena.match.Match;
 import de.simplepvparena.match.MatchCompletionHandler;
 import de.simplepvparena.match.MatchService;
+import de.simplepvparena.match.UnequalTeamsMode;
 import de.simplepvparena.message.CommonMessage;
 import de.simplepvparena.message.MatchMenuMessage;
 import de.simplepvparena.message.Messages;
@@ -413,7 +414,7 @@ public final class TournamentManager implements MatchCompletionHandler {
         if (bracket.isFinalMatch(bracketMatch)) {
             return Optional.of(Messages.text(TournamentMessage.REVOKE_FINAL));
         }
-        if (bracketMatch.getRoundIndex() == 0 && bracketMatch.hasExactlyOneParticipant()) {
+        if (bracketMatch.isFirstRoundBye()) {
             return Optional.of(Messages.text(TournamentMessage.REVOKE_BYE));
         }
         if (!bracketMatch.isDecided()) {
@@ -550,8 +551,10 @@ public final class TournamentManager implements MatchCompletionHandler {
                 adminNotifier.notifyAdmins(Messages.text(TournamentMessage.SMALLER_TEAMS,
                         Placeholder.of("teams", smallerTeams))));
         int largerTeamCount = TeamSizeSetting.findTeamsLargerThan(teamSize, teamRegistry).size();
+        TournamentMessage largerTeamsNotice = matchService.getUnequalTeamSettings().mode() == UnequalTeamsMode.ALL
+                ? TournamentMessage.LARGER_TEAMS : TournamentMessage.LARGER_TEAMS_VOTING;
         TeamSizeSetting.describeTeamsLargerThan(teamSize, teamRegistry).ifPresent(largerTeams ->
-                adminNotifier.notifyAdmins(Messages.plural(TournamentMessage.LARGER_TEAMS, largerTeamCount,
+                adminNotifier.notifyAdmins(Messages.plural(largerTeamsNotice, largerTeamCount,
                         Placeholder.of("teams", largerTeams))));
     }
 

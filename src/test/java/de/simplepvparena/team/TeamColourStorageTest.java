@@ -1,5 +1,6 @@
 package de.simplepvparena.team;
 
+import org.bukkit.configuration.file.YamlConfiguration;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
@@ -9,6 +10,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.logging.Handler;
@@ -94,7 +96,7 @@ class TeamColourStorageTest {
     }
 
     @Test
-    void skipsATeamWithAnUnknownColour() throws IOException {
+    void loadsATeamWithAnUnknownColourWithoutAColourAndWarns() throws IOException {
         Files.writeString(teamsFile(), """
                 teams:
                 - name: Alpha
@@ -112,10 +114,27 @@ class TeamColourStorageTest {
 
         storage().load(registry);
 
-        assertEquals(List.of("Bravo"), registry.getTeamNames());
+        assertEquals(List.of("Alpha", "Bravo"), registry.getTeamNames());
+        assertEquals(Optional.empty(), registry.findTeam("Alpha").orElseThrow().getColour());
+        assertEquals(List.of(steve), registry.findTeam("Alpha").orElseThrow().getMembers());
         assertEquals(Optional.of(TeamColour.RED), registry.findTeam("Bravo").orElseThrow().getColour());
-        assertTrue(messagesAt(Level.WARNING).get(0).endsWith("Team Alpha: the team has the unknown colour violet"),
-                messagesAt(Level.WARNING).get(0));
+        assertEquals(List.of("Team Alpha has the unknown colour violet and is loaded without a colour, the file as "
+                + "it was read is kept as teams.yml.broken"), messagesAt(Level.WARNING));
+        assertTrue(Files.isRegularFile(pluginFolder.resolve("teams.yml.broken")));
+    }
+
+    @Test
+    void reportsTheUnknownColourOfATeamToTheCaller() {
+        YamlConfiguration configuration = new YamlConfiguration();
+        configuration.set("teams", List.of(Map.of("name", "Alpha", "colour", "violet", "members",
+                List.of(Map.of("unique-id", steve.uniqueId().toString(), "name", "Steve")))));
+        List<String> colourWarnings = new ArrayList<>();
+
+        List<String> skippedEntries = new TeamRegistry().loadFromConfiguration(configuration, colourWarnings::add);
+
+        assertEquals(List.of(), skippedEntries);
+        assertEquals(List.of("Team Alpha has the unknown colour violet and is loaded without a colour"),
+                colourWarnings);
     }
 
     @Test

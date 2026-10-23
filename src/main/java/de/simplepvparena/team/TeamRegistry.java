@@ -14,6 +14,8 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.function.BiConsumer;
+import java.util.function.Consumer;
 
 public final class TeamRegistry {
 
@@ -27,6 +29,7 @@ public final class TeamRegistry {
     private static final String MEMBER_NAME_KEY = "name";
 
     private final Map<String, Team> teamsByLowerCaseName = new LinkedHashMap<>();
+    private final List<BiConsumer<String, String>> renameObservers = new ArrayList<>();
 
     public static String describeNameRule() {
         return Messages.text(TeamMessage.NAME_RULE, Placeholder.of("maximumLength", MAXIMUM_NAME_LENGTH));
@@ -47,6 +50,10 @@ public final class TeamRegistry {
             throw new IllegalArgumentException(nameRejection.get());
         }
         return register(teamName, members, colour);
+    }
+
+    public static boolean isSameTeamName(String firstTeamName, String secondTeamName) {
+        return firstTeamName != null && secondTeamName != null && toKey(firstTeamName).equals(toKey(secondTeamName));
     }
 
     public static boolean isAllowedTeamName(String teamName) {
@@ -88,7 +95,14 @@ public final class TeamRegistry {
         }
         Team renamedTeam = new Team(newName, team.getMembers(), team.getColour().orElse(null));
         replaceTeam(key, newKey, renamedTeam);
+        for (BiConsumer<String, String> renameObserver : List.copyOf(renameObservers)) {
+            renameObserver.accept(team.getTeamName(), renamedTeam.getTeamName());
+        }
         return renamedTeam;
+    }
+
+    public void addRenameObserver(BiConsumer<String, String> renameObserver) {
+        renameObservers.add(Objects.requireNonNull(renameObserver, "renameObserver"));
     }
 
     public Team addMember(String teamName, TeamMember member) {
@@ -184,6 +198,11 @@ public final class TeamRegistry {
     }
 
     public List<String> loadFromConfiguration(ConfigurationSection rootSection) {
+        return loadFromConfiguration(rootSection, colourWarning -> { });
+    }
+
+    public List<String> loadFromConfiguration(ConfigurationSection rootSection, Consumer<String> colourWarnings) {
+        Objects.requireNonNull(colourWarnings, "colourWarnings");
         teamsByLowerCaseName.clear();
         Object storedTeams = rootSection.get(TEAMS_KEY);
         if (storedTeams == null) {
@@ -196,7 +215,7 @@ public final class TeamRegistry {
         int entryNumber = 0;
         for (Object teamEntry : teamEntries) {
             entryNumber++;
-            loadTeam(teamEntry, entryNumber).ifPresent(skippedEntries::add);
+            loadTeam(teamEntry, entryNumber, colourWarnings).ifPresent(skippedEntries::add);
         }
         return List.copyOf(skippedEntries);
     }
@@ -224,7 +243,7 @@ public final class TeamRegistry {
         return storedMembers;
     }
 
-    private Optional<String> loadTeam(Object teamEntry, int entryNumber) {
+    private Optional<String> loadTeam(Object teamEntry, int entryNumber, Consumer<String> colourWarnings) {
         String entryDescription = "Entry " + entryNumber + " of the " + TEAMS_KEY + " list";
         if (!(teamEntry instanceof Map<?, ?> storedTeam)) {
             return Optional.of(entryDescription + ": it is no team");
@@ -234,7 +253,14 @@ public final class TeamRegistry {
             return Optional.of(entryDescription + ": the team has no readable " + TEAM_NAME_KEY);
         }
         try {
-            register(teamName, readMembers(storedTeam.get(MEMBERS_KEY)), readColour(storedTeam.get(COLOUR_KEY)));
+            List<TeamMember> members = readMembers(storedTeam.get(MEMBERS_KEY));
+            Object storedColour = storedTeam.get(COLOUR_KEY);
+            Optional<TeamColour> colour = readColour(storedColour);
+            register(teamName, members, colour.orElse(null));
+            if (storedColour != null && colour.isEmpty()) {
+                colourWarnings.accept("Team " + teamName + " has the unknown " + COLOUR_KEY + " " + storedColour
+                        + " and is loaded without a " + COLOUR_KEY);
+            }
             return Optional.empty();
         } catch (IllegalArgumentException | IllegalStateException refusal) {
             return Optional.of("Team " + teamName + ": " + refusal.getMessage());
@@ -275,13 +301,11 @@ public final class TeamRegistry {
         }
     }
 
-    private TeamColour readColour(Object storedColour) {
+    private Optional<TeamColour> readColour(Object storedColour) {
         if (storedColour == null) {
-            return null;
+            return Optional.empty();
         }
-        String colourName = readText(storedColour);
-        return TeamColour.ofStorageName(colourName).orElseThrow(() -> new IllegalArgumentException(
-                "the team has the unknown " + COLOUR_KEY + " " + storedColour));
+        return TeamColour.ofStorageName(readText(storedColour));
     }
 
     private String readText(Object storedValue) {
@@ -319,7 +343,7 @@ public final class TeamRegistry {
         });
     }
 
-    private String toKey(String teamName) {
+    private static String toKey(String teamName) {
         return teamName.toLowerCase(Locale.ROOT);
     }
 }

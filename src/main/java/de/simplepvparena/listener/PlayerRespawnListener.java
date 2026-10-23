@@ -4,6 +4,9 @@ import de.simplepvparena.arena.ArenaRegistry;
 import de.simplepvparena.arena.PositionSnapshot;
 import de.simplepvparena.arena.SpectatorService;
 import de.simplepvparena.match.MatchService;
+import de.simplepvparena.message.ListenerMessage;
+import de.simplepvparena.message.Messages;
+import de.simplepvparena.message.Placeholder;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -12,6 +15,7 @@ import org.bukkit.event.player.PlayerRespawnEvent;
 import org.bukkit.plugin.Plugin;
 
 import java.util.Optional;
+import java.util.logging.Level;
 
 public final class PlayerRespawnListener implements Listener {
 
@@ -46,9 +50,18 @@ public final class PlayerRespawnListener implements Listener {
                 .ifPresent(event::setRespawnLocation);
         plugin.getServer().getScheduler().runTask(plugin, () -> {
             if (player.isOnline()) {
-                spectatorService.sendToTribune(player);
+                sendToTribune(player);
             }
         });
+    }
+
+    private void sendToTribune(Player player) {
+        try {
+            spectatorService.sendToTribune(player);
+        } catch (RuntimeException failure) {
+            plugin.getLogger().log(Level.WARNING, Messages.text(ListenerMessage.NOT_SENT_TO_TRIBUNE,
+                    Placeholder.of("player", player.getName())), failure);
+        }
     }
 
     private void returnToTheRound(PlayerRespawnEvent event, Player player, Location fighterSpawn) {

@@ -7,6 +7,9 @@ import de.simplepvparena.message.TournamentMessages;
 import org.bukkit.Location;
 import org.bukkit.NamespacedKey;
 import org.bukkit.entity.Player;
+import org.bukkit.event.inventory.InventoryType;
+import org.bukkit.inventory.CraftingInventory;
+import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
 import org.bukkit.persistence.PersistentDataType;
@@ -14,6 +17,7 @@ import org.bukkit.plugin.Plugin;
 import org.bukkit.scheduler.BukkitTask;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -32,6 +36,7 @@ public final class AreaInventoryService implements EffectAreaPresence {
     public static final String DEPOSITED_KEY_NAME = "area_inventory_deposited";
     public static final long RECONCILE_PERIOD_TICKS = 20L;
     public static final long WARNING_INTERVAL_MILLIS = 60_000L;
+    public static final long CHAT_MESSAGE_INTERVAL_MILLIS = 60_000L;
 
     private static final byte DEPOSITED_VALUE = 1;
 
@@ -43,6 +48,8 @@ public final class AreaInventoryService implements EffectAreaPresence {
     private final Consumer<String> warningReporter;
     private final LongSupplier clock;
     private final Map<UUID, Long> lastWarningMillisByPlayer = new HashMap<>();
+    private final Map<UUID, Long> lastKeptSafeChatMillisByPlayer = new HashMap<>();
+    private final Map<UUID, Long> lastBackChatMillisByPlayer = new HashMap<>();
 
     private boolean enabled = DEFAULT_ENABLED;
     private BukkitTask reconcileTask;
@@ -140,8 +147,10 @@ public final class AreaInventoryService implements EffectAreaPresence {
 
     private void deposit(Player player) {
         ItemStack[] contents = player.getInventory().getContents();
+        Optional<CraftingInventory> craftingGrid = findCraftingGrid(player);
+        List<ItemStack> looseItems = collectLooseItems(player, craftingGrid);
         try {
-            storage.save(player.getUniqueId(), contents);
+            storage.save(player.getUniqueId(), contents, looseItems);
         } catch (IOException | RuntimeException writeFailure) {
             warnAtMostOncePerInterval(player, Messages.text(AreaInventoryMessage.NOT_WRITTEN,
                     Placeholder.of("player", player.getName()),
@@ -152,29 +161,66 @@ public final class AreaInventoryService implements EffectAreaPresence {
         lastWarningMillisByPlayer.remove(player.getUniqueId());
         try {
             player.getInventory().clear();
+            if (!looseItems.isEmpty()) {
+                player.setItemOnCursor(null);
+                craftingGrid.ifPresent(grid -> grid.setMatrix(new ItemStack[grid.getMatrix().length]));
+            }
         } catch (RuntimeException clearFailure) {
             warningReporter.accept(Messages.text(AreaInventoryMessage.NOT_CLEARED,
                     Placeholder.of("player", player.getName()),
                     Placeholder.of("reason", describeFailure(clearFailure))));
             return;
         }
-        TournamentMessages.sendInfo(player, Messages.text(AreaInventoryMessage.KEPT_SAFE));
+        String keptSafe = Messages.text(AreaInventoryMessage.KEPT_SAFE);
+        if (isChatDue(lastKeptSafeChatMillisByPlayer, player)) {
+            TournamentMessages.sendInfo(player, keptSafe);
+        } else {
+            TournamentMessages.sendActionBarInfo(player, keptSafe);
+        }
+    }
+
+    private static Optional<CraftingInventory> findCraftingGrid(Player player) {
+        Inventory topInventory = player.getOpenInventory().getTopInventory();
+        if (topInventory.getType() == InventoryType.CRAFTING && topInventory instanceof CraftingInventory grid) {
+            return Optional.of(grid);
+        }
+        return Optional.empty();
+    }
+
+    private static List<ItemStack> collectLooseItems(Player player, Optional<CraftingInventory> craftingGrid) {
+        List<ItemStack> looseItems = new ArrayList<>();
+        addIfPresent(looseItems, player.getItemOnCursor());
+        craftingGrid.ifPresent(grid -> {
+            for (ItemStack itemStack : grid.getMatrix()) {
+                addIfPresent(looseItems, itemStack);
+            }
+        });
+        return looseItems;
+    }
+
+    private static void addIfPresent(List<ItemStack> itemStacks, ItemStack itemStack) {
+        if (itemStack != null && !itemStack.isEmpty()) {
+            itemStacks.add(itemStack);
+        }
     }
 
     private void giveBack(Player player, boolean informPlayer) {
         AreaInventoryLookup lookup = storage.find(player.getUniqueId());
         switch (lookup.outcome()) {
-            case FOUND -> restore(player, lookup.contents().orElseThrow(), lookup.fileName(), informPlayer);
+            case FOUND -> restore(player, lookup.contents().orElseThrow(), lookup.looseItems(), lookup.fileName(),
+                    informPlayer);
             case MISSING -> abandon(player, AreaInventoryMessage.MISSING, lookup.fileName(), informPlayer);
             case BROKEN -> abandon(player, AreaInventoryMessage.UNREADABLE, lookup.fileName(), informPlayer);
         }
     }
 
-    private void restore(Player player, ItemStack[] contents, String fileName, boolean informPlayer) {
+    private void restore(Player player, ItemStack[] contents, List<ItemStack> looseItems, String fileName,
+                         boolean informPlayer) {
         try {
             PlayerInventory inventory = player.getInventory();
             inventory.clear();
             inventory.setContents(contents);
+            giveLooseItemsBack(player, inventory, looseItems);
         } catch (RuntimeException restoreFailure) {
             warnAtMostOncePerInterval(player, Messages.text(AreaInventoryMessage.NOT_RESTORED,
                     Placeholder.of("player", player.getName()),
@@ -185,9 +231,35 @@ public final class AreaInventoryService implements EffectAreaPresence {
         if (savePlayerData(player, fileName)) {
             deleteFile(player, fileName);
         }
-        if (informPlayer) {
-            TournamentMessages.sendSuccess(player, Messages.text(AreaInventoryMessage.BACK));
+        if (!informPlayer) {
+            return;
         }
+        String back = Messages.text(AreaInventoryMessage.BACK);
+        if (isChatDue(lastBackChatMillisByPlayer, player)) {
+            TournamentMessages.sendSuccess(player, back);
+        } else {
+            TournamentMessages.sendActionBarSuccess(player, back);
+        }
+    }
+
+    private static void giveLooseItemsBack(Player player, PlayerInventory inventory, List<ItemStack> looseItems) {
+        if (looseItems.isEmpty()) {
+            return;
+        }
+        Map<Integer, ItemStack> itemsWithoutRoom = inventory.addItem(looseItems.toArray(new ItemStack[0]));
+        for (ItemStack itemWithoutRoom : itemsWithoutRoom.values()) {
+            player.getWorld().dropItem(player.getLocation(), itemWithoutRoom);
+        }
+    }
+
+    private boolean isChatDue(Map<UUID, Long> lastChatMillisByPlayer, Player player) {
+        long now = clock.getAsLong();
+        Long lastChatMillis = lastChatMillisByPlayer.get(player.getUniqueId());
+        if (lastChatMillis != null && now - lastChatMillis < CHAT_MESSAGE_INTERVAL_MILLIS) {
+            return false;
+        }
+        lastChatMillisByPlayer.put(player.getUniqueId(), now);
+        return true;
     }
 
     private void abandon(Player player, AreaInventoryMessage warning, String fileName, boolean informPlayer) {

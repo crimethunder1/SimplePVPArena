@@ -34,6 +34,9 @@ import org.bukkit.Server;
 import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
+import org.bukkit.event.inventory.InventoryType;
+import org.bukkit.inventory.CraftingInventory;
+import org.bukkit.inventory.InventoryView;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.scheduler.BukkitScheduler;
@@ -43,6 +46,7 @@ import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -60,6 +64,8 @@ final class ArenaMatchHarness {
     static final int WALL_HEIGHT = 4;
     static final int WALL_TOP_Y = GROUND_Y + WALL_HEIGHT - 1;
     static final int INVENTORY_SLOT_COUNT = 43;
+    static final int STORAGE_SLOT_COUNT = 36;
+    static final int CRAFTING_GRID_SLOT_COUNT = 4;
     static final long TICKS_PER_SECOND = 20L;
 
     private static final Logger LOGGER = Logger.getLogger("ArenaMatchHarness");
@@ -76,6 +82,7 @@ final class ArenaMatchHarness {
     private final SpectatorService spectatorService;
     private final RecordingFighterColours fighterColours = new RecordingFighterColours();
     private final List<String> roundStartSteps = new ArrayList<>();
+    private final List<DroppedItem> droppedItems = new ArrayList<>();
     private final List<World> temporaryEntityRemovalWorlds = new ArrayList<>();
     private final StartGateMarks gateMarks = new StartGateMarks();
     private final StartGateDuration gateDuration = new StartGateDuration();
@@ -97,6 +104,10 @@ final class ArenaMatchHarness {
         this.world = proxy(World.class, (method, arguments) -> switch (method.getName()) {
             case "getName" -> WORLD_NAME;
             case "getBlockAt" -> createBlock((Integer) arguments[0], (Integer) arguments[1], (Integer) arguments[2]);
+            case "dropItem" -> {
+                droppedItems.add(new DroppedItem((Location) arguments[0], (ItemStack) arguments[1]));
+                yield null;
+            }
             default -> throw new UnsupportedOperationException("World." + method.getName());
         });
         this.plugin = createPlugin(createServer());
@@ -443,6 +454,13 @@ final class ArenaMatchHarness {
         return blockMaterials.getOrDefault(BlockPositionCodec.encode(blockX, blockY, blockZ), Material.AIR);
     }
 
+    List<DroppedItem> droppedItems() {
+        return droppedItems;
+    }
+
+    record DroppedItem(Location location, ItemStack itemStack) {
+    }
+
     static <T> T proxy(Class<T> type, FakeCall call) {
         InvocationHandler handler = (proxyInstance, method, arguments) -> switch (method.getName()) {
             case "equals" -> proxyInstance == arguments[0];
@@ -491,6 +509,9 @@ final class ArenaMatchHarness {
         private boolean online = true;
         private int inventoryClearCount;
         private ItemStack[] contents = new ItemStack[INVENTORY_SLOT_COUNT];
+        private ItemStack itemOnCursor;
+        private ItemStack[] craftingGrid = new ItemStack[CRAFTING_GRID_SLOT_COUNT];
+        private InventoryType openInventoryType = InventoryType.CRAFTING;
         private double health = 20.0;
         private int foodLevel = 20;
         private float saturation;
@@ -577,6 +598,13 @@ final class ArenaMatchHarness {
                 case "getActivePotionEffects" -> List.of();
                 case "getAttribute" -> null;
                 case "getInventory" -> inventory();
+                case "getItemOnCursor" -> itemOnCursor;
+                case "setItemOnCursor" -> {
+                    itemOnCursor = (ItemStack) arguments[0];
+                    yield null;
+                }
+                case "getOpenInventory" -> openInventory();
+                case "getWorld" -> this.location.getWorld();
                 case "getPersistentDataContainer" -> SharedBukkitServer.createPersistentDataContainer(persistentData);
                 case "saveData" -> {
                     if (playerDataSaveFailure != null) {
@@ -670,6 +698,26 @@ final class ArenaMatchHarness {
             this.contents = contents.clone();
         }
 
+        ItemStack itemOnCursor() {
+            return itemOnCursor;
+        }
+
+        void holdOnCursor(ItemStack itemStack) {
+            this.itemOnCursor = itemStack;
+        }
+
+        ItemStack[] craftingGrid() {
+            return craftingGrid.clone();
+        }
+
+        void putIntoCraftingGrid(ItemStack... itemStacks) {
+            this.craftingGrid = Arrays.copyOf(itemStacks, CRAFTING_GRID_SLOT_COUNT);
+        }
+
+        void openInventoryOfType(InventoryType inventoryType) {
+            this.openInventoryType = inventoryType;
+        }
+
         int level() {
             return level;
         }
@@ -723,7 +771,46 @@ final class ArenaMatchHarness {
                     }
                     yield null;
                 }
+                case "addItem" -> addToFreeStorageSlots((ItemStack[]) arguments[0]);
                 default -> throw new UnsupportedOperationException("PlayerInventory." + method.getName());
+            });
+        }
+
+        private Map<Integer, ItemStack> addToFreeStorageSlots(ItemStack[] itemStacks) {
+            Map<Integer, ItemStack> itemsWithoutRoom = new LinkedHashMap<>();
+            for (int itemIndex = 0; itemIndex < itemStacks.length; itemIndex++) {
+                int freeSlot = findFreeStorageSlot();
+                if (freeSlot < 0) {
+                    itemsWithoutRoom.put(itemIndex, itemStacks[itemIndex]);
+                    continue;
+                }
+                contents[freeSlot] = itemStacks[itemIndex];
+            }
+            return itemsWithoutRoom;
+        }
+
+        private int findFreeStorageSlot() {
+            for (int slotIndex = 0; slotIndex < STORAGE_SLOT_COUNT; slotIndex++) {
+                if (contents[slotIndex] == null) {
+                    return slotIndex;
+                }
+            }
+            return -1;
+        }
+
+        private Object openInventory() {
+            Object topInventory = proxy(CraftingInventory.class, (method, arguments) -> switch (method.getName()) {
+                case "getType" -> openInventoryType;
+                case "getMatrix" -> craftingGrid.clone();
+                case "setMatrix" -> {
+                    craftingGrid = Arrays.copyOf((ItemStack[]) arguments[0], CRAFTING_GRID_SLOT_COUNT);
+                    yield null;
+                }
+                default -> throw new UnsupportedOperationException("CraftingInventory." + method.getName());
+            });
+            return proxy(InventoryView.class, (method, arguments) -> switch (method.getName()) {
+                case "getTopInventory" -> topInventory;
+                default -> throw new UnsupportedOperationException("InventoryView." + method.getName());
             });
         }
     }

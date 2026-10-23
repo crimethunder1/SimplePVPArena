@@ -685,6 +685,7 @@ arena:
     out-of-range: 'Das Zellenlimit muss zwischen {minimum} und {maximum} liegen'
   reserved-for-match: 'Das Kit für das nächste Match wird gerade gewählt, die Arena ist bis zu dessen Start für dieses Match reserviert'
   reserved-for-auto-match: 'Ein Auto-Match beginnt gleich, die Arena ist dafür reserviert'
+  configuration-not-written: 'Die Änderung gilt, aber config.yml konnte nicht geschrieben werden: {reason}'
   calculation:
     during-match: 'Ein Match läuft, die Kampffläche lässt sich nur zwischen den Matches berechnen'
     diagnosis-run:
@@ -863,7 +864,7 @@ arena-menu:
     reset:
       title: 'Arena zurücksetzen'
       lore:
-        - 'Verwirft die Kampffläche und alle drei Spawns'
+        - 'Verwirft die Kampffläche, alle drei Spawns und die Platzierungstafel'
         - 'Die Blöcke und die Wandblöcke bleiben unberührt'
     height-marker:
       title: 'Höhe der Kampffläche markieren'
@@ -912,7 +913,7 @@ arena-menu:
     - 'Die Änderung lässt sich nicht rückgängig machen'
     - 'Die Arenawand um sie herum bleibt unberührt'
   reset-confirmation:
-    - 'Die Kampffläche und alle drei Spawns werden verworfen'
+    - 'Die Kampffläche, alle drei Spawns und die Platzierungstafel werden verworfen'
     - 'Die Blöcke der Arena und die Wandblöcke bleiben unberührt'
     - 'Bis zur nächsten Berechnung lässt sich kein Turnier starten'
   height-marker:
@@ -1198,6 +1199,9 @@ listener:
     outside-the-arena: 'Nur Admins verändern Blöcke außerhalb der Arena'
     not-a-fighter: 'Nur die Kämpfer der laufenden Runde bauen in der Arena'
   rejoined-during-match: 'Du bist während des Matches {match} zurückgekehrt, du machst ab der nächsten Runde wieder mit'
+  rejoined-not-chosen: 'Du bist während Match {match} zurückgekehrt, dein Team kämpft mit den gewählten Spielern'
+  not-sent-to-tribune: '{player} konnte nicht auf die Tribüne geschickt werden'
+  spectator-mode-not-switched: 'Der Zuschauermodus von {player} konnte nicht gewechselt werden'
 start-gate:
   countdown:
     release-title: 'Kämpft!'
@@ -1301,6 +1305,9 @@ tournament:
     larger-teams:
       one: '{teams}. Das Turnier startet trotzdem, jeder Spieler dieses Teams, der online ist, kämpft'
       other: '{teams}. Das Turnier startet trotzdem, jeder Spieler dieser Teams, der online ist, kämpft'
+    larger-teams-voting:
+      one: '{teams}. Das Turnier startet trotzdem, das größere Team stimmt ab, wer kämpft'
+      other: '{teams}. Das Turnier startet trotzdem, das größere Team stimmt ab, wer kämpft'
     cleaning-skipped-after-final: 'Die Arena wurde nach Match {match} nicht gereinigt: {reason}. Führe {action} vor dem nächsten Turnier erneut aus'
     cleaning-skipped: 'Die Arena wurde nach Match {match} nicht gereinigt: {reason}. Das nächste Match beginnt in der Arena, wie sie jetzt ist'
     both-teams-missing: 'Beide Teams von Match {match} sind nicht mehr registriert, das Turnier wartet auf dich. Entscheide das Match im Match-Menü von /tournament unter "{tile}"'
@@ -1509,6 +1516,7 @@ team-choice:
   random-mode: 'Die Teams werden zufällig gebildet, ein Admin bildet sie'
   closed: 'Während eines Turniers ist die Teamwahl geschlossen'
   team-full: 'Dieses Team ist voll'
+  assigned-by-admin: 'Ein Admin hat dich Team {team} zugeteilt, frag einen Admin, wenn du wechseln willst'
   not-in-a-team: 'Du bist in keinem Team'
   joined: 'Du bist Team {team} beigetreten'
   member-joined: '{player} ist deinem Team beigetreten'
@@ -1798,6 +1806,9 @@ config:
     larger-teams-at-start:
       one: '{teams}. Die Teamgröße {teamSize} aus {path} in config.yml gilt seit dem Start trotzdem, dieses Team behält seine Spieler und jeder Spieler davon, der online ist, kämpft'
       other: '{teams}. Die Teamgröße {teamSize} aus {path} in config.yml gilt seit dem Start trotzdem, diese Teams behalten ihre Spieler und jeder Spieler davon, der online ist, kämpft'
+    larger-teams-at-start-voting:
+      one: '{teams}. Die Teamgröße {teamSize} aus {path} in config.yml gilt seit dem Start trotzdem, dieses Team behält seine Spieler und das größere Team stimmt ab, wer kämpft'
+      other: '{teams}. Die Teamgröße {teamSize} aus {path} in config.yml gilt seit dem Start trotzdem, diese Teams behalten ihre Spieler und das größere Team stimmt ab, wer kämpft'
     tribune-outside-of-the-effect-area: '{warning}. Es wurde nichts verworfen, setze den Tribünen-Spawn näher an der Kampffläche neu oder erhöhe {path} in config.yml'
 plugin:
   kits-not-loaded: 'Die Kits konnten nicht geladen werden ({reason}), es gibt kein Kit, bis im Kit-Menü von /tournament eines angelegt wird'

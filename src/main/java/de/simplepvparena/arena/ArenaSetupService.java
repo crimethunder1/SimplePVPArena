@@ -9,12 +9,14 @@ import de.simplepvparena.message.ArenaSetupMessage;
 import de.simplepvparena.message.MessageKey;
 import de.simplepvparena.message.Messages;
 import de.simplepvparena.message.Placeholder;
+import de.simplepvparena.message.TournamentMessage;
 import de.simplepvparena.message.TournamentMessages;
 import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -35,7 +37,7 @@ public final class ArenaSetupService {
     private final ArenaCleaningService arenaCleaningService;
     private final ArenaBaselineService arenaBaselineService;
     private final ArenaBorderConfirmation borderConfirmation;
-    private final Runnable arenaConfigurationSaver;
+    private final ArenaConfigurationWriter arenaConfigurationWriter;
 
     private int maximumArenaCellCount = ArenaShapeFloodFill.DEFAULT_MAXIMUM_CELL_COUNT;
     private BooleanSupplier arenaReservedForMatch = () -> false;
@@ -50,7 +52,7 @@ public final class ArenaSetupService {
                              ArenaCleaningService arenaCleaningService,
                              ArenaBaselineService arenaBaselineService,
                              ArenaBorderConfirmation borderConfirmation,
-                             Runnable arenaConfigurationSaver) {
+                             ArenaConfigurationWriter arenaConfigurationWriter) {
         this.activeArena = Objects.requireNonNull(activeArena, "activeArena");
         this.matchService = Objects.requireNonNull(matchService, "matchService");
         this.spectatorBorderService = Objects.requireNonNull(spectatorBorderService, "spectatorBorderService");
@@ -59,7 +61,8 @@ public final class ArenaSetupService {
         this.arenaCleaningService = Objects.requireNonNull(arenaCleaningService, "arenaCleaningService");
         this.arenaBaselineService = Objects.requireNonNull(arenaBaselineService, "arenaBaselineService");
         this.borderConfirmation = Objects.requireNonNull(borderConfirmation, "borderConfirmation");
-        this.arenaConfigurationSaver = Objects.requireNonNull(arenaConfigurationSaver, "arenaConfigurationSaver");
+        this.arenaConfigurationWriter = Objects.requireNonNull(arenaConfigurationWriter,
+                "arenaConfigurationWriter");
     }
 
     public void setMaximumArenaCellCount(int maximumArenaCellCount) {
@@ -104,9 +107,9 @@ public final class ArenaSetupService {
             TournamentMessages.sendError(admin, Messages.text(ArenaSetupMessage.CALCULATION_DURING_MATCH));
             return;
         }
-        Optional<String> reservation = findReservation();
-        if (reservation.isPresent()) {
-            TournamentMessages.sendError(admin, reservation.get());
+        Optional<String> rejection = findReservation().or(this::findCleaningInProgress);
+        if (rejection.isPresent()) {
+            TournamentMessages.sendError(admin, rejection.get());
             return;
         }
         if (isDiagnosisRun) {
@@ -131,9 +134,9 @@ public final class ArenaSetupService {
         ArenaShape shape = update.volume();
         Arena arena = activeArena.getArena();
         borderConfirmation.confirmCalculation();
-        arenaConfigurationSaver.run();
         TournamentMessages.sendSuccess(admin, Messages.text(ArenaSetupMessage.CALCULATED,
                 Placeholder.of("fightArea", shape.describe())));
+        writeArenaConfiguration(admin);
         reportVolume(admin, update);
         reportDiagnosisLimit(admin, shape, cellLimit);
         captureBaseline(admin);
@@ -255,9 +258,9 @@ public final class ArenaSetupService {
             TournamentMessages.sendError(admin, rejection.get());
             return;
         }
-        arenaConfigurationSaver.run();
         TournamentMessages.sendSuccess(admin, Messages.text(ArenaSetupMessage.SPAWN_SET,
                 Placeholder.of("spawn", spawnType.getDisplayName()), Placeholder.of("position", position.describe())));
+        writeArenaConfiguration(admin);
         reportSpawnPlacementWarnings(admin, arena);
         reportMissingConfiguration(admin, arena);
     }
@@ -272,13 +275,13 @@ public final class ArenaSetupService {
                 location.getBlockX() + BLOCK_CENTRE, location.getBlockY(), location.getBlockZ() + BLOCK_CENTRE,
                 location.getYaw(), 0.0F);
         activeArena.getArena().setStandingsBoard(position);
-        arenaConfigurationSaver.run();
+        writeArenaConfiguration(admin);
         standingsBoardListener.run();
     }
 
-    public void removeStandingsBoard() {
+    public void removeStandingsBoard(CommandSender admin) {
         activeArena.getArena().setStandingsBoard(null);
-        arenaConfigurationSaver.run();
+        writeArenaConfiguration(admin);
         standingsBoardListener.run();
     }
 
@@ -300,7 +303,14 @@ public final class ArenaSetupService {
         if (matchService.hasActiveMatch()) {
             return Optional.of(Messages.text(ArenaSetupMessage.RESET_DURING_MATCH));
         }
-        return findReservation();
+        return findReservation().or(this::findCleaningInProgress);
+    }
+
+    private Optional<String> findCleaningInProgress() {
+        if (arenaCleaningService.isCleaning()) {
+            return Optional.of(Messages.text(TournamentMessage.ARENA_BEING_CLEANED));
+        }
+        return Optional.empty();
     }
 
     private Optional<String> findReservation() {
@@ -321,9 +331,9 @@ public final class ArenaSetupService {
         }
         activeArena.clear();
         arenaBaselineService.discardSnapshot();
-        arenaConfigurationSaver.run();
         standingsBoardListener.run();
         TournamentMessages.sendSuccess(sender, Messages.text(ArenaSetupMessage.CONFIGURATION_REMOVED));
+        writeArenaConfiguration(sender);
     }
 
     public Optional<String> findCleaningRejection() {
@@ -426,6 +436,19 @@ public final class ArenaSetupService {
             return Optional.of(Messages.text(ArenaSetupMessage.AUTOMATIC_CLEANING_NOT_STARTED));
         }
         return Optional.empty();
+    }
+
+    private void writeArenaConfiguration(CommandSender admin) {
+        try {
+            arenaConfigurationWriter.write();
+        } catch (IOException failure) {
+            TournamentMessages.sendWarning(admin, Messages.text(ArenaSetupMessage.CONFIGURATION_NOT_WRITTEN,
+                    Placeholder.of("reason", describeFailure(failure))));
+        }
+    }
+
+    private static String describeFailure(IOException failure) {
+        return failure.getMessage() == null ? failure.getClass().getSimpleName() : failure.getMessage();
     }
 
     private static Placeholder calculateAction() {

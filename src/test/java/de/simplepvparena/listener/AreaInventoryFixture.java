@@ -163,12 +163,13 @@ final class AreaInventoryFixture {
     private final class ObservedStorage implements AreaInventoryStorage {
 
         @Override
-        public void save(UUID playerUniqueId, ItemStack[] contents) throws IOException {
+        public void save(UUID playerUniqueId, ItemStack[] contents, List<ItemStack> looseItems)
+                throws IOException {
             saveObservers.forEach(Runnable::run);
             if (writeFailure != null) {
                 throw writeFailure;
             }
-            fileStorage.save(playerUniqueId, contents);
+            fileStorage.save(playerUniqueId, contents, looseItems);
         }
 
         @Override

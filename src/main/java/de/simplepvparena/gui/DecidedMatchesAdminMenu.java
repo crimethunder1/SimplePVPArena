@@ -16,7 +16,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.OptionalInt;
 
 final class DecidedMatchesAdminMenu implements AdminMenu {
 
@@ -49,6 +48,7 @@ final class DecidedMatchesAdminMenu implements AdminMenu {
 
     @Override
     public void fill(Player player, AdminMenuHolder holder, AdminMenuCanvas canvas) {
+        holder.forgetMatchIdsOfSlots();
         List<BracketMatch> revocableMatches = tournamentManager.findRevocableMatches();
         if (revocableMatches.isEmpty()) {
             canvas.set(DECIDED_MATCHES_INFO_SLOT, MenuItems.info(Messages.text(DecidedMatchMessage.INFO_TITLE),
@@ -58,7 +58,9 @@ final class DecidedMatchesAdminMenu implements AdminMenu {
         }
         MenuPagination pagination = MenuPagination.of(revocableMatches.size(), holder.getPageIndex());
         for (int slot = 0; slot < pagination.getItemCountOnPage(); slot++) {
-            canvas.set(slot, buildMatchItem(revocableMatches.get(pagination.getFirstItemIndex() + slot)));
+            BracketMatch revocableMatch = revocableMatches.get(pagination.getFirstItemIndex() + slot);
+            canvas.set(slot, buildMatchItem(revocableMatch));
+            holder.rememberMatchIdOfSlot(slot, revocableMatch.getMatchId());
         }
         canvas.set(DECIDED_MATCHES_INFO_SLOT, MenuItems.info(Messages.text(DecidedMatchMessage.INFO_TITLE), List.of(
                 Messages.plural(DecidedMatchMessage.REVOCABLE_MATCH_COUNT, revocableMatches.size()),
@@ -90,7 +92,7 @@ final class DecidedMatchesAdminMenu implements AdminMenu {
             }
             case DECIDED_MATCHES_INFO_SLOT -> { }
             case DECIDED_MATCHES_BACK_SLOT -> navigation.open(player, AdminMenuHolder.match());
-            default -> askForTheRevocation(player, revocableMatches, pagination, slot);
+            default -> askForTheRevocation(player, holder, pagination, slot);
         }
     }
 
@@ -135,14 +137,19 @@ final class DecidedMatchesAdminMenu implements AdminMenu {
                 Placeholder.of("match", matchId));
     }
 
-    private void askForTheRevocation(Player player, List<BracketMatch> revocableMatches, MenuPagination pagination,
-                                     int slot) {
-        OptionalInt matchIndex = pagination.findItemIndex(slot);
-        if (matchIndex.isEmpty()) {
+    private void askForTheRevocation(Player player, AdminMenuHolder holder, MenuPagination pagination, int slot) {
+        Optional<String> matchId = holder.findMatchIdOfSlot(slot);
+        if (matchId.isEmpty()) {
             return;
         }
-        navigation.open(player, AdminMenuHolder.confirmation(ConfirmationRequest.REVOKE_RESULT,
-                revocableMatches.get(matchIndex.getAsInt()).getMatchId(), pagination.pageIndex()));
+        Optional<String> rejection = tournamentManager.findRevokeRejection(matchId.get());
+        if (rejection.isPresent()) {
+            TournamentMessages.sendError(player, rejection.get());
+            navigation.refresh(player, holder);
+            return;
+        }
+        navigation.open(player, AdminMenuHolder.confirmation(ConfirmationRequest.REVOKE_RESULT, matchId.get(),
+                pagination.pageIndex()));
     }
 
     private MenuTile buildMatchItem(BracketMatch match) {

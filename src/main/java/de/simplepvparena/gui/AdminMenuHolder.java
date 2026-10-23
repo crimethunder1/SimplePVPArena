@@ -1,9 +1,12 @@
 package de.simplepvparena.gui;
 
+import de.simplepvparena.match.Match;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.InventoryHolder;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -14,6 +17,8 @@ public final class AdminMenuHolder implements InventoryHolder {
     private final ConfirmationRequest confirmationRequest;
     private final int pageIndex;
     private final boolean openedFromMainMenu;
+    private final Match match;
+    private final Map<Integer, String> matchIdsBySlot = new HashMap<>();
 
     private Inventory inventory;
 
@@ -24,11 +29,17 @@ public final class AdminMenuHolder implements InventoryHolder {
 
     private AdminMenuHolder(AdminMenuType menuType, String subject, ConfirmationRequest confirmationRequest,
                             int pageIndex, boolean openedFromMainMenu) {
+        this(menuType, subject, confirmationRequest, pageIndex, openedFromMainMenu, null);
+    }
+
+    private AdminMenuHolder(AdminMenuType menuType, String subject, ConfirmationRequest confirmationRequest,
+                            int pageIndex, boolean openedFromMainMenu, Match match) {
         this.menuType = Objects.requireNonNull(menuType, "menuType");
         this.subject = subject;
         this.confirmationRequest = confirmationRequest;
         this.pageIndex = Math.max(0, pageIndex);
         this.openedFromMainMenu = openedFromMainMenu;
+        this.match = match;
     }
 
     public static AdminMenuHolder main() {
@@ -98,6 +109,12 @@ public final class AdminMenuHolder implements InventoryHolder {
                 Objects.requireNonNull(confirmationRequest, "confirmationRequest"), pageIndex);
     }
 
+    public static AdminMenuHolder restartConfirmation(Match match) {
+        Objects.requireNonNull(match, "match");
+        return new AdminMenuHolder(AdminMenuType.CONFIRMATION, match.getMatchId(), ConfirmationRequest.RESTART_MATCH,
+                0, false, match);
+    }
+
     public static AdminMenuHolder bracketView(int pageIndex, boolean openedFromMainMenu) {
         return new AdminMenuHolder(AdminMenuType.BRACKET_VIEW, null, null, pageIndex, openedFromMainMenu);
     }
@@ -119,6 +136,10 @@ public final class AdminMenuHolder implements InventoryHolder {
         return Optional.ofNullable(subject);
     }
 
+    public Optional<Match> getMatch() {
+        return Optional.ofNullable(match);
+    }
+
     public Optional<ConfirmationRequest> getConfirmationRequest() {
         return Optional.ofNullable(confirmationRequest);
     }
@@ -129,6 +150,18 @@ public final class AdminMenuHolder implements InventoryHolder {
 
     public boolean isOpenedFromMainMenu() {
         return openedFromMainMenu;
+    }
+
+    void rememberMatchIdOfSlot(int slot, String matchId) {
+        matchIdsBySlot.put(slot, Objects.requireNonNull(matchId, "matchId"));
+    }
+
+    void forgetMatchIdsOfSlots() {
+        matchIdsBySlot.clear();
+    }
+
+    Optional<String> findMatchIdOfSlot(int slot) {
+        return Optional.ofNullable(matchIdsBySlot.get(slot));
     }
 
     void setInventory(Inventory inventory) {

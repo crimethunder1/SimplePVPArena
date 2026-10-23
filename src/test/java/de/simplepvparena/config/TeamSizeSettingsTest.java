@@ -214,7 +214,7 @@ class TeamSizeSettingsTest {
         assertEquals(List.of("Bravo"), teamRegistry.getTeamNames(), "the start never drops a team");
         assertEquals(1, teamSizeSetting.getTeamSize());
         String warning = "1 team has more than 1 player: Bravo (3). The team size 1 of match.team-size in config.yml "
-                + "applies anyway since the start, this team keeps its players and every online player of it "
+                + "applies anyway since the start, this team keeps its players and the larger team votes who "
                 + "fights";
         assertEquals(List.of(warning), logLines);
         assertEquals(List.of(warning), adminNotices);
@@ -248,12 +248,30 @@ class TeamSizeSettingsTest {
 
         assertEquals(3, teamSizeSetting.getTeamSize());
         String warning = "1 team has more than 3 players: Alpha (4). The team size 3 of match.team-size in config.yml "
-                + "applies anyway since the start, this team keeps its players and every online player of it "
+                + "applies anyway since the start, this team keeps its players and the larger team votes who "
                 + "fights";
         assertEquals(List.of(warning), logLines);
         assertEquals(List.of(warning), adminNotices);
         assertEquals(List.of("Alpha", "Bravo"), teamRegistry.getTeamNames());
         assertEquals(4, teamRegistry.findTeam("Alpha").orElseThrow().getMembers().size());
+    }
+
+    @Test
+    void theWarningAboutALargerTeamSaysThatEveryOnlinePlayerFightsInTheModeAll() {
+        tournamentInProgress = true;
+        registerTeam("Alpha", 4);
+        registerTeam("Bravo", 2);
+        MemoryConfiguration configuration = configurationWithTeamSize(3);
+        configuration.set(PluginSettings.UNEQUAL_TEAMS_MODE_PATH, "all");
+
+        new ConfigurationReloadService(() -> configuration, () -> { }, createLiveConfiguration(),
+                problems::add).applyStoredConfiguration();
+
+        String warning = "1 team has more than 3 players: Alpha (4). The team size 3 of match.team-size in config.yml "
+                + "applies anyway since the start, this team keeps its players and every online player of it "
+                + "fights";
+        assertEquals(List.of(warning), logLines);
+        assertEquals(List.of(warning), adminNotices);
     }
 
     @Test

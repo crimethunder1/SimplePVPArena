@@ -170,6 +170,7 @@ class ConvertedClassesHaveNoTextLiteralsTest {
             "placement/AutoMatchWinCount.java",
             "placement/PlacementLines.java",
             "placement/PlacementSidebar.java",
+            "placement/ScoreboardTeamMirror.java",
             "arena/EffectAreaPresence.java",
             "placement/PlacementBoard.java",
             "placement/PlacementBoardEntities.java",

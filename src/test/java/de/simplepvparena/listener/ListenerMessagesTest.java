@@ -164,14 +164,15 @@ class ListenerMessagesTest {
 
     private void rejoin(ArenaMatchHarness.FakePlayer player) {
         PlayerConnectionListener listener = new PlayerConnectionListener(harness.getMatchService(),
-                harness.getSpectatorService(), harness.getArenaRegistry(), selectorModes, harness.getKitService());
+                harness.getSpectatorService(), harness.getArenaRegistry(), selectorModes, harness.getKitService(),
+                harness.getPlugin().getLogger());
         player.forgetReceivedTexts();
         listener.onPlayerJoin(new PlayerJoinEvent(player.player(), Component.empty()));
     }
 
     private void useSpectatorItem(ArenaMatchHarness.FakePlayer player) {
         PlayerInteractListener listener = new PlayerInteractListener(harness.getMatchService(),
-                harness.getSpectatorService(), selectorModes);
+                harness.getSpectatorService(), selectorModes, harness.getPlugin().getLogger());
         player.forgetReceivedTexts();
         listener.onPlayerInteract(new PlayerInteractEvent(player.player(), Action.RIGHT_CLICK_AIR,
                 new FakeItemStack(FakeSpectatorItems.SPECTATOR_TOGGLE_LABEL), null, BlockFace.UP,

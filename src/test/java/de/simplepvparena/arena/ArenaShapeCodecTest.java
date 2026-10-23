@@ -1,6 +1,7 @@
 package de.simplepvparena.arena;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Timeout;
 
 import java.util.Arrays;
 import java.util.List;
@@ -59,6 +60,24 @@ class ArenaShapeCodecTest {
         long[] cells = ArenaShapeCodec.decodeRows(List.of("-10:-5..-3"));
 
         assertArrayEquals(cells(-10, -5, -10, -4, -10, -3), sorted(cells));
+    }
+
+    @Test
+    @Timeout(5)
+    void endsARangeThatReachesTheLargestCoordinate() {
+        long[] cells = ArenaShapeCodec.decodeRows(List.of(
+                "7:" + (Integer.MAX_VALUE - 1) + ".." + Integer.MAX_VALUE));
+
+        assertArrayEquals(cells(7, Integer.MAX_VALUE - 1, 7, Integer.MAX_VALUE), sorted(cells));
+    }
+
+    @Test
+    @Timeout(5)
+    void endsARangeThatConsistsOfTheLargestCoordinateOnly() {
+        long[] cells = ArenaShapeCodec.decodeRows(List.of(
+                Integer.MIN_VALUE + ":" + Integer.MAX_VALUE + ".." + Integer.MAX_VALUE));
+
+        assertArrayEquals(cells(Integer.MIN_VALUE, Integer.MAX_VALUE), cells);
     }
 
     @Test

@@ -317,6 +317,18 @@ class TeamRegistryTest {
     }
 
     @Test
+    void tellsTheRenameObserversTheStoredFormerNameAndTheNewName() {
+        TeamRegistry registry = registryOfAlphaBravoAndCharlie();
+        List<String> renames = new ArrayList<>();
+        registry.addRenameObserver((formerName, newName) -> renames.add(formerName + " -> " + newName));
+
+        registry.renameTeam("bravo", "Delta");
+        assertThrows(IllegalStateException.class, () -> registry.renameTeam("Alpha", "charlie"));
+
+        assertEquals(List.of("Bravo -> Delta"), renames);
+    }
+
+    @Test
     void rejectsTheRenameOfAnUnknownTeam() {
         TeamRegistry registry = registryOfAlphaBravoAndCharlie();
 

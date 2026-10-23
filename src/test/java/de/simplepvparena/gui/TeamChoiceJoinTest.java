@@ -80,14 +80,16 @@ class TeamChoiceJoinTest {
     }
 
     @Test
-    void leavesAManuallyCreatedTeamWithoutAColourToJoinAColour() {
+    void refusesAPlayerWhomAnAdminPutIntoATeamWithoutAColour() {
         fixture.registerTeamOfOnlinePlayers("Admins", steve, alex);
         registerAndOpen(steve);
+        steve.messages().clear();
 
         fixture.clickAs(steve.player(), BLUE_SLOT);
 
-        assertEquals("Alex", fixture.teamRegistry().findTeam("Admins").orElseThrow().getMemberNamesJoined());
-        assertEquals("Steve", fixture.teamRegistry().findTeam("Blue").orElseThrow().getMemberNamesJoined());
+        assertEquals(List.of("An admin put you in team Admins, ask an admin to change it"), steve.messages());
+        assertEquals("Steve, Alex", fixture.teamRegistry().findTeam("Admins").orElseThrow().getMemberNamesJoined());
+        assertTrue(fixture.teamRegistry().findTeam("Blue").isEmpty());
     }
 
     @Test

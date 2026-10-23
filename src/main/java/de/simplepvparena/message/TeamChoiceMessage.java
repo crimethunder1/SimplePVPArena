@@ -8,6 +8,7 @@ public enum TeamChoiceMessage implements MessageKey {
     RANDOM_MODE("team-choice.random-mode"),
     CLOSED("team-choice.closed"),
     TEAM_FULL("team-choice.team-full"),
+    ASSIGNED_BY_ADMIN("team-choice.assigned-by-admin", "team"),
     NOT_IN_A_TEAM("team-choice.not-in-a-team"),
     JOINED("team-choice.joined", "team"),
     MEMBER_JOINED("team-choice.member-joined", "player"),

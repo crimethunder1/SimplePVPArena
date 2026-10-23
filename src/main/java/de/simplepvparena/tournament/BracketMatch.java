@@ -1,5 +1,7 @@
 package de.simplepvparena.tournament;
 
+import de.simplepvparena.team.TeamRegistry;
+
 import java.util.Objects;
 import java.util.Optional;
 
@@ -54,6 +56,10 @@ public final class BracketMatch {
         return firstTeamName != null ^ secondTeamName != null;
     }
 
+    public boolean isFirstRoundBye() {
+        return roundIndex == 0 && hasExactlyOneParticipant();
+    }
+
     public boolean isDecided() {
         return winnerTeamName != null;
     }
@@ -63,17 +69,24 @@ public final class BracketMatch {
     }
 
     public boolean containsTeam(String teamName) {
-        return teamName != null && (teamName.equals(firstTeamName) || teamName.equals(secondTeamName));
+        return findTeamName(teamName).isPresent();
+    }
+
+    public Optional<String> findTeamName(String teamName) {
+        if (TeamRegistry.isSameTeamName(teamName, firstTeamName)) {
+            return getFirstTeamName();
+        }
+        if (TeamRegistry.isSameTeamName(teamName, secondTeamName)) {
+            return getSecondTeamName();
+        }
+        return Optional.empty();
     }
 
     public Optional<String> getOpponentOf(String teamName) {
-        if (teamName == null) {
-            return Optional.empty();
-        }
-        if (teamName.equals(firstTeamName)) {
+        if (TeamRegistry.isSameTeamName(teamName, firstTeamName)) {
             return getSecondTeamName();
         }
-        if (teamName.equals(secondTeamName)) {
+        if (TeamRegistry.isSameTeamName(teamName, secondTeamName)) {
             return getFirstTeamName();
         }
         return Optional.empty();

@@ -96,6 +96,19 @@ public final class InMemoryScoreboard {
         return descriptions;
     }
 
+    public List<String> describeTeamDetails() {
+        List<String> descriptions = new ArrayList<>();
+        for (FakeTeam team : teams.values()) {
+            descriptions.add(team.name + " | prefix " + plain(team.prefix) + " | suffix " + plain(team.suffix)
+                    + " | " + team.options);
+        }
+        return descriptions;
+    }
+
+    public Set<String> objectiveNames() {
+        return Set.copyOf(objectives.keySet());
+    }
+
     public int teamWriteCount() {
         return teamWriteCount;
     }
@@ -135,6 +148,8 @@ public final class InMemoryScoreboard {
 
         private NamedTextColor colour;
         private Component displayName;
+        private Component prefix = Component.empty();
+        private Component suffix = Component.empty();
         private boolean friendlyFire = true;
         private boolean seesInvisibles = true;
 
@@ -159,6 +174,20 @@ public final class InMemoryScoreboard {
                         yield displayName;
                     }
                     displayName = (Component) arguments[0];
+                    yield written();
+                }
+                case "prefix" -> {
+                    if (arguments == null || arguments.length == 0) {
+                        yield prefix;
+                    }
+                    prefix = (Component) arguments[0];
+                    yield written();
+                }
+                case "suffix" -> {
+                    if (arguments == null || arguments.length == 0) {
+                        yield suffix;
+                    }
+                    suffix = (Component) arguments[0];
                     yield written();
                 }
                 case "allowFriendlyFire" -> friendlyFire;

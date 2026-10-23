@@ -177,6 +177,7 @@ final class AdminMenuFixture {
     private IOException autoMatchModeWriteFailure;
     private IOException borderParticleSwitchWriteFailure;
     private IOException teamModeWriteFailure;
+    private IOException arenaConfigurationWriteFailure;
 
     AdminMenuFixture() {
         this(false);
@@ -209,7 +210,7 @@ final class AdminMenuFixture {
                 new ArenaGapGuide(plugin), cleaningService,
                 new ArenaBaselineService(plugin, new ArenaBaselineRegistry()),
                 borderConfirmation,
-                () -> arenaConfigurationSaveCount++);
+                this::writeArenaConfiguration);
         AutomaticArenaCleanup arenaCleanup = new AutomaticArenaCleanup(arenaSetupService, cleaningService);
         if (kitChoiceEnabled) {
             kitChoiceService = new KitChoiceService(kitChoiceScheduler.plugin(), kitLibrary,
@@ -490,6 +491,10 @@ final class AdminMenuFixture {
 
     List<TeamMode> writtenTeamModes() {
         return writtenTeamModes;
+    }
+
+    void failArenaConfigurationWrites(IOException failure) {
+        arenaConfigurationWriteFailure = failure;
     }
 
     void failTeamModeWrites(IOException failure) {
@@ -816,6 +821,13 @@ final class AdminMenuFixture {
             throw borderParticleSwitchWriteFailure;
         }
         writtenBorderParticleSwitches.add(enabled);
+    }
+
+    private void writeArenaConfiguration() throws IOException {
+        if (arenaConfigurationWriteFailure != null) {
+            throw arenaConfigurationWriteFailure;
+        }
+        arenaConfigurationSaveCount++;
     }
 
     private void writeTeamMode(TeamMode teamMode) throws IOException {

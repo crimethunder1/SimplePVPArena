@@ -18,6 +18,7 @@ import de.simplepvparena.match.MatchService;
 import de.simplepvparena.match.RoundTimeoutSettings;
 import de.simplepvparena.match.TeamColourSettings;
 import de.simplepvparena.match.UnequalTeamSettings;
+import de.simplepvparena.match.UnequalTeamsMode;
 import de.simplepvparena.message.ConfigMessage;
 import de.simplepvparena.message.Messages;
 import de.simplepvparena.message.Placeholder;
@@ -187,7 +188,8 @@ public final class PluginLiveConfiguration implements LiveConfiguration {
         }
         int appliedTeamSize = teamSizeSetting.getTeamSize();
         TeamSizeSetting.describeTeamsLargerThan(appliedTeamSize, teamRegistry).ifPresent(largerTeams -> {
-            String warning = Messages.plural(ConfigMessage.LARGER_TEAMS_AT_START,
+            String warning = Messages.plural(matchService.getUnequalTeamSettings().mode() == UnequalTeamsMode.ALL
+                            ? ConfigMessage.LARGER_TEAMS_AT_START : ConfigMessage.LARGER_TEAMS_AT_START_VOTING,
                     TeamSizeSetting.findTeamsLargerThan(appliedTeamSize, teamRegistry).size(),
                     Placeholder.of("teams", largerTeams), Placeholder.of("teamSize", appliedTeamSize),
                     Placeholder.of("path", PluginSettings.TEAM_SIZE_PATH));

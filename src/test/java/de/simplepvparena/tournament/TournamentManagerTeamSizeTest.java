@@ -1,5 +1,7 @@
 package de.simplepvparena.tournament;
 
+import de.simplepvparena.match.UnequalTeamSettings;
+import de.simplepvparena.match.UnequalTeamsMode;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
@@ -50,9 +52,24 @@ class TournamentManagerTeamSizeTest {
 
         fixture.startTournament();
 
+        assertEquals(List.of("1 team has more than 2 players: Bravo (3). The tournament starts anyway, the larger "
+                + "team votes who fights"), fixture.adminMessages());
+        assertEquals(TournamentState.RUNNING, fixture.tournamentManager().getState());
+    }
+
+    @Test
+    void saysThatEveryOnlinePlayerOfTheLargerTeamFightsInTheModeAll() {
+        fixture.matchService().setUnequalTeamSettings(new UnequalTeamSettings(UnequalTeamsMode.ALL,
+                UnequalTeamSettings.DEFAULT_VOTE_SECONDS));
+        fixture.registerTeamOf("Alpha", 2);
+        fixture.registerTeamOf("Bravo", 3);
+        fixture.registerTeamOf("Charlie", 2);
+        fixture.registerTeamOf("Delta", 2);
+
+        fixture.startTournament();
+
         assertEquals(List.of("1 team has more than 2 players: Bravo (3). The tournament starts anyway, every "
                 + "online player of this team fights"), fixture.adminMessages());
-        assertEquals(TournamentState.RUNNING, fixture.tournamentManager().getState());
     }
 
     @Test
@@ -68,8 +85,8 @@ class TournamentManagerTeamSizeTest {
         assertEquals(List.of(
                 "1 team has fewer than 2 players: Alpha (1). The tournament starts anyway, a missing player counts "
                         + "as absent",
-                "1 team has more than 2 players: Charlie (4). The tournament starts anyway, every online player of "
-                        + "this team fights"), fixture.adminMessages());
+                "1 team has more than 2 players: Charlie (4). The tournament starts anyway, the larger team votes "
+                        + "who fights"), fixture.adminMessages());
     }
 
     @Test

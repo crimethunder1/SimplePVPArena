@@ -685,6 +685,7 @@ arena:
     out-of-range: 'The cell limit has to be between {minimum} and {maximum}'
   reserved-for-match: 'The kit for the next match is being chosen, the arena is reserved for that match until it starts'
   reserved-for-auto-match: 'An auto match is about to start, the arena is reserved for it'
+  configuration-not-written: 'The change holds, but config.yml could not be written: {reason}'
   calculation:
     during-match: 'A match is running, the fight area can only be calculated between matches'
     diagnosis-run:
@@ -863,7 +864,7 @@ arena-menu:
     reset:
       title: 'Reset the arena'
       lore:
-        - 'Drops the fight area and all three spawns'
+        - 'Drops the fight area, all three spawns and the standings board'
         - 'The blocks and the border blocks stay untouched'
     height-marker:
       title: 'Mark the height of the fight area'
@@ -912,7 +913,7 @@ arena-menu:
     - 'The change cannot be undone'
     - 'The border wall around it stays untouched'
   reset-confirmation:
-    - 'The fight area and all three spawns are dropped'
+    - 'The fight area, all three spawns and the standings board are dropped'
     - 'The blocks of the arena and the border blocks stay untouched'
     - 'No tournament can be started until it is calculated again'
   height-marker:
@@ -1198,6 +1199,9 @@ listener:
     outside-the-arena: 'Only admins change blocks outside the arena'
     not-a-fighter: 'Only the fighters of the running round build inside the arena'
   rejoined-during-match: 'You rejoined during match {match}, you take part again from the next round on'
+  rejoined-not-chosen: 'You came back during match {match}, your team fights with the chosen players'
+  not-sent-to-tribune: '{player} could not be sent to the tribune'
+  spectator-mode-not-switched: 'The spectator mode of {player} could not be switched'
 start-gate:
   countdown:
     release-title: 'Fight!'
@@ -1301,6 +1305,9 @@ tournament:
     larger-teams:
       one: '{teams}. The tournament starts anyway, every online player of this team fights'
       other: '{teams}. The tournament starts anyway, every online player of these teams fights'
+    larger-teams-voting:
+      one: '{teams}. The tournament starts anyway, the larger team votes who fights'
+      other: '{teams}. The tournament starts anyway, the larger team votes who fights'
     cleaning-skipped-after-final: 'The arena was not cleaned after match {match}: {reason}. Run {action} again before the next tournament'
     cleaning-skipped: 'The arena was not cleaned after match {match}: {reason}. The next match starts in the arena as it is now'
     both-teams-missing: 'Both teams of match {match} are no longer registered, the tournament waits for you. Decide the match in the match menu of /tournament under "{tile}"'
@@ -1509,6 +1516,7 @@ team-choice:
   random-mode: 'The teams are formed at random, an admin forms them'
   closed: 'The team choice is closed while a tournament is in progress'
   team-full: 'This team is full'
+  assigned-by-admin: 'An admin put you in team {team}, ask an admin to change it'
   not-in-a-team: 'You are not in a team'
   joined: 'You joined team {team}'
   member-joined: '{player} joined your team'
@@ -1798,6 +1806,9 @@ config:
     larger-teams-at-start:
       one: '{teams}. The team size {teamSize} of {path} in config.yml applies anyway since the start, this team keeps its players and every online player of it fights'
       other: '{teams}. The team size {teamSize} of {path} in config.yml applies anyway since the start, these teams keep their players and every online player of them fights'
+    larger-teams-at-start-voting:
+      one: '{teams}. The team size {teamSize} of {path} in config.yml applies anyway since the start, this team keeps its players and the larger team votes who fights'
+      other: '{teams}. The team size {teamSize} of {path} in config.yml applies anyway since the start, these teams keep their players and the larger team votes who fights'
     tribune-outside-of-the-effect-area: '{warning}. Nothing was dropped, set the tribune spawn again closer to the fight area or raise {path} in config.yml'
 plugin:
   kits-not-loaded: 'The kits could not be loaded ({reason}), there is no kit until one is created in the kit menu of /tournament'

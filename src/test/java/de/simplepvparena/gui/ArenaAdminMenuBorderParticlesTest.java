@@ -134,7 +134,8 @@ class ArenaAdminMenuBorderParticlesTest {
                 Steh außerhalb der Arenawand, wo die Zuschauer warten / \
                 Eine Stelle auf der falschen Seite der Kampffläche / wird abgelehnt, sobald die Fläche berechnet ist
                 15 | TNT | Arena reinigen | Es ist keine Kampffläche berechnet, es gibt nichts zu reinigen
-                16 | BARRIER | Arena zurücksetzen | Verwirft die Kampffläche und alle drei Spawns / \
+                16 | BARRIER | Arena zurücksetzen | Verwirft die Kampffläche, alle drei Spawns und die \
+                Platzierungstafel / \
                 Die Blöcke und die Wandblöcke bleiben unberührt / Fragt vorher nach einer Bestätigung
                 19 | TARGET | Höhe der Kampffläche markieren | Gibt dir das Item, das den tiefsten und den / \
                 höchsten Punkt der Kampffläche markiert / Setze damit einen Block, nur seine Höhe wird gemerkt / \

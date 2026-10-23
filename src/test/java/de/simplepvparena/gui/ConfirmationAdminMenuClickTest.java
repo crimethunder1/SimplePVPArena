@@ -328,15 +328,15 @@ class ConfirmationAdminMenuClickTest {
     }
 
     @Test
-    void reportsAfterYesThatNoTournamentIsInProgressWhenThereIsNoneToCancel() {
-        fixture.registerTeams("Alpha", "Bravo");
-        fixture.openMenuFromTheMainMenu(MAIN_MATCH_SLOT);
-        fixture.click(MATCH_CANCEL_SLOT);
+    void reportsAfterYesThatNoTournamentIsInProgressWhenItWasCancelledMeanwhile() {
+        openTheCancelConfirmationOfARunningTournament();
+        fixture.tournamentManager().cancelTournament();
+        fixture.messages().clear();
 
         fixture.click(YES_SLOT);
 
         assertEquals(List.of("No tournament is in progress"), fixture.messages());
-        assertEquals(TournamentState.IDLE, fixture.tournamentManager().getState());
+        assertEquals(TournamentState.CANCELLED, fixture.tournamentManager().getState());
         assertReturnedTo(AdminMenuType.MATCH, "Match and tournament", 0);
     }
 

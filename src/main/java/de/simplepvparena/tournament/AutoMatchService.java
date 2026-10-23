@@ -68,6 +68,7 @@ public final class AutoMatchService implements MatchCompletionHandler, AutoMatch
         this.arenaAudience = Objects.requireNonNull(arenaAudience, "arenaAudience");
         this.matchService.setAutoMatchCompletionHandler(this);
         this.tournamentManager.setAutoMatchReservation(this);
+        this.teamRegistry.addRenameObserver(this::followRenamedTeam);
     }
 
     public void applySettings(AutoMatchSettings newSettings) {
@@ -125,6 +126,19 @@ public final class AutoMatchService implements MatchCompletionHandler, AutoMatch
 
     public Map<String, Integer> getWinsByTeamName() {
         return Map.copyOf(winsByTeamName);
+    }
+
+    private void followRenamedTeam(String formerTeamName, String newTeamName) {
+        if (!winsByTeamName.containsKey(formerTeamName)) {
+            return;
+        }
+        Map<String, Integer> renamedWins = new LinkedHashMap<>();
+        for (Map.Entry<String, Integer> entry : winsByTeamName.entrySet()) {
+            String teamName = entry.getKey().equals(formerTeamName) ? newTeamName : entry.getKey();
+            renamedWins.merge(teamName, entry.getValue(), Integer::sum);
+        }
+        winsByTeamName.clear();
+        winsByTeamName.putAll(renamedWins);
     }
 
     public Optional<List<Team>> findPairing() {

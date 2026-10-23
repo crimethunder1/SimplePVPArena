@@ -202,7 +202,8 @@ class AreaInventoryJoinTest {
 
     private PlayerConnectionListener createConnectionListener() {
         return new PlayerConnectionListener(harness.getMatchService(), harness.getSpectatorService(),
-                harness.getArenaRegistry(), new BorderSelectorModeRegistry(), harness.getKitService());
+                harness.getArenaRegistry(), new BorderSelectorModeRegistry(), harness.getKitService(),
+                harness.getPlugin().getLogger());
     }
 
     private void quit(ArenaMatchHarness.FakePlayer player) {

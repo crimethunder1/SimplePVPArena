@@ -8,6 +8,7 @@ import org.bukkit.entity.Player;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.function.BooleanSupplier;
 
@@ -50,10 +51,16 @@ public final class RegistrationService {
         if (isClosed(player)) {
             return;
         }
-        if (!registrationList.unregister(player.getUniqueId())) {
+        if (!registrationList.isRegistered(player.getUniqueId())) {
             TournamentMessages.sendWarning(player, Messages.text(RegistrationMessage.NOT_REGISTERED));
             return;
         }
+        Optional<String> rejection = findUnregistrationRejection(player.getUniqueId());
+        if (rejection.isPresent()) {
+            TournamentMessages.sendError(player, rejection.get());
+            return;
+        }
+        registrationList.unregister(player.getUniqueId());
         registrationSaver.run();
         TournamentMessages.sendSuccess(player, Messages.text(RegistrationMessage.UNREGISTERED));
         observers.forEach(observer -> observer.playerUnregistered(player.getUniqueId()));
@@ -83,6 +90,16 @@ public final class RegistrationService {
 
     public boolean isRegistered(UUID uniqueId) {
         return registrationList.isRegistered(uniqueId);
+    }
+
+    private Optional<String> findUnregistrationRejection(UUID uniqueId) {
+        for (RegistrationObserver observer : observers) {
+            Optional<String> rejection = observer.findUnregistrationRejection(uniqueId);
+            if (rejection.isPresent()) {
+                return rejection;
+            }
+        }
+        return Optional.empty();
     }
 
     private boolean isClosed(Player player) {

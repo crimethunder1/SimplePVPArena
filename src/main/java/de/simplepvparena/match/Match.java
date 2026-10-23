@@ -2,6 +2,7 @@ package de.simplepvparena.match;
 
 import de.simplepvparena.arena.Arena;
 import de.simplepvparena.team.Team;
+import de.simplepvparena.team.TeamRegistry;
 
 import java.util.Collection;
 import java.util.List;
@@ -103,6 +104,11 @@ public final class Match {
         if (!firstTeam.equals(team) && !secondTeam.equals(team)) {
             throw new IllegalArgumentException(team.getTeamName() + " does not take part in match " + matchId);
         }
+        if (fighterUniqueIds.isEmpty()) {
+            teamWithChosenFighters = null;
+            chosenFighterUniqueIds = List.of();
+            return;
+        }
         teamWithChosenFighters = team;
         chosenFighterUniqueIds = List.copyOf(fighterUniqueIds);
     }
@@ -147,7 +153,7 @@ public final class Match {
     }
 
     public Team getOpponentOf(Team team) {
-        return team.equals(firstTeam) ? secondTeam : firstTeam;
+        return TeamRegistry.isSameTeamName(team.getTeamName(), firstTeam.getTeamName()) ? secondTeam : firstTeam;
     }
 
     public boolean isFinished() {

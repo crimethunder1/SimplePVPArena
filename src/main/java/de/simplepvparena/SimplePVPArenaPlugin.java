@@ -31,6 +31,7 @@ import de.simplepvparena.border.BorderVisualEffects;
 import de.simplepvparena.border.BorderWallPreview;
 import de.simplepvparena.border.SpectatorBorderService;
 import de.simplepvparena.command.TournamentCommand;
+import de.simplepvparena.config.ArenaConfigurationFileWriter;
 import de.simplepvparena.config.AutoMatchConfigurationWriter;
 import de.simplepvparena.config.ConfigurationReloadReport;
 import de.simplepvparena.config.ConfigurationReloadService;
@@ -302,7 +303,8 @@ public final class SimplePVPArenaPlugin extends JavaPlugin {
 
         arenaSetupService = new ArenaSetupService(activeArenaState, matchService, spectatorBorderService,
                 borderWallPreview, arenaGapGuide, arenaCleaningService, arenaBaselineService,
-                arenaBorderConfirmation, this::saveArenaConfiguration);
+                arenaBorderConfirmation, new ArenaConfigurationFileWriter(arenaRegistry, this::getConfig,
+                        new File(getDataFolder(), CONFIGURATION_FILE_NAME), getLogger()));
         KitChoiceService kitChoiceService = new KitChoiceService(this, kitLibrary, adminNotifier);
         arenaSetupService.setArenaReservedForMatch(kitChoiceService::isPending);
 
@@ -461,11 +463,6 @@ public final class SimplePVPArenaPlugin extends JavaPlugin {
         Messages.reset();
     }
 
-    public void saveArenaConfiguration() {
-        arenaRegistry.saveToConfiguration(getConfig());
-        saveConfig();
-    }
-
     public void saveTeamConfiguration() {
         teamStorage.save(teamRegistry);
     }
@@ -568,16 +565,17 @@ public final class SimplePVPArenaPlugin extends JavaPlugin {
     private void registerListeners() {
         getServer().getPluginManager().registerEvents(
                 new PlayerConnectionListener(matchService, spectatorService, arenaRegistry,
-                        borderSelectorModes, kitService), this);
+                        borderSelectorModes, kitService, getLogger()), this);
         getServer().getPluginManager().registerEvents(new PlayerDeathListener(matchService), this);
         getServer().getPluginManager().registerEvents(
                 new PlayerRespawnListener(this, matchService, spectatorService, arenaRegistry), this);
         getServer().getPluginManager().registerEvents(
-                new PlayerMoveListener(matchService, spectatorService, arenaRegistry), this);
+                new PlayerMoveListener(matchService, spectatorService, arenaRegistry, getLogger()), this);
         getServer().getPluginManager().registerEvents(
                 new SpectatorBorderListener(matchService, spectatorService, spectatorBorderService), this);
         getServer().getPluginManager().registerEvents(
-                new PlayerInteractListener(matchService, spectatorService, borderSelectorModes), this);
+                new PlayerInteractListener(matchService, spectatorService, borderSelectorModes, getLogger()),
+                this);
         getServer().getPluginManager().registerEvents(
                 new BorderSelectorListener(borderSelectorModes, spectatorBorderService), this);
         getServer().getPluginManager().registerEvents(

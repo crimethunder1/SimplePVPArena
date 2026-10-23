@@ -132,6 +132,11 @@ public final class UnequalTeamVoteService {
         return Optional.ofNullable(pendingVote);
     }
 
+    public boolean isLeftOutOfThePendingVote(Match match, UUID playerUniqueId) {
+        return pendingVote != null && pendingMatch == match && votingTeam.containsPlayer(playerUniqueId)
+                && !pendingVote.isVoter(playerUniqueId);
+    }
+
     public boolean isVoter(UUID playerUniqueId) {
         return pendingVote != null && pendingVote.isVoter(playerUniqueId);
     }

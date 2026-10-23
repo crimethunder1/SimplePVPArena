@@ -53,6 +53,16 @@ public final class ArenaHeightMarkerService {
                 .get(markerKey, PersistentDataType.STRING));
     }
 
+    public void takeMarkersAway(Player player) {
+        PlayerInventory inventory = player.getInventory();
+        ItemStack[] contents = inventory.getContents();
+        for (int slot = 0; slot < contents.length; slot++) {
+            if (isMarkerItem(contents[slot])) {
+                inventory.setItem(slot, null);
+            }
+        }
+    }
+
     public void markPlacedBlock(Player admin, Block placedBlock, EquipmentSlot hand) {
         int blockY = placedBlock.getY();
         placedBlock.setType(Material.AIR, false);

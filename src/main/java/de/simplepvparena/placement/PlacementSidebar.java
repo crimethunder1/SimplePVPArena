@@ -3,7 +3,6 @@ package de.simplepvparena.placement;
 import de.simplepvparena.arena.EffectArea;
 import de.simplepvparena.arena.EffectAreaPresence;
 import de.simplepvparena.config.PluginSettings;
-import de.simplepvparena.match.ScoreboardFighterColours;
 import io.papermc.paper.scoreboard.numbers.NumberFormat;
 import net.kyori.adventure.text.Component;
 import org.bukkit.Location;
@@ -128,7 +127,7 @@ public final class PlacementSidebar implements EffectAreaPresence {
             shownSidebars.put(player.getUniqueId(), shown);
             player.setScoreboard(shown.scoreboard);
         }
-        ScoreboardFighterColours.mirrorFighterTeams(scoreboardManager.getMainScoreboard(), shown.scoreboard);
+        ScoreboardTeamMirror.mirrorTeams(scoreboardManager.getMainScoreboard(), shown.scoreboard);
         shown.update(PlacementLines.title(standings), PlacementLines.sidebarLines(standings));
     }
 

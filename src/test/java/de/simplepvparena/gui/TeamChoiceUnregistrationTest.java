@@ -82,7 +82,7 @@ class TeamChoiceUnregistrationTest {
     }
 
     @Test
-    void keepsTheColouredTeamOfAPlayerWhoUnregistersDuringAMatchOfThatTeam() {
+    void refusesTheUnregistrationOfAPlayerWhoseColouredTeamIsInAMatch() {
         fixture.registerTeams("Alpha");
         fixture.teamRegistry().registerTeam("Red", List.of(new TeamMember(UUID.randomUUID(), "Herobrine")),
                 TeamColour.RED);
@@ -92,11 +92,11 @@ class TeamChoiceUnregistrationTest {
 
         command.onCommand(steve.player(), null, "tournament", LEAVE);
 
-        assertEquals(List.of("You are no longer registered",
-                "Team Red is in match M1, it cannot be changed before the match is over"), steve.messages());
+        assertEquals(List.of("Team Red is in match M1, it cannot be changed before the match is over"),
+                steve.messages());
         assertEquals("Herobrine, Steve", fixture.teamRegistry().findTeam("Red").orElseThrow()
                 .getMemberNamesJoined());
-        assertTrue(fixture.registrationList().getEntries().isEmpty());
+        assertTrue(fixture.registrationList().isRegistered(steve.player().getUniqueId()));
     }
 
     @Test

@@ -38,7 +38,7 @@ class ArenaAdminMenuSnapshotTest {
                 Stand outside the border wall, where the spectators wait / \
                 A position on the wrong side of the fight area / is refused once the area is calculated
                 15 | TNT | Clean the arena | No fight area is calculated, there is nothing to clean
-                16 | BARRIER | Reset the arena | Drops the fight area and all three spawns / \
+                16 | BARRIER | Reset the arena | Drops the fight area, all three spawns and the standings board / \
                 The blocks and the border blocks stay untouched / Asks for a confirmation first
                 19 | TARGET | Mark the height of the fight area | Hands you the item that marks the lowest and the / \
                 highest point of the fight area / Place a block with it, only its height is kept / \
@@ -116,7 +116,7 @@ class ArenaAdminMenuSnapshotTest {
                 A baseline is taken by the calculation and is / gone after a server restart / \
                 Covers y 64 to y 67, the height of the fight area / 100 blocks are affected / \
                 Asks for a confirmation first
-                16 | BARRIER | Reset the arena | Drops the fight area and all three spawns / \
+                16 | BARRIER | Reset the arena | Drops the fight area, all three spawns and the standings board / \
                 The blocks and the border blocks stay untouched / Asks for a confirmation first
                 19 | TARGET | Mark the height of the fight area | Hands you the item that marks the lowest and the / \
                 highest point of the fight area / Place a block with it, only its height is kept / \
@@ -171,7 +171,7 @@ class ArenaAdminMenuSnapshotTest {
                 A baseline is taken by the calculation and is / gone after a server restart / \
                 Covers y 64 to y 67, the height of the fight area / 100 blocks are affected / \
                 Asks for a confirmation first
-                16 | BARRIER | Reset the arena | Drops the fight area and all three spawns / \
+                16 | BARRIER | Reset the arena | Drops the fight area, all three spawns and the standings board / \
                 The blocks and the border blocks stay untouched / Asks for a confirmation first
                 19 | TARGET | Mark the height of the fight area | Hands you the item that marks the lowest and the / \
                 highest point of the fight area / Place a block with it, only its height is kept / \

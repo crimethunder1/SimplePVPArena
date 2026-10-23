@@ -17,6 +17,11 @@ public final class FakeItemStack extends ItemStack {
     }
 
     @Override
+    public boolean isEmpty() {
+        return false;
+    }
+
+    @Override
     public ItemStack clone() {
         return new FakeItemStack(label);
     }

@@ -54,6 +54,19 @@ class GermanTeamChoiceMenuSnapshotTest {
                 menu.findTile(TeamChoiceMenu.INFO_SLOT).orElseThrow().loreLines());
     }
 
+    @Test
+    void refusesAPlayerWhomAnAdminPutIntoATeamWithoutAColourInGerman() {
+        fixture.registerTeamOfOnlinePlayers("Admins", steve, alex);
+        fixture.registrationList().register(steve.player().getUniqueId(), "Steve");
+        fixture.openTeamChoiceFor(steve.player());
+        steve.messages().clear();
+
+        fixture.clickAs(steve.player(), 0);
+
+        assertEquals(List.of("Ein Admin hat dich Team Admins zugeteilt, frag einen Admin, wenn du wechseln willst"),
+                steve.messages());
+    }
+
     private static TeamMember member(AdminMenuFixture.OnlinePlayer player) {
         return new TeamMember(player.player().getUniqueId(), player.player().getName());
     }

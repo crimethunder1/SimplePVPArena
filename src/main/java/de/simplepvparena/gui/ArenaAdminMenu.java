@@ -309,7 +309,7 @@ final class ArenaAdminMenu implements AdminMenu {
 
     private void switchStandingsBoard(Player player, AdminMenuHolder holder) {
         if (arenaSetupService.findStandingsBoard().isPresent()) {
-            arenaSetupService.removeStandingsBoard();
+            arenaSetupService.removeStandingsBoard(player);
             TournamentMessages.sendSuccess(player, Messages.text(ArenaMenuMessage.STANDINGS_BOARD_REMOVED));
         } else {
             arenaSetupService.placeStandingsBoard(player);

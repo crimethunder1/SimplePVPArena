@@ -20,6 +20,7 @@ import java.util.Optional;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class TeamChoiceServiceTest {
@@ -119,7 +120,7 @@ class TeamChoiceServiceTest {
     }
 
     @Test
-    void keepsTheColouredTeamOfAnUnregisteringPlayerThatIsAboutToPlay() {
+    void refusesTheUnregistrationOfAPlayerWhoseColouredTeamIsAboutToPlay() {
         register(steve);
         teamChoiceService.join(steve.player(), TeamColour.RED);
         rejectionsByTeamName.put("Red", aboutToPlay("Red"));
@@ -127,9 +128,37 @@ class TeamChoiceServiceTest {
 
         server.stationService().useStation(steve.player(), button);
 
-        assertEquals(List.of("You joined team Red", "You are no longer registered", aboutToPlay("Red")),
-                steve.messages());
+        assertEquals(List.of("You joined team Red", aboutToPlay("Red")), steve.messages());
         assertEquals("Steve", teamRegistry.findTeam("Red").orElseThrow().getMemberNamesJoined());
+        assertTrue(server.registrationList().isRegistered(steve.uniqueId()));
+    }
+
+    @Test
+    void unregistersInTheRandomModeEvenWhileTheTeamIsAboutToPlay() {
+        register(steve);
+        teamChoiceService.join(steve.player(), TeamColour.RED);
+        teamModeSetting.setTeamMode(TeamMode.RANDOM);
+        rejectionsByTeamName.put("Red", aboutToPlay("Red"));
+        steve.setSneaking(true);
+
+        server.stationService().useStation(steve.player(), button);
+
+        assertEquals(List.of("You joined team Red", "You are no longer registered"), steve.messages());
+        assertFalse(server.registrationList().isRegistered(steve.uniqueId()));
+        assertEquals("Steve", teamRegistry.findTeam("Red").orElseThrow().getMemberNamesJoined());
+    }
+
+    @Test
+    void anAdminStillRemovesTheRegistrationOfAPlayerWhoseTeamIsAboutToPlay() {
+        register(steve);
+        teamChoiceService.join(steve.player(), TeamColour.RED);
+        rejectionsByTeamName.put("Red", aboutToPlay("Red"));
+
+        assertTrue(server.registrationService().removeRegistration(steve.uniqueId()));
+
+        assertFalse(server.registrationList().isRegistered(steve.uniqueId()));
+        assertEquals("Steve", teamRegistry.findTeam("Red").orElseThrow().getMemberNamesJoined());
+        assertEquals(List.of("You joined team Red", aboutToPlay("Red")), steve.messages());
     }
 
     @Test

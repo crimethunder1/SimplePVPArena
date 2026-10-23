@@ -53,9 +53,16 @@ public final class TeamStorage {
                     + "), not a single team was loaded, " + keepBrokenFile(storedContent));
             return;
         }
-        List<String> skippedEntries = teamRegistry.loadFromConfiguration(configuration);
-        if (!skippedEntries.isEmpty()) {
-            warnAboutSkippedEntries(skippedEntries, keepBrokenFile(storedContent));
+        List<String> colourWarnings = new ArrayList<>();
+        List<String> skippedEntries = teamRegistry.loadFromConfiguration(configuration, colourWarnings::add);
+        if (!skippedEntries.isEmpty() || !colourWarnings.isEmpty()) {
+            String brokenFileNotice = keepBrokenFile(storedContent);
+            if (!skippedEntries.isEmpty()) {
+                warnAboutSkippedEntries(skippedEntries, brokenFileNotice);
+            }
+            for (String colourWarning : colourWarnings) {
+                logger.warning(colourWarning + ", " + brokenFileNotice);
+            }
         }
         logger.info("Loaded " + teamRegistry.getTeamCount() + " teams from " + teamsFile.getName());
     }

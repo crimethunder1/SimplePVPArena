@@ -116,6 +116,9 @@ public final class TeamChoiceService implements RegistrationObserver {
             return;
         }
         Optional<String> rejection = findAccessRejection(playerUniqueId)
+                .or(() -> currentTeam.filter(team -> team.getColour().isEmpty())
+                        .map(team -> Messages.text(TeamChoiceMessage.ASSIGNED_BY_ADMIN,
+                                Placeholder.of("team", team.getTeamName()))))
                 .or(() -> currentTeam.flatMap(team -> teamChangeRejection.apply(team.getTeamName())))
                 .or(() -> targetTeam.filter(this::isFull).map(team -> Messages.text(TeamChoiceMessage.TEAM_FULL)))
                 .or(() -> targetTeam.flatMap(team -> teamChangeRejection.apply(team.getTeamName())));
@@ -177,6 +180,16 @@ public final class TeamChoiceService implements RegistrationObserver {
             presenter.show(player);
         }
         presenter.refresh();
+    }
+
+    @Override
+    public Optional<String> findUnregistrationRejection(UUID playerUniqueId) {
+        if (!teamModeSetting.isFreeChoice()) {
+            return Optional.empty();
+        }
+        return findTeamOfPlayer(playerUniqueId)
+                .filter(team -> team.getColour().isPresent())
+                .flatMap(team -> teamChangeRejection.apply(team.getTeamName()));
     }
 
     @Override

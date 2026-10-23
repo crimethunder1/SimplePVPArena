@@ -230,6 +230,27 @@ class MatchAdminMenuRestartTest {
     }
 
     @Test
+    void aSecondOpenConfirmationRestartsNothingOnceTheMatchWasRestarted() {
+        startATournamentOfFourTeams();
+        openTheRestartConfirmation();
+        AdminMenuHolder firstConfirmation = fixture.lastMenu().holder();
+        openTheRestartConfirmation();
+        AdminMenuHolder secondConfirmation = fixture.lastMenu().holder();
+        Match oldMatch = fixture.runningMatch();
+        assertEquals(Optional.of(oldMatch), secondConfirmation.getMatch());
+        fixture.clickIn(firstConfirmation, CONFIRM_YES_SLOT);
+        Match restartedMatch = fixture.runningMatch();
+        assertNotSame(oldMatch, restartedMatch);
+        assertEquals("round1-match1", restartedMatch.getMatchId());
+        fixture.messages().clear();
+
+        fixture.clickIn(secondConfirmation, CONFIRM_YES_SLOT);
+
+        assertEquals(List.of("Match round1-match1 is not running any more"), fixture.messages());
+        assertSame(restartedMatch, fixture.runningMatch(), "the match is not restarted a second time");
+    }
+
+    @Test
     void theConfirmationRestartsNothingWhenNoMatchRunsAnyMore() {
         startATournamentOfFourTeams();
         openTheRestartConfirmation();

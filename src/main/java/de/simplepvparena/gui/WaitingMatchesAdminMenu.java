@@ -15,7 +15,7 @@ import org.bukkit.entity.Player;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
-import java.util.OptionalInt;
+import java.util.Optional;
 
 final class WaitingMatchesAdminMenu implements AdminMenu {
 
@@ -51,6 +51,7 @@ final class WaitingMatchesAdminMenu implements AdminMenu {
 
     @Override
     public void fill(Player player, AdminMenuHolder holder, AdminMenuCanvas canvas) {
+        holder.forgetMatchIdsOfSlots();
         List<BracketMatch> waitingMatches = tournamentManager.findWaitingMatches();
         if (waitingMatches.isEmpty()) {
             canvas.set(WAITING_MATCHES_INFO_SLOT, MenuItems.info(Messages.text(WaitingMatchMessage.INFO_TITLE),
@@ -60,7 +61,9 @@ final class WaitingMatchesAdminMenu implements AdminMenu {
         }
         MenuPagination pagination = MenuPagination.of(waitingMatches.size(), holder.getPageIndex());
         for (int slot = 0; slot < pagination.getItemCountOnPage(); slot++) {
-            canvas.set(slot, buildMatchItem(waitingMatches.get(pagination.getFirstItemIndex() + slot)));
+            BracketMatch waitingMatch = waitingMatches.get(pagination.getFirstItemIndex() + slot);
+            canvas.set(slot, buildMatchItem(waitingMatch));
+            holder.rememberMatchIdOfSlot(slot, waitingMatch.getMatchId());
         }
         canvas.set(WAITING_MATCHES_INFO_SLOT, MenuItems.info(Messages.text(WaitingMatchMessage.INFO_TITLE), List.of(
                 Messages.plural(WaitingMatchMessage.WAITING_MATCH_COUNT, waitingMatches.size()),
@@ -93,7 +96,7 @@ final class WaitingMatchesAdminMenu implements AdminMenu {
             }
             case WAITING_MATCHES_INFO_SLOT -> { }
             case WAITING_MATCHES_BACK_SLOT -> navigation.open(player, AdminMenuHolder.match());
-            default -> openMatchResult(player, waitingMatches, pagination, slot);
+            default -> openMatchResult(player, holder, pagination, slot);
         }
     }
 
@@ -109,14 +112,20 @@ final class WaitingMatchesAdminMenu implements AdminMenu {
         return Messages.text(WaitingMatchMessage.ROUND, Placeholder.of("round", match.getRoundIndex() + 1));
     }
 
-    private void openMatchResult(Player player, List<BracketMatch> waitingMatches, MenuPagination pagination,
-                                 int slot) {
-        OptionalInt matchIndex = pagination.findItemIndex(slot);
-        if (matchIndex.isEmpty()) {
+    private void openMatchResult(Player player, AdminMenuHolder holder, MenuPagination pagination, int slot) {
+        Optional<String> matchId = holder.findMatchIdOfSlot(slot);
+        if (matchId.isEmpty()) {
             return;
         }
-        navigation.open(player, AdminMenuHolder.waitingMatchResult(
-                waitingMatches.get(matchIndex.getAsInt()).getMatchId(), pagination.pageIndex()));
+        boolean stillWaiting = tournamentManager.findWaitingMatches().stream()
+                .anyMatch(waitingMatch -> waitingMatch.getMatchId().equals(matchId.get()));
+        if (!stillWaiting) {
+            TournamentMessages.sendWarning(player, Messages.text(WaitingMatchMessage.RESULT_MATCH_NOT_WAITING,
+                    Placeholder.of("match", matchId.get())));
+            navigation.refresh(player, holder);
+            return;
+        }
+        navigation.open(player, AdminMenuHolder.waitingMatchResult(matchId.get(), pagination.pageIndex()));
     }
 
     private MenuTile buildMatchItem(BracketMatch match) {

@@ -85,8 +85,8 @@ public final class ArenaShapeCodec {
             if (toZ < fromZ) {
                 throw new IllegalArgumentException("the arena shape row " + row + " holds the reversed range " + range);
             }
-            for (int cellZ = fromZ; cellZ <= toZ; cellZ++) {
-                cells.add(HorizontalCellCodec.encode(rowX, cellZ));
+            for (long cellZ = fromZ; cellZ <= toZ; cellZ++) {
+                cells.add(HorizontalCellCodec.encode(rowX, (int) cellZ));
             }
         }
     }

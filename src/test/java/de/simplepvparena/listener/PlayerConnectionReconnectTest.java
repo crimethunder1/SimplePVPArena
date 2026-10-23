@@ -57,7 +57,8 @@ class PlayerConnectionReconnectTest {
         matchService = harness.getMatchService();
         kitService = harness.getKitService();
         listener = new PlayerConnectionListener(matchService, harness.getSpectatorService(),
-                harness.getArenaRegistry(), new BorderSelectorModeRegistry(), kitService);
+                harness.getArenaRegistry(), new BorderSelectorModeRegistry(), kitService,
+                harness.getPlugin().getLogger());
         fighter = harness.addPlayer("Fighter");
         mate = harness.addPlayer("Mate");
         opponent = harness.addPlayer("Opponent");

@@ -1,5 +1,6 @@
 package de.simplepvparena.gui;
 
+import de.simplepvparena.match.Match;
 import de.simplepvparena.match.MatchService;
 import de.simplepvparena.message.CommonMessage;
 import de.simplepvparena.message.MatchMenuMessage;
@@ -122,8 +123,7 @@ final class MatchAdminMenu implements AdminMenu {
             case MATCH_START_SLOT -> runOperation(player, holder, () -> tournamentManager.startTournament(false));
             case MATCH_FORCE_START_SLOT -> runOperation(player, holder, () -> tournamentManager.startTournament(true));
             case MATCH_PAUSE_SLOT -> runOperation(player, holder, tournamentManager::togglePause);
-            case MATCH_CANCEL_SLOT -> navigation.open(player,
-                    AdminMenuHolder.confirmation(ConfirmationRequest.CANCEL_TOURNAMENT, null, 0));
+            case MATCH_CANCEL_SLOT -> askForTheCancel(player);
             case MATCH_DECIDE_WAITING_MATCH_SLOT -> waitingMatchesAdminMenu.openWaitingMatchesMenu(player);
             case MATCH_FINAL_SLOT -> runOperation(player, holder, tournamentManager::startFinalMatch);
             case MATCH_FORCE_RESULT_SLOT -> forceResultAdminMenu.openForceResultMenu(player);
@@ -144,7 +144,7 @@ final class MatchAdminMenu implements AdminMenu {
 
             @Override
             public void carryOut(Player player, AdminMenuHolder holder) {
-                restartRunningMatch(player, holder.getSubject().orElseThrow());
+                restartRunningMatch(player, holder);
             }
 
             @Override
@@ -170,17 +170,25 @@ final class MatchAdminMenu implements AdminMenu {
             TournamentMessages.sendError(player, rejection.get());
             return;
         }
-        navigation.open(player, AdminMenuHolder.confirmation(ConfirmationRequest.RESTART_MATCH,
-                matchService.getActiveMatch().orElseThrow().getMatchId(), 0));
+        navigation.open(player, AdminMenuHolder.restartConfirmation(matchService.getActiveMatch().orElseThrow()));
     }
 
-    private void restartRunningMatch(Player player, String matchId) {
-        if (matchService.findMatchById(matchId).isEmpty()) {
+    private void restartRunningMatch(Player player, AdminMenuHolder holder) {
+        Match rememberedMatch = holder.getMatch().orElseThrow();
+        if (matchService.getActiveMatch().filter(activeMatch -> activeMatch == rememberedMatch).isEmpty()) {
             TournamentMessages.sendError(player, Messages.text(MatchMenuMessage.FORCE_RESULT_MATCH_NOT_RUNNING,
-                    Placeholder.of("match", matchId)));
+                    Placeholder.of("match", rememberedMatch.getMatchId())));
             return;
         }
         AdminMenuReplies.reportOperation(player, tournamentManager.restartRunningMatch());
+    }
+
+    private void askForTheCancel(Player player) {
+        if (!tournamentMenuStatus.currentOptions().cancelOffered()) {
+            TournamentMessages.sendError(player, Messages.text(CommonMessage.NO_TOURNAMENT_IN_PROGRESS));
+            return;
+        }
+        navigation.open(player, AdminMenuHolder.confirmation(ConfirmationRequest.CANCEL_TOURNAMENT, null, 0));
     }
 
     AdminMenuConfirmation cancelConfirmation() {

@@ -10,6 +10,7 @@ import de.simplepvparena.team.Team;
 import de.simplepvparena.team.TeamColour;
 import de.simplepvparena.team.TeamMember;
 import io.papermc.paper.scoreboard.numbers.NumberFormat;
+import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import org.junit.jupiter.api.Test;
 
@@ -246,12 +247,29 @@ class PlacementSidebarTest {
     }
 
     @Test
+    void keepsThePrefixesOfAnotherPluginOnTheOwnScoreboardInTheArea() {
+        SidebarFixture.FakePlayer spectator = fixture.addPlayer("Spectator", fixture.inside());
+        org.bukkit.scoreboard.Team rankTeam = fixture.mainScoreboard().scoreboard().registerNewTeam("rank_vip");
+        rankTeam.prefix(Component.text("[VIP] "));
+        rankTeam.addEntry("Spectator");
+        fixture.showStandings(runningTournament());
+
+        sidebar.refresh();
+
+        assertEquals(fixture.mainScoreboard().describeTeams(), fixture.scoreboardOf(spectator).describeTeams());
+        assertEquals(fixture.mainScoreboard().describeTeamDetails(),
+                fixture.scoreboardOf(spectator).describeTeamDetails());
+        assertTrue(fixture.scoreboardOf(spectator).describeTeamDetails().getFirst().startsWith(
+                "rank_vip | prefix [VIP] "));
+    }
+
+    @Test
     void mirroringDropsATeamThatIsGoneFromTheMainScoreboard() {
         InMemoryScoreboard source = new InMemoryScoreboard();
         InMemoryScoreboard target = new InMemoryScoreboard();
         target.scoreboard().registerNewTeam(MatchTeamColours.FIRST_TEAM_SCOREBOARD_NAME).addEntry("Steve");
 
-        ScoreboardFighterColours.mirrorFighterTeams(source.scoreboard(), target.scoreboard());
+        ScoreboardTeamMirror.mirrorTeams(source.scoreboard(), target.scoreboard());
 
         assertEquals(List.of(), target.describeTeams());
     }

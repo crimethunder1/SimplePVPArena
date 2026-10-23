@@ -6,7 +6,9 @@ import de.simplepvparena.arena.ArenaRegistry;
 import de.simplepvparena.arena.ArenaShape;
 import de.simplepvparena.arena.SpectatorService;
 import de.simplepvparena.match.MatchService;
+import de.simplepvparena.message.ListenerMessage;
 import de.simplepvparena.message.Messages;
+import de.simplepvparena.message.Placeholder;
 import de.simplepvparena.message.SpectatorMessage;
 import de.simplepvparena.message.TournamentMessages;
 import de.simplepvparena.permission.AdminPermission;
@@ -18,19 +20,24 @@ import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.event.player.PlayerTeleportEvent;
 
 import java.util.Optional;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public final class PlayerMoveListener implements Listener {
 
     private final MatchService matchService;
     private final SpectatorService spectatorService;
     private final ArenaRegistry arenaRegistry;
+    private final Logger logger;
 
     public PlayerMoveListener(MatchService matchService,
                               SpectatorService spectatorService,
-                              ArenaRegistry arenaRegistry) {
+                              ArenaRegistry arenaRegistry,
+                              Logger logger) {
         this.matchService = matchService;
         this.spectatorService = spectatorService;
         this.arenaRegistry = arenaRegistry;
+        this.logger = logger;
     }
 
     @EventHandler(ignoreCancelled = true)
@@ -71,7 +78,15 @@ public final class PlayerMoveListener implements Listener {
     }
 
     private void endArenaFlight(Player player) {
-        if (!spectatorService.sendToTribune(player)) {
+        boolean sentToTribune;
+        try {
+            sentToTribune = spectatorService.sendToTribune(player);
+        } catch (RuntimeException failure) {
+            logger.log(Level.WARNING, Messages.text(ListenerMessage.NOT_SENT_TO_TRIBUNE,
+                    Placeholder.of("player", player.getName())), failure);
+            return;
+        }
+        if (!sentToTribune) {
             TournamentMessages.sendWarning(player, Messages.text(SpectatorMessage.TRIBUNE_SPAWN_NOT_SET));
             return;
         }

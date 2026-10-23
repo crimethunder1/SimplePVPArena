@@ -249,12 +249,36 @@ class KitServicePlayerStateSnapshotTest {
         StatefulPlayer player = playerWithPrivateState("Broken");
         player.persistentData.put(KIT_APPLIED_KEY, (byte) 1);
         Path snapshotFile = snapshotFileOf(snapshotDirectory, player);
-        Path brokenFile = snapshotDirectory.resolve(snapshotFile.getFileName() + ".broken");
         Files.createDirectories(snapshotDirectory);
         Files.writeString(snapshotFile, "format-version: [1\nlevel: 3\n", StandardCharsets.UTF_8);
-        Files.writeString(brokenFile, "older broken file", StandardCharsets.UTF_8);
 
         assertBrokenFileIsMovedAside(player, snapshotDirectory, "format-version: [1\nlevel: 3\n");
+    }
+
+    @Test
+    void keepsAnOlderBrokenFileAndGivesTheNewOneATimeMark(@TempDir Path snapshotDirectory) throws IOException {
+        StatefulPlayer player = playerWithPrivateState("Broken");
+        player.persistentData.put(KIT_APPLIED_KEY, (byte) 1);
+        Path snapshotFile = snapshotFileOf(snapshotDirectory, player);
+        Path olderBrokenFile = snapshotDirectory.resolve(snapshotFile.getFileName() + ".broken");
+        Files.createDirectories(snapshotDirectory);
+        Files.writeString(snapshotFile, "format-version: [1\nlevel: 3\n", StandardCharsets.UTF_8);
+        Files.writeString(olderBrokenFile, "older broken file", StandardCharsets.UTF_8);
+
+        kitServiceIn(snapshotDirectory).clearKit(player.player);
+
+        assertFalse(Files.exists(snapshotFile));
+        assertEquals("older broken file", Files.readString(olderBrokenFile, StandardCharsets.UTF_8));
+        String timeMarkedName = snapshotFile.getFileName() + "\\.\\d+\\.broken";
+        List<Path> newerBrokenFiles;
+        try (Stream<Path> files = Files.list(snapshotDirectory)) {
+            newerBrokenFiles = files.filter(file -> file.getFileName().toString().matches(timeMarkedName)).toList();
+        }
+        assertEquals(1, newerBrokenFiles.size(), newerBrokenFiles.toString());
+        assertEquals("format-version: [1\nlevel: 3\n",
+                Files.readString(newerBrokenFiles.get(0), StandardCharsets.UTF_8));
+        assertEquals(1, warnings.size());
+        assertTrue(warnings.get(0).contains(newerBrokenFiles.get(0).getFileName().toString()), warnings.get(0));
     }
 
     @Test

@@ -176,14 +176,18 @@ class MatchAdminMenuClickTest {
     }
 
     @Test
-    void asksForTheConfirmationOfTheCancelEvenThoughTheTileIsUnavailableWithoutATournament() {
+    void reportsTheReasonOfTheGreyCancelTileAndOpensNoConfirmationWithoutATournament() {
         openTheMatchMenuWithTeams("Alpha", "Bravo");
+        AdminMenuHolder matchHolder = fixture.lastMenu().holder();
         assertEquals(MenuItems.UNAVAILABLE_MATERIAL,
                 fixture.lastMenu().findTile(CANCEL_SLOT).orElseThrow().material());
 
         fixture.click(CANCEL_SLOT);
 
-        assertCancelConfirmationOpened();
+        assertEquals(List.of("No tournament is in progress"), fixture.messages());
+        assertEquals(TournamentMessages.error("No tournament is in progress"), fixture.lastSentMessage());
+        assertSame(matchHolder, fixture.lastMenu().holder());
+        assertFalse(fixture.isMenuClosed());
         assertEquals(TournamentState.IDLE, fixture.tournamentManager().getState());
     }
 

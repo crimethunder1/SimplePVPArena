@@ -66,50 +66,6 @@ public final class ScoreboardFighterColours implements FighterColours {
         findMainScoreboard().ifPresent(this::releaseEveryFighter);
     }
 
-    public static void mirrorFighterTeams(Scoreboard source, Scoreboard target) {
-        for (String scoreboardTeamName : MatchTeamColours.SCOREBOARD_TEAM_NAMES) {
-            Team sourceTeam = source.getTeam(scoreboardTeamName);
-            Team targetTeam = target.getTeam(scoreboardTeamName);
-            if (sourceTeam == null) {
-                if (targetTeam != null) {
-                    targetTeam.unregister();
-                }
-                continue;
-            }
-            mirrorTeam(sourceTeam, targetTeam == null ? target.registerNewTeam(scoreboardTeamName) : targetTeam);
-        }
-    }
-
-    private static void mirrorTeam(Team sourceTeam, Team targetTeam) {
-        if (sourceTeam.hasColor() && !(targetTeam.hasColor() && sourceTeam.color().equals(targetTeam.color()))) {
-            targetTeam.color(NamedTextColor.nearestTo(sourceTeam.color()));
-        }
-        if (!Objects.equals(sourceTeam.displayName(), targetTeam.displayName())) {
-            targetTeam.displayName(sourceTeam.displayName());
-        }
-        if (sourceTeam.allowFriendlyFire() != targetTeam.allowFriendlyFire()) {
-            targetTeam.setAllowFriendlyFire(sourceTeam.allowFriendlyFire());
-        }
-        if (sourceTeam.canSeeFriendlyInvisibles() != targetTeam.canSeeFriendlyInvisibles()) {
-            targetTeam.setCanSeeFriendlyInvisibles(sourceTeam.canSeeFriendlyInvisibles());
-        }
-        Team.OptionStatus nameTagVisibility = sourceTeam.getOption(Team.Option.NAME_TAG_VISIBILITY);
-        if (nameTagVisibility != targetTeam.getOption(Team.Option.NAME_TAG_VISIBILITY)) {
-            targetTeam.setOption(Team.Option.NAME_TAG_VISIBILITY, nameTagVisibility);
-        }
-        Set<String> fighterNames = sourceTeam.getEntries();
-        for (String entry : Set.copyOf(targetTeam.getEntries())) {
-            if (!fighterNames.contains(entry)) {
-                targetTeam.removeEntry(entry);
-            }
-        }
-        for (String fighterName : fighterNames) {
-            if (!targetTeam.hasEntry(fighterName)) {
-                targetTeam.addEntry(fighterName);
-            }
-        }
-    }
-
     private void releaseEveryFighter(Scoreboard scoreboard) {
         for (String scoreboardTeamName : MatchTeamColours.SCOREBOARD_TEAM_NAMES) {
             Team scoreboardTeam = scoreboard.getTeam(scoreboardTeamName);

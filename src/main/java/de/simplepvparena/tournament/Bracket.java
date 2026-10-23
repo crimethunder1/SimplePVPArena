@@ -156,10 +156,9 @@ public final class Bracket {
         if (match.isDecided()) {
             throw new IllegalStateException("match " + matchId + " is already decided");
         }
-        if (!match.containsTeam(winnerTeamName)) {
-            throw new IllegalArgumentException(winnerTeamName + " does not take part in match " + matchId);
-        }
-        match.setWinnerTeamName(winnerTeamName);
+        String storedWinnerTeamName = match.findTeamName(winnerTeamName).orElseThrow(() ->
+                new IllegalArgumentException(winnerTeamName + " does not take part in match " + matchId));
+        match.setWinnerTeamName(storedWinnerTeamName);
         matchesInDecisionOrder.add(match);
         advanceWinner(match);
     }

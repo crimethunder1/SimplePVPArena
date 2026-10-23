@@ -32,7 +32,7 @@ class FighterInTheArenaTest {
         spectator = harness.addPlayer("Spectator");
         harness.startMatch(fighter, mate, opponent, opponentMate);
         moveListener = new PlayerMoveListener(harness.getMatchService(), harness.getSpectatorService(),
-                harness.getArenaRegistry());
+                harness.getArenaRegistry(), harness.getPlugin().getLogger());
         borderListener = new SpectatorBorderListener(harness.getMatchService(), harness.getSpectatorService(),
                 harness.getBorderService());
         buildListener = new ArenaBuildListener(harness.getMatchService(), harness.getArenaRegistry());

@@ -35,7 +35,7 @@ class GermanArenaMenuSnapshotTest {
             100 Blöcke sind betroffen / Fragt vorher nach einer Bestätigung
             """;
     private static final String TILES_AFTER_THE_CLEAN_TILE = """
-            16 | BARRIER | Arena zurücksetzen | Verwirft die Kampffläche und alle drei Spawns / \
+            16 | BARRIER | Arena zurücksetzen | Verwirft die Kampffläche, alle drei Spawns und die Platzierungstafel / \
             Die Blöcke und die Wandblöcke bleiben unberührt / Fragt vorher nach einer Bestätigung
             19 | TARGET | Höhe der Kampffläche markieren | Gibt dir das Item, das den tiefsten und den / \
             höchsten Punkt der Kampffläche markiert / Setze damit einen Block, nur seine Höhe wird gemerkt / \
@@ -132,7 +132,8 @@ class GermanArenaMenuSnapshotTest {
 
         assertEquals("""
                 Arena zurücksetzen? | 27
-                4 | BOOK | Arena zurücksetzen? | Die Kampffläche und alle drei Spawns werden verworfen / \
+                4 | BOOK | Arena zurücksetzen? | Die Kampffläche, alle drei Spawns und die Platzierungstafel \
+                werden verworfen / \
                 Die Blöcke der Arena und die Wandblöcke bleiben unberührt / \
                 Bis zur nächsten Berechnung lässt sich kein Turnier starten
                 11 | LIME_WOOL | Ja | Führt die Aktion aus

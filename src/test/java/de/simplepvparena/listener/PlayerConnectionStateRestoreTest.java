@@ -41,7 +41,8 @@ class PlayerConnectionStateRestoreTest {
         harness.forgetTribuneSpawn();
         kitService = harness.getKitService();
         listener = new PlayerConnectionListener(harness.getMatchService(), harness.getSpectatorService(),
-                harness.getArenaRegistry(), new BorderSelectorModeRegistry(), kitService);
+                harness.getArenaRegistry(), new BorderSelectorModeRegistry(), kitService,
+                harness.getPlugin().getLogger());
     }
 
     @Test

@@ -22,6 +22,7 @@ public final class FilePlayerStateSnapshotStorage implements PlayerStateSnapshot
     private static final String BROKEN_FILE_EXTENSION = ".broken";
     private static final String RESTORED_FILE_EXTENSION = ".restored";
     private static final String TEMPORARY_FILE_EXTENSION = ".tmp";
+    private static final String SEPARATOR = ".";
     private static final String FORMAT_VERSION_KEY = "format-version";
     private static final String SAVED_AT_KEY = "saved-at";
     private static final String CONTENTS_KEY = "contents";
@@ -160,8 +161,12 @@ public final class FilePlayerStateSnapshotStorage implements PlayerStateSnapshot
 
     private static String moveAside(Path snapshotFile) {
         Path brokenFile = snapshotFile.resolveSibling(snapshotFile.getFileName() + BROKEN_FILE_EXTENSION);
+        if (Files.exists(brokenFile)) {
+            brokenFile = snapshotFile.resolveSibling(snapshotFile.getFileName() + SEPARATOR
+                    + System.currentTimeMillis() + BROKEN_FILE_EXTENSION);
+        }
         try {
-            Files.move(snapshotFile, brokenFile, StandardCopyOption.REPLACE_EXISTING);
+            Files.move(snapshotFile, brokenFile);
             return brokenFile.getFileName().toString();
         } catch (IOException moveFailure) {
             return snapshotFile.getFileName().toString();

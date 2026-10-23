@@ -173,7 +173,7 @@ final class BracketViewMenu implements AdminMenu {
     }
 
     private static MenuTile buildMatchTile(BracketMatch match, Optional<String> runningMatchId) {
-        if (isFirstRoundBye(match)) {
+        if (match.isFirstRoundBye()) {
             return MenuItems.create(DECIDED_MATERIAL, match.getMatchId(), Messages.text(BracketViewMessage.MATCH_BYE,
                     Placeholder.of("team", match.getWinnerTeamName().orElseThrow())));
         }
@@ -193,10 +193,6 @@ final class BracketViewMenu implements AdminMenu {
         }
         return MenuItems.create(WAITING_FOR_TEAMS_MATERIAL, match.getMatchId(), teams,
                 Messages.text(BracketViewMessage.MATCH_WAITING_FOR_TEAMS));
-    }
-
-    private static boolean isFirstRoundBye(BracketMatch match) {
-        return match.getRoundIndex() == 0 && match.hasExactlyOneParticipant() && match.isDecided();
     }
 
     private static String describeTeams(BracketMatch match) {

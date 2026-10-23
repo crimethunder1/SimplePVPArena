@@ -1,6 +1,7 @@
 package de.simplepvparena.arena;
 
 import de.simplepvparena.kit.ItemStackCodec;
+import de.simplepvparena.kit.KitItemCodec;
 import de.simplepvparena.support.FakeItemStack;
 import de.simplepvparena.support.FakeItemStackCodec;
 import org.bukkit.inventory.ItemStack;
@@ -37,18 +38,51 @@ class FileAreaInventoryStorageTest {
         FileAreaInventoryStorage storage = storageIn(inventoryDirectory());
         ItemStack[] contents = fullContents();
 
-        storage.save(playerUniqueId, contents);
+        storage.save(playerUniqueId, contents, List.of());
 
         Path inventoryFile = inventoryDirectory().resolve(playerUniqueId + ".yml");
         assertTrue(Files.isRegularFile(inventoryFile));
         assertEquals(List.of(inventoryFile), filesIn(inventoryDirectory()), "no temporary file is left behind");
         String writtenFile = Files.readString(inventoryFile, StandardCharsets.UTF_8);
-        assertTrue(writtenFile.contains("format-version: 1"), writtenFile);
+        assertTrue(writtenFile.contains("format-version: 2"), writtenFile);
+        assertFalse(writtenFile.contains("loose-items"), writtenFile);
         assertTrue(writtenFile.contains("saved-at: "), writtenFile);
         AreaInventoryLookup lookup = storage.find(playerUniqueId);
         assertEquals(AreaInventoryLookup.Outcome.FOUND, lookup.outcome());
         assertEquals(playerUniqueId + ".yml", lookup.fileName());
         assertArrayEquals(contents, lookup.contents().orElseThrow(), "armour and off hand are part of the file");
+        assertEquals(List.of(), lookup.looseItems());
+    }
+
+    @Test
+    void writesTheItemsOfTheCursorAndTheCraftingGridAndReadsThemBack() throws IOException {
+        FileAreaInventoryStorage storage = storageIn(inventoryDirectory());
+        List<ItemStack> looseItems = List.of(new FakeItemStack("cursor torch"), new FakeItemStack("grid planks"));
+
+        storage.save(playerUniqueId, fullContents(), looseItems);
+
+        String writtenFile = Files.readString(inventoryDirectory().resolve(playerUniqueId + ".yml"),
+                StandardCharsets.UTF_8);
+        assertTrue(writtenFile.contains("loose-items: "), writtenFile);
+        AreaInventoryLookup lookup = storage.find(playerUniqueId);
+        assertEquals(AreaInventoryLookup.Outcome.FOUND, lookup.outcome());
+        assertArrayEquals(fullContents(), lookup.contents().orElseThrow());
+        assertEquals(looseItems, lookup.looseItems());
+    }
+
+    @Test
+    void readsAFileOfTheFirstFormatWithoutLooseItems() throws IOException {
+        Files.createDirectories(inventoryDirectory());
+        String encodedContents = KitItemCodec.encode(new FakeItemStackCodec().encode(fullContents()));
+        Files.writeString(inventoryDirectory().resolve(playerUniqueId + ".yml"),
+                "format-version: 1\nsaved-at: '2026-09-01T10:00:00Z'\ncontents: " + encodedContents + "\n",
+                StandardCharsets.UTF_8);
+
+        AreaInventoryLookup lookup = storageIn(inventoryDirectory()).find(playerUniqueId);
+
+        assertEquals(AreaInventoryLookup.Outcome.FOUND, lookup.outcome());
+        assertArrayEquals(fullContents(), lookup.contents().orElseThrow());
+        assertEquals(List.of(), lookup.looseItems());
     }
 
     @Test
@@ -59,11 +93,11 @@ class FileAreaInventoryStorageTest {
     @Test
     void replacesAnOlderFileOfTheSamePlayer() throws IOException {
         FileAreaInventoryStorage storage = storageIn(inventoryDirectory());
-        storage.save(playerUniqueId, fullContents());
+        storage.save(playerUniqueId, fullContents(), List.of());
         ItemStack[] newerContents = new ItemStack[SLOT_COUNT];
         newerContents[3] = new FakeItemStack("bread");
 
-        storage.save(playerUniqueId, newerContents);
+        storage.save(playerUniqueId, newerContents, List.of());
 
         assertArrayEquals(newerContents, storage.find(playerUniqueId).contents().orElseThrow());
         assertEquals(1, filesIn(inventoryDirectory()).size());
@@ -129,7 +163,8 @@ class FileAreaInventoryStorageTest {
         Path blockedDirectory = dataFolder.resolve("blocked");
         Files.writeString(blockedDirectory, "a file where the folder should be", StandardCharsets.UTF_8);
 
-        assertThrows(IOException.class, () -> storageIn(blockedDirectory).save(playerUniqueId, fullContents()));
+        assertThrows(IOException.class,
+                () -> storageIn(blockedDirectory).save(playerUniqueId, fullContents(), List.of()));
 
         assertTrue(Files.isRegularFile(blockedDirectory));
     }
@@ -149,7 +184,8 @@ class FileAreaInventoryStorageTest {
         };
         FileAreaInventoryStorage storage = new FileAreaInventoryStorage(inventoryDirectory(), failingCodec);
 
-        IOException failure = assertThrows(IOException.class, () -> storage.save(playerUniqueId, fullContents()));
+        IOException failure = assertThrows(IOException.class,
+                () -> storage.save(playerUniqueId, fullContents(), List.of()));
 
         assertEquals("the inventory could not be encoded", failure.getMessage());
         assertFalse(Files.exists(inventoryDirectory().resolve(playerUniqueId + ".yml")));
@@ -158,7 +194,7 @@ class FileAreaInventoryStorageTest {
     @Test
     void deletesTheFileAndToleratesAMissingOne() throws IOException {
         FileAreaInventoryStorage storage = storageIn(inventoryDirectory());
-        storage.save(playerUniqueId, fullContents());
+        storage.save(playerUniqueId, fullContents(), List.of());
 
         storage.delete(playerUniqueId);
         storage.delete(playerUniqueId);

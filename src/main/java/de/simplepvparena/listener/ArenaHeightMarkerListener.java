@@ -1,6 +1,8 @@
 package de.simplepvparena.listener;
 
 import de.simplepvparena.arena.ArenaHeightMarkerService;
+import de.simplepvparena.permission.AdminPermission;
+import org.bukkit.entity.Player;
 import org.bukkit.event.Event;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -22,22 +24,33 @@ public final class ArenaHeightMarkerListener implements Listener {
         if (!heightMarkerService.isMarkerItem(event.getItemInHand())) {
             return;
         }
-        heightMarkerService.markPlacedBlock(event.getPlayer(), event.getBlockPlaced(), event.getHand());
+        Player player = event.getPlayer();
+        if (!AdminPermission.isAdmin(player)) {
+            event.setCancelled(true);
+            heightMarkerService.takeMarkersAway(player);
+            return;
+        }
+        heightMarkerService.markPlacedBlock(player, event.getBlockPlaced(), event.getHand());
     }
 
     @EventHandler
     public void onPlayerInteract(PlayerInteractEvent event) {
+        if (!heightMarkerService.isMarkerItem(event.getItem())) {
+            return;
+        }
+        Player player = event.getPlayer();
+        if (!AdminPermission.isAdmin(player)) {
+            event.setCancelled(true);
+            heightMarkerService.takeMarkersAway(player);
+            return;
+        }
         if (event.getHand() != EquipmentSlot.HAND || event.getAction() != Action.RIGHT_CLICK_AIR) {
             return;
         }
         if (event.useItemInHand() == Event.Result.DENY) {
             return;
         }
-        if (!heightMarkerService.isMarkerItem(event.getItem())) {
-            return;
-        }
         event.setCancelled(true);
-        event.getPlayer().getInventory().setItemInMainHand(
-                heightMarkerService.switchMarkedEnd(event.getPlayer(), event.getItem()));
+        player.getInventory().setItemInMainHand(heightMarkerService.switchMarkedEnd(player, event.getItem()));
     }
 }

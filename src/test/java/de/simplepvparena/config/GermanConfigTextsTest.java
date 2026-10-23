@@ -116,6 +116,21 @@ class GermanConfigTextsTest {
     }
 
     @Test
+    void saysThatTheLargerTeamVotesInTheModeVoteInGerman() {
+        Placeholder path = Placeholder.of("path", PluginSettings.TEAM_SIZE_PATH);
+        Placeholder teamSize = Placeholder.of("teamSize", 2);
+
+        assertEquals("x. Die Teamgröße 2 aus match.team-size in config.yml gilt seit dem Start trotzdem, dieses "
+                        + "Team behält seine Spieler und das größere Team stimmt ab, wer kämpft",
+                Messages.plural(ConfigMessage.LARGER_TEAMS_AT_START_VOTING, 1, Placeholder.of("teams", "x"),
+                        teamSize, path));
+        assertEquals("x. Die Teamgröße 2 aus match.team-size in config.yml gilt seit dem Start trotzdem, diese "
+                        + "Teams behalten ihre Spieler und das größere Team stimmt ab, wer kämpft",
+                Messages.plural(ConfigMessage.LARGER_TEAMS_AT_START_VOTING, 2, Placeholder.of("teams", "x"),
+                        teamSize, path));
+    }
+
+    @Test
     void warnsAboutLargerTeamsAtTheStartInTheSingularAndThePluralInGerman() {
         TeamRegistry teamRegistry = new TeamRegistry();
         registerTeam(teamRegistry, "Bravo", 3);

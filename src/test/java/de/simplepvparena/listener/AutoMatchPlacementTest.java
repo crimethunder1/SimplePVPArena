@@ -41,6 +41,33 @@ class AutoMatchPlacementTest {
     }
 
     @Test
+    void theWinsFollowARenamedTeam() {
+        AutoMatchHarness harness = new AutoMatchHarness("Alpha", "Bravo", "Charlie");
+        harness.switchOnWithPause(0);
+        harness.advanceUntilTheAutoMatchRuns();
+        harness.winMatch("Bravo");
+        harness.finishCleaning();
+        harness.advanceUntilTheAutoMatchRuns();
+        harness.winMatch("Charlie");
+
+        harness.teamRegistry().renameTeam("bravo", "Dragons");
+
+        assertEquals(Map.of("Dragons", 1, "Charlie", 1), harness.autoMatchService().getWinsByTeamName());
+    }
+
+    @Test
+    void renamingATeamWithoutWinsChangesNoWins() {
+        AutoMatchHarness harness = new AutoMatchHarness("Alpha", "Bravo", "Charlie");
+        harness.switchOnWithPause(0);
+        harness.advanceUntilTheAutoMatchRuns();
+        harness.winMatch("Bravo");
+
+        harness.teamRegistry().renameTeam("Charlie", "Dragons");
+
+        assertEquals(Map.of("Bravo", 1), harness.autoMatchService().getWinsByTeamName());
+    }
+
+    @Test
     void aCancelledAutoMatchCountsNoWin() {
         AutoMatchHarness harness = new AutoMatchHarness("Alpha", "Bravo");
         harness.switchOn();

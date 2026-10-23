@@ -223,8 +223,8 @@ class GermanTournamentTextsTest {
 
         assertEquals(List.of("1 Team hat weniger als 2 Spieler: Alpha (1). Das Turnier startet trotzdem, ein "
                         + "fehlender Spieler zählt als abwesend",
-                "2 Teams haben mehr als 2 Spieler: Charlie (4) und Delta (3). Das Turnier startet trotzdem, jeder "
-                        + "Spieler dieser Teams, der online ist, kämpft"), fixture.adminMessages());
+                "2 Teams haben mehr als 2 Spieler: Charlie (4) und Delta (3). Das Turnier startet trotzdem, das "
+                        + "größere Team stimmt ab, wer kämpft"), fixture.adminMessages());
     }
 
     @Test
@@ -264,6 +264,8 @@ class GermanTournamentTextsTest {
                 Placeholder.of("teams", Messages.join(List.of("Alpha", "Bravo")))));
         assertEquals("x. Das Turnier startet trotzdem, jeder Spieler dieses Teams, der online ist, kämpft",
                 Messages.plural(TournamentMessage.LARGER_TEAMS, 1, Placeholder.of("teams", "x")));
+        assertEquals("x. Das Turnier startet trotzdem, das größere Team stimmt ab, wer kämpft",
+                Messages.plural(TournamentMessage.LARGER_TEAMS_VOTING, 2, Placeholder.of("teams", "x")));
         assertTrue(Messages.plural(TournamentMessage.RESTORED, 2, Placeholder.of("file", "f"),
                 Placeholder.of("rounds", 2), Placeholder.of("action", "a"))
                 .contains("(entschiedene Matches: 2, Turnierrunden: 2)"));
@@ -297,6 +299,8 @@ class GermanTournamentTextsTest {
                 Messages.plural(TournamentMessage.LARGER_TEAMS, 1, Placeholder.of("teams", "x")));
         assertEquals("x. The tournament starts anyway, every online player of these teams fights",
                 Messages.plural(TournamentMessage.LARGER_TEAMS, 2, Placeholder.of("teams", "x")));
+        assertEquals("x. The tournament starts anyway, the larger team votes who fights",
+                Messages.plural(TournamentMessage.LARGER_TEAMS_VOTING, 1, Placeholder.of("teams", "x")));
         assertTrue(Messages.plural(TournamentMessage.RESTORED, 1, Placeholder.of("file", "f"),
                 Placeholder.of("rounds", 1), Placeholder.of("action", "a"))
                 .contains("(matches decided: 1, rounds: 1)"));

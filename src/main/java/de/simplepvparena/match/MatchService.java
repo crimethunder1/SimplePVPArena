@@ -245,6 +245,16 @@ public final class MatchService {
         return getActiveMatch().filter(match -> match.containsPlayer(playerUniqueId));
     }
 
+    public boolean isLeftOutOfTheChosenFighters(Match match, UUID playerUniqueId) {
+        Optional<Team> team = match.findTeamOfPlayer(playerUniqueId);
+        if (team.isEmpty()) {
+            return false;
+        }
+        return match.findChosenFighters(team.get())
+                .map(chosenFighters -> !chosenFighters.contains(playerUniqueId))
+                .orElseGet(() -> unequalTeamVoteService.isLeftOutOfThePendingVote(match, playerUniqueId));
+    }
+
     public boolean isActiveFighter(UUID playerUniqueId) {
         return findMatchOfPlayer(playerUniqueId)
                 .flatMap(Match::getRoundParticipants)
