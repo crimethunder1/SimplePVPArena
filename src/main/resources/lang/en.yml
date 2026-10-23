@@ -689,6 +689,7 @@ arena:
   configuration-not-written: 'The change holds, but config.yml could not be written: {reason}'
   calculation:
     during-match: 'A match is running, the fight area can only be calculated between matches'
+    no-border-block-marked: 'No border block is marked, mark the border blocks first'
     diagnosis-run:
       one:
         - 'Calculating once with a limit of {count} cell'
@@ -925,7 +926,8 @@ arena-menu:
       lore:
         - 'Forgets every marked border block'
         - 'The blocks in the world stay as they are'
-        - 'The calculated fight area stays, a new calculation needs marked border blocks again'
+        - 'The calculated fight area stays,'
+        - 'a new calculation needs marked border blocks again'
       marked:
         one: '{count} border block is marked'
         other: '{count} border blocks are marked'
@@ -934,11 +936,25 @@ arena-menu:
       title: 'Clear the start gate marks'
       lore:
         - 'Forgets every marked start gate block'
-        - 'The blocks in the world stay as they are, the rounds start without a start gate'
+        - 'The blocks in the world stay as they are,'
+        - 'the rounds start without a start gate'
+        - 'A cleaning resets these blocks like any other block'
       marked:
         one: '{count} start gate block is marked'
         other: '{count} start gate blocks are marked'
       none-marked: 'No start gate blocks are marked'
+    smaller-effect-area:
+      title: 'Smaller area of effect'
+    larger-effect-area:
+      title: 'Larger area of effect'
+    effect-margin:
+      state:
+        one: 'Margin around the fight area: {count} block'
+        other: 'Margin around the fight area: {count} blocks'
+      radius:
+        one: 'The area of effect has a radius of {radius} block'
+        other: 'The area of effect has a radius of {radius} blocks'
+      steps: 'Click: 8 blocks, shift click: 1 block'
   cleaning:
     affected-blocks:
       one: '{count} block is affected'
@@ -988,6 +1004,20 @@ arena-menu:
     switched-to-hidden: 'Border particles are hidden'
     switched-to-shown-not-written: 'Border particles are shown, but config.yml could not be written: {reason}'
     switched-to-hidden-not-written: 'Border particles are hidden, but config.yml could not be written: {reason}'
+  effect-margin:
+    smallest:
+      one: 'The margin cannot get smaller than {count} block'
+      other: 'The margin cannot get smaller than {count} blocks'
+    largest:
+      one: 'The margin cannot get larger than {count} block'
+      other: 'The margin cannot get larger than {count} blocks'
+    changed:
+      one: 'The margin is now {count} block, the area of effect has a radius of {radius} blocks'
+      other: 'The margin is now {count} blocks, the area of effect has a radius of {radius} blocks'
+    changed-without-fight-area:
+      one: 'The margin is now {count} block'
+      other: 'The margin is now {count} blocks'
+    not-written: '{change}, but config.yml could not be written: {reason}'
   standings-board:
     placed: 'The standings board stands here now'
     removed: 'The standings board was removed'

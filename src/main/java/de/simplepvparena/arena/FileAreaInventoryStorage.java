@@ -2,6 +2,7 @@ package de.simplepvparena.arena;
 
 import de.simplepvparena.kit.ItemStackCodec;
 import de.simplepvparena.kit.KitItemCodec;
+import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.inventory.ItemStack;
@@ -13,16 +14,20 @@ import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.UUID;
 
 public final class FileAreaInventoryStorage implements AreaInventoryStorage {
 
     public static final String DIRECTORY_NAME = "area-inventories";
 
-    private static final int FORMAT_VERSION = 2;
+    private static final int FORMAT_VERSION = 3;
     private static final int FIRST_FORMAT_VERSION = 1;
+    private static final int FIRST_FORMAT_VERSION_WITH_CONDITION = 3;
     private static final String FILE_EXTENSION = ".yml";
     private static final String BROKEN_FILE_EXTENSION = ".broken";
     private static final String TEMPORARY_FILE_EXTENSION = ".tmp";
@@ -31,6 +36,17 @@ public final class FileAreaInventoryStorage implements AreaInventoryStorage {
     private static final String SAVED_AT_KEY = "saved-at";
     private static final String CONTENTS_KEY = "contents";
     private static final String LOOSE_ITEMS_KEY = "loose-items";
+    private static final String POTION_EFFECTS_KEY = "potion-effects";
+    private static final String EFFECT_TYPE_KEY = "type";
+    private static final String AMPLIFIER_KEY = "amplifier";
+    private static final String DURATION_TICKS_KEY = "duration-ticks";
+    private static final String AMBIENT_KEY = "ambient";
+    private static final String PARTICLES_KEY = "particles";
+    private static final String ICON_KEY = "icon";
+    private static final String HUNGER_KEY = "hunger";
+    private static final String FOOD_LEVEL_KEY = "food-level";
+    private static final String SATURATION_KEY = "saturation";
+    private static final String EXHAUSTION_KEY = "exhaustion";
 
     private final Path inventoryDirectory;
     private final ItemStackCodec itemStackCodec;
@@ -41,8 +57,9 @@ public final class FileAreaInventoryStorage implements AreaInventoryStorage {
     }
 
     @Override
-    public void save(UUID playerUniqueId, ItemStack[] contents, List<ItemStack> looseItems) throws IOException {
-        String serializedInventory = serialize(contents, looseItems);
+    public void save(UUID playerUniqueId, ItemStack[] contents, List<ItemStack> looseItems,
+                     AreaPlayerCondition condition) throws IOException {
+        String serializedInventory = serialize(contents, looseItems, condition);
         Files.createDirectories(inventoryDirectory);
         Path inventoryFile = resolveInventoryFile(playerUniqueId);
         Path temporaryFile = Files.createTempFile(inventoryDirectory, inventoryFile.getFileName().toString(),
@@ -82,7 +99,8 @@ public final class FileAreaInventoryStorage implements AreaInventoryStorage {
         return inventoryDirectory.resolve(playerUniqueId + FILE_EXTENSION);
     }
 
-    private String serialize(ItemStack[] contents, List<ItemStack> looseItems) throws IOException {
+    private String serialize(ItemStack[] contents, List<ItemStack> looseItems, AreaPlayerCondition condition)
+            throws IOException {
         YamlConfiguration configuration = new YamlConfiguration();
         configuration.set(FORMAT_VERSION_KEY, FORMAT_VERSION);
         configuration.set(SAVED_AT_KEY, Instant.now().toString());
@@ -90,7 +108,24 @@ public final class FileAreaInventoryStorage implements AreaInventoryStorage {
         if (!looseItems.isEmpty()) {
             configuration.set(LOOSE_ITEMS_KEY, encode(looseItems.toArray(new ItemStack[0])));
         }
+        configuration.set(POTION_EFFECTS_KEY, condition.potionEffects().stream()
+                .map(FileAreaInventoryStorage::describe)
+                .toList());
+        configuration.set(HUNGER_KEY + SEPARATOR + FOOD_LEVEL_KEY, condition.foodLevel());
+        configuration.set(HUNGER_KEY + SEPARATOR + SATURATION_KEY, condition.saturation());
+        configuration.set(HUNGER_KEY + SEPARATOR + EXHAUSTION_KEY, condition.exhaustion());
         return configuration.saveToString();
+    }
+
+    private static Map<String, Object> describe(SavedPotionEffect potionEffect) {
+        Map<String, Object> description = new LinkedHashMap<>();
+        description.put(EFFECT_TYPE_KEY, potionEffect.effectTypeKey());
+        description.put(AMPLIFIER_KEY, potionEffect.amplifier());
+        description.put(DURATION_TICKS_KEY, potionEffect.durationTicks());
+        description.put(AMBIENT_KEY, potionEffect.ambient());
+        description.put(PARTICLES_KEY, potionEffect.particles());
+        description.put(ICON_KEY, potionEffect.icon());
+        return description;
     }
 
     private String encode(ItemStack[] itemStacks) throws IOException {
@@ -118,7 +153,41 @@ public final class FileAreaInventoryStorage implements AreaInventoryStorage {
                 }
             }
         }
-        return AreaInventoryLookup.found(contents, looseItems, fileName);
+        Optional<AreaPlayerCondition> condition = formatVersion.intValue() < FIRST_FORMAT_VERSION_WITH_CONDITION
+                ? Optional.empty()
+                : Optional.of(readCondition(configuration));
+        return AreaInventoryLookup.found(contents, looseItems, condition, fileName);
+    }
+
+    private static AreaPlayerCondition readCondition(YamlConfiguration configuration)
+            throws InvalidConfigurationException {
+        ConfigurationSection hunger = configuration.getConfigurationSection(HUNGER_KEY);
+        if (hunger == null || !configuration.isList(POTION_EFFECTS_KEY)
+                || !(hunger.get(FOOD_LEVEL_KEY) instanceof Number foodLevel)
+                || !(hunger.get(SATURATION_KEY) instanceof Number saturation)
+                || !(hunger.get(EXHAUSTION_KEY) instanceof Number exhaustion)) {
+            throw new InvalidConfigurationException("missing or unreadable " + POTION_EFFECTS_KEY + " or "
+                    + HUNGER_KEY);
+        }
+        List<SavedPotionEffect> potionEffects = new ArrayList<>();
+        for (Map<?, ?> description : configuration.getMapList(POTION_EFFECTS_KEY)) {
+            potionEffects.add(readPotionEffect(description));
+        }
+        return new AreaPlayerCondition(potionEffects, foodLevel.intValue(), saturation.floatValue(),
+                exhaustion.floatValue());
+    }
+
+    private static SavedPotionEffect readPotionEffect(Map<?, ?> description) throws InvalidConfigurationException {
+        if (!(description.get(EFFECT_TYPE_KEY) instanceof String effectTypeKey)
+                || !(description.get(AMPLIFIER_KEY) instanceof Number amplifier)
+                || !(description.get(DURATION_TICKS_KEY) instanceof Number durationTicks)
+                || !(description.get(AMBIENT_KEY) instanceof Boolean ambient)
+                || !(description.get(PARTICLES_KEY) instanceof Boolean particles)
+                || !(description.get(ICON_KEY) instanceof Boolean icon)) {
+            throw new InvalidConfigurationException("unreadable " + POTION_EFFECTS_KEY);
+        }
+        return new SavedPotionEffect(effectTypeKey, amplifier.intValue(), durationTicks.intValue(), ambient,
+                particles, icon);
     }
 
     private ItemStack[] decode(YamlConfiguration configuration, String key) throws InvalidConfigurationException {

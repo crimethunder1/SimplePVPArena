@@ -178,7 +178,14 @@ class ConvertedClassesHaveNoTextLiteralsTest {
             "listener/PlacementBoardWorldListener.java",
             "arena/MarkClearing.java",
             "arena/MarkClearingKind.java",
-            "arena/MarkForgetting.java");
+            "arena/MarkForgetting.java",
+            "arena/SpectatorToggleItemGiver.java",
+            "arena/EffectMarginSetting.java",
+            "arena/EffectMarginWriter.java",
+            "arena/SavedPotionEffect.java",
+            "arena/AreaPlayerCondition.java",
+            "arena/PlayerPotionEffects.java",
+            "arena/BukkitPlayerPotionEffects.java");
 
     private static final Pattern STRING_LITERAL = Pattern.compile("\"((?:[^\"\\\\]|\\\\.)*)\"");
     private static final Pattern USAGE_TOKEN = Pattern.compile("<[^<>]*>");

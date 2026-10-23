@@ -22,6 +22,7 @@ public enum ArenaSetupMessage implements MessageKey {
     ARENA_RESERVED_FOR_AUTO_MATCH("arena.reserved-for-auto-match"),
     CONFIGURATION_NOT_WRITTEN("arena.configuration-not-written", "reason"),
     CALCULATION_DURING_MATCH("arena.calculation.during-match"),
+    CALCULATION_WITHOUT_BORDER_MARKS("arena.calculation.no-border-block-marked"),
     DIAGNOSIS_RUN("arena.calculation.diagnosis-run", "count", "maximumCellCount", "path"),
     CALCULATED("arena.calculation.calculated", "fightArea"),
     TRIBUNE_OUTSIDE_AFTER_CALCULATION("arena.calculation.tribune-outside-of-effect-area", "warning", "path"),

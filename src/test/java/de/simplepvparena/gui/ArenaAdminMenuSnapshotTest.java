@@ -19,10 +19,14 @@ class ArenaAdminMenuSnapshotTest {
 
         assertEquals("""
                 Arena | 27
+                3 | RED_DYE | Smaller area of effect | Margin around the fight area: 96 blocks / \
+                Click: 8 blocks, shift click: 1 block
                 4 | BOOK | Arena | Arena incomplete /   fight area: not calculated / \
                   first team spawn: not configured /   second team spawn: not configured / \
                   tribune spawn: not configured /   Area of effect: none until the fight area is calculated / \
                   running match: none
+                5 | LIME_DYE | Larger area of effect | Margin around the fight area: 96 blocks / \
+                Click: 8 blocks, shift click: 1 block
                 10 | SPYGLASS | Calculate the fight area | Runs the calculation for the position you stand on / \
                 Stand inside the closed border wall before you click / \
                 The menu closes so you can see the recognized wall
@@ -96,10 +100,14 @@ class ArenaAdminMenuSnapshotTest {
 
         assertEquals("""
                 Arena | 27
+                3 | RED_DYE | Smaller area of effect | Margin around the fight area: 96 blocks / \
+                The area of effect has a radius of 99.5 blocks / Click: 8 blocks, shift click: 1 block
                 4 | BOOK | Arena | Arena ready /   fight area: admin-menu with 25 cells between 1/1 and 5/5, from y 64 \
                 to y 67, calculated at y 64 /   first team spawn: not configured / \
                   second team spawn: not configured /   tribune spawn: admin-menu 11.5/64.0/11.5 / \
                   Area of effect: centre 3.5/3.5, radius 99.5 blocks /   running match: none
+                5 | LIME_DYE | Larger area of effect | Margin around the fight area: 96 blocks / \
+                The area of effect has a radius of 99.5 blocks / Click: 8 blocks, shift click: 1 block
                 10 | SPYGLASS | Calculate the fight area | Runs the calculation for the position you stand on / \
                 Stand inside the closed border wall before you click / \
                 The menu closes so you can see the recognized wall
@@ -122,7 +130,7 @@ class ArenaAdminMenuSnapshotTest {
                 The blocks and the border blocks stay untouched / Asks for a confirmation first
                 17 | TNT_MINECART | Clear the border marks | Forgets every marked border block / \
                 The blocks in the world stay as they are / \
-                The calculated fight area stays, a new calculation needs marked border blocks again / \
+                The calculated fight area stays, / a new calculation needs marked border blocks again / \
                 96 border blocks are marked / Asks for a confirmation first
                 19 | TARGET | Mark the height of the fight area | Hands you the item that marks the lowest and the / \
                 highest point of the fight area / Place a block with it, only its height is kept / \
@@ -156,10 +164,14 @@ class ArenaAdminMenuSnapshotTest {
 
         assertEquals("""
                 Arena | 27
+                3 | RED_DYE | Smaller area of effect | Margin around the fight area: 96 blocks / \
+                The area of effect has a radius of 99.5 blocks / Click: 8 blocks, shift click: 1 block
                 4 | BOOK | Arena | Arena ready /   fight area: admin-menu with 25 cells between 1/1 and 5/5, from y 64 \
                 to y 67, calculated at y 64 /   first team spawn: not configured / \
                   second team spawn: not configured /   tribune spawn: admin-menu 11.5/64.0/11.5 / \
                   Area of effect: centre 3.5/3.5, radius 99.5 blocks /   running match: M1 (Alpha 0 : 0 Bravo)
+                5 | LIME_DYE | Larger area of effect | Margin around the fight area: 96 blocks / \
+                The area of effect has a radius of 99.5 blocks / Click: 8 blocks, shift click: 1 block
                 10 | SPYGLASS | Calculate the fight area | Runs the calculation for the position you stand on / \
                 Stand inside the closed border wall before you click / \
                 The menu closes so you can see the recognized wall

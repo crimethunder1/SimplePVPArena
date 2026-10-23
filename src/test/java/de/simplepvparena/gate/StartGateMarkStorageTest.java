@@ -17,6 +17,7 @@ import java.util.logging.Handler;
 import java.util.logging.Level;
 import java.util.logging.LogRecord;
 import java.util.logging.Logger;
+import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -27,6 +28,8 @@ class StartGateMarkStorageTest {
 
     private static final String WORLD = "event";
     private static final String OTHER_WORLD = "event.copy";
+    private static final String FILE_NAME_WITHOUT_ROOM_FOR_A_TEMPORARY_FILE = "g".repeat(248) + ".yml";
+    private static final String EARLIER_CONTENT = "gate:\n- world: event\n  marks:\n  - 5 BARRIER\n";
 
     private final List<String> loggedMessages = new ArrayList<>();
     private final Logger recordingLogger = recordingLogger(loggedMessages);
@@ -128,6 +131,8 @@ class StartGateMarkStorageTest {
     @Test
     void keepsTheGateForgottenWhenTheFileCannotBeWritten(@TempDir Path pluginFolder) throws IOException {
         Files.createDirectory(pluginFolder.resolve(StartGateMarkStorage.FILE_NAME));
+        Files.writeString(pluginFolder.resolve(StartGateMarkStorage.FILE_NAME).resolve("kept.txt"), "kept",
+                StandardCharsets.UTF_8);
         StartGateMarks gateMarks = markedGate();
         StartGateMarkStorage storage = storageIn(pluginFolder);
         loggedMessages.clear();
@@ -142,12 +147,42 @@ class StartGateMarkStorageTest {
     @Test
     void savesWithoutThrowingAndLogsAFailedWrite(@TempDir Path pluginFolder) throws IOException {
         Files.createDirectory(pluginFolder.resolve(StartGateMarkStorage.FILE_NAME));
+        Files.writeString(pluginFolder.resolve(StartGateMarkStorage.FILE_NAME).resolve("kept.txt"), "kept",
+                StandardCharsets.UTF_8);
         StartGateMarks gateMarks = markedGate();
 
         storageIn(pluginFolder).save(gateMarks);
 
         assertEquals(2, gateMarks.getMarkedBlockCount());
         assertEquals(List.of("Could not write startgates.yml, the start gate is not persisted"), loggedMessages);
+    }
+
+    @Test
+    void replacesTheFileWithoutLeavingATemporaryFileBehind(@TempDir Path pluginFolder) throws IOException {
+        StartGateMarkStorage storage = storageIn(pluginFolder);
+        storage.write(markedGate());
+        StartGateMarks changedMarks = new StartGateMarks();
+        changedMarks.mark(WORLD, 7, 65, 7, Material.IRON_BARS);
+
+        storage.write(changedMarks);
+
+        assertEquals(List.of(StartGateMarkStorage.FILE_NAME), listFolder(pluginFolder));
+        StartGateMarks reloadedMarks = new StartGateMarks();
+        storage.load(reloadedMarks);
+        assertEquals(1, reloadedMarks.getMarkedBlockCount());
+        assertEquals(Optional.of(Material.IRON_BARS), reloadedMarks.findMaterial(WORLD, 7, 65, 7));
+    }
+
+    @Test
+    void leavesTheEarlierFileAsItWasWhenTheWriteFails(@TempDir Path pluginFolder) throws IOException {
+        Path gatesFile = Files.writeString(pluginFolder.resolve(FILE_NAME_WITHOUT_ROOM_FOR_A_TEMPORARY_FILE),
+                EARLIER_CONTENT, StandardCharsets.UTF_8);
+        StartGateMarkStorage storage = new StartGateMarkStorage(gatesFile.toFile(), recordingLogger);
+
+        assertThrows(IOException.class, () -> storage.write(markedGate()));
+
+        assertEquals(EARLIER_CONTENT, Files.readString(gatesFile, StandardCharsets.UTF_8));
+        assertEquals(List.of(FILE_NAME_WITHOUT_ROOM_FOR_A_TEMPORARY_FILE), listFolder(pluginFolder));
     }
 
     @Test
@@ -189,6 +224,12 @@ class StartGateMarkStorageTest {
         return new StartGateMarkStorage(
                 new File(pluginFolder.toFile(), StartGateMarkStorage.FILE_NAME),
                 recordingLogger);
+    }
+
+    private static List<String> listFolder(Path folder) throws IOException {
+        try (Stream<Path> files = Files.list(folder)) {
+            return files.map(file -> file.getFileName().toString()).sorted().toList();
+        }
     }
 
     private static Logger recordingLogger(List<String> loggedMessages) {

@@ -11,6 +11,7 @@ import de.simplepvparena.arena.ArenaHeightMarkerService;
 import de.simplepvparena.arena.ArenaHeightMarkers;
 import de.simplepvparena.arena.ArenaRegistry;
 import de.simplepvparena.arena.ArenaSetupService;
+import de.simplepvparena.arena.EffectMarginSetting;
 import de.simplepvparena.arena.MarkClearing;
 import de.simplepvparena.arena.MarkClearingKind;
 import de.simplepvparena.arena.SpectatorService;
@@ -159,7 +160,11 @@ class AdminMenuSeamTest {
                         }, arenaSetupService::findResetRejection, warning -> { }),
                         new MarkClearing(MarkClearingKind.START_GATE_MARKS, gateMarks::getMarkedBlockCount, () -> {
                             throw new UnsupportedOperationException("no start gate mark is cleared in this test");
-                        }, arenaSetupService::findResetRejection, warning -> { })),
+                        }, arenaSetupService::findResetRejection, warning -> { }),
+                        new EffectMarginSetting(arenaRegistry, arenaRegistry::setEffectMargin),
+                        margin -> {
+                            throw new UnsupportedOperationException("the margin is not written in this test");
+                        }),
                 new AdminMenuDependencies.KitServices(kitLibrary,
                         new KitSaveService(kitLibrary, new FakeKitItemSerializer())),
                 new AdminMenuDependencies.RegistrationServices(registrationService,

@@ -30,7 +30,7 @@ class ArenaAdminMenuMarkClearingTest {
     private static final String BEING_CLEANED = "The arena is still being cleaned. Try again in a moment.";
     private static final String BORDER_MARKS_TILE = "17 | TNT_MINECART | Clear the border marks | "
             + "Forgets every marked border block / The blocks in the world stay as they are / "
-            + "The calculated fight area stays, a new calculation needs marked border blocks again / "
+            + "The calculated fight area stays, / a new calculation needs marked border blocks again / "
             + "96 border blocks are marked / Asks for a confirmation first";
 
     private final AdminMenuFixture fixture = new AdminMenuFixture();
@@ -44,7 +44,8 @@ class ArenaAdminMenuMarkClearingTest {
 
         assertEquals(BORDER_MARKS_TILE, describeTile(CLEAR_BORDER_MARKS_SLOT));
         assertEquals("25 | IRON_CHAIN | Clear the start gate marks | Forgets every marked start gate block / "
-                + "The blocks in the world stay as they are, the rounds start without a start gate / "
+                + "The blocks in the world stay as they are, / the rounds start without a start gate / "
+                + "A cleaning resets these blocks like any other block / "
                 + "2 start gate blocks are marked / Asks for a confirmation first",
                 describeTile(CLEAR_START_GATE_MARKS_SLOT));
     }
@@ -56,7 +57,8 @@ class ArenaAdminMenuMarkClearingTest {
         fixture.openMenuFromTheMainMenu(MAIN_ARENA_SLOT);
 
         assertEquals("25 | IRON_CHAIN | Clear the start gate marks | Forgets every marked start gate block / "
-                + "The blocks in the world stay as they are, the rounds start without a start gate / "
+                + "The blocks in the world stay as they are, / the rounds start without a start gate / "
+                + "A cleaning resets these blocks like any other block / "
                 + "1 start gate block is marked / Asks for a confirmation first",
                 describeTile(CLEAR_START_GATE_MARKS_SLOT));
     }

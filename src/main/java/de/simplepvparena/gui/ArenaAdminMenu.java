@@ -5,6 +5,9 @@ import de.simplepvparena.arena.ArenaHeightMarkerService;
 import de.simplepvparena.arena.ArenaSetupService;
 import de.simplepvparena.arena.ArenaShapeFloodFill;
 import de.simplepvparena.arena.ArenaSpawnType;
+import de.simplepvparena.arena.EffectArea;
+import de.simplepvparena.arena.EffectMarginSetting;
+import de.simplepvparena.arena.EffectMarginWriter;
 import de.simplepvparena.arena.MarkClearing;
 import de.simplepvparena.border.BorderParticleService;
 import de.simplepvparena.border.ConfirmedBorderParticleWriter;
@@ -33,6 +36,8 @@ import java.util.Optional;
 
 final class ArenaAdminMenu implements AdminMenu {
 
+    private static final int ARENA_SMALLER_EFFECT_AREA_SLOT = 3;
+    private static final int ARENA_LARGER_EFFECT_AREA_SLOT = 5;
     private static final int ARENA_CALCULATE_SLOT = 10;
     private static final int ARENA_DIAGNOSE_SLOT = 11;
     private static final int ARENA_FIRST_TEAM_SPAWN_SLOT = 12;
@@ -49,6 +54,8 @@ final class ArenaAdminMenu implements AdminMenu {
     private static final Material START_GATE_TILE_MATERIAL = Material.IRON_BARS;
     private static final Material BORDER_PARTICLES_TILE_MATERIAL = Material.BLAZE_POWDER;
     private static final Material STANDINGS_BOARD_TILE_MATERIAL = Material.OAK_SIGN;
+    private static final Material SMALLER_EFFECT_AREA_TILE_MATERIAL = Material.RED_DYE;
+    private static final Material LARGER_EFFECT_AREA_TILE_MATERIAL = Material.LIME_DYE;
 
     private final AdminMenuNavigation navigation;
     private final ArenaSetupService arenaSetupService;
@@ -59,12 +66,15 @@ final class ArenaAdminMenu implements AdminMenu {
     private final ConfirmedBorderParticleWriter confirmedBorderParticleWriter;
     private final MarkClearing borderMarkClearing;
     private final MarkClearing startGateMarkClearing;
+    private final EffectMarginSetting effectMarginSetting;
+    private final EffectMarginWriter effectMarginWriter;
 
     ArenaAdminMenu(AdminMenuNavigation navigation, ArenaSetupService arenaSetupService,
                    ArenaHeightMarkerService heightMarkerService, StartGateItemService gateItemService,
                    ChatInputService chatInputService, BorderParticleService borderParticleService,
                    ConfirmedBorderParticleWriter confirmedBorderParticleWriter, MarkClearing borderMarkClearing,
-                   MarkClearing startGateMarkClearing) {
+                   MarkClearing startGateMarkClearing, EffectMarginSetting effectMarginSetting,
+                   EffectMarginWriter effectMarginWriter) {
         this.navigation = Objects.requireNonNull(navigation, "navigation");
         this.arenaSetupService = Objects.requireNonNull(arenaSetupService, "arenaSetupService");
         this.heightMarkerService = Objects.requireNonNull(heightMarkerService, "heightMarkerService");
@@ -75,6 +85,8 @@ final class ArenaAdminMenu implements AdminMenu {
                 "confirmedBorderParticleWriter");
         this.borderMarkClearing = Objects.requireNonNull(borderMarkClearing, "borderMarkClearing");
         this.startGateMarkClearing = Objects.requireNonNull(startGateMarkClearing, "startGateMarkClearing");
+        this.effectMarginSetting = Objects.requireNonNull(effectMarginSetting, "effectMarginSetting");
+        this.effectMarginWriter = Objects.requireNonNull(effectMarginWriter, "effectMarginWriter");
     }
 
     @Override
@@ -91,6 +103,8 @@ final class ArenaAdminMenu implements AdminMenu {
     public void fill(Player player, AdminMenuHolder holder, AdminMenuCanvas canvas) {
         canvas.set(AdminMenuLayout.INFO_SLOT, MenuItems.info(Messages.text(ArenaMenuMessage.INFO_TITLE),
                 arenaSetupService.describeArena()));
+        canvas.set(ARENA_SMALLER_EFFECT_AREA_SLOT, buildSmallerEffectAreaTile());
+        canvas.set(ARENA_LARGER_EFFECT_AREA_SLOT, buildLargerEffectAreaTile());
         canvas.set(ARENA_CALCULATE_SLOT, MenuItems.create(Material.SPYGLASS,
                 Messages.text(ArenaMenuMessage.CALCULATE_TITLE), Messages.lines(ArenaMenuMessage.CALCULATE_LORE)));
         canvas.set(ARENA_DIAGNOSE_SLOT, MenuItems.create(Material.REDSTONE_TORCH,
@@ -120,7 +134,14 @@ final class ArenaAdminMenu implements AdminMenu {
 
     @Override
     public void handleClick(Player player, AdminMenuHolder holder, int slot) {
+        handleClick(player, holder, slot, false);
+    }
+
+    @Override
+    public void handleClick(Player player, AdminMenuHolder holder, int slot, boolean shiftClick) {
         switch (slot) {
+            case ARENA_SMALLER_EFFECT_AREA_SLOT -> makeEffectAreaSmaller(player, holder, shiftClick);
+            case ARENA_LARGER_EFFECT_AREA_SLOT -> makeEffectAreaLarger(player, holder, shiftClick);
             case ARENA_CALCULATE_SLOT -> {
                 navigation.close(player);
                 arenaSetupService.calculateShape(player);
@@ -351,6 +372,93 @@ final class ArenaAdminMenu implements AdminMenu {
                     Placeholder.of("reason", FailureDescriptions.describe(failure))));
         }
         navigation.refresh(player, holder);
+    }
+
+    private MenuTile buildSmallerEffectAreaTile() {
+        String title = Messages.text(ArenaMenuMessage.SMALLER_EFFECT_AREA_TITLE);
+        if (!effectMarginSetting.canGetSmaller()) {
+            return MenuItems.unavailable(title, describeSmallestMargin());
+        }
+        return MenuItems.create(SMALLER_EFFECT_AREA_TILE_MATERIAL, title, buildEffectMarginLore());
+    }
+
+    private MenuTile buildLargerEffectAreaTile() {
+        String title = Messages.text(ArenaMenuMessage.LARGER_EFFECT_AREA_TITLE);
+        if (!effectMarginSetting.canGetLarger()) {
+            return MenuItems.unavailable(title, describeLargestMargin());
+        }
+        return MenuItems.create(LARGER_EFFECT_AREA_TILE_MATERIAL, title, buildEffectMarginLore());
+    }
+
+    private List<String> buildEffectMarginLore() {
+        List<String> lore = new ArrayList<>();
+        lore.add(Messages.plural(ArenaMenuMessage.EFFECT_MARGIN_STATE, effectMarginSetting.getMargin()));
+        effectMarginSetting.findEffectArea().ifPresent(effectArea -> lore.add(Messages.plural(
+                ArenaMenuMessage.EFFECT_AREA_RADIUS, effectArea.findRadiusPluralCount(),
+                Placeholder.of("radius", effectArea.formatRadius()))));
+        lore.add(Messages.text(ArenaMenuMessage.EFFECT_MARGIN_STEPS));
+        return lore;
+    }
+
+    private void makeEffectAreaSmaller(Player player, AdminMenuHolder holder, boolean shiftClick) {
+        if (isEffectMarginChangeRejected(player)) {
+            return;
+        }
+        if (!effectMarginSetting.canGetSmaller()) {
+            TournamentMessages.sendError(player, describeSmallestMargin());
+            return;
+        }
+        changeEffectMargin(player, holder,
+                effectMarginSetting.findSmallerMargin(EffectMarginSetting.findStep(shiftClick)));
+    }
+
+    private void makeEffectAreaLarger(Player player, AdminMenuHolder holder, boolean shiftClick) {
+        if (isEffectMarginChangeRejected(player)) {
+            return;
+        }
+        if (!effectMarginSetting.canGetLarger()) {
+            TournamentMessages.sendError(player, describeLargestMargin());
+            return;
+        }
+        changeEffectMargin(player, holder,
+                effectMarginSetting.findLargerMargin(EffectMarginSetting.findStep(shiftClick)));
+    }
+
+    private boolean isEffectMarginChangeRejected(Player player) {
+        Optional<String> rejection = arenaSetupService.findResetRejection();
+        rejection.ifPresent(reason -> TournamentMessages.sendError(player, reason));
+        return rejection.isPresent();
+    }
+
+    private void changeEffectMargin(Player player, AdminMenuHolder holder, int newMargin) {
+        effectMarginSetting.apply(newMargin);
+        String change = describeEffectMarginChange(newMargin);
+        try {
+            effectMarginWriter.write(newMargin);
+            TournamentMessages.sendSuccess(player, change);
+        } catch (IOException failure) {
+            TournamentMessages.sendWarning(player, Messages.text(ArenaMenuMessage.EFFECT_MARGIN_NOT_WRITTEN,
+                    Placeholder.of("change", change),
+                    Placeholder.of("reason", FailureDescriptions.describe(failure))));
+        }
+        navigation.refresh(player, holder);
+    }
+
+    private String describeEffectMarginChange(int newMargin) {
+        Optional<EffectArea> effectArea = effectMarginSetting.findEffectArea();
+        if (effectArea.isEmpty()) {
+            return Messages.plural(ArenaMenuMessage.EFFECT_MARGIN_CHANGED_WITHOUT_FIGHT_AREA, newMargin);
+        }
+        return Messages.plural(ArenaMenuMessage.EFFECT_MARGIN_CHANGED, newMargin,
+                Placeholder.of("radius", effectArea.get().formatRadius()));
+    }
+
+    private static String describeSmallestMargin() {
+        return Messages.plural(ArenaMenuMessage.SMALLEST_EFFECT_MARGIN, EffectArea.MINIMUM_MARGIN);
+    }
+
+    private static String describeLargestMargin() {
+        return Messages.plural(ArenaMenuMessage.LARGEST_EFFECT_MARGIN, EffectArea.MAXIMUM_MARGIN);
     }
 
     private MenuTile buildStandingsBoardTile() {

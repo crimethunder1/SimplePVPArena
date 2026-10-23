@@ -8,7 +8,8 @@ import java.util.UUID;
 
 public interface AreaInventoryStorage {
 
-    void save(UUID playerUniqueId, ItemStack[] contents, List<ItemStack> looseItems) throws IOException;
+    void save(UUID playerUniqueId, ItemStack[] contents, List<ItemStack> looseItems, AreaPlayerCondition condition)
+            throws IOException;
 
     AreaInventoryLookup find(UUID playerUniqueId);
 

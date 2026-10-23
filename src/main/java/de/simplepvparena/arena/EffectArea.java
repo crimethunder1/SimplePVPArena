@@ -51,6 +51,14 @@ public final class EffectArea {
         return radius;
     }
 
+    public String formatRadius() {
+        return formatBlocks(radius);
+    }
+
+    public long findRadiusPluralCount() {
+        return pluralCountOf(radius);
+    }
+
     public boolean contains(String otherWorldName, double x, double z) {
         return worldName.equals(otherWorldName) && center.distanceTo(x, z) <= radius;
     }

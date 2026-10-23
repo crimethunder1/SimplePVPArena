@@ -4,6 +4,10 @@ import org.bukkit.configuration.file.YamlConfiguration;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedHashMap;
@@ -18,6 +22,7 @@ public final class BorderMarkStorage {
     private static final String WORLDS_KEY = "worlds";
     private static final String WORLD_NAME_KEY = "world";
     private static final String MARKS_KEY = "marks";
+    private static final String TEMPORARY_FILE_EXTENSION = ".tmp";
 
     private final File bordersFile;
     private final Logger logger;
@@ -72,7 +77,33 @@ public final class BorderMarkStorage {
         if (parentDirectory != null && !parentDirectory.isDirectory() && !parentDirectory.mkdirs()) {
             throw new IOException("Could not create the directory of " + bordersFile.getName());
         }
-        configuration.save(bordersFile);
+        Path targetFile = bordersFile.toPath().toAbsolutePath();
+        Path temporaryFile = Files.createTempFile(targetFile.getParent(), bordersFile.getName(),
+                TEMPORARY_FILE_EXTENSION);
+        try {
+            Files.writeString(temporaryFile, configuration.saveToString(), StandardCharsets.UTF_8);
+            moveIntoPlace(temporaryFile, targetFile);
+        } catch (IOException | RuntimeException writeFailure) {
+            removeTemporaryFile(temporaryFile, writeFailure);
+            throw writeFailure;
+        }
+    }
+
+    private static void moveIntoPlace(Path temporaryFile, Path targetFile) throws IOException {
+        try {
+            Files.move(temporaryFile, targetFile, StandardCopyOption.ATOMIC_MOVE,
+                    StandardCopyOption.REPLACE_EXISTING);
+        } catch (IOException atomicMoveFailure) {
+            Files.move(temporaryFile, targetFile, StandardCopyOption.REPLACE_EXISTING);
+        }
+    }
+
+    private static void removeTemporaryFile(Path temporaryFile, Exception writeFailure) {
+        try {
+            Files.deleteIfExists(temporaryFile);
+        } catch (IOException deleteFailure) {
+            writeFailure.addSuppressed(deleteFailure);
+        }
     }
 
     private void readWorldEntry(BorderMarkIndex borderMarks, Map<?, ?> worldEntry) {

@@ -113,6 +113,10 @@ public final class ArenaSetupService {
             TournamentMessages.sendError(admin, rejection.get());
             return;
         }
+        if (!spectatorBorderService.hasMarkedBorderBlocks()) {
+            TournamentMessages.sendError(admin, Messages.text(ArenaSetupMessage.CALCULATION_WITHOUT_BORDER_MARKS));
+            return;
+        }
         if (isDiagnosisRun) {
             TournamentMessages.sendInfo(admin, Messages.plural(ArenaSetupMessage.DIAGNOSIS_RUN, cellLimit,
                     Placeholder.of("maximumCellCount", maximumArenaCellCount),

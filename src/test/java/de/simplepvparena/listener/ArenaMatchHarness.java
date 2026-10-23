@@ -520,6 +520,7 @@ final class ArenaMatchHarness {
         private double health = 20.0;
         private int foodLevel = 20;
         private float saturation;
+        private float exhaustion;
         private float exp;
         private int level;
         private RuntimeException inventoryClearFailure;
@@ -568,6 +569,10 @@ final class ArenaMatchHarness {
                     saturation = (Float) arguments[0];
                     yield null;
                 }
+                case "setExhaustion" -> {
+                    exhaustion = (Float) arguments[0];
+                    yield null;
+                }
                 case "setExp" -> {
                     exp = (Float) arguments[0];
                     yield null;
@@ -600,6 +605,7 @@ final class ArenaMatchHarness {
                 case "getHealth" -> health;
                 case "getFoodLevel" -> foodLevel;
                 case "getSaturation" -> saturation;
+                case "getExhaustion" -> exhaustion;
                 case "getExp" -> exp;
                 case "getLevel" -> level;
                 case "getActivePotionEffects" -> List.of();
@@ -739,6 +745,28 @@ final class ArenaMatchHarness {
 
         int level() {
             return level;
+        }
+
+        int foodLevel() {
+            return foodLevel;
+        }
+
+        float saturation() {
+            return saturation;
+        }
+
+        float exhaustion() {
+            return exhaustion;
+        }
+
+        double health() {
+            return health;
+        }
+
+        void setHunger(int foodLevel, float saturation, float exhaustion) {
+            this.foodLevel = foodLevel;
+            this.saturation = saturation;
+            this.exhaustion = exhaustion;
         }
 
         void setLevel(int level) {

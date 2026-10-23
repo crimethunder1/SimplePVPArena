@@ -11,6 +11,7 @@ import de.simplepvparena.match.MatchService;
 import de.simplepvparena.match.RoundParticipants;
 import de.simplepvparena.permission.AdminPermission;
 import org.bukkit.Server;
+import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -73,9 +74,12 @@ public final class ArenaDamageListener implements Listener {
         if (!(event instanceof EntityDamageByEntityEvent damageByEntityEvent)) {
             return ArenaDamageCauser.NONE;
         }
-        Optional<UUID> attackerUniqueId = PlayerDamageSource.resolveCausingPlayer(damageByEntityEvent.getDamager());
+        Entity damager = damageByEntityEvent.getDamager();
+        Optional<UUID> attackerUniqueId = PlayerDamageSource.resolveCausingPlayer(damager);
         if (attackerUniqueId.isEmpty()) {
-            return ArenaDamageCauser.NON_PLAYER;
+            return PlayerDamageSource.isCausedByMob(damager)
+                    ? ArenaDamageCauser.MOB
+                    : ArenaDamageCauser.NON_LIVING_ENTITY;
         }
         return classifyAttacker(victimUniqueId, attackerUniqueId.get());
     }

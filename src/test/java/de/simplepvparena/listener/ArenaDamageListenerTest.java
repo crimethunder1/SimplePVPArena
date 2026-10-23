@@ -95,17 +95,21 @@ class ArenaDamageListenerTest {
     }
 
     @Test
-    void keepsTheEnvironmentTeamMatesMobsAndExplosionsAwayFromAnActiveFighter() {
-        assertTrue(isCancelled(fighter, DamageCause.FALL), "fall");
-        assertTrue(isCancelled(fighter, DamageCause.LAVA), "lava");
-        assertTrue(isCancelled(fighter, DamageCause.POISON), "poison");
+    void keepsTeamMatesMobsAndPlayersOutsideTheMatchAwayFromAnActiveFighter() {
         assertTrue(isCancelled(fighter, mate.player(), DamageCause.ENTITY_ATTACK), "a team mate");
         assertTrue(isCancelled(fighter, arrowShotBy(mate), DamageCause.PROJECTILE), "the arrow of a team mate");
         assertTrue(isCancelled(fighter, createEntity(Zombie.class), DamageCause.ENTITY_ATTACK), "a mob");
-        assertTrue(isCancelled(fighter, tntIgnitedBy(opponent), DamageCause.ENTITY_EXPLOSION),
-                "the TNT of an opponent");
         assertTrue(isCancelled(fighter, bystander.player(), DamageCause.ENTITY_ATTACK),
                 "a player outside the match");
+    }
+
+    @Test
+    void letsTheEnvironmentAndTheTntOfAnOpponentHurtAnActiveFighter() {
+        assertFalse(isCancelled(fighter, DamageCause.FALL), "fall");
+        assertFalse(isCancelled(fighter, DamageCause.LAVA), "lava");
+        assertFalse(isCancelled(fighter, DamageCause.POISON), "poison");
+        assertFalse(isCancelled(fighter, tntIgnitedBy(opponent), DamageCause.ENTITY_EXPLOSION),
+                "the TNT of an opponent");
     }
 
     @Test

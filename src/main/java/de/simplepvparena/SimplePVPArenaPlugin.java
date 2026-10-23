@@ -18,6 +18,8 @@ import de.simplepvparena.arena.ArenaSafetyZone;
 import de.simplepvparena.arena.ArenaSetupService;
 import de.simplepvparena.arena.ArenaTemporaryEntityRemover;
 import de.simplepvparena.arena.BukkitArenaTemporaryEntityRemover;
+import de.simplepvparena.arena.BukkitPlayerPotionEffects;
+import de.simplepvparena.arena.EffectMarginSetting;
 import de.simplepvparena.arena.FileAreaInventoryStorage;
 import de.simplepvparena.arena.MarkClearing;
 import de.simplepvparena.arena.MarkClearingKind;
@@ -38,6 +40,7 @@ import de.simplepvparena.config.AutoMatchConfigurationWriter;
 import de.simplepvparena.config.ConfigurationReloadReport;
 import de.simplepvparena.config.ConfigurationReloadService;
 import de.simplepvparena.config.ConfirmedBorderParticleConfigurationWriter;
+import de.simplepvparena.config.EffectMarginConfigurationWriter;
 import de.simplepvparena.config.PluginLiveConfiguration;
 import de.simplepvparena.config.PluginSettings;
 import de.simplepvparena.config.TeamModeConfigurationWriter;
@@ -197,6 +200,7 @@ public final class SimplePVPArenaPlugin extends JavaPlugin {
     private AutoMatchService autoMatchService;
     private TournamentDryRun tournamentDryRun;
     private ConfigurationReloadService configurationReloadService;
+    private PluginLiveConfiguration liveConfiguration;
     private AreaInventoryService areaInventoryService;
     private ConfiguredVisuals configuredVisuals;
     private PlacementSidebar placementSidebar;
@@ -252,7 +256,9 @@ public final class SimplePVPArenaPlugin extends JavaPlugin {
                 new FileAreaInventoryStorage(
                         new File(getDataFolder(), FileAreaInventoryStorage.DIRECTORY_NAME).toPath(),
                         new BukkitItemStackCodec()),
-                kitService::hasAppliedKit, adminNotifier::notifyAdmins, System::currentTimeMillis);
+                kitService::hasAppliedKit, player -> matchService.isActiveFighter(player.getUniqueId()),
+                spectatorService, new BukkitPlayerPotionEffects(), adminNotifier::notifyAdmins,
+                System::currentTimeMillis);
 
         borderMarkIndex = new BorderMarkIndex();
         borderMarkStorage = new BorderMarkStorage(new File(getDataFolder(), BORDERS_FILE_NAME), getLogger());
@@ -370,7 +376,10 @@ public final class SimplePVPArenaPlugin extends JavaPlugin {
                                 getLogger()::warning),
                         new MarkClearing(MarkClearingKind.START_GATE_MARKS, startGateMarks::getMarkedBlockCount,
                                 () -> startGateMarkStorage.clearEveryMark(startGateMarks),
-                                arenaSetupService::findResetRejection, getLogger()::warning)),
+                                arenaSetupService::findResetRejection, getLogger()::warning),
+                        new EffectMarginSetting(arenaRegistry, margin -> liveConfiguration.setArenaEffectMargin(margin)),
+                        new EffectMarginConfigurationWriter(this::getConfig,
+                                new File(getDataFolder(), CONFIGURATION_FILE_NAME), getLogger())),
                 new AdminMenuDependencies.KitServices(kitLibrary, kitSaveService),
                 new AdminMenuDependencies.RegistrationServices(registrationService, registrationStationService,
                         randomTeamFormation, teamModeSetting, new TeamModeConfigurationWriter(this::getConfig,
@@ -384,16 +393,16 @@ public final class SimplePVPArenaPlugin extends JavaPlugin {
         matchService.setRoundStartEffects(new ConfiguredRoundStartEffects(new VanillaRoundStartEffects(),
                 configuredVisuals::playTotemAnimation));
 
-        configurationReloadService = new ConfigurationReloadService(this::getConfig, this::reloadConfig,
-                new PluginLiveConfiguration(matchService, startGateDuration, fighterColours,
+        liveConfiguration = new PluginLiveConfiguration(matchService, startGateDuration, fighterColours,
                         arenaCleaningService, arenaCleaningVisualEffect, arenaBaselineService, arenaSetupService,
                         arenaSafetyZone, arenaRegistry, borderParticleService, borderWallPreview,
                         borderVisualEffect, teamSizeSetting, teamRegistry, tournamentManager::isTournamentInProgress,
                         adminNotifier::notifyAdmins,
                         getLogger()::warning, messageCatalogLoader::useLanguage, autoMatchService::applySettings,
                         teamModeSetting::setTeamMode, areaInventoryService::setEnabled,
-                        configuredVisuals::applySettings, placementSidebar::setEnabled, placementBoard::setEnabled),
-                getLogger()::warning);
+                        configuredVisuals::applySettings, placementSidebar::setEnabled, placementBoard::setEnabled);
+        configurationReloadService = new ConfigurationReloadService(this::getConfig, this::reloadConfig,
+                liveConfiguration, getLogger()::warning);
         configurationReloadService.applyStoredConfiguration();
 
         registrationStationDisplays = new RegistrationStationDisplays(registrationStations, getServer()::getWorld,

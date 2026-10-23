@@ -44,7 +44,7 @@ class ArenaDamageListenerSuddenDeathTest {
         List<Boolean> cancelledDuringDamage = new ArrayList<>();
         fighter.reactToDamageWith(() -> {
             applyingDuringDamage.add(matchService.isApplyingSuddenDeathDamage());
-            cancelledDuringDamage.add(isCancelled(fighter, DamageCause.FALL));
+            cancelledDuringDamage.add(isCancelled(fighter, DamageCause.CRAMMING));
         });
         harness.runTick();
         assertTrue(harness.getMatchService().findRoundTimer().orElseThrow().isSuddenDeathActive());
@@ -62,7 +62,7 @@ class ArenaDamageListenerSuddenDeathTest {
         harness.runRepeatingTasks();
 
         assertFalse(harness.getMatchService().isApplyingSuddenDeathDamage());
-        assertTrue(isCancelled(fighter, DamageCause.FALL));
+        assertTrue(isCancelled(fighter, DamageCause.CRAMMING));
     }
 
     private boolean isCancelled(ArenaMatchHarness.FakePlayer victim, DamageCause cause) {

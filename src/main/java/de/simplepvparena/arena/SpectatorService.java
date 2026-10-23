@@ -12,7 +12,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 
-public final class SpectatorService {
+public final class SpectatorService implements SpectatorToggleItemGiver {
 
     private static final int SPECTATOR_TOGGLE_ITEM_SLOT = 8;
 
@@ -59,6 +59,16 @@ public final class SpectatorService {
             return enterArenaFlight(player);
         }
         return sendToTribune(player);
+    }
+
+    @Override
+    public void giveSpectatorToggleItemIfMissing(Player player) {
+        for (ItemStack itemStack : player.getInventory().getContents()) {
+            if (spectatorItems.isSpectatorToggleItem(itemStack)) {
+                return;
+            }
+        }
+        giveSpectatorToggleItem(player);
     }
 
     private void giveSpectatorToggleItem(Player player) {

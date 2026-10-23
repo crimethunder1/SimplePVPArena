@@ -689,6 +689,7 @@ arena:
   configuration-not-written: 'Die Änderung gilt, aber config.yml konnte nicht geschrieben werden: {reason}'
   calculation:
     during-match: 'Ein Match läuft, die Kampffläche lässt sich nur zwischen den Matches berechnen'
+    no-border-block-marked: 'Es ist kein Wandblock markiert, markiere zuerst die Wandblöcke'
     diagnosis-run:
       one:
         - 'Einmalige Berechnung mit einem Limit von {count} Zelle'
@@ -925,7 +926,8 @@ arena-menu:
       lore:
         - 'Vergisst jeden markierten Wandblock'
         - 'Die Blöcke in der Welt bleiben, wie sie sind'
-        - 'Die berechnete Kampffläche bleibt, für eine neue Berechnung müssen Wandblöcke neu markiert werden'
+        - 'Die berechnete Kampffläche bleibt, für eine neue'
+        - 'Berechnung müssen Wandblöcke neu markiert werden'
       marked:
         one: '{count} Wandblock ist markiert'
         other: '{count} Wandblöcke sind markiert'
@@ -934,11 +936,26 @@ arena-menu:
       title: 'Starttor-Markierungen löschen'
       lore:
         - 'Vergisst jeden markierten Starttor-Block'
-        - 'Die Blöcke in der Welt bleiben, wie sie sind, die Runden beginnen ohne Starttor'
+        - 'Die Blöcke in der Welt bleiben, wie sie sind,'
+        - 'die Runden beginnen ohne Starttor'
+        - 'Eine Reinigung setzt diese Blöcke wie jeden'
+        - 'anderen Block zurück'
       marked:
         one: '{count} Starttor-Block ist markiert'
         other: '{count} Starttor-Blöcke sind markiert'
       none-marked: 'Es ist kein Starttor-Block markiert'
+    smaller-effect-area:
+      title: 'Kleinerer Wirkungsbereich'
+    larger-effect-area:
+      title: 'Größerer Wirkungsbereich'
+    effect-margin:
+      state:
+        one: 'Rand um die Kampffläche: {count} Block'
+        other: 'Rand um die Kampffläche: {count} Blöcke'
+      radius:
+        one: 'Der Wirkungsbereich hat einen Radius von {radius} Block'
+        other: 'Der Wirkungsbereich hat einen Radius von {radius} Blöcken'
+      steps: 'Klick: 8 Blöcke, Umschalt-Klick: 1 Block'
   cleaning:
     affected-blocks:
       one: '{count} Block ist betroffen'
@@ -988,6 +1005,20 @@ arena-menu:
     switched-to-hidden: 'Die Wandpartikel sind ausgeblendet'
     switched-to-shown-not-written: 'Die Wandpartikel werden angezeigt, aber config.yml konnte nicht geschrieben werden: {reason}'
     switched-to-hidden-not-written: 'Die Wandpartikel sind ausgeblendet, aber config.yml konnte nicht geschrieben werden: {reason}'
+  effect-margin:
+    smallest:
+      one: 'Der Rand kann nicht kleiner als {count} Block werden'
+      other: 'Der Rand kann nicht kleiner als {count} Blöcke werden'
+    largest:
+      one: 'Der Rand kann nicht größer als {count} Block werden'
+      other: 'Der Rand kann nicht größer als {count} Blöcke werden'
+    changed:
+      one: 'Der Rand ist jetzt {count} Block, der Wirkungsbereich hat einen Radius von {radius} Blöcken'
+      other: 'Der Rand ist jetzt {count} Blöcke, der Wirkungsbereich hat einen Radius von {radius} Blöcken'
+    changed-without-fight-area:
+      one: 'Der Rand ist jetzt {count} Block'
+      other: 'Der Rand ist jetzt {count} Blöcke'
+    not-written: '{change}, aber config.yml konnte nicht geschrieben werden: {reason}'
   standings-board:
     placed: 'Die Platzierungstafel steht jetzt hier'
     removed: 'Die Platzierungstafel wurde entfernt'

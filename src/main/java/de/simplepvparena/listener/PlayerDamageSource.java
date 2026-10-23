@@ -2,6 +2,8 @@ package de.simplepvparena.listener;
 
 import org.bukkit.entity.AreaEffectCloud;
 import org.bukkit.entity.Entity;
+import org.bukkit.entity.EvokerFangs;
+import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.Projectile;
 import org.bukkit.entity.TNTPrimed;
@@ -32,6 +34,25 @@ final class PlayerDamageSource {
             return Optional.of(igniter.getUniqueId());
         }
         return Optional.empty();
+    }
+
+    static boolean isCausedByMob(Entity damagingEntity) {
+        if (damagingEntity instanceof LivingEntity) {
+            return true;
+        }
+        if (damagingEntity instanceof Projectile projectile) {
+            return projectile.getShooter() instanceof LivingEntity;
+        }
+        if (damagingEntity instanceof AreaEffectCloud areaEffectCloud) {
+            return areaEffectCloud.getSource() instanceof LivingEntity;
+        }
+        if (damagingEntity instanceof TNTPrimed primedTnt) {
+            return primedTnt.getSource() instanceof LivingEntity;
+        }
+        if (damagingEntity instanceof EvokerFangs evokerFangs) {
+            return evokerFangs.getOwner() != null;
+        }
+        return false;
     }
 
     static Optional<UUID> resolveProjectileSource(ProjectileSource projectileSource) {

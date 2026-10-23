@@ -46,6 +46,9 @@ public final class AreaInventoryService implements EffectAreaPresence {
     private final Supplier<Optional<EffectArea>> effectAreaSource;
     private final AreaInventoryStorage storage;
     private final Predicate<Player> kitWorn;
+    private final Predicate<Player> activeFighter;
+    private final SpectatorToggleItemGiver spectatorToggleItemGiver;
+    private final PlayerPotionEffects potionEffects;
     private final Consumer<String> warningReporter;
     private final LongSupplier clock;
     private final Map<UUID, Long> lastWarningMillisByPlayer = new HashMap<>();
@@ -57,12 +60,17 @@ public final class AreaInventoryService implements EffectAreaPresence {
 
     public AreaInventoryService(Plugin plugin, Supplier<Optional<EffectArea>> effectAreaSource,
                                 AreaInventoryStorage storage, Predicate<Player> kitWorn,
-                                Consumer<String> warningReporter, LongSupplier clock) {
+                                Predicate<Player> activeFighter, SpectatorToggleItemGiver spectatorToggleItemGiver,
+                                PlayerPotionEffects potionEffects, Consumer<String> warningReporter,
+                                LongSupplier clock) {
         this.plugin = Objects.requireNonNull(plugin, "plugin");
         this.depositedKey = new NamespacedKey(plugin, DEPOSITED_KEY_NAME);
         this.effectAreaSource = Objects.requireNonNull(effectAreaSource, "effectAreaSource");
         this.storage = Objects.requireNonNull(storage, "storage");
         this.kitWorn = Objects.requireNonNull(kitWorn, "kitWorn");
+        this.activeFighter = Objects.requireNonNull(activeFighter, "activeFighter");
+        this.spectatorToggleItemGiver = Objects.requireNonNull(spectatorToggleItemGiver, "spectatorToggleItemGiver");
+        this.potionEffects = Objects.requireNonNull(potionEffects, "potionEffects");
         this.warningReporter = Objects.requireNonNull(warningReporter, "warningReporter");
         this.clock = Objects.requireNonNull(clock, "clock");
     }
@@ -151,8 +159,10 @@ public final class AreaInventoryService implements EffectAreaPresence {
         ItemStack[] contents = player.getInventory().getContents();
         Optional<CraftingInventory> craftingGrid = findCraftingGrid(player);
         List<ItemStack> looseItems = collectLooseItems(player, craftingGrid);
+        AreaPlayerCondition condition = new AreaPlayerCondition(potionEffects.read(player), player.getFoodLevel(),
+                player.getSaturation(), player.getExhaustion());
         try {
-            storage.save(player.getUniqueId(), contents, looseItems);
+            storage.save(player.getUniqueId(), contents, looseItems, condition);
         } catch (IOException | RuntimeException writeFailure) {
             warnAtMostOncePerInterval(player, Messages.text(AreaInventoryMessage.NOT_WRITTEN,
                     Placeholder.of("player", player.getName()),
@@ -167,11 +177,17 @@ public final class AreaInventoryService implements EffectAreaPresence {
                 player.setItemOnCursor(null);
                 craftingGrid.ifPresent(grid -> grid.setMatrix(new ItemStack[grid.getMatrix().length]));
             }
+            potionEffects.removeAll(player);
+            setHunger(player, AreaPlayerCondition.FULL_FOOD_LEVEL, AreaPlayerCondition.FULL_SATURATION,
+                    AreaPlayerCondition.NO_EXHAUSTION);
         } catch (RuntimeException clearFailure) {
             warningReporter.accept(Messages.text(AreaInventoryMessage.NOT_CLEARED,
                     Placeholder.of("player", player.getName()),
                     Placeholder.of("reason", FailureDescriptions.describe(clearFailure))));
             return;
+        }
+        if (!activeFighter.test(player)) {
+            spectatorToggleItemGiver.giveSpectatorToggleItemIfMissing(player);
         }
         String keptSafe = Messages.text(AreaInventoryMessage.KEPT_SAFE);
         if (isChatDue(lastKeptSafeChatMillisByPlayer, player)) {
@@ -209,20 +225,21 @@ public final class AreaInventoryService implements EffectAreaPresence {
     private void giveBack(Player player, boolean informPlayer) {
         AreaInventoryLookup lookup = storage.find(player.getUniqueId());
         switch (lookup.outcome()) {
-            case FOUND -> restore(player, lookup.contents().orElseThrow(), lookup.looseItems(), lookup.fileName(),
-                    informPlayer);
+            case FOUND -> restore(player, lookup.contents().orElseThrow(), lookup.looseItems(), lookup.condition(),
+                    lookup.fileName(), informPlayer);
             case MISSING -> abandon(player, AreaInventoryMessage.MISSING, lookup.fileName(), informPlayer);
             case BROKEN -> abandon(player, AreaInventoryMessage.UNREADABLE, lookup.fileName(), informPlayer);
         }
     }
 
-    private void restore(Player player, ItemStack[] contents, List<ItemStack> looseItems, String fileName,
-                         boolean informPlayer) {
+    private void restore(Player player, ItemStack[] contents, List<ItemStack> looseItems,
+                         Optional<AreaPlayerCondition> condition, String fileName, boolean informPlayer) {
         try {
             PlayerInventory inventory = player.getInventory();
             inventory.clear();
             inventory.setContents(contents);
             giveLooseItemsBack(player, inventory, looseItems);
+            condition.ifPresent(savedCondition -> restoreCondition(player, savedCondition));
         } catch (RuntimeException restoreFailure) {
             warnAtMostOncePerInterval(player, Messages.text(AreaInventoryMessage.NOT_RESTORED,
                     Placeholder.of("player", player.getName()),
@@ -242,6 +259,20 @@ public final class AreaInventoryService implements EffectAreaPresence {
         } else {
             TournamentMessages.sendActionBarSuccess(player, back);
         }
+    }
+
+    private void restoreCondition(Player player, AreaPlayerCondition condition) {
+        potionEffects.removeAll(player);
+        potionEffects.apply(player, condition.potionEffects().stream()
+                .filter(SavedPotionEffect::isRestorable)
+                .toList());
+        setHunger(player, condition.foodLevel(), condition.saturation(), condition.exhaustion());
+    }
+
+    private static void setHunger(Player player, int foodLevel, float saturation, float exhaustion) {
+        player.setFoodLevel(foodLevel);
+        player.setSaturation(saturation);
+        player.setExhaustion(exhaustion);
     }
 
     private static void giveLooseItemsBack(Player player, PlayerInventory inventory, List<ItemStack> looseItems) {

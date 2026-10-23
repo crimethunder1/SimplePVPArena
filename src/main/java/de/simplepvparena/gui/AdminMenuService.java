@@ -115,7 +115,8 @@ public final class AdminMenuService {
                 teamChoiceService);
         ArenaAdminMenu arenaAdminMenu = new ArenaAdminMenu(navigator, arenaSetupService, heightMarkerService,
                 gateItemService, chatInputService, arena.borderParticleService(),
-                arena.confirmedBorderParticleWriter(), arena.borderMarkClearing(), arena.startGateMarkClearing());
+                arena.confirmedBorderParticleWriter(), arena.borderMarkClearing(), arena.startGateMarkClearing(),
+                arena.effectMarginSetting(), arena.effectMarginWriter());
         bracketViewMenu = new BracketViewMenu(navigator, tournamentManager, matchService);
         MainAdminMenu mainAdminMenu = new MainAdminMenu(navigator, tournamentManager, tournamentDryRun, teamRegistry,
                 matchService, arenaSetupService, borderSelectorModes, configurationReloader, tournamentMenuStatus,
@@ -192,12 +193,16 @@ public final class AdminMenuService {
     }
 
     public void handleClick(Player player, AdminMenuHolder holder, int slot) {
+        handleClick(player, holder, slot, false);
+    }
+
+    public void handleClick(Player player, AdminMenuHolder holder, int slot, boolean shiftClick) {
         boolean memberOfTheVotingTeam = unequalTeamVoteService.isVoter(player.getUniqueId());
         if (!AdminMenuReplies.mayStillUse(player, holder.getMenuType(), memberOfTheVotingTeam,
                 () -> teamChoiceService.findAccessRejection(player.getUniqueId()))) {
             navigator.close(player);
             return;
         }
-        navigator.menuOf(holder.getMenuType()).handleClick(player, holder, slot);
+        navigator.menuOf(holder.getMenuType()).handleClick(player, holder, slot, shiftClick);
     }
 }

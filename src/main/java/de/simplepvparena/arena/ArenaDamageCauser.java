@@ -7,5 +7,6 @@ public enum ArenaDamageCauser {
     SELF,
     TEAM_MATE,
     OTHER_PLAYER,
-    NON_PLAYER
+    MOB,
+    NON_LIVING_ENTITY
 }

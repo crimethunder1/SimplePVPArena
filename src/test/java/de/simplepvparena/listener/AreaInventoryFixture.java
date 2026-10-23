@@ -3,11 +3,13 @@ package de.simplepvparena.listener;
 import de.simplepvparena.arena.AreaInventoryLookup;
 import de.simplepvparena.arena.AreaInventoryService;
 import de.simplepvparena.arena.AreaInventoryStorage;
+import de.simplepvparena.arena.AreaPlayerCondition;
 import de.simplepvparena.arena.FileAreaInventoryStorage;
 import de.simplepvparena.kit.FilePlayerStateSnapshotStorage;
 import de.simplepvparena.kit.KitService;
 import de.simplepvparena.support.FakeItemStack;
 import de.simplepvparena.support.FakeItemStackCodec;
+import de.simplepvparena.support.FakePlayerPotionEffects;
 import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.inventory.ItemStack;
@@ -32,6 +34,7 @@ final class AreaInventoryFixture {
     private final List<String> warnings = new ArrayList<>();
     private final AtomicLong clock = new AtomicLong(1_000_000L);
     private final List<Runnable> saveObservers = new ArrayList<>();
+    private final FakePlayerPotionEffects potionEffects = new FakePlayerPotionEffects();
     private final ArenaMatchHarness harness;
     private final FileAreaInventoryStorage fileStorage;
     private final AreaInventoryStorage storage;
@@ -58,7 +61,9 @@ final class AreaInventoryFixture {
 
     AreaInventoryService createService() {
         return new AreaInventoryService(harness.getPlugin(), harness.getArenaRegistry()::findEffectArea, storage,
-                harness.getKitService()::hasAppliedKit, warnings::add, clock::get);
+                harness.getKitService()::hasAppliedKit,
+                player -> harness.getMatchService().isActiveFighter(player.getUniqueId()),
+                harness.getSpectatorService(), potionEffects, warnings::add, clock::get);
     }
 
     void restartService() {
@@ -71,6 +76,10 @@ final class AreaInventoryFixture {
 
     AreaInventoryService service() {
         return service;
+    }
+
+    FakePlayerPotionEffects potionEffects() {
+        return potionEffects;
     }
 
     KitService kitService() {
@@ -163,13 +172,13 @@ final class AreaInventoryFixture {
     private final class ObservedStorage implements AreaInventoryStorage {
 
         @Override
-        public void save(UUID playerUniqueId, ItemStack[] contents, List<ItemStack> looseItems)
-                throws IOException {
+        public void save(UUID playerUniqueId, ItemStack[] contents, List<ItemStack> looseItems,
+                         AreaPlayerCondition condition) throws IOException {
             saveObservers.forEach(Runnable::run);
             if (writeFailure != null) {
                 throw writeFailure;
             }
-            fileStorage.save(playerUniqueId, contents, looseItems);
+            fileStorage.save(playerUniqueId, contents, looseItems, condition);
         }
 
         @Override

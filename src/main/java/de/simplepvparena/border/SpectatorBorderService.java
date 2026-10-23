@@ -72,6 +72,10 @@ public final class SpectatorBorderService {
         return clearedMarkCount;
     }
 
+    public boolean hasMarkedBorderBlocks() {
+        return borderMarks.getMarkedBlockCount() > 0;
+    }
+
     public BorderColumnReader createColumnReader(World world) {
         return borderMarks.createColumnReader(world.getName());
     }

@@ -23,8 +23,20 @@ class ArenaDamageRuleTest {
     private static final Set<DamageCause> ALWAYS_ALLOWED_CAUSES = EnumSet.of(
             DamageCause.VOID, DamageCause.KILL, DamageCause.SUICIDE);
 
-    private static final Set<DamageCause> EXPLOSION_CAUSES = EnumSet.of(
-            DamageCause.ENTITY_EXPLOSION, DamageCause.BLOCK_EXPLOSION);
+    private static final Set<DamageCause> FIGHT_CAUSES = EnumSet.of(
+            DamageCause.LAVA, DamageCause.FIRE, DamageCause.FIRE_TICK, DamageCause.HOT_FLOOR, DamageCause.CAMPFIRE,
+            DamageCause.CONTACT, DamageCause.FALL, DamageCause.DROWNING, DamageCause.SUFFOCATION,
+            DamageCause.FLY_INTO_WALL, DamageCause.FALLING_BLOCK, DamageCause.BLOCK_EXPLOSION,
+            DamageCause.ENTITY_EXPLOSION, DamageCause.MAGIC, DamageCause.POISON, DamageCause.WITHER,
+            DamageCause.THORNS, DamageCause.DRAGON_BREATH, DamageCause.SONIC_BOOM, DamageCause.STARVATION,
+            DamageCause.FREEZE, DamageCause.LIGHTNING, DamageCause.ENTITY_SWEEP_ATTACK, DamageCause.ENTITY_ATTACK,
+            DamageCause.PROJECTILE);
+
+    private static final Set<ArenaDamageCauser> CAUSERS_WITHOUT_PLAYER_OR_MOB = EnumSet.of(
+            ArenaDamageCauser.NONE, ArenaDamageCauser.NON_LIVING_ENTITY);
+
+    private static final Set<ArenaDamageCauser> REFUSED_FIGHTER_CAUSERS = EnumSet.of(
+            ArenaDamageCauser.TEAM_MATE, ArenaDamageCauser.OTHER_PLAYER, ArenaDamageCauser.MOB);
 
     private static final Set<ArenaDamageCauser> ALLOWED_FIGHTER_CAUSERS = EnumSet.of(
             ArenaDamageCauser.OPPONENT, ArenaDamageCauser.ADMIN, ArenaDamageCauser.SELF);
@@ -77,45 +89,76 @@ class ArenaDamageRuleTest {
     }
 
     @Test
-    void treatsEveryExplosionAsEnvironmentalDamageOfAFighter() {
-        for (DamageCause cause : EXPLOSION_CAUSES) {
-            for (ArenaDamageCauser causer : ArenaDamageCauser.values()) {
+    void coversEveryCauseOfAFightInTheArena() {
+        assertEquals(25, FIGHT_CAUSES.size());
+        assertEquals(EnumSet.allOf(ArenaDamageCauser.class), union(CAUSERS_WITHOUT_PLAYER_OR_MOB,
+                REFUSED_FIGHTER_CAUSERS, ALLOWED_FIGHTER_CAUSERS));
+    }
+
+    @Test
+    void letsEveryCauseOfAFightHurtAFighterWhenNoPlayerAndNoMobIsBehindIt() {
+        for (DamageCause cause : FIGHT_CAUSES) {
+            for (ArenaDamageCauser causer : CAUSERS_WITHOUT_PLAYER_OR_MOB) {
+                assertFalse(isCancelled(ArenaDamageVictimRole.FIGHTER, cause, causer), describe(cause, causer));
+            }
+        }
+    }
+
+    @Test
+    void letsAnOpponentAnAdminAndTheFighterCauseEveryDamageToAFighter() {
+        for (DamageCause cause : DamageCause.values()) {
+            for (ArenaDamageCauser causer : ALLOWED_FIGHTER_CAUSERS) {
+                assertFalse(isCancelled(ArenaDamageVictimRole.FIGHTER, cause, causer), describe(cause, causer));
+            }
+        }
+    }
+
+    @Test
+    void keepsTeamMatesPlayersOutsideTheMatchAndMobsAwayFromAFighter() {
+        for (DamageCause cause : DamageCause.values()) {
+            if (cause == DamageCause.CUSTOM || ALWAYS_ALLOWED_CAUSES.contains(cause)) {
+                continue;
+            }
+            for (ArenaDamageCauser causer : REFUSED_FIGHTER_CAUSERS) {
                 assertTrue(isCancelled(ArenaDamageVictimRole.FIGHTER, cause, causer), describe(cause, causer));
             }
         }
     }
 
     @Test
-    void letsOnlyAnOpponentAnAdminOrTheFighterCauseAnyOtherDamageToAFighter() {
+    void keepsEveryOtherCauseAwayFromAFighterWhenNoOpponentAdminOrTheFighterIsBehindIt() {
         for (DamageCause cause : DamageCause.values()) {
-            if (cause == DamageCause.CUSTOM || ALWAYS_ALLOWED_CAUSES.contains(cause)
-                    || EXPLOSION_CAUSES.contains(cause)) {
+            if (cause == DamageCause.CUSTOM || ALWAYS_ALLOWED_CAUSES.contains(cause) || FIGHT_CAUSES.contains(cause)) {
                 continue;
             }
-            for (ArenaDamageCauser causer : ArenaDamageCauser.values()) {
-                assertEquals(!ALLOWED_FIGHTER_CAUSERS.contains(causer),
-                        isCancelled(ArenaDamageVictimRole.FIGHTER, cause, causer), describe(cause, causer));
+            for (ArenaDamageCauser causer : CAUSERS_WITHOUT_PLAYER_OR_MOB) {
+                assertTrue(isCancelled(ArenaDamageVictimRole.FIGHTER, cause, causer), describe(cause, causer));
             }
         }
     }
 
     @Test
-    void keepsTheEnvironmentTeamMatesAndMobsAwayFromAFighter() {
-        for (DamageCause cause : List.of(DamageCause.FALL, DamageCause.FIRE, DamageCause.FIRE_TICK,
-                DamageCause.LAVA, DamageCause.DROWNING, DamageCause.SUFFOCATION, DamageCause.STARVATION,
-                DamageCause.POISON, DamageCause.WITHER, DamageCause.LIGHTNING)) {
-            assertTrue(isCancelled(ArenaDamageVictimRole.FIGHTER, cause, ArenaDamageCauser.NONE), cause.name());
+    void letsLavaFireAndTheExplosionsOfAnOpponentHurtAFighter() {
+        for (DamageCause cause : List.of(DamageCause.LAVA, DamageCause.FIRE, DamageCause.FIRE_TICK,
+                DamageCause.FALL, DamageCause.POISON, DamageCause.LIGHTNING, DamageCause.BLOCK_EXPLOSION)) {
+            assertFalse(isCancelled(ArenaDamageVictimRole.FIGHTER, cause, ArenaDamageCauser.NONE), cause.name());
         }
+        assertFalse(isCancelled(ArenaDamageVictimRole.FIGHTER, DamageCause.ENTITY_EXPLOSION,
+                ArenaDamageCauser.OPPONENT), "the TNT of an opponent");
+        assertFalse(isCancelled(ArenaDamageVictimRole.FIGHTER, DamageCause.ENTITY_EXPLOSION,
+                ArenaDamageCauser.NON_LIVING_ENTITY), "an end crystal");
+        assertFalse(isCancelled(ArenaDamageVictimRole.FIGHTER, DamageCause.FALLING_BLOCK,
+                ArenaDamageCauser.NON_LIVING_ENTITY), "a falling anvil");
+        assertTrue(isCancelled(ArenaDamageVictimRole.FIGHTER, DamageCause.ENTITY_EXPLOSION,
+                ArenaDamageCauser.MOB), "a creeper");
+        assertTrue(isCancelled(ArenaDamageVictimRole.FIGHTER, DamageCause.ENTITY_ATTACK,
+                ArenaDamageCauser.MOB), "a mob");
         assertTrue(isCancelled(ArenaDamageVictimRole.FIGHTER, DamageCause.ENTITY_ATTACK,
                 ArenaDamageCauser.TEAM_MATE), "a team mate");
         assertTrue(isCancelled(ArenaDamageVictimRole.FIGHTER, DamageCause.ENTITY_ATTACK,
-                ArenaDamageCauser.NON_PLAYER), "a mob");
-        assertTrue(isCancelled(ArenaDamageVictimRole.FIGHTER, DamageCause.LIGHTNING,
-                ArenaDamageCauser.NON_PLAYER), "a lightning strike");
-        assertTrue(isCancelled(ArenaDamageVictimRole.FIGHTER, DamageCause.ENTITY_EXPLOSION,
-                ArenaDamageCauser.OPPONENT), "the TNT of an opponent");
-        assertTrue(isCancelled(ArenaDamageVictimRole.FIGHTER, DamageCause.ENTITY_ATTACK,
                 ArenaDamageCauser.OTHER_PLAYER), "a player outside the match");
+        assertTrue(isCancelled(ArenaDamageVictimRole.FIGHTER, DamageCause.CRAMMING,
+                ArenaDamageCauser.NONE), "cramming");
     }
 
     @Test
@@ -129,6 +172,15 @@ class ArenaDamageRuleTest {
         }
         assertFalse(isCancelled(ArenaDamageVictimRole.FIGHTER, DamageCause.PROJECTILE, ArenaDamageCauser.SELF),
                 "the own projectile of the fighter");
+    }
+
+    @SafeVarargs
+    private static Set<ArenaDamageCauser> union(Set<ArenaDamageCauser>... causerSets) {
+        Set<ArenaDamageCauser> causers = EnumSet.noneOf(ArenaDamageCauser.class);
+        for (Set<ArenaDamageCauser> causerSet : causerSets) {
+            causers.addAll(causerSet);
+        }
+        return causers;
     }
 
     private static boolean isCancelled(ArenaDamageVictimRole victimRole, DamageCause cause,

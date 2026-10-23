@@ -13,6 +13,7 @@ import de.simplepvparena.arena.ArenaRegistry;
 import de.simplepvparena.arena.ArenaSetupService;
 import de.simplepvparena.arena.ArenaShape;
 import de.simplepvparena.arena.ArenaShapeFloodFill;
+import de.simplepvparena.arena.EffectMarginSetting;
 import de.simplepvparena.arena.MarkClearing;
 import de.simplepvparena.arena.MarkClearingKind;
 import de.simplepvparena.arena.PositionSnapshot;
@@ -147,6 +148,7 @@ final class AdminMenuFixture {
     private final List<Integer> writtenTeamSizes = new ArrayList<>();
     private final List<Boolean> writtenAutoMatchModes = new ArrayList<>();
     private final List<Boolean> writtenBorderParticleSwitches = new ArrayList<>();
+    private final List<Integer> writtenEffectMargins = new ArrayList<>();
     private final List<TeamMode> writtenTeamModes = new ArrayList<>();
     private final List<String> markClearingWarnings = new ArrayList<>();
     private final TeamModeSetting teamModeSetting = new TeamModeSetting();
@@ -185,6 +187,7 @@ final class AdminMenuFixture {
     private IOException teamSizeWriteFailure;
     private IOException autoMatchModeWriteFailure;
     private IOException borderParticleSwitchWriteFailure;
+    private IOException effectMarginWriteFailure;
     private IOException teamModeWriteFailure;
     private IOException arenaConfigurationWriteFailure;
     private IOException markWriteFailure;
@@ -272,7 +275,9 @@ final class AdminMenuFixture {
                                 markClearingWarnings::add),
                         new MarkClearing(MarkClearingKind.START_GATE_MARKS, gateMarks::getMarkedBlockCount,
                                 this::forgetEveryStartGateMark, arenaSetupService::findResetRejection,
-                                markClearingWarnings::add)),
+                                markClearingWarnings::add),
+                        new EffectMarginSetting(arenaRegistry, arenaRegistry::setEffectMargin),
+                        this::writeEffectMargin),
                 new AdminMenuDependencies.KitServices(kitLibrary,
                         new KitSaveService(kitLibrary, new FakeKitItemSerializer())),
                 new AdminMenuDependencies.RegistrationServices(registrationService, registrationStationService,
@@ -486,6 +491,14 @@ final class AdminMenuFixture {
         return borderParticleService;
     }
 
+    List<Integer> writtenEffectMargins() {
+        return writtenEffectMargins;
+    }
+
+    void failEffectMarginWrites(IOException failure) {
+        effectMarginWriteFailure = failure;
+    }
+
     List<Boolean> writtenBorderParticleSwitches() {
         return writtenBorderParticleSwitches;
     }
@@ -691,6 +704,10 @@ final class AdminMenuFixture {
         menuService.handleClick(admin, lastMenu().holder(), slot);
     }
 
+    void shiftClick(int slot) {
+        menuService.handleClick(admin, lastMenu().holder(), slot, true);
+    }
+
     void clickIn(AdminMenuHolder holder, int slot) {
         menuService.handleClick(admin, holder, slot);
     }
@@ -865,6 +882,13 @@ final class AdminMenuFixture {
             throw autoMatchModeWriteFailure;
         }
         writtenAutoMatchModes.add(enabled);
+    }
+
+    private void writeEffectMargin(int margin) throws IOException {
+        if (effectMarginWriteFailure != null) {
+            throw effectMarginWriteFailure;
+        }
+        writtenEffectMargins.add(margin);
     }
 
     private void writeBorderParticleSwitch(boolean enabled) throws IOException {

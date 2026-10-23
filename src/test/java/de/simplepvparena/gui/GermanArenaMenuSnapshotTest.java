@@ -36,6 +36,22 @@ class GermanArenaMenuSnapshotTest {
             Steh außerhalb der Arenawand, wo die Zuschauer warten / \
             Eine Stelle auf der falschen Seite der Kampffläche / wird abgelehnt, sobald die Fläche berechnet ist
             """;
+    private static final String SMALLER_EFFECT_AREA_TILE_WITHOUT_FIGHT_AREA = """
+            3 | RED_DYE | Kleinerer Wirkungsbereich | Rand um die Kampffläche: 96 Blöcke / \
+            Klick: 8 Blöcke, Umschalt-Klick: 1 Block
+            """;
+    private static final String LARGER_EFFECT_AREA_TILE_WITHOUT_FIGHT_AREA = """
+            5 | LIME_DYE | Größerer Wirkungsbereich | Rand um die Kampffläche: 96 Blöcke / \
+            Klick: 8 Blöcke, Umschalt-Klick: 1 Block
+            """;
+    private static final String SMALLER_EFFECT_AREA_TILE_OF_A_CALCULATED_ARENA = """
+            3 | RED_DYE | Kleinerer Wirkungsbereich | Rand um die Kampffläche: 96 Blöcke / \
+            Der Wirkungsbereich hat einen Radius von 99.5 Blöcken / Klick: 8 Blöcke, Umschalt-Klick: 1 Block
+            """;
+    private static final String LARGER_EFFECT_AREA_TILE_OF_A_CALCULATED_ARENA = """
+            5 | LIME_DYE | Größerer Wirkungsbereich | Rand um die Kampffläche: 96 Blöcke / \
+            Der Wirkungsbereich hat einen Radius von 99.5 Blöcken / Klick: 8 Blöcke, Umschalt-Klick: 1 Block
+            """;
     private static final String CLEAN_TILE_OF_A_CALCULATED_ARENA = """
             15 | TNT | Arena reinigen | Es ist kein Ausgangszustand gespeichert, jeder Block / \
             der Kampffläche wird auf Luft gesetzt / Einen Ausgangszustand nimmt die Berechnung auf, er ist / \
@@ -52,7 +68,7 @@ class GermanArenaMenuSnapshotTest {
     private static final String BORDER_MARKS_TILE_OF_A_CALCULATED_ARENA = """
             17 | TNT_MINECART | Wandmarkierungen löschen | Vergisst jeden markierten Wandblock / \
             Die Blöcke in der Welt bleiben, wie sie sind / \
-            Die berechnete Kampffläche bleibt, für eine neue Berechnung müssen Wandblöcke neu markiert werden / \
+            Die berechnete Kampffläche bleibt, für eine neue / Berechnung müssen Wandblöcke neu markiert werden / \
             96 Wandblöcke sind markiert / Fragt vorher nach einer Bestätigung
             """;
     private static final String BORDER_MARKS_TILE_WHILE_A_MATCH_RUNS = """
@@ -92,11 +108,12 @@ class GermanArenaMenuSnapshotTest {
         fixture.openMenuFromTheMainMenu(MAIN_ARENA_SLOT);
 
         assertEquals("Arena | 27\n"
+                + SMALLER_EFFECT_AREA_TILE_WITHOUT_FIGHT_AREA
                 + "4 | BOOK | Arena | Arena unvollständig /   Kampffläche: nicht berechnet / "
                 + "  Spawn des ersten Teams: nicht gesetzt /   Spawn des zweiten Teams: nicht gesetzt / "
                 + "  Tribünen-Spawn: nicht gesetzt /   Wirkungsbereich: keiner, bis die Kampffläche berechnet ist / "
                 + "  Laufendes Match: keins\n"
-                + FIXED_TILES
+                + LARGER_EFFECT_AREA_TILE_WITHOUT_FIGHT_AREA + FIXED_TILES
                 + "15 | TNT | Arena reinigen | Es ist keine Kampffläche berechnet, es gibt nichts zu reinigen\n"
                 + RESET_TILE + BORDER_MARKS_TILE_WITHOUT_MARKS + TILES_FROM_THE_HEIGHT_MARKER_TILE,
                 fixture.describeLastMenu());
@@ -109,9 +126,9 @@ class GermanArenaMenuSnapshotTest {
 
         fixture.openMenuFromTheMainMenu(MAIN_ARENA_SLOT);
 
-        assertEquals("Arena | 27\n"
+        assertEquals("Arena | 27\n" + SMALLER_EFFECT_AREA_TILE_OF_A_CALCULATED_ARENA
                 + INFO_OF_A_READY_ARENA + "  Laufendes Match: keins\n"
-                + FIXED_TILES + CLEAN_TILE_OF_A_CALCULATED_ARENA + RESET_TILE
+                + LARGER_EFFECT_AREA_TILE_OF_A_CALCULATED_ARENA + FIXED_TILES + CLEAN_TILE_OF_A_CALCULATED_ARENA + RESET_TILE
                 + BORDER_MARKS_TILE_OF_A_CALCULATED_ARENA + TILES_FROM_THE_HEIGHT_MARKER_TILE,
                 fixture.describeLastMenu());
     }
@@ -124,9 +141,9 @@ class GermanArenaMenuSnapshotTest {
 
         fixture.openMenuFromTheMainMenu(MAIN_ARENA_SLOT);
 
-        assertEquals("Arena | 27\n"
+        assertEquals("Arena | 27\n" + SMALLER_EFFECT_AREA_TILE_OF_A_CALCULATED_ARENA
                 + INFO_OF_A_READY_ARENA + "  Laufendes Match: M1 (Alpha 0 : 0 Bravo)\n"
-                + FIXED_TILES + CLEAN_TILE_OF_A_CALCULATED_ARENA + RESET_TILE
+                + LARGER_EFFECT_AREA_TILE_OF_A_CALCULATED_ARENA + FIXED_TILES + CLEAN_TILE_OF_A_CALCULATED_ARENA + RESET_TILE
                 + BORDER_MARKS_TILE_WHILE_A_MATCH_RUNS + TILES_FROM_THE_HEIGHT_MARKER_TILE,
                 fixture.describeLastMenu());
     }
@@ -159,7 +176,8 @@ class GermanArenaMenuSnapshotTest {
 
         assertEquals(BORDER_MARKS_TILE_OF_A_CALCULATED_ARENA.strip(), describeTile(CLEAR_BORDER_MARKS_SLOT));
         assertEquals("25 | IRON_CHAIN | Starttor-Markierungen löschen | Vergisst jeden markierten Starttor-Block / "
-                + "Die Blöcke in der Welt bleiben, wie sie sind, die Runden beginnen ohne Starttor / "
+                + "Die Blöcke in der Welt bleiben, wie sie sind, / die Runden beginnen ohne Starttor / "
+                + "Eine Reinigung setzt diese Blöcke wie jeden / anderen Block zurück / "
                 + "2 Starttor-Blöcke sind markiert / Fragt vorher nach einer Bestätigung",
                 describeTile(CLEAR_START_GATE_MARKS_SLOT));
     }

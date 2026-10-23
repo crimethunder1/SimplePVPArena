@@ -27,6 +27,7 @@ class FileAreaInventoryStorageTest {
     private static final int SLOT_COUNT = 41;
     private static final int OFF_HAND_SLOT = 40;
     private static final int HELMET_SLOT = 39;
+    private static final AreaPlayerCondition WITHOUT_EFFECTS = new AreaPlayerCondition(List.of(), 20, 5.0F, 0.0F);
 
     @TempDir
     Path dataFolder;
@@ -38,13 +39,13 @@ class FileAreaInventoryStorageTest {
         FileAreaInventoryStorage storage = storageIn(inventoryDirectory());
         ItemStack[] contents = fullContents();
 
-        storage.save(playerUniqueId, contents, List.of());
+        storage.save(playerUniqueId, contents, List.of(), WITHOUT_EFFECTS);
 
         Path inventoryFile = inventoryDirectory().resolve(playerUniqueId + ".yml");
         assertTrue(Files.isRegularFile(inventoryFile));
         assertEquals(List.of(inventoryFile), filesIn(inventoryDirectory()), "no temporary file is left behind");
         String writtenFile = Files.readString(inventoryFile, StandardCharsets.UTF_8);
-        assertTrue(writtenFile.contains("format-version: 2"), writtenFile);
+        assertTrue(writtenFile.contains("format-version: 3"), writtenFile);
         assertFalse(writtenFile.contains("loose-items"), writtenFile);
         assertTrue(writtenFile.contains("saved-at: "), writtenFile);
         AreaInventoryLookup lookup = storage.find(playerUniqueId);
@@ -59,7 +60,7 @@ class FileAreaInventoryStorageTest {
         FileAreaInventoryStorage storage = storageIn(inventoryDirectory());
         List<ItemStack> looseItems = List.of(new FakeItemStack("cursor torch"), new FakeItemStack("grid planks"));
 
-        storage.save(playerUniqueId, fullContents(), looseItems);
+        storage.save(playerUniqueId, fullContents(), looseItems, WITHOUT_EFFECTS);
 
         String writtenFile = Files.readString(inventoryDirectory().resolve(playerUniqueId + ".yml"),
                 StandardCharsets.UTF_8);
@@ -93,11 +94,11 @@ class FileAreaInventoryStorageTest {
     @Test
     void replacesAnOlderFileOfTheSamePlayer() throws IOException {
         FileAreaInventoryStorage storage = storageIn(inventoryDirectory());
-        storage.save(playerUniqueId, fullContents(), List.of());
+        storage.save(playerUniqueId, fullContents(), List.of(), WITHOUT_EFFECTS);
         ItemStack[] newerContents = new ItemStack[SLOT_COUNT];
         newerContents[3] = new FakeItemStack("bread");
 
-        storage.save(playerUniqueId, newerContents, List.of());
+        storage.save(playerUniqueId, newerContents, List.of(), WITHOUT_EFFECTS);
 
         assertArrayEquals(newerContents, storage.find(playerUniqueId).contents().orElseThrow());
         assertEquals(1, filesIn(inventoryDirectory()).size());
@@ -165,7 +166,7 @@ class FileAreaInventoryStorageTest {
         Files.writeString(blockedDirectory, "a file where the folder should be", StandardCharsets.UTF_8);
 
         assertThrows(IOException.class,
-                () -> storageIn(blockedDirectory).save(playerUniqueId, fullContents(), List.of()));
+                () -> storageIn(blockedDirectory).save(playerUniqueId, fullContents(), List.of(), WITHOUT_EFFECTS));
 
         assertTrue(Files.isRegularFile(blockedDirectory));
     }
@@ -186,7 +187,7 @@ class FileAreaInventoryStorageTest {
         FileAreaInventoryStorage storage = new FileAreaInventoryStorage(inventoryDirectory(), failingCodec);
 
         IOException failure = assertThrows(IOException.class,
-                () -> storage.save(playerUniqueId, fullContents(), List.of()));
+                () -> storage.save(playerUniqueId, fullContents(), List.of(), WITHOUT_EFFECTS));
 
         assertEquals("the inventory could not be encoded", failure.getMessage());
         assertFalse(Files.exists(inventoryDirectory().resolve(playerUniqueId + ".yml")));
@@ -195,12 +196,74 @@ class FileAreaInventoryStorageTest {
     @Test
     void deletesTheFileAndToleratesAMissingOne() throws IOException {
         FileAreaInventoryStorage storage = storageIn(inventoryDirectory());
-        storage.save(playerUniqueId, fullContents(), List.of());
+        storage.save(playerUniqueId, fullContents(), List.of(), WITHOUT_EFFECTS);
 
         storage.delete(playerUniqueId);
         storage.delete(playerUniqueId);
 
         assertEquals(AreaInventoryLookup.Outcome.MISSING, storage.find(playerUniqueId).outcome());
+    }
+
+    @Test
+    void writesTheEffectsAndTheHungerAndReadsThemBack() throws IOException {
+        FileAreaInventoryStorage storage = storageIn(inventoryDirectory());
+        AreaPlayerCondition condition = new AreaPlayerCondition(List.of(
+                new SavedPotionEffect("minecraft:speed", 1, 1200, false, true, true),
+                new SavedPotionEffect("minecraft:night_vision", 0, SavedPotionEffect.INFINITE_DURATION_TICKS, true,
+                        false, false)), 9, 2.5F, 1.25F);
+
+        storage.save(playerUniqueId, fullContents(), List.of(), condition);
+
+        String writtenFile = Files.readString(inventoryDirectory().resolve(playerUniqueId + ".yml"),
+                StandardCharsets.UTF_8);
+        assertTrue(writtenFile.contains("potion-effects:"), writtenFile);
+        assertTrue(writtenFile.contains("type: minecraft:speed"), writtenFile);
+        assertTrue(writtenFile.contains("hunger:"), writtenFile);
+        AreaInventoryLookup lookup = storage.find(playerUniqueId);
+        assertEquals(AreaInventoryLookup.Outcome.FOUND, lookup.outcome());
+        assertEquals(condition, lookup.condition().orElseThrow());
+    }
+
+    @Test
+    void writesAnEmptyListOfEffects() throws IOException {
+        FileAreaInventoryStorage storage = storageIn(inventoryDirectory());
+
+        storage.save(playerUniqueId, fullContents(), List.of(), WITHOUT_EFFECTS);
+
+        assertEquals(WITHOUT_EFFECTS, storage.find(playerUniqueId).condition().orElseThrow());
+    }
+
+    @Test
+    void readsAFileOfTheSecondFormatWithoutEffectsAndHunger() throws IOException {
+        Files.createDirectories(inventoryDirectory());
+        String encodedContents = KitItemCodec.encode(new FakeItemStackCodec().encode(fullContents()));
+        Files.writeString(inventoryDirectory().resolve(playerUniqueId + ".yml"),
+                "format-version: 2\nsaved-at: '2026-10-01T10:00:00Z'\ncontents: " + encodedContents + "\n",
+                StandardCharsets.UTF_8);
+
+        AreaInventoryLookup lookup = storageIn(inventoryDirectory()).find(playerUniqueId);
+
+        assertEquals(AreaInventoryLookup.Outcome.FOUND, lookup.outcome());
+        assertArrayEquals(fullContents(), lookup.contents().orElseThrow());
+        assertTrue(lookup.condition().isEmpty());
+    }
+
+    @Test
+    void treatsAFileOfTheThirdFormatWithoutHungerOrWithAnUnreadableEffectAsBroken() throws IOException {
+        Files.createDirectories(inventoryDirectory());
+        String encodedContents = KitItemCodec.encode(new FakeItemStackCodec().encode(fullContents()));
+        Path inventoryFile = inventoryDirectory().resolve(playerUniqueId + ".yml");
+        Files.writeString(inventoryFile, "format-version: 3\ncontents: " + encodedContents
+                + "\npotion-effects: []\n", StandardCharsets.UTF_8);
+        assertEquals(AreaInventoryLookup.Outcome.BROKEN,
+                storageIn(inventoryDirectory()).find(playerUniqueId).outcome());
+
+        Files.writeString(inventoryFile, "format-version: 3\ncontents: " + encodedContents
+                + "\npotion-effects:\n- type: minecraft:speed\n  amplifier: fast\n"
+                + "hunger:\n  food-level: 20\n  saturation: 5.0\n  exhaustion: 0.0\n", StandardCharsets.UTF_8);
+
+        assertEquals(AreaInventoryLookup.Outcome.BROKEN,
+                storageIn(inventoryDirectory()).find(playerUniqueId).outcome());
     }
 
     private Path inventoryDirectory() {

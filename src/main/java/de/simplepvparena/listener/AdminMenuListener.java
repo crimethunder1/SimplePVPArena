@@ -32,7 +32,7 @@ public final class AdminMenuListener implements Listener {
         if (clickedInventory == null || !(clickedInventory.getHolder() instanceof AdminMenuHolder)) {
             return;
         }
-        adminMenuService.handleClick(player, holder, event.getSlot());
+        adminMenuService.handleClick(player, holder, event.getSlot(), event.isShiftClick());
     }
 
     @EventHandler

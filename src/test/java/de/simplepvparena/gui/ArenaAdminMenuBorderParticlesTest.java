@@ -114,10 +114,14 @@ class ArenaAdminMenuBorderParticlesTest {
 
         assertEquals("""
                 Arena | 27
+                3 | RED_DYE | Kleinerer Wirkungsbereich | Rand um die Kampffläche: 96 Blöcke / \
+                Klick: 8 Blöcke, Umschalt-Klick: 1 Block
                 4 | BOOK | Arena | Arena unvollständig /   Kampffläche: nicht berechnet / \
                   Spawn des ersten Teams: nicht gesetzt /   Spawn des zweiten Teams: nicht gesetzt / \
                   Tribünen-Spawn: nicht gesetzt /   Wirkungsbereich: keiner, bis die Kampffläche berechnet ist / \
                   Laufendes Match: keins
+                5 | LIME_DYE | Größerer Wirkungsbereich | Rand um die Kampffläche: 96 Blöcke / \
+                Klick: 8 Blöcke, Umschalt-Klick: 1 Block
                 10 | SPYGLASS | Kampffläche berechnen | Berechnet die Fläche ab der Stelle, an der du stehst / \
                 Steh vor dem Klick innerhalb der geschlossenen Arenawand / \
                 Das Menü schließt sich, damit du die erkannte Wand sehen kannst
