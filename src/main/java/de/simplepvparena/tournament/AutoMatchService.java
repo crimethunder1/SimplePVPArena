@@ -51,6 +51,7 @@ public final class AutoMatchService implements MatchCompletionHandler, AutoMatch
     private Match runningMatch;
     private int secondsLeft;
     private Object runningCleaning;
+    private PlayAgainRule playAgainRule = PlayAgainRule.NONE;
 
     public AutoMatchService(Plugin plugin, TeamRegistry teamRegistry, ArenaRegistry arenaRegistry,
                             MatchService matchService, TournamentManager tournamentManager, KitLibrary kitLibrary,
@@ -67,6 +68,10 @@ public final class AutoMatchService implements MatchCompletionHandler, AutoMatch
         this.matchService.setAutoMatchCompletionHandler(this);
         this.tournamentManager.setAutoMatchReservation(this);
         this.teamRegistry.addRenameObserver(this::followRenamedTeam);
+    }
+
+    public void setPlayAgainRule(PlayAgainRule playAgainRule) {
+        this.playAgainRule = Objects.requireNonNull(playAgainRule, "playAgainRule");
     }
 
     public void applySettings(AutoMatchSettings newSettings) {
@@ -132,6 +137,7 @@ public final class AutoMatchService implements MatchCompletionHandler, AutoMatch
     public Optional<List<Team>> findPairing() {
         List<Team> teamsByWaitingTime = teamRegistry.getTeams().stream()
                 .filter(this::hasFreeOnlineMember)
+                .filter(team -> !playAgainRule.isWaitingForPlayAgain(team))
                 .sorted(Comparator.comparingLong(this::findLastAutoMatchNumber))
                 .toList();
         if (teamsByWaitingTime.size() < 2) {
@@ -156,6 +162,7 @@ public final class AutoMatchService implements MatchCompletionHandler, AutoMatch
     public void onMatchCompleted(Match match, String winnerTeamName) {
         if (state == AutoMatchState.RUNNING && match == runningMatch) {
             finishRunningMatch();
+            playAgainRule.autoMatchFinished(match, settings.playAgainSeconds());
             stopTimerWhenIdle();
         }
     }

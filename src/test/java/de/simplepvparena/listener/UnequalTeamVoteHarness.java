@@ -160,7 +160,7 @@ final class UnequalTeamVoteHarness {
     }
 
     void startAnAutoMatch() {
-        autoMatchService.applySettings(new AutoMatchSettings(true, AUTO_MATCH_START_DELAY_SECONDS, 20));
+        autoMatchService.applySettings(new AutoMatchSettings(true, AUTO_MATCH_START_DELAY_SECONDS, 20, 0));
         advanceSeconds(1);
         advanceSeconds(AUTO_MATCH_START_DELAY_SECONDS);
     }

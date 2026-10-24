@@ -503,6 +503,7 @@ final class ArenaMatchHarness {
         private final String playerName;
         private final Map<Object, Object> persistentData = new LinkedHashMap<>();
         private final List<String> messages = new ArrayList<>();
+        private final List<Component> components = new ArrayList<>();
         private final List<String> actionBars = new ArrayList<>();
         private final List<Title> titles = new ArrayList<>();
         private final Player player;
@@ -646,6 +647,10 @@ final class ArenaMatchHarness {
             return messages;
         }
 
+        List<Component> components() {
+            return components;
+        }
+
         List<String> actionBars() {
             return actionBars;
         }
@@ -663,12 +668,14 @@ final class ArenaMatchHarness {
 
         void forgetReceivedTexts() {
             messages.clear();
+            components.clear();
             actionBars.clear();
             titles.clear();
         }
 
         private void recordMessage(Object message) {
             if (message instanceof Component component) {
+                components.add(component);
                 messages.add(TournamentMessages.toPlainBody(component));
             } else {
                 messages.add(String.valueOf(message));

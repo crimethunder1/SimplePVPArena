@@ -44,7 +44,7 @@ class PluginSettingsTest {
         assertEquals(new TeamColourSettings(NamedTextColor.GOLD, NamedTextColor.DARK_PURPLE),
                 settings.teamColourSettings());
         assertEquals(4, settings.teamSize());
-        assertEquals(new AutoMatchSettings(true, 45, 0), settings.autoMatchSettings());
+        assertEquals(new AutoMatchSettings(true, 45, 0, 90), settings.autoMatchSettings());
         assertEquals(1024, settings.arenaCleaningBlocksPerTick());
         assertEquals(2048, settings.arenaBaselineBlocksPerTick());
         assertEquals(20, settings.arenaBaselineDepthBelowFloor());
@@ -401,6 +401,7 @@ class PluginSettingsTest {
         configuration.set(PluginSettings.AUTO_MATCH_ENABLED_PATH, true);
         configuration.set(PluginSettings.AUTO_MATCH_START_DELAY_SECONDS_PATH, 45);
         configuration.set(PluginSettings.AUTO_MATCH_PAUSE_SECONDS_PATH, 0);
+        configuration.set(PluginSettings.AUTO_MATCH_PLAY_AGAIN_SECONDS_PATH, 90);
         configuration.set(PluginSettings.FIRST_TEAM_COLOUR_PATH, "GOLD");
         configuration.set(PluginSettings.SECOND_TEAM_COLOUR_PATH, "dark purple");
         configuration.set(PluginSettings.ARENA_CLEAN_BLOCKS_PER_TICK_PATH, 1024);

@@ -12,6 +12,7 @@ import de.simplepvparena.message.TournamentMessages;
 import de.simplepvparena.permission.AdminPermission;
 import de.simplepvparena.permission.ViewPermission;
 import de.simplepvparena.registration.RegistrationService;
+import de.simplepvparena.tournament.PlayAgainService;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.TabExecutor;
@@ -35,22 +36,26 @@ public final class TournamentCommand implements TabExecutor {
     private static final String LEAVE_ARGUMENT = "leave";
     private static final String VOTE_ARGUMENT = "vote";
     private static final String TEAM_ARGUMENT = "team";
+    private static final String PLAY_AGAIN_ARGUMENT = PlayAgainService.COMMAND_ARGUMENT;
 
     private final MatchService matchService;
     private final SpectatorService spectatorService;
     private final AdminMenuService adminMenuService;
     private final RegistrationService registrationService;
+    private final PlayAgainService playAgainService;
     private final Logger logger;
 
     public TournamentCommand(MatchService matchService,
                              SpectatorService spectatorService,
                              AdminMenuService adminMenuService,
                              RegistrationService registrationService,
+                             PlayAgainService playAgainService,
                              Logger logger) {
         this.matchService = Objects.requireNonNull(matchService, "matchService");
         this.spectatorService = Objects.requireNonNull(spectatorService, "spectatorService");
         this.adminMenuService = Objects.requireNonNull(adminMenuService, "adminMenuService");
         this.registrationService = Objects.requireNonNull(registrationService, "registrationService");
+        this.playAgainService = Objects.requireNonNull(playAgainService, "playAgainService");
         this.logger = Objects.requireNonNull(logger, "logger");
     }
 
@@ -79,6 +84,10 @@ public final class TournamentCommand implements TabExecutor {
         }
         if (arguments.length > 0 && arguments[0].toLowerCase(Locale.ROOT).equals(TEAM_ARGUMENT)) {
             openTeamChoice(sender);
+            return true;
+        }
+        if (arguments.length > 0 && arguments[0].toLowerCase(Locale.ROOT).equals(PLAY_AGAIN_ARGUMENT)) {
+            playAgain(sender);
             return true;
         }
         openAdminMenu(sender);
@@ -127,6 +136,18 @@ public final class TournamentCommand implements TabExecutor {
             return;
         }
         adminMenuService.openTeamChoice(player);
+    }
+
+    private void playAgain(CommandSender sender) {
+        if (!(sender instanceof Player player)) {
+            TournamentMessages.sendError(sender, Messages.text(CommandMessage.ONLY_FOR_PLAYERS));
+            return;
+        }
+        if (!ViewPermission.mayView(player)) {
+            TournamentMessages.sendError(player, Messages.text(CommonMessage.COMMAND_NOT_ALLOWED));
+            return;
+        }
+        playAgainService.playAgain(player);
     }
 
     private void handleRegistration(CommandSender sender, boolean join) {
@@ -195,6 +216,10 @@ public final class TournamentCommand implements TabExecutor {
         if (sender instanceof Player player && ViewPermission.mayView(player)
                 && adminMenuService.mayChooseTeam(player)) {
             availableArguments.add(TEAM_ARGUMENT);
+        }
+        if (sender instanceof Player player && ViewPermission.mayView(player)
+                && playAgainService.hasOpenQuestion(player.getUniqueId())) {
+            availableArguments.add(PLAY_AGAIN_ARGUMENT);
         }
         if (sender.hasPermission(SPECTATE_PERMISSION)) {
             availableArguments.add(SPECTATE_ARGUMENT);

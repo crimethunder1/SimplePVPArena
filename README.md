@@ -55,6 +55,7 @@ The team size sets how many players a new team has at most, 2 by default (`match
 | `/tournament join` | `tournament.view` | everyone | Registers the player for the next event, see "Registration and random teams" |
 | `/tournament leave` | `tournament.view` | everyone | Takes the registration of the player back |
 | `/tournament team` | `tournament.view` | everyone | Opens the team choice again for a registered player, see "Choosing a team" |
+| `/tournament playagain` | `tournament.view` | the players of a finished auto match | Registers the player again while the question "Play again?" after an auto match is open, see "Auto match mode" |
 | `/tournament vote` | none | the players of the voting team | Opens the vote on who fights again while the larger team of a match votes, see "Teams with different numbers of players online" |
 
 The bracket menu shows a tile for every match of a round with its two teams and whether it waits for its teams, is ready to be played, runs or was won, and it names the champion once the tournament is over. It opens on the round of the running match, "Previous round" and "Next round" turn the pages. It only shows the bracket: a click on a match does nothing and nothing can be taken out. It reads the bracket when it opens and when the round is changed, an open menu does not follow a match that is decided meanwhile. The tile "Bracket" in the main menu of `/tournament` opens it as well, with a tile back to the main menu. Every other menu needs `tournament.admin`.
@@ -156,6 +157,7 @@ The team choice is closed while a tournament is running or paused. A team cannot
 | `enabled` | `false` | Two teams that each have a player online get a match while no tournament is in progress, also switched by the tile "Auto match mode" in the match menu |
 | `start-delay-seconds` | `10` | Seconds between the announcement of an auto match and its start, 3 to 120 |
 | `pause-seconds` | `20` | Pause after an auto match and its cleaning before the next one is announced, 0 to 300 |
+| `play-again-seconds` | `60` | Seconds after the end of an auto match in which its players may click "Play again" to register again and choose a new team, 0 to 600, 0 asks nothing and pairs the same teams again |
 
 `registration`:
 
@@ -228,6 +230,8 @@ When the two teams of a match have different numbers of players online right bef
 ## Auto match mode
 
 The tile "Auto match mode" in the match menu of `/tournament` switches the mode on and off and writes `auto-match.enabled` into `config.yml`. While it is on and no tournament is in progress, two teams that each have a player online get a match of their own: both teams and the players around the arena read "Auto match: Alpha against Bravo begins in 10 seconds", the match `auto-1` starts with the default kit and follows every rule of a normal match, the arena is cleaned afterwards and the next pair is announced after the pause. The live placement of an over tournament stays, an auto match is never part of it. With more than two teams the two that have waited longest play next. A tournament has priority: it cannot be started while an auto match runs, it cancels an announced one, and the auto matches carry on once it is over. An auto match never enters the bracket or `tournament.yml`.
+
+After an auto match the same teams do not play again at once. Right at its end every player of the match leaves the registration list and their team with a colour, from the team choice or from forming random teams, and such a team that becomes empty is removed. A team without a colour, made by an admin, keeps its members but waits: it is paired again once one of its members confirms with `/tournament playagain` or once `auto-match.play-again-seconds` are over. Every player of the match who is online and stands in the area of effect reads "Play again? Click here: [Play again]" in the chat. A click on the part in brackets runs `/tournament playagain`, which registers the player again; with `registration.team-mode: free-choice` the team choice opens one tick later and the player chooses a new team, with `random` the player is only registered and an admin forms the teams. A member of a team without a colour is registered and keeps that team. The question holds for `auto-match.play-again-seconds` (60 by default) and comes once per match, afterwards the answer is "There is no rematch to confirm". A player outside of the area of effect gets no question and registers with `/tournament join`. The next auto match begins as soon as two teams are ready again. With `auto-match.play-again-seconds: 0` nothing is asked and the same teams are paired again as before. Tournament matches and an auto match that ends without a result change no team.
 
 ## Live placement
 

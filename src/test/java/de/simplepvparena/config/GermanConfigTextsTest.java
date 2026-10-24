@@ -82,8 +82,9 @@ class GermanConfigTextsTest {
                         + "haben, und die Sekunden der Abstimmung, ab dem nächsten Match",
                 "  ob die Arena zwischen den Runden eines Matches gereinigt wird, ab dem nächsten Rundenende",
                 "  die Teamgröße, außer ein Turnier läuft oder ein Team hat mehr Spieler als eine kleinere neue Größe",
-                "  ob der Auto-Match-Modus an ist, die Sekunden bis zum Beginn eines Auto-Matches und die Pause "
-                        + "zwischen zwei Auto-Matches",
+                "  ob der Auto-Match-Modus an ist, die Sekunden bis zum Beginn eines Auto-Matches, die Pause "
+                        + "zwischen zwei Auto-Matches und die Sekunden, in denen die Spieler eines beendeten "
+                        + "Auto-Matches nochmal spielen können",
                 "  ob die Spieler nach der Anmeldung ihr Team wählen oder die Teams zufällig gebildet werden",
                 "  die Blockmengen der Reinigung und des Ausgangszustands und die Partikel einer laufenden Reinigung",
                 "  die Tiefe unter dem Boden, bis zu der der nächste Ausgangszustand aufgenommen wird",

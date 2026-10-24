@@ -4,9 +4,11 @@ import de.simplepvparena.arena.ArenaRegistry;
 import de.simplepvparena.arena.PositionSnapshot;
 import de.simplepvparena.arena.SpectatorService;
 import de.simplepvparena.match.MatchService;
+import de.simplepvparena.message.CommandMessage;
 import de.simplepvparena.message.ListenerMessage;
 import de.simplepvparena.message.Messages;
 import de.simplepvparena.message.Placeholder;
+import de.simplepvparena.message.TournamentMessages;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -36,7 +38,8 @@ public final class PlayerRespawnListener implements Listener {
     public void onPlayerRespawn(PlayerRespawnEvent event) {
         Player player = event.getPlayer();
         Optional<Location> fighterSpawn = matchService.findActiveFighterSpawn(player.getUniqueId());
-        if (fighterSpawn.isPresent()) {
+        boolean waitsForTheRoundCleaning = fighterSpawn.isPresent() && matchService.isCleaningBetweenRounds();
+        if (fighterSpawn.isPresent() && !waitsForTheRoundCleaning) {
             returnToTheRound(event, player, fighterSpawn.get());
             return;
         }
@@ -50,17 +53,22 @@ public final class PlayerRespawnListener implements Listener {
                 .ifPresent(event::setRespawnLocation);
         plugin.getServer().getScheduler().runTask(plugin, () -> {
             if (player.isOnline()) {
-                sendToTribune(player);
+                sendToTribune(player, waitsForTheRoundCleaning);
             }
         });
     }
 
-    private void sendToTribune(Player player) {
+    private void sendToTribune(Player player, boolean warnWithoutATribune) {
+        boolean sentToTribune;
         try {
-            spectatorService.sendToTribune(player);
+            sentToTribune = spectatorService.sendToTribune(player);
         } catch (RuntimeException failure) {
             plugin.getLogger().log(Level.WARNING, Messages.text(ListenerMessage.NOT_SENT_TO_TRIBUNE,
                     Placeholder.of("player", player.getName())), failure);
+            return;
+        }
+        if (!sentToTribune && warnWithoutATribune) {
+            TournamentMessages.sendWarning(player, Messages.text(CommandMessage.SPECTATE_NO_TRIBUNE_POSITION));
         }
     }
 

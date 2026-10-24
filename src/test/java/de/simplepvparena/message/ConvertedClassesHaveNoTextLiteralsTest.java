@@ -101,6 +101,8 @@ class ConvertedClassesHaveNoTextLiteralsTest {
             "tournament/AutoMatchService.java",
             "tournament/AutoMatchSettings.java",
             "tournament/AutoMatchState.java",
+            "tournament/PlayAgainRule.java",
+            "tournament/PlayAgainService.java",
             "match/Match.java",
             "match/MatchScore.java",
             "kit/KitService.java",

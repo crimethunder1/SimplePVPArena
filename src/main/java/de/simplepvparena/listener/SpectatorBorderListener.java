@@ -46,11 +46,15 @@ public final class SpectatorBorderListener implements Listener {
             return;
         }
         Player player = event.getPlayer();
-        if (!spectatorBorderService.isMovementAllowed(matchService.isActiveFighter(player.getUniqueId()),
+        if (!spectatorBorderService.isMovementAllowed(countsAsActiveFighter(player),
                 spectatorService.isFlyingSpectator(player.getUniqueId()), AdminPermission.isAdmin(player),
                 origin, destination)) {
             event.setCancelled(true);
         }
+    }
+
+    private boolean countsAsActiveFighter(Player player) {
+        return matchService.isActiveFighter(player.getUniqueId()) && !matchService.isCleaningBetweenRounds();
     }
 
     private boolean hasChangedBlock(Location from, Location to) {

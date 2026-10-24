@@ -156,8 +156,9 @@ class ConfigTextsTest {
                 "  whether the arena is cleaned between the rounds of a match, from the next end of a round on",
                 "  the team size, unless a tournament is in progress or a team has more players than a smaller new "
                         + "size",
-                "  whether the auto match mode is on, the seconds before an auto match starts and the pause between "
-                        + "two auto matches",
+                "  whether the auto match mode is on, the seconds before an auto match starts, the pause between "
+                        + "two auto matches and the seconds in which the players of a finished auto match may play "
+                        + "again",
                 "  whether the players choose their team after registering or the teams are formed at random",
                 "  the cleaning and baseline batch sizes and the particles of a running cleaning",
                 "  the depth below the floor the next baseline is taken to",

@@ -1479,6 +1479,11 @@ auto-match:
     mode-switched-off: 'Auto-Match abgebrochen: der Modus wurde ausgeschaltet'
     tournament-starting: 'Auto-Match abgebrochen: ein Turnier beginnt'
     arena-not-ready: 'Auto-Match abgebrochen: die Arena ist nicht bereit'
+  play-again:
+    question: 'Nochmal spielen? Klicke hier:'
+    button: '[Nochmal spielen]'
+    hover: 'Melde dich neu an und wähle ein neues Team'
+    no-rematch: 'Es gibt keine Revanche zu bestätigen'
 player-state:
   not-found: 'Für {player} wurde kein gespeichertes Inventar und kein gespeicherter Zustand gefunden, das Kit wurde abgeräumt, ohne etwas wiederherzustellen'
   unreadable-cleared: 'Das gespeicherte Inventar und der Zustand von {player} konnten nicht gelesen werden, das Kit wurde abgeräumt, ohne etwas wiederherzustellen, die Datei bleibt als {file} erhalten'
@@ -1842,6 +1847,9 @@ config:
     auto-match-pause-out-of-range:
       one: '{path} muss eine ganze Zahl zwischen {minimum} und {maximum} Sekunden sein, stattdessen gilt {count} Sekunde'
       other: '{path} muss eine ganze Zahl zwischen {minimum} und {maximum} Sekunden sein, stattdessen gelten {count} Sekunden'
+    auto-match-play-again-out-of-range:
+      one: '{path} muss eine ganze Zahl zwischen {minimum} und {maximum} Sekunden sein, stattdessen gilt {count} Sekunde'
+      other: '{path} muss eine ganze Zahl zwischen {minimum} und {maximum} Sekunden sein, stattdessen gelten {count} Sekunden'
     team-mode-unknown: '{path} muss einer der Werte {modes} sein, stattdessen gilt {fallback}'
     cleaning-duration-negative: '{path} darf nicht negativ sein, stattdessen gelten {seconds} Sekunden. Mit null reinigst du ohne die beiden farbigen Phasen'
     cleaning-columns-negative:
@@ -1873,7 +1881,7 @@ config:
       clean-between-rounds: 'ob die Arena zwischen den Runden eines Matches gereinigt wird, ab dem nächsten Rundenende'
       unequal-teams: 'ob das größere Team abstimmt, wer kämpft, wenn die Teams unterschiedlich viele Spieler online haben, und die Sekunden der Abstimmung, ab dem nächsten Match'
       team-size: 'die Teamgröße, außer ein Turnier läuft oder ein Team hat mehr Spieler als eine kleinere neue Größe'
-      auto-match: 'ob der Auto-Match-Modus an ist, die Sekunden bis zum Beginn eines Auto-Matches und die Pause zwischen zwei Auto-Matches'
+      auto-match: 'ob der Auto-Match-Modus an ist, die Sekunden bis zum Beginn eines Auto-Matches, die Pause zwischen zwei Auto-Matches und die Sekunden, in denen die Spieler eines beendeten Auto-Matches nochmal spielen können'
       team-mode: 'ob die Spieler nach der Anmeldung ihr Team wählen oder die Teams zufällig gebildet werden'
       cleaning: 'die Blockmengen der Reinigung und des Ausgangszustands und die Partikel einer laufenden Reinigung'
       baseline-depth: 'die Tiefe unter dem Boden, bis zu der der nächste Ausgangszustand aufgenommen wird'

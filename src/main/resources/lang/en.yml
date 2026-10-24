@@ -1478,6 +1478,11 @@ auto-match:
     mode-switched-off: 'Auto match cancelled: the mode was switched off'
     tournament-starting: 'Auto match cancelled: a tournament is starting'
     arena-not-ready: 'Auto match cancelled: the arena is not ready'
+  play-again:
+    question: 'Play again? Click here:'
+    button: '[Play again]'
+    hover: 'Register again and choose a new team'
+    no-rematch: 'There is no rematch to confirm'
 player-state:
   not-found: 'No saved inventory and state of {player} was found, the kit was cleared without restoring anything'
   unreadable-cleared: 'The saved inventory and state of {player} could not be read, the kit was cleared without restoring anything, the file is kept as {file}'
@@ -1841,6 +1846,9 @@ config:
     auto-match-pause-out-of-range:
       one: '{path} must be a whole number between {minimum} and {maximum} seconds, falling back to {count} second'
       other: '{path} must be a whole number between {minimum} and {maximum} seconds, falling back to {count} seconds'
+    auto-match-play-again-out-of-range:
+      one: '{path} must be a whole number between {minimum} and {maximum} seconds, falling back to {count} second'
+      other: '{path} must be a whole number between {minimum} and {maximum} seconds, falling back to {count} seconds'
     team-mode-unknown: '{path} must be one of {modes}, falling back to {fallback}'
     cleaning-duration-negative: '{path} cannot be negative, falling back to {seconds} seconds. Use zero to clean without the two coloured phases'
     cleaning-columns-negative:
@@ -1872,7 +1880,7 @@ config:
       clean-between-rounds: 'whether the arena is cleaned between the rounds of a match, from the next end of a round on'
       unequal-teams: 'whether the larger team votes who fights when the teams have different numbers of players online and the seconds of the vote, from the next match on'
       team-size: 'the team size, unless a tournament is in progress or a team has more players than a smaller new size'
-      auto-match: 'whether the auto match mode is on, the seconds before an auto match starts and the pause between two auto matches'
+      auto-match: 'whether the auto match mode is on, the seconds before an auto match starts, the pause between two auto matches and the seconds in which the players of a finished auto match may play again'
       team-mode: 'whether the players choose their team after registering or the teams are formed at random'
       cleaning: 'the cleaning and baseline batch sizes and the particles of a running cleaning'
       baseline-depth: 'the depth below the floor the next baseline is taken to'

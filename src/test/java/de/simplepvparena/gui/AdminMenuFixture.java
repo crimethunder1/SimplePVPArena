@@ -71,6 +71,7 @@ import de.simplepvparena.tournament.AutoMatchService;
 import de.simplepvparena.tournament.AutoMatchState;
 import de.simplepvparena.tournament.AutomaticArenaCleanup;
 import de.simplepvparena.tournament.KitChoiceService;
+import de.simplepvparena.tournament.PlayAgainService;
 import de.simplepvparena.tournament.TournamentManager;
 import de.simplepvparena.tournament.TournamentOperationResult;
 import de.simplepvparena.tournament.TournamentStateStorage;
@@ -162,6 +163,7 @@ final class AdminMenuFixture {
     private final RegistrationStationService registrationStationService;
     private final StandingsBoardToolService standingsBoardToolService;
     private final TeamChoiceService teamChoiceService;
+    private final PlayAgainService playAgainService;
     private final KitChoiceService kitChoiceService;
     private final UnequalTeamVoteService unequalTeamVoteService;
     private final World world;
@@ -184,6 +186,7 @@ final class AdminMenuFixture {
     private int teamConfigurationSaveCount;
     private int arenaConfigurationSaveCount;
     private int registrationSaveCount;
+    private long currentTimeMillis;
     private int borderMarkWriteCount;
     private int startGateMarkWriteCount;
     private RandomGenerator randomGenerator = new OrderKeepingRandomGenerator();
@@ -252,6 +255,9 @@ final class AdminMenuFixture {
                 tournamentManager.getTeamSizeSetting(), teamModeSetting, tournamentManager::isTournamentInProgress,
                 tournamentManager::findTeamChangeRejection, this::saveTeamConfiguration, this::findOnlinePlayer);
         registrationService.addObserver(teamChoiceService);
+        playAgainService = new PlayAgainService(autoMatchService, teamRegistry, registrationService, teamModeSetting,
+                tournamentManager::isTournamentInProgress, this::saveTeamConfiguration, this::findOnlinePlayer,
+                arenaRegistry::findEffectArea, () -> currentTimeMillis);
         TournamentDryRun tournamentDryRun = new TournamentDryRun(tournamentManager::getState,
                 matchService::hasActiveMatch, teamRegistry,
                 new PluginDryRunArena(arenaRegistry.getArena(), arenaSetupService), kitService, gateMarks,
@@ -312,6 +318,7 @@ final class AdminMenuFixture {
             case "getUniqueId" -> playerUniqueId;
             case "getName" -> playerName;
             case "isOnline" -> true;
+            case "getLocation" -> new Location(world, INSIDE_COORDINATE, GROUND_Y, INSIDE_COORDINATE);
             case "hasPermission" -> AdminPermission.ADMIN_PERMISSION_NAME.equals(arguments[0]) && adminPermission
                     || ViewPermission.VIEW_PERMISSION_NAME.equals(arguments[0]) && viewPermission;
             case "sendMessage" -> {
@@ -331,7 +338,7 @@ final class AdminMenuFixture {
     TournamentCommand createTournamentCommand(Logger logger) {
         return new TournamentCommand(matchService,
                 new SpectatorService(arenaRegistry, new SpectatorItemFactory(plugin)), menuService,
-                registrationService, logger);
+                registrationService, playAgainService, logger);
     }
 
     void letTheAdminLeave() {
@@ -851,6 +858,20 @@ final class AdminMenuFixture {
 
     TeamRegistry teamRegistry() {
         return teamRegistry;
+    }
+
+    PlayAgainService playAgainService() {
+        return playAgainService;
+    }
+
+    void finishAnAutoMatchOf(String firstTeamName, String secondTeamName, int playAgainSeconds) {
+        Match match = Match.autoMatch("auto-1", teamRegistry.findTeam(firstTeamName).orElseThrow(),
+                teamRegistry.findTeam(secondTeamName).orElseThrow(), arenaRegistry.getArena());
+        playAgainService.autoMatchFinished(match, playAgainSeconds);
+    }
+
+    void advanceTheClockSeconds(long seconds) {
+        currentTimeMillis += seconds * 1000L;
     }
 
     ArenaSetupService arenaSetupService() {

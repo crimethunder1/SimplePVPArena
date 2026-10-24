@@ -130,6 +130,7 @@ import de.simplepvparena.tournament.AutomaticArenaCleanup;
 import de.simplepvparena.tournament.FileTournamentStateStorage;
 import de.simplepvparena.tournament.KitChoiceService;
 import de.simplepvparena.tournament.OnlineAdminNotifier;
+import de.simplepvparena.tournament.PlayAgainService;
 import de.simplepvparena.tournament.TournamentManager;
 import de.simplepvparena.visual.ConfiguredVisuals;
 import de.simplepvparena.visual.CustomVisuals;
@@ -199,6 +200,7 @@ public final class SimplePVPArenaPlugin extends JavaPlugin {
     private MatchService matchService;
     private TournamentManager tournamentManager;
     private AutoMatchService autoMatchService;
+    private PlayAgainService playAgainService;
     private TournamentDryRun tournamentDryRun;
     private ConfigurationReloadService configurationReloadService;
     private PluginLiveConfiguration liveConfiguration;
@@ -355,6 +357,9 @@ public final class SimplePVPArenaPlugin extends JavaPlugin {
                 teamSizeSetting, teamModeSetting, tournamentManager::isTournamentInProgress,
                 tournamentManager::findTeamChangeRejection, this::saveTeamConfiguration, getServer()::getPlayer);
         registrationService.addObserver(teamChoiceService);
+        playAgainService = new PlayAgainService(autoMatchService, teamRegistry, registrationService, teamModeSetting,
+                tournamentManager::isTournamentInProgress, this::saveTeamConfiguration, getServer()::getPlayer,
+                arenaRegistry::findEffectArea, System::currentTimeMillis);
 
         tournamentDryRun = new TournamentDryRun(tournamentManager::getState,
                 matchService::hasActiveMatch, teamRegistry,
@@ -590,7 +595,7 @@ public final class SimplePVPArenaPlugin extends JavaPlugin {
             return;
         }
         TournamentCommand tournamentCommand = new TournamentCommand(matchService, spectatorService,
-                adminMenuService, registrationService, getLogger());
+                adminMenuService, registrationService, playAgainService, getLogger());
         pluginCommand.setExecutor(tournamentCommand);
         pluginCommand.setTabCompleter(tournamentCommand);
     }

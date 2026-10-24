@@ -22,7 +22,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class ShippedPluginDescriptionTest {
 
-    private static final List<String> SUBCOMMANDS = List.of("bracket", "spectate", "join", "leave", "team", "vote");
+    private static final List<String> SUBCOMMANDS = List.of("bracket", "spectate", "join", "leave", "team", "vote",
+            "playagain");
 
     @Test
     void namesThePluginItsAuthorItsMainClassAndTheApiVersion() {
@@ -49,7 +50,7 @@ class ShippedPluginDescriptionTest {
         String commandDescription = (String) tournamentCommand.get("description");
         String usage = (String) tournamentCommand.get("usage");
 
-        assertEquals("/<command> [bracket|spectate|join|leave|team|vote]", usage);
+        assertEquals("/<command> [bracket|spectate|join|leave|team|vote|playagain]", usage);
         for (String subcommand : SUBCOMMANDS) {
             assertTrue(commandDescription.contains("/tournament " + subcommand), subcommand);
         }

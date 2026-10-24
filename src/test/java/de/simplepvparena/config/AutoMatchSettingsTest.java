@@ -27,7 +27,7 @@ class AutoMatchSettingsTest {
     void shipsTheModeSwitchedOffWithTenSecondsBeforeTheStartAndTwentySecondsOfPause() {
         AutoMatchSettings defaults = PluginSettings.defaults().autoMatchSettings();
 
-        assertEquals(new AutoMatchSettings(false, 10, 20), defaults);
+        assertEquals(new AutoMatchSettings(false, 10, 20, 60), defaults);
         assertEquals(AutoMatchSettings.defaults(), defaults);
         assertEquals(PluginSettings.defaults(), PluginSettings.read(new MemoryConfiguration(), problems::add));
         assertEquals(List.of(), problems);
@@ -60,7 +60,8 @@ class AutoMatchSettingsTest {
             configuration.set(PluginSettings.AUTO_MATCH_START_DELAY_SECONDS_PATH, values[0]);
             configuration.set(PluginSettings.AUTO_MATCH_PAUSE_SECONDS_PATH, values[1]);
 
-            assertEquals(new AutoMatchSettings(true, values[0], values[1]),
+            assertEquals(new AutoMatchSettings(true, values[0], values[1],
+                    AutoMatchSettings.DEFAULT_PLAY_AGAIN_SECONDS),
                     PluginSettings.read(configuration, problems::add).autoMatchSettings());
         }
         assertEquals(List.of(), problems);
@@ -112,6 +113,81 @@ class AutoMatchSettingsTest {
     }
 
     @Test
+    void shipsSixtySecondsToPlayAgainWithACommentRightAfterThePause() throws IOException {
+        List<String> lines = shippedConfigurationLines();
+
+        int pauseIndex = lines.indexOf("  pause-seconds: 20");
+        int playAgainIndex = lines.indexOf("  play-again-seconds: 60");
+
+        assertEquals(pauseIndex + 2, playAgainIndex, "the entry follows the pause: " + lines);
+        assertTrue(lines.get(playAgainIndex - 1).startsWith("  # "), "a comment explains the entry");
+        assertTrue(lines.get(playAgainIndex - 1).contains("0 to 600"), lines.get(playAgainIndex - 1));
+        assertEquals(60, AutoMatchSettings.defaults().playAgainSeconds());
+    }
+
+    @Test
+    void readsThePlayAgainSecondsWithinZeroToSixHundredWithoutAProblem() {
+        for (int playAgainSeconds : new int[] {0, 60, 600}) {
+            MemoryConfiguration configuration = new MemoryConfiguration();
+            configuration.set(PluginSettings.AUTO_MATCH_PLAY_AGAIN_SECONDS_PATH, playAgainSeconds);
+
+            assertEquals(playAgainSeconds,
+                    PluginSettings.read(configuration, problems::add).autoMatchSettings().playAgainSeconds());
+        }
+        assertEquals(List.of(), problems);
+    }
+
+    @Test
+    void fallsBackForPlayAgainSecondsOutsideOfZeroToSixHundredOrNoWholeNumberAndReportsIt() {
+        for (Object playAgainSeconds : new Object[] {-1, 601, "later", 1.5D, true}) {
+            problems.clear();
+            MemoryConfiguration configuration = new MemoryConfiguration();
+            configuration.set(PluginSettings.AUTO_MATCH_PLAY_AGAIN_SECONDS_PATH, playAgainSeconds);
+
+            PluginSettings settings = PluginSettings.read(configuration, problems::add);
+
+            assertEquals(60, settings.autoMatchSettings().playAgainSeconds(), "a value of " + playAgainSeconds);
+            assertEquals(List.of("auto-match.play-again-seconds must be a whole number between 0 and 600 seconds, "
+                    + "falling back to 60 seconds"), problems, "a value of " + playAgainSeconds + " is reported");
+        }
+    }
+
+    @Test
+    @UseLanguage("de")
+    void reportsBrokenPlayAgainSecondsInGerman() {
+        MemoryConfiguration configuration = new MemoryConfiguration();
+        configuration.set(PluginSettings.AUTO_MATCH_PLAY_AGAIN_SECONDS_PATH, 700);
+
+        PluginSettings.read(configuration, problems::add);
+
+        assertEquals(List.of("auto-match.play-again-seconds muss eine ganze Zahl zwischen 0 und 600 Sekunden sein, "
+                + "stattdessen gelten 60 Sekunden"), problems);
+        assertEquals("auto-match.play-again-seconds muss eine ganze Zahl zwischen 0 und 600 Sekunden sein, "
+                + "stattdessen gilt 1 Sekunde", Messages.plural(ConfigMessage.AUTO_MATCH_PLAY_AGAIN_OUT_OF_RANGE, 1,
+                Placeholder.of("path", PluginSettings.AUTO_MATCH_PLAY_AGAIN_SECONDS_PATH),
+                Placeholder.of("minimum", 0), Placeholder.of("maximum", 600)));
+    }
+
+    @Test
+    void everyReloadHandsThePlayAgainSecondsToTheRunningPlugin() {
+        MemoryConfiguration shortQuestion = configurationWith(true, 10, 20);
+        shortQuestion.set(PluginSettings.AUTO_MATCH_PLAY_AGAIN_SECONDS_PATH, 15);
+        MemoryConfiguration noQuestion = configurationWith(true, 10, 20);
+        noQuestion.set(PluginSettings.AUTO_MATCH_PLAY_AGAIN_SECONDS_PATH, 0);
+        AtomicReference<MemoryConfiguration> fileOnDisk = new AtomicReference<>(shortQuestion);
+        RecordingLiveConfiguration liveConfiguration = new RecordingLiveConfiguration();
+        ConfigurationReloadService reloadService = new ConfigurationReloadService(fileOnDisk::get, () -> { },
+                liveConfiguration, problems::add);
+
+        assertTrue(reloadService.applyStoredConfiguration().isClean());
+        assertEquals(15, liveConfiguration.autoMatchSettings().playAgainSeconds());
+
+        fileOnDisk.set(noQuestion);
+        assertTrue(reloadService.reloadFromFile().isClean());
+        assertEquals(0, liveConfiguration.autoMatchSettings().playAgainSeconds());
+    }
+
+    @Test
     void writesAFallbackOfOneSecondInTheSingular() {
         assertEquals("auto-match.start-delay-seconds must be a whole number between 3 and 120 seconds, falling back "
                 + "to 1 second", Messages.plural(ConfigMessage.AUTO_MATCH_START_DELAY_OUT_OF_RANGE, 1,
@@ -146,9 +222,10 @@ class AutoMatchSettingsTest {
 
     @Test
     void theSettingsKeepBothDurationsWithinTheirLimits() {
-        assertEquals(new AutoMatchSettings(true, 3, 0), new AutoMatchSettings(true, -5, -5));
-        assertEquals(new AutoMatchSettings(false, 120, 300), new AutoMatchSettings(false, 9999, 9999));
-        assertEquals(new AutoMatchSettings(true, 45, 7), new AutoMatchSettings(false, 45, 7).withEnabled(true));
+        assertEquals(new AutoMatchSettings(true, 3, 0, 0), new AutoMatchSettings(true, -5, -5, -5));
+        assertEquals(new AutoMatchSettings(false, 120, 300, 600), new AutoMatchSettings(false, 9999, 9999, 9999));
+        assertEquals(new AutoMatchSettings(true, 45, 7, 90),
+                new AutoMatchSettings(false, 45, 7, 90).withEnabled(true));
     }
 
     @Test
@@ -160,17 +237,17 @@ class AutoMatchSettingsTest {
 
         assertTrue(reloadService.applyStoredConfiguration().isClean());
 
-        assertEquals(new AutoMatchSettings(true, 30, 5), liveConfiguration.autoMatchSettings());
+        assertEquals(new AutoMatchSettings(true, 30, 5, 60), liveConfiguration.autoMatchSettings());
 
         fileOnDisk.set(configurationWith(false, 60, 120));
         assertTrue(reloadService.reloadFromFile().isClean());
 
-        assertEquals(new AutoMatchSettings(false, 60, 120), liveConfiguration.autoMatchSettings());
+        assertEquals(new AutoMatchSettings(false, 60, 120, 60), liveConfiguration.autoMatchSettings());
 
         fileOnDisk.set(configurationWith(true, 500, -2));
         reloadService.reloadFromFile();
 
-        assertEquals(new AutoMatchSettings(true, 10, 20), liveConfiguration.autoMatchSettings(),
+        assertEquals(new AutoMatchSettings(true, 10, 20, 60), liveConfiguration.autoMatchSettings(),
                 "broken durations fall back to their defaults");
         assertEquals(2, problems.size(), problems.toString());
     }
@@ -181,7 +258,8 @@ class AutoMatchSettingsTest {
                 new RecordingLiveConfiguration(), problems::add).reloadFromFile().describe();
 
         int autoMatchIndex = lines.indexOf("  whether the auto match mode is on, the seconds before an auto match "
-                + "starts and the pause between two auto matches");
+                + "starts, the pause between two auto matches and the seconds in which the players of a finished "
+                + "auto match may play again");
         assertTrue(autoMatchIndex > 0, lines.toString());
         assertTrue(lines.get(autoMatchIndex - 1).startsWith("  the team size"), lines.toString());
     }
@@ -192,8 +270,9 @@ class AutoMatchSettingsTest {
         List<String> lines = new ConfigurationReloadService(MemoryConfiguration::new, () -> { },
                 new RecordingLiveConfiguration(), problems::add).reloadFromFile().describe();
 
-        assertTrue(lines.contains("  ob der Auto-Match-Modus an ist, die Sekunden bis zum Beginn eines Auto-Matches "
-                + "und die Pause zwischen zwei Auto-Matches"), lines.toString());
+        assertTrue(lines.contains("  ob der Auto-Match-Modus an ist, die Sekunden bis zum Beginn eines Auto-Matches, "
+                + "die Pause zwischen zwei Auto-Matches und die Sekunden, in denen die Spieler eines beendeten "
+                + "Auto-Matches nochmal spielen können"), lines.toString());
     }
 
     private static MemoryConfiguration configurationWith(boolean enabled, Object startDelaySeconds,

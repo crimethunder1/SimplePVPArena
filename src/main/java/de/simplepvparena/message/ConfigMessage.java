@@ -23,6 +23,8 @@ public enum ConfigMessage implements MessageKey {
             "maximum", "count"),
     AUTO_MATCH_PAUSE_OUT_OF_RANGE("config.problem.auto-match-pause-out-of-range", "path", "minimum", "maximum",
             "count"),
+    AUTO_MATCH_PLAY_AGAIN_OUT_OF_RANGE("config.problem.auto-match-play-again-out-of-range", "path", "minimum",
+            "maximum", "count"),
     TEAM_MODE_UNKNOWN("config.problem.team-mode-unknown", "path", "modes", "fallback"),
     CLEANING_DURATION_NEGATIVE("config.problem.cleaning-duration-negative", "path", "seconds"),
     CLEANING_COLUMNS_NEGATIVE("config.problem.cleaning-columns-negative", "path", "count"),

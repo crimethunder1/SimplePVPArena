@@ -44,6 +44,8 @@ auto-match:
   start-delay-seconds: 10
   # Seconds of pause after an auto match and its cleaning before the next one is announced, 0 to 300.
   pause-seconds: 20
+  # Seconds after the end of an auto match in which its players in the area of effect may click to register again and choose a new team, 0 to 600. The teams with a colour of the players are dissolved at the end, a team without a colour waits for a member to confirm. 0 asks nothing and pairs the same teams again as before.
+  play-again-seconds: 60
 
 # Registration of players for the next event, with the registration station or /tournament join.
 registration:

@@ -11,6 +11,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.function.BooleanSupplier;
+import java.util.function.Consumer;
 
 public final class RegistrationService {
 
@@ -31,6 +32,14 @@ public final class RegistrationService {
     }
 
     public void join(Player player) {
+        join(player, observer -> observer.playerRegistered(player));
+    }
+
+    public void joinWithoutTeamChoice(Player player) {
+        join(player, observer -> observer.playerRegisteredWithoutTeamChoice(player));
+    }
+
+    private void join(Player player, Consumer<RegistrationObserver> registrationNotice) {
         if (isClosed(player)) {
             return;
         }
@@ -44,7 +53,7 @@ public final class RegistrationService {
         }
         registrationSaver.run();
         TournamentMessages.sendSuccess(player, Messages.text(RegistrationMessage.REGISTERED));
-        observers.forEach(observer -> observer.playerRegistered(player));
+        observers.forEach(registrationNotice);
     }
 
     public void leave(Player player) {

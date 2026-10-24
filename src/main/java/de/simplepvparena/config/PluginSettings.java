@@ -87,6 +87,7 @@ public record PluginSettings(long roundResetDelayTicks,
     public static final String AUTO_MATCH_ENABLED_PATH = "auto-match.enabled";
     public static final String AUTO_MATCH_START_DELAY_SECONDS_PATH = "auto-match.start-delay-seconds";
     public static final String AUTO_MATCH_PAUSE_SECONDS_PATH = "auto-match.pause-seconds";
+    public static final String AUTO_MATCH_PLAY_AGAIN_SECONDS_PATH = "auto-match.play-again-seconds";
     public static final String REGISTRATION_TEAM_MODE_PATH = "registration.team-mode";
     public static final String FIRST_TEAM_COLOUR_PATH = TeamColourSettings.FIRST_TEAM_CONFIGURATION_PATH;
     public static final String SECOND_TEAM_COLOUR_PATH = TeamColourSettings.SECOND_TEAM_CONFIGURATION_PATH;
@@ -133,6 +134,7 @@ public record PluginSettings(long roundResetDelayTicks,
             AUTO_MATCH_ENABLED_PATH,
             AUTO_MATCH_START_DELAY_SECONDS_PATH,
             AUTO_MATCH_PAUSE_SECONDS_PATH,
+            AUTO_MATCH_PLAY_AGAIN_SECONDS_PATH,
             REGISTRATION_TEAM_MODE_PATH,
             ARENA_CLEAN_BLOCKS_PER_TICK_PATH,
             ARENA_BASELINE_BLOCKS_PER_TICK_PATH,
@@ -503,7 +505,8 @@ public record PluginSettings(long roundResetDelayTicks,
                                                            Consumer<String> problemReporter) {
         return new AutoMatchSettings(readAutoMatchEnabled(configuration, problemReporter),
                 readAutoMatchStartDelaySeconds(configuration, problemReporter),
-                readAutoMatchPauseSeconds(configuration, problemReporter));
+                readAutoMatchPauseSeconds(configuration, problemReporter),
+                readAutoMatchPlayAgainSeconds(configuration, problemReporter));
     }
 
     private static boolean readAutoMatchEnabled(ConfigurationSection configuration,
@@ -575,6 +578,26 @@ public record PluginSettings(long roundResetDelayTicks,
                 Placeholder.of("minimum", AutoMatchSettings.MINIMUM_PAUSE_SECONDS),
                 Placeholder.of("maximum", AutoMatchSettings.MAXIMUM_PAUSE_SECONDS)));
         return AutoMatchSettings.DEFAULT_PAUSE_SECONDS;
+    }
+
+    private static int readAutoMatchPlayAgainSeconds(ConfigurationSection configuration,
+                                                     Consumer<String> problemReporter) {
+        if (!configuration.isSet(AUTO_MATCH_PLAY_AGAIN_SECONDS_PATH)) {
+            return AutoMatchSettings.DEFAULT_PLAY_AGAIN_SECONDS;
+        }
+        if (configuration.isInt(AUTO_MATCH_PLAY_AGAIN_SECONDS_PATH)) {
+            int playAgainSeconds = configuration.getInt(AUTO_MATCH_PLAY_AGAIN_SECONDS_PATH);
+            if (playAgainSeconds >= AutoMatchSettings.MINIMUM_PLAY_AGAIN_SECONDS
+                    && playAgainSeconds <= AutoMatchSettings.MAXIMUM_PLAY_AGAIN_SECONDS) {
+                return playAgainSeconds;
+            }
+        }
+        problemReporter.accept(Messages.plural(ConfigMessage.AUTO_MATCH_PLAY_AGAIN_OUT_OF_RANGE,
+                AutoMatchSettings.DEFAULT_PLAY_AGAIN_SECONDS,
+                Placeholder.of("path", AUTO_MATCH_PLAY_AGAIN_SECONDS_PATH),
+                Placeholder.of("minimum", AutoMatchSettings.MINIMUM_PLAY_AGAIN_SECONDS),
+                Placeholder.of("maximum", AutoMatchSettings.MAXIMUM_PLAY_AGAIN_SECONDS)));
+        return AutoMatchSettings.DEFAULT_PLAY_AGAIN_SECONDS;
     }
 
     private static ArenaCleaningParticleSettings readArenaCleaningParticleSettings(

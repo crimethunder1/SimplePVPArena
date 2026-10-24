@@ -182,6 +182,11 @@ public final class TeamChoiceService implements RegistrationObserver {
     }
 
     @Override
+    public void playerRegisteredWithoutTeamChoice(Player player) {
+        presenter.refresh();
+    }
+
+    @Override
     public Optional<String> findUnregistrationRejection(UUID playerUniqueId) {
         if (!teamModeSetting.isFreeChoice()) {
             return Optional.empty();
