@@ -237,7 +237,7 @@ public final class TournamentManager implements MatchCompletionHandler {
             return TournamentOperationResult.success(Messages.text(TournamentMessage.PAUSED_REPLY));
         }
         if (state == TournamentState.PAUSED) {
-            if (arenaCleanup.isCleaning() && !waitingForArenaCleaning) {
+            if (arenaCleanup.isCleaning() && !waitingForArenaCleaning && !matchService.isCleaningBetweenRounds()) {
                 return TournamentOperationResult.failure(describeArenaBeingCleaned());
             }
             state = TournamentState.RUNNING;

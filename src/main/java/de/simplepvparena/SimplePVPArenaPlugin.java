@@ -334,8 +334,7 @@ public final class SimplePVPArenaPlugin extends JavaPlugin {
                 kitLibrary, arenaCleanup, adminNotifier, arenaAudience);
         arenaSetupService.setArenaReservedForAutoMatch(autoMatchService::isAnnounced);
         PlacementService placementService = new PlacementService(tournamentManager::getState,
-                tournamentManager::getBracket, matchService::getActiveMatch, autoMatchService::isEnabled,
-                teamRegistry::findTeam);
+                tournamentManager::getBracket, matchService::getActiveMatch, teamRegistry::findTeam);
         placementSidebar = new PlacementSidebar(this, arenaRegistry::findEffectArea,
                 placementService::findStandings);
         placementBoard = new PlacementBoard(this, arenaRegistry.getArena()::getStandingsBoard, getServer()::getWorld,
@@ -611,7 +610,9 @@ public final class SimplePVPArenaPlugin extends JavaPlugin {
                 new PlayerInteractListener(matchService, spectatorService, borderSelectorModes, getLogger()),
                 this);
         getServer().getPluginManager().registerEvents(
-                new BorderSelectorListener(borderSelectorModes, spectatorBorderService), this);
+                new BorderSelectorListener(borderSelectorModes, spectatorBorderService,
+                        itemStack -> registrationStationService.isTool(itemStack)
+                                || standingsBoardToolService.isTool(itemStack)), this);
         getServer().getPluginManager().registerEvents(
                 new ArenaHeightMarkerListener(arenaHeightMarkerService), this);
         getServer().getPluginManager().registerEvents(

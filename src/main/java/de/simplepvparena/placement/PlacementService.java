@@ -12,7 +12,6 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
-import java.util.function.BooleanSupplier;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
@@ -23,18 +22,15 @@ public final class PlacementService {
     private final Supplier<TournamentState> tournamentStateSource;
     private final Supplier<Optional<Bracket>> bracketSource;
     private final Supplier<Optional<Match>> activeMatchSource;
-    private final BooleanSupplier autoMatchEnabled;
     private final Function<String, Optional<Team>> teamLookup;
 
     public PlacementService(Supplier<TournamentState> tournamentStateSource,
                             Supplier<Optional<Bracket>> bracketSource,
                             Supplier<Optional<Match>> activeMatchSource,
-                            BooleanSupplier autoMatchEnabled,
                             Function<String, Optional<Team>> teamLookup) {
         this.tournamentStateSource = Objects.requireNonNull(tournamentStateSource, "tournamentStateSource");
         this.bracketSource = Objects.requireNonNull(bracketSource, "bracketSource");
         this.activeMatchSource = Objects.requireNonNull(activeMatchSource, "activeMatchSource");
-        this.autoMatchEnabled = Objects.requireNonNull(autoMatchEnabled, "autoMatchEnabled");
         this.teamLookup = Objects.requireNonNull(teamLookup, "teamLookup");
     }
 
@@ -46,9 +42,6 @@ public final class PlacementService {
         }
         if (bracket.isPresent() && state == TournamentState.PAUSED) {
             return describeTournament(PlacementPhase.TOURNAMENT_PAUSED, bracket.get());
-        }
-        if (autoMatchEnabled.getAsBoolean()) {
-            return PlacementStandings.none();
         }
         if (bracket.isPresent() && state == TournamentState.FINISHED) {
             return describeTournament(PlacementPhase.TOURNAMENT_OVER, bracket.get());

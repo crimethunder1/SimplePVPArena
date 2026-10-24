@@ -183,7 +183,8 @@ class ListenerMessagesTest {
     }
 
     private List<String> markTwice() {
-        BorderSelectorListener listener = new BorderSelectorListener(selectorModes, harness.getBorderService());
+        BorderSelectorListener listener = new BorderSelectorListener(selectorModes, harness.getBorderService(),
+                itemStack -> false);
         selectorModes.activate(admin.player().getUniqueId());
         Block block = harness.createBlock(ARENA_FLOOR_X, ArenaMatchHarness.GROUND_Y, ARENA_FLOOR_Z);
         listener.onPlayerInteract(rightClick(admin, block));
@@ -192,7 +193,8 @@ class ListenerMessagesTest {
     }
 
     private List<String> clickWithoutPermission() {
-        BorderSelectorListener listener = new BorderSelectorListener(selectorModes, harness.getBorderService());
+        BorderSelectorListener listener = new BorderSelectorListener(selectorModes, harness.getBorderService(),
+                itemStack -> false);
         selectorModes.activate(spectator.player().getUniqueId());
         listener.onPlayerInteract(rightClick(spectator, harness.createBlock(ARENA_FLOOR_X, ArenaMatchHarness.GROUND_Y,
                 ARENA_FLOOR_Z)));

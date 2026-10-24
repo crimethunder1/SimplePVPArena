@@ -27,14 +27,12 @@ class PlacementServiceTest {
     private TournamentState tournamentState = TournamentState.IDLE;
     private Bracket bracket;
     private Match activeMatch;
-    private boolean autoMatchEnabled;
 
     private final PlacementService placementService = new PlacementService(() -> tournamentState,
-            () -> Optional.ofNullable(bracket), () -> Optional.ofNullable(activeMatch), () -> autoMatchEnabled,
-            teamRegistry::findTeam);
+            () -> Optional.ofNullable(bracket), () -> Optional.ofNullable(activeMatch), teamRegistry::findTeam);
 
     @Test
-    void showsNothingWithoutATournamentAndWithoutTheAutoMatchMode() {
+    void showsNothingWithoutATournament() {
         assertEquals(PlacementStandings.none(), placementService.findStandings());
         assertFalse(placementService.findStandings().hasContent());
 
@@ -136,12 +134,8 @@ class PlacementServiceTest {
     }
 
     @Test
-    void showsNothingInTheAutoMatchModeNotEvenARunningAutoMatch() {
+    void showsNothingWithoutATournamentNotEvenARunningAutoMatch() {
         registerTeams("Alpha", "Bravo");
-        autoMatchEnabled = true;
-
-        assertEquals(PlacementStandings.none(), placementService.findStandings());
-
         activeMatch = Match.autoMatch("auto-1", teamRegistry.findTeam("Alpha").orElseThrow(),
                 teamRegistry.findTeam("Bravo").orElseThrow(), new Arena());
         activeMatch.getScore().awardPoint("Bravo");
@@ -150,9 +144,8 @@ class PlacementServiceTest {
     }
 
     @Test
-    void aRunningOrPausedTournamentIsShownInTheAutoMatchModeAndAnOverTournamentOnlyWithoutIt() {
+    void aRunningAPausedAndAnOverTournamentAreShown() {
         registerTeams("Alpha", "Bravo");
-        autoMatchEnabled = true;
         startTournament("Alpha", "Bravo");
 
         assertEquals(PlacementPhase.TOURNAMENT_RUNNING, placementService.findStandings().phase());
@@ -161,10 +154,25 @@ class PlacementServiceTest {
 
         bracket.recordWinner(bracket.getFinalMatch().getMatchId(), "Alpha");
         tournamentState = TournamentState.FINISHED;
-        assertEquals(PlacementStandings.none(), placementService.findStandings());
-
-        autoMatchEnabled = false;
         assertEquals(PlacementPhase.TOURNAMENT_OVER, placementService.findStandings().phase());
+    }
+
+    @Test
+    void anOverTournamentStaysWhileAnAutoMatchRunsAndLeavesTheAutoMatchOut() {
+        registerTeams("Alpha", "Bravo");
+        startTournament("Alpha", "Bravo");
+        bracket.recordWinner(bracket.getFinalMatch().getMatchId(), "Alpha");
+        tournamentState = TournamentState.FINISHED;
+        activeMatch = Match.autoMatch("auto-1", teamRegistry.findTeam("Alpha").orElseThrow(),
+                teamRegistry.findTeam("Bravo").orElseThrow(), new Arena());
+
+        PlacementStandings standings = placementService.findStandings();
+
+        assertEquals(PlacementPhase.TOURNAMENT_OVER, standings.phase());
+        assertEquals(Optional.empty(), standings.runningMatch());
+        assertEquals(List.of("1 Alpha", "2 Bravo"), standings.ranks().stream()
+                .map(rank -> rank.place() + " " + rank.team().name())
+                .toList());
     }
 
     @Test

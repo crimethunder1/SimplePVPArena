@@ -55,7 +55,7 @@ public final class PlayerMoveListener implements Listener {
         boolean originInside = arenaShape.get().contains(from);
         boolean destinationInside = arenaShape.get().contains(to);
         boolean flyingSpectator = isFlyingSpectator(player);
-        boolean activeFighter = isActiveFighter(player);
+        boolean activeFighter = countsAsActiveFighter(player);
         boolean admin = AdminPermission.isAdmin(player);
         if (!ArenaFlightExitRule.isMovementAllowed(activeFighter, belongsIntoArena(player), admin,
                 flyingSpectator, originInside, destinationInside)) {
@@ -98,20 +98,20 @@ public final class PlayerMoveListener implements Listener {
         if (arenaShape.isEmpty()) {
             return true;
         }
-        return ArenaMovementRule.isMovementAllowed(isActiveFighter(player), belongsIntoArena(player),
+        return ArenaMovementRule.isMovementAllowed(countsAsActiveFighter(player), belongsIntoArena(player),
                 AdminPermission.isAdmin(player), arenaShape.get().contains(origin),
                 arenaShape.get().contains(destination));
     }
 
     private boolean belongsIntoArena(Player player) {
-        if (isActiveFighter(player)) {
+        if (countsAsActiveFighter(player)) {
             return true;
         }
         return isFlyingSpectator(player);
     }
 
-    private boolean isActiveFighter(Player player) {
-        return matchService.isActiveFighter(player.getUniqueId());
+    private boolean countsAsActiveFighter(Player player) {
+        return matchService.isActiveFighter(player.getUniqueId()) && !matchService.isCleaningBetweenRounds();
     }
 
     private boolean isFlyingSpectator(Player player) {

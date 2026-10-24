@@ -16,18 +16,23 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.inventory.EquipmentSlot;
+import org.bukkit.inventory.ItemStack;
 
 import java.util.Objects;
+import java.util.function.Predicate;
 
 public final class BorderSelectorListener implements Listener {
 
     private final BorderSelectorModeRegistry selectorModes;
     private final SpectatorBorderService spectatorBorderService;
+    private final Predicate<ItemStack> pluginToolCheck;
 
     public BorderSelectorListener(BorderSelectorModeRegistry selectorModes,
-                                  SpectatorBorderService spectatorBorderService) {
+                                  SpectatorBorderService spectatorBorderService,
+                                  Predicate<ItemStack> pluginToolCheck) {
         this.selectorModes = Objects.requireNonNull(selectorModes, "selectorModes");
         this.spectatorBorderService = Objects.requireNonNull(spectatorBorderService, "spectatorBorderService");
+        this.pluginToolCheck = Objects.requireNonNull(pluginToolCheck, "pluginToolCheck");
     }
 
     @EventHandler(priority = EventPriority.LOWEST)
@@ -37,6 +42,9 @@ public final class BorderSelectorListener implements Listener {
         }
         Player player = event.getPlayer();
         if (!selectorModes.isActive(player.getUniqueId())) {
+            return;
+        }
+        if (pluginToolCheck.test(event.getItem())) {
             return;
         }
         if (!isStillAdmin(player)) {

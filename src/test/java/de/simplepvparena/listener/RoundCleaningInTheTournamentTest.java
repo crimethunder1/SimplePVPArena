@@ -104,6 +104,62 @@ class RoundCleaningInTheTournamentTest {
     }
 
     @Test
+    void resumingTheTournamentDuringTheCleaningBetweenTheRoundsStartsNothingBeforeTheEndOfTheCleaning() {
+        AutoMatchHarness harness = startTournamentMatch();
+        Match match = harness.runningMatch();
+        harness.winRound(harness.runningTeamNames().get(0));
+        assertTrue(harness.tournamentManager().togglePause().successful());
+        assertTrue(harness.matchService().isCleaningBetweenRounds());
+
+        TournamentOperationResult resume = harness.tournamentManager().togglePause();
+
+        assertTrue(resume.successful(), resume.message());
+        assertEquals(TournamentState.RUNNING, harness.tournamentManager().getState());
+        assertFalse(harness.matchService().isRoundTimerPaused());
+        harness.advanceSeconds(10);
+        assertEquals(Optional.of(match), harness.matchService().getActiveMatch(), "no other match starts");
+        assertEquals(MatchState.BETWEEN_ROUNDS, match.getState());
+        assertEquals(1, match.getRoundNumber(), "no round begins before the end of the cleaning");
+
+        harness.finishCleaning();
+        harness.arena().runTick();
+
+        assertFalse(harness.matchService().isCleaningBetweenRounds());
+        assertEquals(2, match.getRoundNumber());
+        assertEquals(MatchState.RUNNING, match.getState());
+    }
+
+    @Test
+    void resumingTheTournamentWithoutACleaningWorksAsBefore() {
+        AutoMatchHarness harness = startTournamentMatch();
+        Match match = harness.runningMatch();
+        assertTrue(harness.tournamentManager().togglePause().successful());
+
+        TournamentOperationResult resume = harness.tournamentManager().togglePause();
+
+        assertTrue(resume.successful(), resume.message());
+        assertEquals(TournamentState.RUNNING, harness.tournamentManager().getState());
+        assertFalse(harness.matchService().isRoundTimerPaused());
+        assertEquals(Optional.of(match), harness.matchService().getActiveMatch());
+        assertEquals(MatchState.RUNNING, match.getState());
+    }
+
+    @Test
+    void resumingIsStillRefusedWhenTheMatchWasCancelledDuringTheCleaningBetweenTheRounds() {
+        AutoMatchHarness harness = startTournamentMatch();
+        harness.winRound(harness.runningTeamNames().get(0));
+        assertTrue(harness.tournamentManager().togglePause().successful());
+        harness.matchService().cancelActiveMatch();
+
+        TournamentOperationResult resume = harness.tournamentManager().togglePause();
+
+        assertFalse(resume.successful());
+        assertEquals(ARENA_BEING_CLEANED, resume.message());
+        assertEquals(TournamentState.PAUSED, harness.tournamentManager().getState());
+        assertFalse(harness.matchService().hasActiveMatch(), "no match starts into the running cleaning");
+    }
+
+    @Test
     void anAutoMatchIsCleanedBetweenTheRoundsAsWell() {
         AutoMatchHarness harness = new AutoMatchHarness("Alpha", "Bravo");
         harness.cleanBetweenRounds();

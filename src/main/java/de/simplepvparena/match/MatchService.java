@@ -90,6 +90,7 @@ public final class MatchService {
     private Consumer<String> adminNotifier = message -> { };
     private RoundCleaning roundCleaning;
     private Match matchWarnedAboutTheRoundCleaning;
+    private Match matchCleanedBetweenRounds;
     private RoundStartEffects roundStartEffects = new VanillaRoundStartEffects();
     private CountdownImages countdownImages = CountdownImages.NONE;
     private ArenaAudience arenaAudience;
@@ -253,6 +254,10 @@ public final class MatchService {
 
     public boolean hasActiveMatch() {
         return activeMatch != null;
+    }
+
+    public boolean isCleaningBetweenRounds() {
+        return activeMatch != null && activeMatch == matchCleanedBetweenRounds;
     }
 
     public Optional<Match> getActiveMatch() {
@@ -657,7 +662,7 @@ public final class MatchService {
             if (hasAnyOnlineParticipant(match)) {
                 announceRoundTitle(match, Messages.text(MatchMessage.ROUND_DRAW_TITLE,
                         Placeholder.of("round", match.getRoundNumber())));
-                scheduleNextRound(match);
+                cleanTheArenaBeforeTheNextRound(match);
                 return;
             }
             announceWarningToMatch(match, Messages.text(MatchMessage.HALTED,
@@ -691,9 +696,11 @@ public final class MatchService {
             scheduleNextRound(match);
             return;
         }
+        matchCleanedBetweenRounds = match;
         Optional<String> skipReason = roundCleaning.startCleaningBetweenRounds(
                 outcome -> continueAfterTheRoundCleaning(match, outcome));
         if (skipReason.isPresent()) {
+            matchCleanedBetweenRounds = null;
             warnAdminsAboutTheRoundCleaning(match, Messages.text(MatchMessage.ROUND_CLEANING_NOT_STARTED,
                     Placeholder.of("reason", toFirstLine(skipReason.get()))));
             scheduleNextRound(match);
@@ -705,6 +712,9 @@ public final class MatchService {
     private void continueAfterTheRoundCleaning(Match match, String outcome) {
         plugin.getLogger().info("The arena cleaning between the rounds of match " + match.getMatchId()
                 + " is over: " + outcome.replace(TournamentMessages.LINE_BREAK, " "));
+        if (matchCleanedBetweenRounds == match) {
+            matchCleanedBetweenRounds = null;
+        }
         if (activeMatch == match && match.getState() == MatchState.BETWEEN_ROUNDS) {
             scheduleNextRound(match);
         }
