@@ -25,6 +25,7 @@ import de.simplepvparena.arena.MarkClearing;
 import de.simplepvparena.arena.MarkClearingKind;
 import de.simplepvparena.arena.SpectatorItemFactory;
 import de.simplepvparena.arena.SpectatorService;
+import de.simplepvparena.arena.StandingsBoardToolService;
 import de.simplepvparena.arena.VanillaArenaCleaningVisualEffect;
 import de.simplepvparena.border.BorderMarkIndex;
 import de.simplepvparena.border.BorderMarkStorage;
@@ -91,6 +92,7 @@ import de.simplepvparena.listener.PlayerRespawnListener;
 import de.simplepvparena.listener.RegistrationStationListener;
 import de.simplepvparena.listener.RegistrationStationWorldListener;
 import de.simplepvparena.listener.SpectatorBorderListener;
+import de.simplepvparena.listener.StandingsBoardToolListener;
 import de.simplepvparena.listener.StartGateListener;
 import de.simplepvparena.match.ConfiguredRoundStartEffects;
 import de.simplepvparena.match.FighterColours;
@@ -122,7 +124,6 @@ import de.simplepvparena.team.TeamRegistry;
 import de.simplepvparena.team.TeamSizeSetting;
 import de.simplepvparena.team.TeamStorage;
 import de.simplepvparena.tournament.AdminNotifier;
-import de.simplepvparena.tournament.ArenaCleanup;
 import de.simplepvparena.tournament.AutoMatchService;
 import de.simplepvparena.tournament.AutoMatchState;
 import de.simplepvparena.tournament.AutomaticArenaCleanup;
@@ -205,6 +206,7 @@ public final class SimplePVPArenaPlugin extends JavaPlugin {
     private ConfiguredVisuals configuredVisuals;
     private PlacementSidebar placementSidebar;
     private PlacementBoard placementBoard;
+    private StandingsBoardToolService standingsBoardToolService;
 
     @Override
     public void onEnable() {
@@ -319,7 +321,9 @@ public final class SimplePVPArenaPlugin extends JavaPlugin {
         arenaSetupService.setArenaReservedForMatch(kitChoiceService::isPending);
 
         TeamSizeSetting teamSizeSetting = new TeamSizeSetting();
-        ArenaCleanup arenaCleanup = new AutomaticArenaCleanup(arenaSetupService, arenaCleaningService);
+        AutomaticArenaCleanup arenaCleanup = new AutomaticArenaCleanup(arenaSetupService, arenaCleaningService);
+        matchService.setRoundCleaning(arenaCleanup);
+        matchService.setAdminNotifier(adminNotifier::notifyAdmins);
         tournamentManager = new TournamentManager(this, teamRegistry, arenaRegistry, matchService, arenaCleanup,
                 adminNotifier, new FileTournamentStateStorage(
                         new File(getDataFolder(), FileTournamentStateStorage.FILE_NAME).toPath()),
@@ -331,13 +335,14 @@ public final class SimplePVPArenaPlugin extends JavaPlugin {
         arenaSetupService.setArenaReservedForAutoMatch(autoMatchService::isAnnounced);
         PlacementService placementService = new PlacementService(tournamentManager::getState,
                 tournamentManager::getBracket, matchService::getActiveMatch, autoMatchService::isEnabled,
-                autoMatchService::getWinsByTeamName, teamRegistry::findTeam);
+                teamRegistry::findTeam);
         placementSidebar = new PlacementSidebar(this, arenaRegistry::findEffectArea,
                 placementService::findStandings);
         placementBoard = new PlacementBoard(this, arenaRegistry.getArena()::getStandingsBoard, getServer()::getWorld,
                 new PaperPlacementBoardEntities(this), placementService::findStandings);
         matchService.setMatchProgressListener(this::onPlacementChanged);
         arenaSetupService.setStandingsBoardListener(placementBoard::refresh);
+        standingsBoardToolService = new StandingsBoardToolService(this, arenaSetupService, ItemStack::new);
         registrationService = new RegistrationService(registrationList,
                 tournamentManager::isTournamentInProgress, this::saveRegistrations);
         registrationStationService = new RegistrationStationService(this, registrationStations,
@@ -379,7 +384,8 @@ public final class SimplePVPArenaPlugin extends JavaPlugin {
                                 arenaSetupService::findResetRejection, getLogger()::warning),
                         new EffectMarginSetting(arenaRegistry, margin -> liveConfiguration.setArenaEffectMargin(margin)),
                         new EffectMarginConfigurationWriter(this::getConfig,
-                                new File(getDataFolder(), CONFIGURATION_FILE_NAME), getLogger())),
+                                new File(getDataFolder(), CONFIGURATION_FILE_NAME), getLogger()),
+                        standingsBoardToolService),
                 new AdminMenuDependencies.KitServices(kitLibrary, kitSaveService),
                 new AdminMenuDependencies.RegistrationServices(registrationService, registrationStationService,
                         randomTeamFormation, teamModeSetting, new TeamModeConfigurationWriter(this::getConfig,
@@ -635,5 +641,7 @@ public final class SimplePVPArenaPlugin extends JavaPlugin {
                 new RegistrationStationWorldListener(registrationStationDisplays, registrationStationButtonCheck),
                 this);
         getServer().getPluginManager().registerEvents(new PlacementBoardWorldListener(placementBoard), this);
+        getServer().getPluginManager().registerEvents(
+                new StandingsBoardToolListener(standingsBoardToolService), this);
     }
 }

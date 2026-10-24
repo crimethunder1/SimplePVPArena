@@ -14,6 +14,7 @@ import de.simplepvparena.message.TournamentMessage;
 import de.simplepvparena.message.TournamentMessages;
 import org.bukkit.Location;
 import org.bukkit.World;
+import org.bukkit.block.Block;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
@@ -274,11 +275,19 @@ public final class ArenaSetupService {
         return activeArena.getArena().getStandingsBoard();
     }
 
-    public void placeStandingsBoard(Player admin) {
-        Location location = admin.getLocation();
-        PositionSnapshot position = new PositionSnapshot(location.getWorld().getName(),
-                location.getBlockX() + BLOCK_CENTRE, location.getBlockY(), location.getBlockZ() + BLOCK_CENTRE,
-                location.getYaw(), 0.0F);
+    public boolean isStandingsBoardBlock(Block block) {
+        return findStandingsBoard()
+                .filter(place -> place.worldName().equals(block.getWorld().getName()))
+                .filter(place -> (int) Math.floor(place.x()) == block.getX()
+                        && (int) Math.floor(place.y()) == block.getY()
+                        && (int) Math.floor(place.z()) == block.getZ())
+                .isPresent();
+    }
+
+    public void placeStandingsBoard(Player admin, Block block) {
+        PositionSnapshot position = new PositionSnapshot(block.getWorld().getName(),
+                block.getX() + BLOCK_CENTRE, block.getY(), block.getZ() + BLOCK_CENTRE,
+                admin.getLocation().getYaw(), 0.0F);
         activeArena.getArena().setStandingsBoard(position);
         writeArenaConfiguration(admin);
         standingsBoardListener.run();
@@ -353,13 +362,17 @@ public final class ArenaSetupService {
         if (reservation.isPresent()) {
             return reservation;
         }
+        return findCleaningConflict(volume.get());
+    }
+
+    private Optional<String> findCleaningConflict(ArenaShape volume) {
         if (arenaCleaningService.isCleaning()) {
             return Optional.of(Messages.text(ArenaSetupMessage.CLEANING_ALREADY_RUNNING));
         }
         if (arenaBaselineService.isCapturing()) {
             return Optional.of(Messages.text(ArenaSetupMessage.CLEANING_DURING_BASELINE_CAPTURE));
         }
-        return ArenaCleaningPlan.findBaselineMismatch(volume.get(), arenaBaselineService.findStoredSnapshot());
+        return ArenaCleaningPlan.findBaselineMismatch(volume, arenaBaselineService.findStoredSnapshot());
     }
 
     public Optional<ArenaShape> findCleanedVolume() {
@@ -430,6 +443,22 @@ public final class ArenaSetupService {
         if (rejection.isPresent()) {
             return rejection;
         }
+        return startCleaningTowardsTheBaseline(completionHandler);
+    }
+
+    public Optional<String> startCleaningBetweenRounds(Consumer<String> completionHandler) {
+        Optional<ArenaShape> volume = getShape();
+        if (volume.isEmpty()) {
+            return Optional.of(Messages.text(ArenaSetupMessage.CLEANING_WITHOUT_FIGHT_AREA, calculateAction()));
+        }
+        Optional<String> conflict = findCleaningConflict(volume.get());
+        if (conflict.isPresent()) {
+            return conflict;
+        }
+        return startCleaningTowardsTheBaseline(completionHandler);
+    }
+
+    private Optional<String> startCleaningTowardsTheBaseline(Consumer<String> completionHandler) {
         if (!hasBaseline()) {
             return Optional.of(Messages.text(ArenaSetupMessage.AUTOMATIC_CLEANING_WITHOUT_BASELINE,
                     calculateAction()));

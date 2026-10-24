@@ -31,6 +31,7 @@ class ListenerMessagesTest {
     private static final int ARENA_FLOOR_Z = 5;
     private static final int TRIBUNE_X = ArenaMatchHarness.WALL_MAXIMUM + 5;
     private static final int TRIBUNE_Z = ArenaMatchHarness.WALL_MAXIMUM + 5;
+    private static final double OUTSIDE_THE_EFFECT_AREA = 500.5D;
 
     private ArenaMatchHarness harness;
     private ArenaMatchHarness.FakePlayer fighter;
@@ -95,6 +96,7 @@ class ListenerMessagesTest {
     @UseLanguage("en")
     void answersTheSpectatorItemInEnglish() {
         useSpectatorItem(fighter);
+        spectator.moveTo(harness.at(OUTSIDE_THE_EFFECT_AREA, OUTSIDE_THE_EFFECT_AREA));
         useSpectatorItem(spectator);
 
         assertEquals(List.of("You cannot switch to spectator mode while you are fighting"), fighter.messages());
@@ -107,6 +109,7 @@ class ListenerMessagesTest {
     @UseLanguage("de")
     void answersTheSpectatorItemInGerman() {
         useSpectatorItem(fighter);
+        spectator.moveTo(harness.at(OUTSIDE_THE_EFFECT_AREA, OUTSIDE_THE_EFFECT_AREA));
         useSpectatorItem(spectator);
 
         assertEquals(List.of("Du kannst nicht in den Zuschauermodus wechseln, während du kämpfst"),

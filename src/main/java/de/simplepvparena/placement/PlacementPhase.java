@@ -4,7 +4,6 @@ public enum PlacementPhase {
     TOURNAMENT_RUNNING,
     TOURNAMENT_PAUSED,
     TOURNAMENT_OVER,
-    AUTO_MATCH,
     NONE;
 
     public boolean isTournament() {

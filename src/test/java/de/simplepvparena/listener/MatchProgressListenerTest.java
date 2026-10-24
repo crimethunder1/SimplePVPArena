@@ -19,8 +19,7 @@ class MatchProgressListenerTest {
         harness.winRound("Alpha");
         harness.winRound("Alpha");
 
-        assertEquals(List.of("Alpha 0 : 0 Bravo, wins {}", "Alpha 1 : 0 Bravo, wins {}",
-                "Alpha 1 : 0 Bravo, wins {}", "no match, wins {Alpha=1}"), calls);
+        assertEquals(List.of("Alpha 0 : 0 Bravo", "Alpha 1 : 0 Bravo", "Alpha 1 : 0 Bravo", "no match"), calls);
     }
 
     @Test
@@ -32,14 +31,14 @@ class MatchProgressListenerTest {
 
         harness.matchService().cancelActiveMatch();
 
-        assertEquals(List.of("Alpha 0 : 0 Bravo, wins {}", "no match, wins {}"), calls);
+        assertEquals(List.of("Alpha 0 : 0 Bravo", "no match"), calls);
     }
 
     private static List<String> recordCalls(AutoMatchHarness harness) {
         List<String> calls = new ArrayList<>();
         harness.matchService().setMatchProgressListener(() -> calls.add(harness.matchService().getActiveMatch()
                 .map(match -> match.getScore().describe())
-                .orElse("no match") + ", wins " + harness.autoMatchService().getWinsByTeamName()));
+                .orElse("no match")));
         return calls;
     }
 }

@@ -279,6 +279,9 @@ public final class TournamentManager implements MatchCompletionHandler {
             if (winningTeam.isEmpty()) {
                 return TournamentOperationResult.failure(describeTeamNotInMatch(teamName, matchId));
             }
+            if (arenaCleanup.isCleaning()) {
+                return TournamentOperationResult.failure(describeArenaBeingCleaned());
+            }
             forcedRunningMatchId = activeMatch.get().getMatchId();
             try {
                 matchService.forceResult(activeMatch.get().getMatchId(), winningTeam.get().getTeamName());
@@ -335,6 +338,9 @@ public final class TournamentManager implements MatchCompletionHandler {
         String matchId = activeMatch.get().getMatchId();
         if (bracket.findMatch(matchId).isEmpty()) {
             return Optional.of(Messages.text(TournamentMessage.UNKNOWN_MATCH, Placeholder.of("match", matchId)));
+        }
+        if (arenaCleanup.isCleaning()) {
+            return Optional.of(describeArenaBeingCleaned());
         }
         return Optional.empty();
     }

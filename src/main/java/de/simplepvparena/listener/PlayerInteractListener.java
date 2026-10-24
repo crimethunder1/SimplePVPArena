@@ -54,9 +54,19 @@ public final class PlayerInteractListener implements Listener {
             TournamentMessages.sendError(player, Messages.text(SpectatorMessage.SWITCH_WHILE_FIGHTING));
             return;
         }
+        boolean assigned = spectatorService.findSpectatorMode(player.getUniqueId()).isPresent();
+        if (!assigned && !spectatorService.isInsideEffectArea(player)) {
+            TournamentMessages.sendError(player, Messages.text(SpectatorMessage.NOT_WATCHING));
+            return;
+        }
+        if (!assigned && !spectatorService.hasTribuneSpawn()) {
+            TournamentMessages.sendError(player, Messages.text(SpectatorMessage.TRIBUNE_SPAWN_NOT_SET));
+            return;
+        }
         boolean switched;
         try {
-            switched = spectatorService.toggleSpectatorMode(player);
+            switched = assigned ? spectatorService.toggleSpectatorMode(player)
+                    : spectatorService.enterArenaFlight(player);
         } catch (RuntimeException failure) {
             logger.log(Level.WARNING, Messages.text(ListenerMessage.SPECTATOR_MODE_NOT_SWITCHED,
                     Placeholder.of("player", player.getName())), failure);

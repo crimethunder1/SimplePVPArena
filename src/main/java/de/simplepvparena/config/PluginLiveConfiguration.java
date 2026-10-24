@@ -152,6 +152,11 @@ public final class PluginLiveConfiguration implements LiveConfiguration {
     }
 
     @Override
+    public void setCleanBetweenRounds(boolean cleanBetweenRounds) {
+        matchService.setCleanBetweenRounds(cleanBetweenRounds);
+    }
+
+    @Override
     public void setUnequalTeamSettings(UnequalTeamSettings unequalTeamSettings) {
         matchService.setUnequalTeamSettings(unequalTeamSettings);
     }

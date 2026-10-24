@@ -167,7 +167,6 @@ class ConvertedClassesHaveNoTextLiteralsTest {
             "placement/PlacementMatch.java",
             "placement/PlacementRank.java",
             "placement/PlacementElimination.java",
-            "placement/AutoMatchWinCount.java",
             "placement/PlacementLines.java",
             "placement/PlacementSidebar.java",
             "placement/ScoreboardTeamMirror.java",
@@ -185,7 +184,10 @@ class ConvertedClassesHaveNoTextLiteralsTest {
             "arena/SavedPotionEffect.java",
             "arena/AreaPlayerCondition.java",
             "arena/PlayerPotionEffects.java",
-            "arena/BukkitPlayerPotionEffects.java");
+            "arena/BukkitPlayerPotionEffects.java",
+            "match/RoundCleaning.java",
+            "arena/StandingsBoardToolService.java",
+            "listener/StandingsBoardToolListener.java");
 
     private static final Pattern STRING_LITERAL = Pattern.compile("\"((?:[^\"\\\\]|\\\\.)*)\"");
     private static final Pattern USAGE_TOKEN = Pattern.compile("<[^<>]*>");

@@ -80,6 +80,7 @@ class GermanConfigTextsTest {
                         + "Verbindungsabbruch ab jetzt",
                 "  ob das größere Team abstimmt, wer kämpft, wenn die Teams unterschiedlich viele Spieler online "
                         + "haben, und die Sekunden der Abstimmung, ab dem nächsten Match",
+                "  ob die Arena zwischen den Runden eines Matches gereinigt wird, ab dem nächsten Rundenende",
                 "  die Teamgröße, außer ein Turnier läuft oder ein Team hat mehr Spieler als eine kleinere neue Größe",
                 "  ob der Auto-Match-Modus an ist, die Sekunden bis zum Beginn eines Auto-Matches und die Pause "
                         + "zwischen zwei Auto-Matches",

@@ -7,10 +7,8 @@ import de.simplepvparena.tournament.BracketMatch;
 import de.simplepvparena.tournament.TournamentState;
 
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
@@ -22,29 +20,21 @@ public final class PlacementService {
 
     private static final int CHAMPION_PLACE = 1;
 
-    private static final Comparator<Map.Entry<String, Integer>> MOST_WINS_FIRST =
-            Comparator.comparing((Map.Entry<String, Integer> entry) -> entry.getValue()).reversed()
-                    .thenComparing(Map.Entry::getKey, String.CASE_INSENSITIVE_ORDER)
-                    .thenComparing(Map.Entry::getKey);
-
     private final Supplier<TournamentState> tournamentStateSource;
     private final Supplier<Optional<Bracket>> bracketSource;
     private final Supplier<Optional<Match>> activeMatchSource;
     private final BooleanSupplier autoMatchEnabled;
-    private final Supplier<Map<String, Integer>> autoMatchWinsSource;
     private final Function<String, Optional<Team>> teamLookup;
 
     public PlacementService(Supplier<TournamentState> tournamentStateSource,
                             Supplier<Optional<Bracket>> bracketSource,
                             Supplier<Optional<Match>> activeMatchSource,
                             BooleanSupplier autoMatchEnabled,
-                            Supplier<Map<String, Integer>> autoMatchWinsSource,
                             Function<String, Optional<Team>> teamLookup) {
         this.tournamentStateSource = Objects.requireNonNull(tournamentStateSource, "tournamentStateSource");
         this.bracketSource = Objects.requireNonNull(bracketSource, "bracketSource");
         this.activeMatchSource = Objects.requireNonNull(activeMatchSource, "activeMatchSource");
         this.autoMatchEnabled = Objects.requireNonNull(autoMatchEnabled, "autoMatchEnabled");
-        this.autoMatchWinsSource = Objects.requireNonNull(autoMatchWinsSource, "autoMatchWinsSource");
         this.teamLookup = Objects.requireNonNull(teamLookup, "teamLookup");
     }
 
@@ -58,7 +48,7 @@ public final class PlacementService {
             return describeTournament(PlacementPhase.TOURNAMENT_PAUSED, bracket.get());
         }
         if (autoMatchEnabled.getAsBoolean()) {
-            return describeAutoMatches();
+            return PlacementStandings.none();
         }
         if (bracket.isPresent() && state == TournamentState.FINISHED) {
             return describeTournament(PlacementPhase.TOURNAMENT_OVER, bracket.get());
@@ -106,17 +96,6 @@ public final class PlacementService {
             }
         }
         return ranks;
-    }
-
-    private PlacementStandings describeAutoMatches() {
-        Optional<PlacementMatch> runningAutoMatch = activeMatchSource.get()
-                .filter(Match::isAutoMatch)
-                .map(PlacementMatch::of);
-        List<AutoMatchWinCount> winCounts = autoMatchWinsSource.get().entrySet().stream()
-                .sorted(MOST_WINS_FIRST)
-                .map(entry -> new AutoMatchWinCount(toTeam(entry.getKey()), entry.getValue()))
-                .toList();
-        return PlacementStandings.autoMatch(runningAutoMatch, winCounts);
     }
 
     private static Optional<Integer> findFirstUndecidedRoundIndex(List<List<BracketMatch>> rounds) {

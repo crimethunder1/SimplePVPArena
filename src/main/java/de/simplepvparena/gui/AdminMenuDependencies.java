@@ -5,6 +5,7 @@ import de.simplepvparena.arena.ArenaSetupService;
 import de.simplepvparena.arena.EffectMarginSetting;
 import de.simplepvparena.arena.EffectMarginWriter;
 import de.simplepvparena.arena.MarkClearing;
+import de.simplepvparena.arena.StandingsBoardToolService;
 import de.simplepvparena.border.BorderParticleService;
 import de.simplepvparena.border.BorderSelectorModeRegistry;
 import de.simplepvparena.border.ConfirmedBorderParticleWriter;
@@ -62,7 +63,8 @@ public record AdminMenuDependencies(Plugin plugin,
                                 MarkClearing borderMarkClearing,
                                 MarkClearing startGateMarkClearing,
                                 EffectMarginSetting effectMarginSetting,
-                                EffectMarginWriter effectMarginWriter) {
+                                EffectMarginWriter effectMarginWriter,
+                                StandingsBoardToolService standingsBoardToolService) {
     }
 
     public record KitServices(KitLibrary kitLibrary, KitSaveService kitSaveService) {

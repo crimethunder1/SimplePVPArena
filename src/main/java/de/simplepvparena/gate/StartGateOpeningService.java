@@ -189,7 +189,7 @@ public final class StartGateOpeningService implements StartGates {
         if (block.getType() == material) {
             return 0;
         }
-        block.setType(material, false);
+        block.setType(material, true);
         return 1;
     }
 

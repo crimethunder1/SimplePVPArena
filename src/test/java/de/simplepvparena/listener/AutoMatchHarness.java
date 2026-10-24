@@ -5,6 +5,7 @@ import de.simplepvparena.kit.KitLibrary;
 import de.simplepvparena.match.Match;
 import de.simplepvparena.match.MatchService;
 import de.simplepvparena.match.MatchState;
+import de.simplepvparena.match.RoundCleaning;
 import de.simplepvparena.support.FakeKitItemSerializer;
 import de.simplepvparena.support.FakeSerializedKits;
 import de.simplepvparena.support.InMemoryKitLibraryStorage;
@@ -41,6 +42,7 @@ final class AutoMatchHarness {
     static final String DEFAULT_KIT_NAME = "Archer";
     static final String OTHER_KIT_NAME = "Knight";
     static final String SKIPPED_CLEANING_REASON = "no baseline of the fight area is stored";
+    static final String CLEANING_ALREADY_RUNNING = "The arena is already being cleaned";
 
     private static final long TICKS_PER_SECOND = 20L;
 
@@ -224,8 +226,17 @@ final class AutoMatchHarness {
         arenaCleanup.skipEveryCleaning = true;
     }
 
+    void cleanBetweenRounds() {
+        arena.getMatchService().setRoundCleaning(arenaCleanup);
+        arena.getMatchService().setAdminNotifier(adminMessages::add);
+    }
+
     int startedCleaningCount() {
         return arenaCleanup.startedCleaningCount;
+    }
+
+    int startedRoundCleaningCount() {
+        return arenaCleanup.startedRoundCleaningCount;
     }
 
     int tournamentStorageWriteCount() {
@@ -268,11 +279,12 @@ final class AutoMatchHarness {
         }
     }
 
-    private static final class ControlledArenaCleanup implements ArenaCleanup {
+    private static final class ControlledArenaCleanup implements ArenaCleanup, RoundCleaning {
 
         private Consumer<String> completionHandler;
         private boolean skipEveryCleaning;
         private int startedCleaningCount;
+        private int startedRoundCleaningCount;
 
         @Override
         public Optional<String> startCleaningAfterMatch(Consumer<String> completionHandler) {
@@ -280,6 +292,19 @@ final class AutoMatchHarness {
                 return Optional.of(SKIPPED_CLEANING_REASON);
             }
             startedCleaningCount++;
+            this.completionHandler = completionHandler;
+            return Optional.empty();
+        }
+
+        @Override
+        public Optional<String> startCleaningBetweenRounds(Consumer<String> completionHandler) {
+            if (skipEveryCleaning) {
+                return Optional.of(SKIPPED_CLEANING_REASON);
+            }
+            if (this.completionHandler != null) {
+                return Optional.of(CLEANING_ALREADY_RUNNING);
+            }
+            startedRoundCleaningCount++;
             this.completionHandler = completionHandler;
             return Optional.empty();
         }

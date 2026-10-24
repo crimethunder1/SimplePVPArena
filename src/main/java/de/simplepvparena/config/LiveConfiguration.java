@@ -25,6 +25,8 @@ public interface LiveConfiguration {
 
     void setReconnectSeconds(int reconnectSeconds);
 
+    void setCleanBetweenRounds(boolean cleanBetweenRounds);
+
     void setUnequalTeamSettings(UnequalTeamSettings unequalTeamSettings);
 
     void setTeamColourSettings(TeamColourSettings teamColourSettings);

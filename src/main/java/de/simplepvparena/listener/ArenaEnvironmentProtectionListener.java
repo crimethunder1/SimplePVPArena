@@ -6,6 +6,7 @@ import de.simplepvparena.arena.ArenaRegistry;
 import de.simplepvparena.arena.ArenaShape;
 import de.simplepvparena.arena.EffectArea;
 import de.simplepvparena.permission.AdminPermission;
+import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
@@ -15,6 +16,7 @@ import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockBurnEvent;
 import org.bukkit.event.block.BlockExplodeEvent;
+import org.bukkit.event.block.BlockFromToEvent;
 import org.bukkit.event.block.BlockIgniteEvent;
 import org.bukkit.event.block.BlockPistonExtendEvent;
 import org.bukkit.event.block.BlockPistonRetractEvent;
@@ -100,6 +102,24 @@ public final class ArenaEnvironmentProtectionListener implements Listener {
     public void onEntityChangeBlock(EntityChangeBlockEvent event) {
         Block changedBlock = event.getBlock();
         if (findProtectedArea(changedBlock.getWorld()).contains(changedBlock)) {
+            event.setCancelled(true);
+        }
+    }
+
+    @EventHandler(priority = EventPriority.NORMAL, ignoreCancelled = true)
+    public void onBlockFromTo(BlockFromToEvent event) {
+        Block source = event.getBlock();
+        if (source.getType() == Material.DRAGON_EGG) {
+            return;
+        }
+        Block destination = event.getToBlock();
+        Optional<ArenaShape> fightArea = arenaRegistry.getArena().getShape()
+                .filter(shape -> shape.getWorldName().equals(source.getWorld().getName()));
+        if (fightArea.isEmpty()) {
+            return;
+        }
+        if (fightArea.get().containsCell(source.getX(), source.getZ())
+                && !fightArea.get().containsCell(destination.getX(), destination.getZ())) {
             event.setCancelled(true);
         }
     }

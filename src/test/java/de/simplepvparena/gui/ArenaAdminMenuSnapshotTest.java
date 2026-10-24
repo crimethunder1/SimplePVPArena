@@ -61,8 +61,8 @@ class ArenaAdminMenuSnapshotTest {
                 21 | BLAZE_POWDER | Border particles | The particles are shown / \
                 Only the particles at the confirmed border wall / Click to hide them
                 22 | OAK_DOOR | Back | Returns to the main menu
-                23 | OAK_SIGN | Place the standings board here | Puts the board two blocks above the block / \
-                you stand on, best at the tribune / It shows the round, the match and the placement
+                23 | OAK_SIGN | Get the standings board tool | Puts the standings board tool into your inventory / \
+                The board shows the round, the match and the placement / of a tournament
                 25 | GRAY_DYE | Clear the start gate marks | Nothing is marked
                 """, fixture.describeLastMenu());
     }
@@ -148,8 +148,8 @@ class ArenaAdminMenuSnapshotTest {
                 21 | BLAZE_POWDER | Border particles | The particles are shown / \
                 Only the particles at the confirmed border wall / Click to hide them
                 22 | OAK_DOOR | Back | Returns to the main menu
-                23 | OAK_SIGN | Place the standings board here | Puts the board two blocks above the block / \
-                you stand on, best at the tribune / It shows the round, the match and the placement
+                23 | OAK_SIGN | Get the standings board tool | Puts the standings board tool into your inventory / \
+                The board shows the round, the match and the placement / of a tournament
                 25 | GRAY_DYE | Clear the start gate marks | Nothing is marked
                 """, fixture.describeLastMenu());
     }
@@ -210,8 +210,8 @@ class ArenaAdminMenuSnapshotTest {
                 21 | BLAZE_POWDER | Border particles | The particles are shown / \
                 Only the particles at the confirmed border wall / Click to hide them
                 22 | OAK_DOOR | Back | Returns to the main menu
-                23 | OAK_SIGN | Place the standings board here | Puts the board two blocks above the block / \
-                you stand on, best at the tribune / It shows the round, the match and the placement
+                23 | OAK_SIGN | Get the standings board tool | Puts the standings board tool into your inventory / \
+                The board shows the round, the match and the placement / of a tournament
                 25 | GRAY_DYE | Clear the start gate marks | Nothing is marked
                 """, fixture.describeLastMenu());
     }

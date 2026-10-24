@@ -9,6 +9,7 @@ import de.simplepvparena.arena.EffectArea;
 import de.simplepvparena.arena.EffectMarginSetting;
 import de.simplepvparena.arena.EffectMarginWriter;
 import de.simplepvparena.arena.MarkClearing;
+import de.simplepvparena.arena.StandingsBoardToolService;
 import de.simplepvparena.border.BorderParticleService;
 import de.simplepvparena.border.ConfirmedBorderParticleWriter;
 import de.simplepvparena.gate.StartGateItemService;
@@ -68,13 +69,14 @@ final class ArenaAdminMenu implements AdminMenu {
     private final MarkClearing startGateMarkClearing;
     private final EffectMarginSetting effectMarginSetting;
     private final EffectMarginWriter effectMarginWriter;
+    private final StandingsBoardToolService standingsBoardToolService;
 
     ArenaAdminMenu(AdminMenuNavigation navigation, ArenaSetupService arenaSetupService,
                    ArenaHeightMarkerService heightMarkerService, StartGateItemService gateItemService,
                    ChatInputService chatInputService, BorderParticleService borderParticleService,
                    ConfirmedBorderParticleWriter confirmedBorderParticleWriter, MarkClearing borderMarkClearing,
                    MarkClearing startGateMarkClearing, EffectMarginSetting effectMarginSetting,
-                   EffectMarginWriter effectMarginWriter) {
+                   EffectMarginWriter effectMarginWriter, StandingsBoardToolService standingsBoardToolService) {
         this.navigation = Objects.requireNonNull(navigation, "navigation");
         this.arenaSetupService = Objects.requireNonNull(arenaSetupService, "arenaSetupService");
         this.heightMarkerService = Objects.requireNonNull(heightMarkerService, "heightMarkerService");
@@ -87,6 +89,8 @@ final class ArenaAdminMenu implements AdminMenu {
         this.startGateMarkClearing = Objects.requireNonNull(startGateMarkClearing, "startGateMarkClearing");
         this.effectMarginSetting = Objects.requireNonNull(effectMarginSetting, "effectMarginSetting");
         this.effectMarginWriter = Objects.requireNonNull(effectMarginWriter, "effectMarginWriter");
+        this.standingsBoardToolService = Objects.requireNonNull(standingsBoardToolService,
+                "standingsBoardToolService");
     }
 
     @Override
@@ -468,18 +472,25 @@ final class ArenaAdminMenu implements AdminMenu {
                         Messages.lines(ArenaMenuMessage.STANDINGS_BOARD_REMOVE_LORE,
                                 Placeholder.of("position", place.describe()))))
                 .orElseGet(() -> MenuItems.create(STANDINGS_BOARD_TILE_MATERIAL,
-                        Messages.text(ArenaMenuMessage.STANDINGS_BOARD_PLACE_TITLE),
-                        Messages.lines(ArenaMenuMessage.STANDINGS_BOARD_PLACE_LORE)));
+                        Messages.text(ArenaMenuMessage.STANDINGS_BOARD_TOOL_TITLE),
+                        Messages.lines(ArenaMenuMessage.STANDINGS_BOARD_TOOL_LORE)));
     }
 
     private void switchStandingsBoard(Player player, AdminMenuHolder holder) {
         if (arenaSetupService.findStandingsBoard().isPresent()) {
             arenaSetupService.removeStandingsBoard(player);
             TournamentMessages.sendSuccess(player, Messages.text(ArenaMenuMessage.STANDINGS_BOARD_REMOVED));
-        } else {
-            arenaSetupService.placeStandingsBoard(player);
-            TournamentMessages.sendSuccess(player, Messages.text(ArenaMenuMessage.STANDINGS_BOARD_PLACED));
+            navigation.refresh(player, holder);
+            return;
         }
+        Map<Integer, ItemStack> itemsThatDidNotFit = player.getInventory()
+                .addItem(standingsBoardToolService.createTool());
+        if (!itemsThatDidNotFit.isEmpty()) {
+            TournamentMessages.sendWarning(player,
+                    Messages.text(ArenaMenuMessage.STANDINGS_BOARD_TOOL_INVENTORY_FULL));
+            return;
+        }
+        TournamentMessages.sendSuccess(player, Messages.text(ArenaMenuMessage.STANDINGS_BOARD_TOOL_HANDED_OUT));
         navigation.refresh(player, holder);
     }
 

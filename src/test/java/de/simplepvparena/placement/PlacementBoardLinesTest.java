@@ -53,16 +53,6 @@ class PlacementBoardLinesTest {
     }
 
     @Test
-    void showsTheAutoMatchesLikeTheSidebar() {
-        PlacementStandings standings = PlacementStandings.autoMatch(Optional.empty(),
-                List.of(new AutoMatchWinCount(ALPHA, 3), new AutoMatchWinCount(BRAVO, 1)));
-
-        assertEquals(PlacementLines.sidebarLines(standings), PlacementLines.boardLines(standings));
-        assertEquals("Auto match\nWaiting for the next auto match\nAlpha: 3 wins\nBravo: 1 win",
-                plain(PlacementLines.boardText(standings)));
-    }
-
-    @Test
     void neverWritesMoreThanTwentyLines() {
         List<PlacementElimination> eliminations = new ArrayList<>();
         for (int roundNumber = 1; roundNumber <= 12; roundNumber++) {

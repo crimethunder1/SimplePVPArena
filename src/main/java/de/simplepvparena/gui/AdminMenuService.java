@@ -116,7 +116,7 @@ public final class AdminMenuService {
         ArenaAdminMenu arenaAdminMenu = new ArenaAdminMenu(navigator, arenaSetupService, heightMarkerService,
                 gateItemService, chatInputService, arena.borderParticleService(),
                 arena.confirmedBorderParticleWriter(), arena.borderMarkClearing(), arena.startGateMarkClearing(),
-                arena.effectMarginSetting(), arena.effectMarginWriter());
+                arena.effectMarginSetting(), arena.effectMarginWriter(), arena.standingsBoardToolService());
         bracketViewMenu = new BracketViewMenu(navigator, tournamentManager, matchService);
         MainAdminMenu mainAdminMenu = new MainAdminMenu(navigator, tournamentManager, tournamentDryRun, teamRegistry,
                 matchService, arenaSetupService, borderSelectorModes, configurationReloader, tournamentMenuStatus,

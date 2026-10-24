@@ -41,6 +41,7 @@ public record PluginSettings(long roundResetDelayTicks,
                              int startGateDurationSeconds,
                              int countdownSeconds,
                              int reconnectSeconds,
+                             boolean cleanBetweenRounds,
                              UnequalTeamSettings unequalTeamSettings,
                              TeamColourSettings teamColourSettings,
                              int teamSize,
@@ -79,6 +80,7 @@ public record PluginSettings(long roundResetDelayTicks,
     public static final String START_GATE_DURATION_SECONDS_PATH = "match.start-gate-duration-seconds";
     public static final String COUNTDOWN_SECONDS_PATH = "match.countdown-seconds";
     public static final String RECONNECT_SECONDS_PATH = "match.reconnect-seconds";
+    public static final String CLEAN_BETWEEN_ROUNDS_PATH = "match.clean-between-rounds";
     public static final String UNEQUAL_TEAMS_MODE_PATH = "match.unequal-teams.mode";
     public static final String UNEQUAL_TEAMS_VOTE_SECONDS_PATH = "match.unequal-teams.vote-seconds";
     public static final String TEAM_SIZE_PATH = "match.team-size";
@@ -122,6 +124,7 @@ public record PluginSettings(long roundResetDelayTicks,
             START_GATE_DURATION_SECONDS_PATH,
             COUNTDOWN_SECONDS_PATH,
             RECONNECT_SECONDS_PATH,
+            CLEAN_BETWEEN_ROUNDS_PATH,
             UNEQUAL_TEAMS_MODE_PATH,
             UNEQUAL_TEAMS_VOTE_SECONDS_PATH,
             TEAM_SIZE_PATH,
@@ -171,6 +174,7 @@ public record PluginSettings(long roundResetDelayTicks,
                 StartGateDuration.DEFAULT_SECONDS,
                 MatchService.DEFAULT_COUNTDOWN_SECONDS,
                 MatchService.DEFAULT_RECONNECT_SECONDS,
+                MatchService.DEFAULT_CLEAN_BETWEEN_ROUNDS,
                 UnequalTeamSettings.defaults(),
                 TeamColourSettings.defaults(),
                 TeamSizeSetting.DEFAULT_TEAM_SIZE,
@@ -210,6 +214,7 @@ public record PluginSettings(long roundResetDelayTicks,
                 readStartGateDurationSeconds(configuration, problemReporter),
                 readCountdownSeconds(configuration, problemReporter),
                 readReconnectSeconds(configuration, problemReporter),
+                readCleanBetweenRounds(configuration, problemReporter),
                 readUnequalTeamSettings(configuration, problemReporter),
                 readTeamColourSettings(configuration, problemReporter),
                 readTeamSize(configuration, problemReporter),
@@ -275,6 +280,7 @@ public record PluginSettings(long roundResetDelayTicks,
         liveConfiguration.setCountdownSeconds(countdownSeconds);
         liveConfiguration.setReconnectSeconds(reconnectSeconds);
         liveConfiguration.setUnequalTeamSettings(unequalTeamSettings);
+        liveConfiguration.setCleanBetweenRounds(cleanBetweenRounds);
         liveConfiguration.setTeamColourSettings(teamColourSettings);
         teamSizeTarget.accept(teamSize);
         liveConfiguration.setAutoMatchSettings(autoMatchSettings);
@@ -708,6 +714,20 @@ public record PluginSettings(long roundResetDelayTicks,
                 Placeholder.of("path", ARENA_AREA_INVENTORY_ENABLED_PATH),
                 Placeholder.of("fallback", AreaInventoryService.DEFAULT_ENABLED)));
         return AreaInventoryService.DEFAULT_ENABLED;
+    }
+
+    private static boolean readCleanBetweenRounds(ConfigurationSection configuration,
+                                                  Consumer<String> problemReporter) {
+        if (!configuration.isSet(CLEAN_BETWEEN_ROUNDS_PATH)) {
+            return MatchService.DEFAULT_CLEAN_BETWEEN_ROUNDS;
+        }
+        if (configuration.isBoolean(CLEAN_BETWEEN_ROUNDS_PATH)) {
+            return configuration.getBoolean(CLEAN_BETWEEN_ROUNDS_PATH);
+        }
+        problemReporter.accept(Messages.text(ConfigMessage.CLEAN_BETWEEN_ROUNDS_NOT_A_TRUTH_VALUE,
+                Placeholder.of("path", CLEAN_BETWEEN_ROUNDS_PATH),
+                Placeholder.of("fallback", MatchService.DEFAULT_CLEAN_BETWEEN_ROUNDS)));
+        return MatchService.DEFAULT_CLEAN_BETWEEN_ROUNDS;
     }
 
     private static boolean readPlacementEnabled(ConfigurationSection configuration, String path,

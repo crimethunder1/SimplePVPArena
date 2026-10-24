@@ -10,8 +10,7 @@ public record PlacementStandings(PlacementPhase phase,
                                  Optional<PlacementMatch> runningMatch,
                                  List<PlacementTeam> remainingTeams,
                                  List<PlacementElimination> eliminations,
-                                 List<PlacementRank> ranks,
-                                 List<AutoMatchWinCount> autoMatchWinCounts) {
+                                 List<PlacementRank> ranks) {
 
     public PlacementStandings {
         Objects.requireNonNull(phase, "phase");
@@ -19,12 +18,10 @@ public record PlacementStandings(PlacementPhase phase,
         remainingTeams = List.copyOf(Objects.requireNonNull(remainingTeams, "remainingTeams"));
         eliminations = List.copyOf(Objects.requireNonNull(eliminations, "eliminations"));
         ranks = List.copyOf(Objects.requireNonNull(ranks, "ranks"));
-        autoMatchWinCounts = List.copyOf(Objects.requireNonNull(autoMatchWinCounts, "autoMatchWinCounts"));
     }
 
     public static PlacementStandings none() {
-        return new PlacementStandings(PlacementPhase.NONE, 0, 0, Optional.empty(), List.of(), List.of(), List.of(),
-                List.of());
+        return new PlacementStandings(PlacementPhase.NONE, 0, 0, Optional.empty(), List.of(), List.of(), List.of());
     }
 
     public static PlacementStandings tournament(PlacementPhase phase, int roundNumber, int roundCount,
@@ -36,13 +33,7 @@ public record PlacementStandings(PlacementPhase phase,
             throw new IllegalArgumentException("phase " + phase + " belongs to no tournament");
         }
         return new PlacementStandings(phase, roundNumber, roundCount, runningMatch, remainingTeams, eliminations,
-                ranks, List.of());
-    }
-
-    public static PlacementStandings autoMatch(Optional<PlacementMatch> runningMatch,
-                                               List<AutoMatchWinCount> autoMatchWinCounts) {
-        return new PlacementStandings(PlacementPhase.AUTO_MATCH, 0, 0, runningMatch, List.of(), List.of(),
-                List.of(), autoMatchWinCounts);
+                ranks);
     }
 
     public boolean hasContent() {

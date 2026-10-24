@@ -23,6 +23,7 @@ final class RecordingLiveConfiguration implements LiveConfiguration {
     static final String START_GATE_DURATION = "startGateDurationSeconds";
     static final String COUNTDOWN_SECONDS = "countdownSeconds";
     static final String RECONNECT_SECONDS = "reconnectSeconds";
+    static final String CLEAN_BETWEEN_ROUNDS = "cleanBetweenRounds";
     static final String UNEQUAL_TEAMS = "unequalTeamSettings";
     static final String TEAM_COLOURS = "teamColourSettings";
     static final String TEAM_SIZE = "teamSize";
@@ -51,7 +52,7 @@ final class RecordingLiveConfiguration implements LiveConfiguration {
     static final List<String> EVERY_APPLIED_VALUE = List.of(
             LANGUAGE,
             ROUND_RESET_DELAY, ROUND_TIMEOUT, SUDDEN_DEATH_IN_FINAL, START_GATE_DURATION, COUNTDOWN_SECONDS,
-            RECONNECT_SECONDS, UNEQUAL_TEAMS, TEAM_COLOURS, TEAM_SIZE, AUTO_MATCH, TEAM_MODE,
+            RECONNECT_SECONDS, UNEQUAL_TEAMS, CLEAN_BETWEEN_ROUNDS, TEAM_COLOURS, TEAM_SIZE, AUTO_MATCH, TEAM_MODE,
             CLEANING_BLOCKS_PER_TICK, BASELINE_BLOCKS_PER_TICK, BASELINE_DEPTH_BELOW_FLOOR,
             CLEANING_PARTICLE, MAXIMUM_CELL_COUNT, SAFETY_ZONE_RADIUS, EFFECT_MARGIN, TELEPORT_ON_JOIN,
             PARTICLE_PERIOD, PARTICLE_VIEW_RADIUS,
@@ -96,6 +97,11 @@ final class RecordingLiveConfiguration implements LiveConfiguration {
     @Override
     public void setReconnectSeconds(int reconnectSeconds) {
         appliedValues.put(RECONNECT_SECONDS, reconnectSeconds);
+    }
+
+    @Override
+    public void setCleanBetweenRounds(boolean cleanBetweenRounds) {
+        appliedValues.put(CLEAN_BETWEEN_ROUNDS, cleanBetweenRounds);
     }
 
     @Override

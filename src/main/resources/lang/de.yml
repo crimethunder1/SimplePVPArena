@@ -912,11 +912,11 @@ arena-menu:
       click-to-hide: 'Klicke, um sie auszublenden'
       click-to-show: 'Klicke, um sie anzuzeigen'
     standings-board:
-      place-title: 'Platzierungstafel hier aufstellen'
-      place-lore:
-        - 'Stellt die Tafel zwei Blöcke über dem Block auf,'
-        - 'auf dem du stehst, am besten an der Tribüne'
-        - 'Sie zeigt die Turnierrunde, das Match und die Platzierung'
+      tool-title: 'Werkzeug für die Platzierungstafel holen'
+      tool-lore:
+        - 'Legt das Werkzeug für die Platzierungstafel in dein Inventar'
+        - 'Die Tafel zeigt die Turnierrunde, das Match und die Platzierung'
+        - 'eines Turniers'
       remove-title: 'Platzierungstafel entfernen'
       remove-lore:
         - 'Steht bei {position}'
@@ -1022,6 +1022,14 @@ arena-menu:
   standings-board:
     placed: 'Die Platzierungstafel steht jetzt hier'
     removed: 'Die Platzierungstafel wurde entfernt'
+    tool:
+      name: 'Werkzeug für die Platzierungstafel'
+      lore:
+        - 'Rechtsklick auf einen Block stellt die Platzierungstafel darüber auf'
+        - 'Rechtsklick auf den Block der Tafel entfernt sie wieder'
+    tool-handed-out: 'Das Werkzeug für die Platzierungstafel liegt in deinem Inventar'
+    tool-inventory-full: 'Dein Inventar ist voll, das Werkzeug für die Platzierungstafel konnte nicht ausgegeben werden'
+    click-a-block: 'Klicke mit Rechtsklick auf einen Block'
   diagnosis-input:
     description: 'die Diagnose mit einem höheren Zellenlimit'
     prompt:
@@ -1439,6 +1447,9 @@ match:
     - 'Match {match} ist angehalten, kein Teilnehmer ist online'
     - 'Nutze {action}, um es zu entscheiden'
   over: 'Match {match} ist vorbei, {team} gewinnt ({score})'
+  round-cleaning:
+    without-baseline: 'Die Arena wird zwischen den Runden nicht gereinigt, es ist kein Ausgangszustand gespeichert'
+    not-started: 'Die Arena wird zwischen den Runden nicht gereinigt: {reason}'
   reconnect:
     connection-lost:
       one: '{player} hat die Verbindung verloren, {count} Sekunde zum Zurückkommen'
@@ -1850,6 +1861,7 @@ config:
     items-adder-enabled-not-a-truth-value: '{path} muss true oder false sein, stattdessen gilt {fallback}'
     items-adder-identifier-not-text: '{path} muss eine ID in Anführungszeichen wie {example} oder leer sein, stattdessen bleibt der Wert leer und es gilt der eigene Titel oder Effekt des Plugins'
     placement-enabled-not-a-truth-value: '{path} muss true oder false sein, stattdessen gilt {fallback}'
+    clean-between-rounds-not-a-truth-value: '{path} muss true oder false sein, stattdessen gilt {fallback}'
   reload:
     reloaded: 'config.yml wurde neu geladen und angewendet'
     category:
@@ -1858,6 +1870,7 @@ config:
       start-gate: 'die Sekunden, die das Starttor zu Beginn einer Runde braucht'
       countdown: 'die Sekunden des Countdowns direkt vor dem Kampf, ab der nächsten Runde'
       reconnect: 'die Sekunden, die ein Kämpfer nach einem Verbindungsabbruch zum Zurückkommen hat, für jeden Verbindungsabbruch ab jetzt'
+      clean-between-rounds: 'ob die Arena zwischen den Runden eines Matches gereinigt wird, ab dem nächsten Rundenende'
       unequal-teams: 'ob das größere Team abstimmt, wer kämpft, wenn die Teams unterschiedlich viele Spieler online haben, und die Sekunden der Abstimmung, ab dem nächsten Match'
       team-size: 'die Teamgröße, außer ein Turnier läuft oder ein Team hat mehr Spieler als eine kleinere neue Größe'
       auto-match: 'ob der Auto-Match-Modus an ist, die Sekunden bis zum Beginn eines Auto-Matches und die Pause zwischen zwei Auto-Matches'
@@ -1888,21 +1901,16 @@ plugin:
 placement:
   title:
     tournament: 'Turnier'
-    auto-match: 'Auto-Match'
   round: 'Turnierrunde {round} von {rounds}'
   paused: 'Pausiert'
   over: 'Vorbei'
   match: '{firstTeam} {firstPoints} : {secondPoints} {secondTeam}'
   no-match: 'Es läuft kein Match'
-  waiting-for-auto-match: 'Warte auf das nächste Auto-Match'
   still-in:
     one: 'Noch dabei: {count} Team'
     other: 'Noch dabei: {count} Teams'
   more:
     one: 'und {count} weiteres'
     other: 'und {count} weitere'
-  wins:
-    one: '{team}: {count} Sieg'
-    other: '{team}: {count} Siege'
   place: '{place}. {teams}'
   out-in-round: 'Ausgeschieden in Turnierrunde {round}: {teams}'

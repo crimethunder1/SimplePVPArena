@@ -4,6 +4,7 @@ import org.bukkit.Material;
 import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -239,6 +240,45 @@ class StartGateOpeningServiceTest {
 
         assertEquals(0, harness.getScheduledTaskCount());
         assertEquals(3, gateMarks.getLayerCount(WORLD), "and the marks are untouched");
+    }
+
+    @Test
+    void putsEveryBlockOfTheGateBackWithPhysicsSoThatIronBarsJoinTheirNeighbours() {
+        markGate(FIRST_SPAWN_COLUMNS, 64, 65, Material.IRON_BARS);
+        openingService.openAtRoundStart(display);
+        harness.runTicks(200);
+        harness.getBlockWrites().clear();
+
+        assertEquals(4, openingService.restoreGate());
+
+        assertEquals(List.of(
+                new GateServerHarness.BlockWrite(10, 64, 20, Material.IRON_BARS, true),
+                new GateServerHarness.BlockWrite(11, 64, 20, Material.IRON_BARS, true),
+                new GateServerHarness.BlockWrite(10, 65, 20, Material.IRON_BARS, true),
+                new GateServerHarness.BlockWrite(11, 65, 20, Material.IRON_BARS, true)),
+                sortedByPosition(harness.getBlockWrites()));
+    }
+
+    @Test
+    void takesTheGateApartWithPhysicsSoThatTheNeighboursLetGoOfIt() {
+        markGate(FIRST_SPAWN_COLUMNS, 64, 65, Material.IRON_BARS);
+
+        openingService.openAtRoundStart(display);
+        harness.runTicks(200);
+
+        assertEquals(List.of(
+                new GateServerHarness.BlockWrite(10, 64, 20, Material.AIR, true),
+                new GateServerHarness.BlockWrite(11, 64, 20, Material.AIR, true),
+                new GateServerHarness.BlockWrite(10, 65, 20, Material.AIR, true),
+                new GateServerHarness.BlockWrite(11, 65, 20, Material.AIR, true)),
+                sortedByPosition(harness.getBlockWrites()));
+    }
+
+    private static List<GateServerHarness.BlockWrite> sortedByPosition(List<GateServerHarness.BlockWrite> writes) {
+        return writes.stream()
+                .sorted(Comparator.comparingInt(GateServerHarness.BlockWrite::blockY)
+                        .thenComparingInt(GateServerHarness.BlockWrite::blockX))
+                .toList();
     }
 
     private void markGate(int[] columns, int lowestY, int highestY, Material material) {

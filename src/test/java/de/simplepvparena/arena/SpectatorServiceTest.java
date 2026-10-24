@@ -1,5 +1,6 @@
 package de.simplepvparena.arena;
 
+import de.simplepvparena.support.FakeItemStack;
 import de.simplepvparena.support.FakeSpectatorItems;
 import de.simplepvparena.support.SharedBukkitServer;
 import org.bukkit.GameMode;
@@ -12,6 +13,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -26,6 +28,7 @@ class SpectatorServiceTest {
 
     private static final String WORLD_NAME = "spectator-service";
     private static final int SPECTATOR_TOGGLE_ITEM_SLOT = 8;
+    private static final int INVENTORY_SLOT_COUNT = 41;
 
     private final UUID playerUniqueId = UUID.randomUUID();
     private final Map<Integer, ItemStack> inventoryItemsBySlot = new LinkedHashMap<>();
@@ -62,6 +65,41 @@ class SpectatorServiceTest {
     }
 
     @Test
+    void handsOutNoSecondToggleItemWhenThePlayerMovedTheFirstOneToAnotherSlot() {
+        ItemStack carriedToggleItem = new FakeItemStack(FakeSpectatorItems.SPECTATOR_TOGGLE_LABEL);
+        inventoryItemsBySlot.put(3, carriedToggleItem);
+
+        assertTrue(spectatorService.sendToTribune(player));
+
+        assertEquals(Map.of(3, carriedToggleItem), inventoryItemsBySlot);
+        assertEquals(List.of(), spectatorItems.getCreatedItems());
+        assertEquals(Optional.of(SpectatorMode.TRIBUNE), spectatorService.findSpectatorMode(playerUniqueId));
+    }
+
+    @Test
+    void handsOutNoSecondToggleItemWhenThePlayerStillCarriesItInTheSpectatorSlot() {
+        ItemStack carriedToggleItem = new FakeItemStack(FakeSpectatorItems.SPECTATOR_TOGGLE_LABEL);
+        inventoryItemsBySlot.put(SPECTATOR_TOGGLE_ITEM_SLOT, carriedToggleItem);
+
+        assertTrue(spectatorService.sendToTribune(player));
+
+        assertEquals(Map.of(SPECTATOR_TOGGLE_ITEM_SLOT, carriedToggleItem), inventoryItemsBySlot);
+        assertEquals(List.of(), spectatorItems.getCreatedItems());
+    }
+
+    @Test
+    void handsOutExactlyOneToggleItemInTheSpectatorSlotWhenThePlayerCarriesNone() {
+        ItemStack sword = new FakeItemStack("sword");
+        inventoryItemsBySlot.put(3, sword);
+
+        assertTrue(spectatorService.sendToTribune(player));
+
+        assertEquals(1, spectatorItems.getCreatedItems().size());
+        assertEquals(Map.of(3, sword, SPECTATOR_TOGGLE_ITEM_SLOT, spectatorItems.getCreatedItems().get(0)),
+                inventoryItemsBySlot);
+    }
+
+    @Test
     void leavesNoAssignmentBehindWhenTheToggleItemCannotBeBuilt() {
         RuntimeException failure = new IllegalArgumentException("COMPASS isn't an item");
         spectatorItems.failCreationWith(failure);
@@ -91,6 +129,11 @@ class SpectatorServiceTest {
                     case "setItem" -> {
                         inventoryItemsBySlot.put((Integer) arguments[0], (ItemStack) arguments[1]);
                         yield null;
+                    }
+                    case "getContents" -> {
+                        ItemStack[] contents = new ItemStack[INVENTORY_SLOT_COUNT];
+                        inventoryItemsBySlot.forEach((slot, itemStack) -> contents[slot] = itemStack);
+                        yield contents;
                     }
                     default -> throw new UnsupportedOperationException("PlayerInventory." + method.getName());
                 });

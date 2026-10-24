@@ -19,6 +19,7 @@ import de.simplepvparena.arena.MarkClearingKind;
 import de.simplepvparena.arena.PositionSnapshot;
 import de.simplepvparena.arena.SpectatorItemFactory;
 import de.simplepvparena.arena.SpectatorService;
+import de.simplepvparena.arena.StandingsBoardToolService;
 import de.simplepvparena.border.BorderMarkIndex;
 import de.simplepvparena.border.BorderParticleService;
 import de.simplepvparena.border.BorderSelectorModeRegistry;
@@ -83,6 +84,7 @@ import org.bukkit.Material;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.Server;
 import org.bukkit.World;
+import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
@@ -158,6 +160,7 @@ final class AdminMenuFixture {
     private final RegistrationService registrationService;
     private final RegistrationStations registrationStations = new RegistrationStations();
     private final RegistrationStationService registrationStationService;
+    private final StandingsBoardToolService standingsBoardToolService;
     private final TeamChoiceService teamChoiceService;
     private final KitChoiceService kitChoiceService;
     private final UnequalTeamVoteService unequalTeamVoteService;
@@ -253,6 +256,8 @@ final class AdminMenuFixture {
                 matchService::hasActiveMatch, teamRegistry,
                 new PluginDryRunArena(arenaRegistry.getArena(), arenaSetupService), kitService, gateMarks,
                 gateDuration, tournamentManager.getTeamSizeSetting());
+        standingsBoardToolService = new StandingsBoardToolService(plugin, arenaSetupService,
+                material -> new RecordingItemStack(material, 1));
         chatInputService = new ChatInputService(plugin, chatInputRegistry);
         chatInputListener = new ChatInputListener(chatInputService);
         adminInventory = createAdminInventory();
@@ -277,7 +282,7 @@ final class AdminMenuFixture {
                                 this::forgetEveryStartGateMark, arenaSetupService::findResetRejection,
                                 markClearingWarnings::add),
                         new EffectMarginSetting(arenaRegistry, arenaRegistry::setEffectMargin),
-                        this::writeEffectMargin),
+                        this::writeEffectMargin, standingsBoardToolService),
                 new AdminMenuDependencies.KitServices(kitLibrary,
                         new KitSaveService(kitLibrary, new FakeKitItemSerializer())),
                 new AdminMenuDependencies.RegistrationServices(registrationService, registrationStationService,
@@ -407,6 +412,21 @@ final class AdminMenuFixture {
 
     int registrationSaveCount() {
         return registrationSaveCount;
+    }
+
+    StandingsBoardToolService standingsBoardToolService() {
+        return standingsBoardToolService;
+    }
+
+    void rightClickWithTheStandingsBoardTool(int blockX, int blockY, int blockZ) {
+        Block block = SharedBukkitServer.proxy(Block.class, (method, arguments) -> switch (method.getName()) {
+            case "getWorld" -> world;
+            case "getX" -> blockX;
+            case "getY" -> blockY;
+            case "getZ" -> blockZ;
+            default -> throw new UnsupportedOperationException("Block." + method.getName());
+        });
+        standingsBoardToolService.useTool(admin, block);
     }
 
     RegistrationStationService registrationStationService() {

@@ -12,6 +12,8 @@ public enum MatchMessage implements MessageKey {
     POINT_SCORED("match.point-scored", "team", "score"),
     HALTED("match.halted", "match", "action"),
     OVER("match.over", "match", "team", "score"),
+    ROUND_CLEANING_WITHOUT_BASELINE("match.round-cleaning.without-baseline"),
+    ROUND_CLEANING_NOT_STARTED("match.round-cleaning.not-started", "reason"),
     RECONNECT_CONNECTION_LOST("match.reconnect.connection-lost", "player", "count"),
     RECONNECT_RETURNED("match.reconnect.returned", "player"),
     RECONNECT_NOT_RETURNED("match.reconnect.not-returned", "player"),

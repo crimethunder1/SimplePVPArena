@@ -155,13 +155,13 @@ class PlacementSidebarTest {
         fixture.showStandings(runningTournament());
         sidebar.refresh();
 
-        fixture.showStandings(PlacementStandings.autoMatch(Optional.empty(),
-                List.of(new AutoMatchWinCount(BRAVO, 2))));
+        fixture.showStandings(PlacementStandings.tournament(PlacementPhase.TOURNAMENT_OVER, 1, 1, Optional.empty(),
+                List.of(BRAVO), List.of(), List.of(new PlacementRank(1, BRAVO))));
         sidebar.refresh();
 
         InMemoryScoreboard ownScoreboard = fixture.scoreboardOf(insider);
-        assertEquals(Optional.of("Auto match"), ownScoreboard.sidebarTitle());
-        assertEquals(List.of("Waiting for the next auto match", "Bravo: 2 wins"), ownScoreboard.sidebarLines());
+        assertEquals(Optional.of("Tournament"), ownScoreboard.sidebarTitle());
+        assertEquals(List.of("Over", "1. Bravo"), ownScoreboard.sidebarLines());
         assertEquals(1, fixture.newScoreboards().size());
     }
 

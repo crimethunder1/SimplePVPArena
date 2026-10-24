@@ -12,9 +12,7 @@ import net.kyori.adventure.text.format.NamedTextColor;
 import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
-import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -25,7 +23,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 class PlacementServiceTest {
 
     private final TeamRegistry teamRegistry = new TeamRegistry();
-    private final Map<String, Integer> autoMatchWins = new LinkedHashMap<>();
 
     private TournamentState tournamentState = TournamentState.IDLE;
     private Bracket bracket;
@@ -34,7 +31,7 @@ class PlacementServiceTest {
 
     private final PlacementService placementService = new PlacementService(() -> tournamentState,
             () -> Optional.ofNullable(bracket), () -> Optional.ofNullable(activeMatch), () -> autoMatchEnabled,
-            () -> autoMatchWins, teamRegistry::findTeam);
+            teamRegistry::findTeam);
 
     @Test
     void showsNothingWithoutATournamentAndWithoutTheAutoMatchMode() {
@@ -139,40 +136,21 @@ class PlacementServiceTest {
     }
 
     @Test
-    void describesTheAutoMatchesWithTheMostWinsFirstAndTheNameOnATie() {
-        registerTeams("Alpha", "Bravo", "Charlie", "Delta");
-        autoMatchEnabled = true;
-        autoMatchWins.put("delta", 2);
-        autoMatchWins.put("Charlie", 3);
-        autoMatchWins.put("Bravo", 2);
-        autoMatchWins.put("Alpha", 1);
-
-        PlacementStandings standings = placementService.findStandings();
-
-        assertEquals(PlacementPhase.AUTO_MATCH, standings.phase());
-        assertEquals(Optional.empty(), standings.runningMatch());
-        assertEquals(List.of(new AutoMatchWinCount(new PlacementTeam("Charlie", NamedTextColor.AQUA), 3),
-                new AutoMatchWinCount(new PlacementTeam("Bravo", NamedTextColor.DARK_GREEN), 2),
-                new AutoMatchWinCount(new PlacementTeam("delta", NamedTextColor.WHITE), 2),
-                new AutoMatchWinCount(new PlacementTeam("Alpha", NamedTextColor.RED), 1)),
-                standings.autoMatchWinCounts());
-    }
-
-    @Test
-    void describesTheRunningAutoMatchAndNoTournamentMatch() {
+    void showsNothingInTheAutoMatchModeNotEvenARunningAutoMatch() {
         registerTeams("Alpha", "Bravo");
         autoMatchEnabled = true;
+
+        assertEquals(PlacementStandings.none(), placementService.findStandings());
+
         activeMatch = Match.autoMatch("auto-1", teamRegistry.findTeam("Alpha").orElseThrow(),
                 teamRegistry.findTeam("Bravo").orElseThrow(), new Arena());
         activeMatch.getScore().awardPoint("Bravo");
 
-        assertEquals(Optional.of(new PlacementMatch(new PlacementTeam("Alpha", NamedTextColor.RED), 0,
-                new PlacementTeam("Bravo", NamedTextColor.DARK_GREEN), 1)), placementService.findStandings()
-                .runningMatch());
+        assertEquals(PlacementStandings.none(), placementService.findStandings());
     }
 
     @Test
-    void aRunningOrPausedTournamentComesBeforeTheAutoMatchesAndTheAutoMatchesBeforeAnOverTournament() {
+    void aRunningOrPausedTournamentIsShownInTheAutoMatchModeAndAnOverTournamentOnlyWithoutIt() {
         registerTeams("Alpha", "Bravo");
         autoMatchEnabled = true;
         startTournament("Alpha", "Bravo");
@@ -183,7 +161,7 @@ class PlacementServiceTest {
 
         bracket.recordWinner(bracket.getFinalMatch().getMatchId(), "Alpha");
         tournamentState = TournamentState.FINISHED;
-        assertEquals(PlacementPhase.AUTO_MATCH, placementService.findStandings().phase());
+        assertEquals(PlacementStandings.none(), placementService.findStandings());
 
         autoMatchEnabled = false;
         assertEquals(PlacementPhase.TOURNAMENT_OVER, placementService.findStandings().phase());
@@ -205,13 +183,12 @@ class PlacementServiceTest {
         for (PlacementPhase phase : PlacementPhase.values()) {
             PlacementStandings standings = phase.isTournament()
                     ? PlacementStandings.tournament(phase, 1, 1, Optional.empty(), List.of(), List.of(), List.of())
-                    : phase == PlacementPhase.AUTO_MATCH
-                    ? PlacementStandings.autoMatch(Optional.empty(), List.of())
                     : PlacementStandings.none();
             assertEquals(phase != PlacementPhase.NONE, standings.hasContent(), phase.name());
         }
         assertTrue(PlacementPhase.TOURNAMENT_OVER.isTournament());
-        assertFalse(PlacementPhase.AUTO_MATCH.isTournament());
+        assertFalse(PlacementPhase.NONE.isTournament());
+        assertEquals(4, PlacementPhase.values().length, "the auto match mode has no phase of its own");
     }
 
     private List<String> placesOfACompletedTournament(int teamCount) {

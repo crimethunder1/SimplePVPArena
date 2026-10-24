@@ -22,7 +22,6 @@ public final class PlacementLines {
     public static final int SIDEBAR_LINE_LIMIT = 15;
     public static final int BOARD_LINE_LIMIT = 20;
     public static final int TEAM_LINE_LIMIT = 8;
-    public static final int AUTO_MATCH_TABLE_LIMIT = 10;
 
     private static final TextColor TITLE_COLOUR = TournamentMessages.PREFIX_COLOUR;
     private static final TextColor STATE_COLOUR = NamedTextColor.YELLOW;
@@ -35,17 +34,13 @@ public final class PlacementLines {
     }
 
     public static Component title(PlacementStandings standings) {
-        PlacementMessage title = standings.phase() == PlacementPhase.AUTO_MATCH
-                ? PlacementMessage.AUTO_MATCH_TITLE
-                : PlacementMessage.TOURNAMENT_TITLE;
-        return Component.text(Messages.text(title), TITLE_COLOUR, TextDecoration.BOLD);
+        return Component.text(Messages.text(PlacementMessage.TOURNAMENT_TITLE), TITLE_COLOUR, TextDecoration.BOLD);
     }
 
     public static List<Component> sidebarLines(PlacementStandings standings) {
         List<Component> lines = switch (standings.phase()) {
             case TOURNAMENT_RUNNING, TOURNAMENT_PAUSED -> tournamentLines(standings);
             case TOURNAMENT_OVER -> firstPlacesLines(standings);
-            case AUTO_MATCH -> autoMatchLines(standings);
             case NONE -> List.of();
         };
         return lines.size() <= SIDEBAR_LINE_LIMIT ? lines : List.copyOf(lines.subList(0, SIDEBAR_LINE_LIMIT));
@@ -55,7 +50,6 @@ public final class PlacementLines {
         List<Component> lines = switch (standings.phase()) {
             case TOURNAMENT_RUNNING, TOURNAMENT_PAUSED -> withEliminations(standings);
             case TOURNAMENT_OVER -> fullPlacementLines(standings);
-            case AUTO_MATCH -> autoMatchLines(standings);
             case NONE -> List.of();
         };
         return lines.size() <= BOARD_LINE_LIMIT ? lines : List.copyOf(lines.subList(0, BOARD_LINE_LIMIT));
@@ -78,19 +72,6 @@ public final class PlacementLines {
         List<PlacementTeam> remainingTeams = standings.remainingTeams();
         lines.add(detailLine(Messages.plural(PlacementMessage.STILL_IN, remainingTeams.size())));
         addLimited(lines, remainingTeams.stream().map(PlacementLines::teamName).toList());
-        return lines;
-    }
-
-    static List<Component> autoMatchLines(PlacementStandings standings) {
-        List<Component> lines = new ArrayList<>();
-        lines.add(standings.runningMatch()
-                .map(PlacementLines::matchLine)
-                .orElseGet(() -> detailLine(Messages.text(PlacementMessage.WAITING_FOR_AUTO_MATCH))));
-        standings.autoMatchWinCounts().stream()
-                .limit(AUTO_MATCH_TABLE_LIMIT)
-                .map(winCount -> compose(Messages.plural(PlacementMessage.WINS, winCount.wins(),
-                        Placeholder.of("team", marker(0))), TEXT_COLOUR, List.of(winCount.team())))
-                .forEach(lines::add);
         return lines;
     }
 

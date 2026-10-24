@@ -23,6 +23,7 @@ final class GateServerHarness {
     private final String worldName;
     private final Map<Long, Material> blocks = new HashMap<>();
     private final List<ScheduledTask> scheduledTasks = new ArrayList<>();
+    private final List<BlockWrite> blockWrites = new ArrayList<>();
     private final Plugin plugin;
     private final Object world;
 
@@ -45,6 +46,10 @@ final class GateServerHarness {
 
     Material getBlock(int blockX, int blockY, int blockZ) {
         return blocks.getOrDefault(BlockPositionCodec.encode(blockX, blockY, blockZ), Material.AIR);
+    }
+
+    List<BlockWrite> getBlockWrites() {
+        return blockWrites;
     }
 
     Block blockAt(int blockX, int blockY, int blockZ) {
@@ -147,7 +152,10 @@ final class GateServerHarness {
             }
             case "setType" -> {
                 failBlockAccessIfAsked();
-                blocks.put(encodedPosition, (Material) arguments[0]);
+                Material material = (Material) arguments[0];
+                boolean applyPhysics = arguments.length < 2 || (Boolean) arguments[1];
+                blocks.put(encodedPosition, material);
+                blockWrites.add(new BlockWrite(blockX, blockY, blockZ, material, applyPhysics));
                 yield null;
             }
             case "getX" -> blockX;
@@ -172,6 +180,9 @@ final class GateServerHarness {
             default -> call.invoke(method, arguments);
         };
         return type.cast(Proxy.newProxyInstance(type.getClassLoader(), new Class<?>[] {type}, handler));
+    }
+
+    record BlockWrite(int blockX, int blockY, int blockZ, Material material, boolean applyPhysics) {
     }
 
     @FunctionalInterface

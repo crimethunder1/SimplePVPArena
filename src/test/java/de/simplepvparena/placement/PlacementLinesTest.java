@@ -66,34 +66,6 @@ class PlacementLinesTest {
     }
 
     @Test
-    void writesTheAutoMatchesWithTheBestTenOfTheTable() {
-        List<AutoMatchWinCount> winCounts = new ArrayList<>();
-        List<PlacementTeam> teams = teams(12);
-        for (int index = 0; index < teams.size(); index++) {
-            winCounts.add(new AutoMatchWinCount(teams.get(index), 12 - index));
-        }
-        PlacementStandings standings = PlacementStandings.autoMatch(
-                Optional.of(new PlacementMatch(ALPHA, 0, BRAVO, 1)), winCounts);
-
-        List<String> lines = plain(PlacementLines.sidebarLines(standings));
-
-        assertEquals("Auto match", plain(PlacementLines.title(standings)));
-        assertEquals(11, lines.size());
-        assertEquals("Alpha 0 : 1 Bravo", lines.get(0));
-        assertEquals("T01: 12 wins", lines.get(1));
-        assertEquals("T10: 3 wins", lines.get(10));
-    }
-
-    @Test
-    void waitsForTheNextAutoMatchAndCountsASingleWin() {
-        PlacementStandings standings = PlacementStandings.autoMatch(Optional.empty(),
-                List.of(new AutoMatchWinCount(ALPHA, 1)));
-
-        assertEquals(List.of("Waiting for the next auto match", "Alpha: 1 win"),
-                plain(PlacementLines.sidebarLines(standings)));
-    }
-
-    @Test
     void nothingToShowGivesNoLine() {
         assertEquals(List.of(), PlacementLines.sidebarLines(PlacementStandings.none()));
     }
@@ -102,11 +74,10 @@ class PlacementLinesTest {
     void neverWritesMoreThanFifteenLines() {
         assertEquals(15, PlacementLines.SIDEBAR_LINE_LIMIT);
         assertEquals(8, PlacementLines.TEAM_LINE_LIMIT);
-        assertEquals(10, PlacementLines.AUTO_MATCH_TABLE_LIMIT);
         for (PlacementStandings standings : List.of(
                 tournament(PlacementPhase.TOURNAMENT_RUNNING, Optional.empty(), teams(64)),
-                PlacementStandings.autoMatch(Optional.empty(), teams(30).stream()
-                        .map(team -> new AutoMatchWinCount(team, 1)).toList()))) {
+                tournament(PlacementPhase.TOURNAMENT_PAUSED, Optional.of(new PlacementMatch(ALPHA, 0, BRAVO, 1)),
+                        teams(30)))) {
             assertTrue(PlacementLines.sidebarLines(standings).size() <= PlacementLines.SIDEBAR_LINE_LIMIT);
         }
     }
@@ -139,19 +110,14 @@ class PlacementLinesTest {
         PlacementStandings over = PlacementStandings.tournament(PlacementPhase.TOURNAMENT_OVER, 1, 1,
                 Optional.empty(), List.of(ALPHA), List.of(), List.of(new PlacementRank(1, ALPHA),
                         new PlacementRank(2, BRAVO)));
-        PlacementStandings waiting = PlacementStandings.autoMatch(Optional.empty(),
-                List.of(new AutoMatchWinCount(ALPHA, 1), new AutoMatchWinCount(BRAVO, 2)));
 
         assertEquals("Turnier", plain(PlacementLines.title(running)));
-        assertEquals("Auto-Match", plain(PlacementLines.title(waiting)));
         assertEquals(List.of("Turnierrunde 2 von 3", "Alpha 1 : 0 Bravo", "Noch dabei: 9 Teams", "T01", "T02",
                 "T03", "T04", "T05", "T06", "T07", "T08", "und 1 weiteres"),
                 plain(PlacementLines.sidebarLines(running)));
         assertEquals(List.of("Pausiert", "Es läuft kein Match", "Noch dabei: 1 Team", "Alpha"),
                 plain(PlacementLines.sidebarLines(paused)));
         assertEquals(List.of("Vorbei", "1. Alpha", "2. Bravo"), plain(PlacementLines.sidebarLines(over)));
-        assertEquals(List.of("Warte auf das nächste Auto-Match", "Alpha: 1 Sieg", "Bravo: 2 Siege"),
-                plain(PlacementLines.sidebarLines(waiting)));
     }
 
     @Test

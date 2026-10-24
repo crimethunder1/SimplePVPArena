@@ -912,11 +912,11 @@ arena-menu:
       click-to-hide: 'Click to hide them'
       click-to-show: 'Click to show them'
     standings-board:
-      place-title: 'Place the standings board here'
-      place-lore:
-        - 'Puts the board two blocks above the block'
-        - 'you stand on, best at the tribune'
-        - 'It shows the round, the match and the placement'
+      tool-title: 'Get the standings board tool'
+      tool-lore:
+        - 'Puts the standings board tool into your inventory'
+        - 'The board shows the round, the match and the placement'
+        - 'of a tournament'
       remove-title: 'Remove the standings board'
       remove-lore:
         - 'Stands at {position}'
@@ -1021,6 +1021,14 @@ arena-menu:
   standings-board:
     placed: 'The standings board stands here now'
     removed: 'The standings board was removed'
+    tool:
+      name: 'Standings board tool'
+      lore:
+        - 'Right click a block to place the standings board above it'
+        - 'Right click the block of the board to remove it'
+    tool-handed-out: 'The standings board tool is in your inventory'
+    tool-inventory-full: 'Your inventory is full, the standings board tool could not be handed out'
+    click-a-block: 'Right click a block'
   diagnosis-input:
     description: 'the diagnosis cell limit'
     prompt:
@@ -1438,6 +1446,9 @@ match:
     - 'Match {match} is halted, no participant is online'
     - 'Use {action} to resolve it'
   over: 'Match {match} is over, {team} wins ({score})'
+  round-cleaning:
+    without-baseline: 'The arena is not cleaned between the rounds, no baseline is stored'
+    not-started: 'The arena is not cleaned between the rounds: {reason}'
   reconnect:
     connection-lost:
       one: '{player} lost the connection, {count} second to come back'
@@ -1849,6 +1860,7 @@ config:
     items-adder-enabled-not-a-truth-value: '{path} must be true or false, falling back to {fallback}'
     items-adder-identifier-not-text: '{path} must be an ID in quotes such as {example} or empty, falling back to empty, the own title or effect of the plugin is used'
     placement-enabled-not-a-truth-value: '{path} must be true or false, falling back to {fallback}'
+    clean-between-rounds-not-a-truth-value: '{path} must be true or false, falling back to {fallback}'
   reload:
     reloaded: 'config.yml was reloaded and applied'
     category:
@@ -1857,6 +1869,7 @@ config:
       start-gate: 'the seconds the start gate takes at the beginning of a round'
       countdown: 'the seconds of the countdown right before the fight, from the next round on'
       reconnect: 'the seconds a fighter who lost the connection has to come back, for every connection lost from now on'
+      clean-between-rounds: 'whether the arena is cleaned between the rounds of a match, from the next end of a round on'
       unequal-teams: 'whether the larger team votes who fights when the teams have different numbers of players online and the seconds of the vote, from the next match on'
       team-size: 'the team size, unless a tournament is in progress or a team has more players than a smaller new size'
       auto-match: 'whether the auto match mode is on, the seconds before an auto match starts and the pause between two auto matches'
@@ -1887,21 +1900,16 @@ plugin:
 placement:
   title:
     tournament: 'Tournament'
-    auto-match: 'Auto match'
   round: 'Round {round} of {rounds}'
   paused: 'Paused'
   over: 'Over'
   match: '{firstTeam} {firstPoints} : {secondPoints} {secondTeam}'
   no-match: 'No match is running'
-  waiting-for-auto-match: 'Waiting for the next auto match'
   still-in:
     one: 'Still in: {count} team'
     other: 'Still in: {count} teams'
   more:
     one: 'and {count} more'
     other: 'and {count} more'
-  wins:
-    one: '{team}: {count} win'
-    other: '{team}: {count} wins'
   place: '{place}. {teams}'
   out-in-round: 'Out in round {round}: {teams}'

@@ -15,6 +15,7 @@ import de.simplepvparena.arena.EffectMarginSetting;
 import de.simplepvparena.arena.MarkClearing;
 import de.simplepvparena.arena.MarkClearingKind;
 import de.simplepvparena.arena.SpectatorService;
+import de.simplepvparena.arena.StandingsBoardToolService;
 import de.simplepvparena.border.BorderMarkIndex;
 import de.simplepvparena.border.BorderParticleService;
 import de.simplepvparena.border.BorderSelectorModeRegistry;
@@ -45,6 +46,7 @@ import de.simplepvparena.registration.TeamChoiceService;
 import de.simplepvparena.registration.TeamModeSetting;
 import de.simplepvparena.support.FakeKitItemSerializer;
 import de.simplepvparena.support.FakeSpectatorItems;
+import de.simplepvparena.support.RecordingItemStack;
 import de.simplepvparena.support.SharedBukkitServer;
 import de.simplepvparena.team.TeamMemberLookup;
 import de.simplepvparena.team.TeamRegistry;
@@ -164,7 +166,9 @@ class AdminMenuSeamTest {
                         new EffectMarginSetting(arenaRegistry, arenaRegistry::setEffectMargin),
                         margin -> {
                             throw new UnsupportedOperationException("the margin is not written in this test");
-                        }),
+                        },
+                        new StandingsBoardToolService(plugin, arenaSetupService,
+                                material -> new RecordingItemStack(material, 1))),
                 new AdminMenuDependencies.KitServices(kitLibrary,
                         new KitSaveService(kitLibrary, new FakeKitItemSerializer())),
                 new AdminMenuDependencies.RegistrationServices(registrationService,

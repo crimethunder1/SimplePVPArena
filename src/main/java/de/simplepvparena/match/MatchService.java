@@ -45,6 +45,8 @@ public final class MatchService {
 
     public static final boolean DEFAULT_SUDDEN_DEATH_DISABLED_IN_FINAL = true;
 
+    public static final boolean DEFAULT_CLEAN_BETWEEN_ROUNDS = true;
+
     public static final int DEFAULT_RECONNECT_SECONDS = 60;
     public static final int MINIMUM_RECONNECT_SECONDS = 0;
     public static final int MAXIMUM_RECONNECT_SECONDS = 600;
@@ -85,6 +87,9 @@ public final class MatchService {
     private MatchCompletionHandler matchCompletionHandler = (match, winnerTeamName) -> { };
     private MatchCompletionHandler autoMatchCompletionHandler = (match, winnerTeamName) -> { };
     private Runnable matchProgressListener = () -> { };
+    private Consumer<String> adminNotifier = message -> { };
+    private RoundCleaning roundCleaning;
+    private Match matchWarnedAboutTheRoundCleaning;
     private RoundStartEffects roundStartEffects = new VanillaRoundStartEffects();
     private CountdownImages countdownImages = CountdownImages.NONE;
     private ArenaAudience arenaAudience;
@@ -95,6 +100,7 @@ public final class MatchService {
     private long roundResetDelayTicks = DEFAULT_ROUND_RESET_DELAY_TICKS;
     private RoundTimeoutSettings roundTimeoutSettings = RoundTimeoutSettings.defaults();
     private boolean suddenDeathDisabledInFinal = DEFAULT_SUDDEN_DEATH_DISABLED_IN_FINAL;
+    private boolean cleanBetweenRounds = DEFAULT_CLEAN_BETWEEN_ROUNDS;
     private int reconnectSeconds = DEFAULT_RECONNECT_SECONDS;
     private int countdownSeconds = DEFAULT_COUNTDOWN_SECONDS;
     private UnequalTeamSettings unequalTeamSettings = UnequalTeamSettings.defaults();
@@ -134,6 +140,14 @@ public final class MatchService {
         this.matchProgressListener = Objects.requireNonNull(matchProgressListener, "matchProgressListener");
     }
 
+    public void setAdminNotifier(Consumer<String> adminNotifier) {
+        this.adminNotifier = Objects.requireNonNull(adminNotifier, "adminNotifier");
+    }
+
+    public void setRoundCleaning(RoundCleaning roundCleaning) {
+        this.roundCleaning = Objects.requireNonNull(roundCleaning, "roundCleaning");
+    }
+
     public void setArenaAudience(ArenaAudience arenaAudience) {
         this.arenaAudience = Objects.requireNonNull(arenaAudience, "arenaAudience");
     }
@@ -164,6 +178,14 @@ public final class MatchService {
 
     public boolean isSuddenDeathDisabledInFinal() {
         return suddenDeathDisabledInFinal;
+    }
+
+    public void setCleanBetweenRounds(boolean cleanBetweenRounds) {
+        this.cleanBetweenRounds = cleanBetweenRounds;
+    }
+
+    public boolean isCleanBetweenRounds() {
+        return cleanBetweenRounds;
     }
 
     public void setReconnectSeconds(int reconnectSeconds) {
@@ -656,7 +678,64 @@ public final class MatchService {
         matchProgressListener.run();
         announceRoundTitle(match, Messages.text(MatchMessage.ROUND_WON_TITLE, Placeholder.of("team", winnerTeamName),
                 Placeholder.of("round", match.getRoundNumber())));
-        scheduleNextRound(match);
+        cleanTheArenaBeforeTheNextRound(match);
+    }
+
+    private void cleanTheArenaBeforeTheNextRound(Match match) {
+        if (roundCleaning == null || !cleanBetweenRounds) {
+            scheduleNextRound(match);
+            return;
+        }
+        if (!roundCleaning.hasBaseline()) {
+            warnAdminsAboutTheRoundCleaning(match, Messages.text(MatchMessage.ROUND_CLEANING_WITHOUT_BASELINE));
+            scheduleNextRound(match);
+            return;
+        }
+        Optional<String> skipReason = roundCleaning.startCleaningBetweenRounds(
+                outcome -> continueAfterTheRoundCleaning(match, outcome));
+        if (skipReason.isPresent()) {
+            warnAdminsAboutTheRoundCleaning(match, Messages.text(MatchMessage.ROUND_CLEANING_NOT_STARTED,
+                    Placeholder.of("reason", toFirstLine(skipReason.get()))));
+            scheduleNextRound(match);
+            return;
+        }
+        sendFightersToTheTribune(match);
+    }
+
+    private void continueAfterTheRoundCleaning(Match match, String outcome) {
+        plugin.getLogger().info("The arena cleaning between the rounds of match " + match.getMatchId()
+                + " is over: " + outcome.replace(TournamentMessages.LINE_BREAK, " "));
+        if (activeMatch == match && match.getState() == MatchState.BETWEEN_ROUNDS) {
+            scheduleNextRound(match);
+        }
+    }
+
+    private void warnAdminsAboutTheRoundCleaning(Match match, String warning) {
+        plugin.getLogger().info(warning);
+        if (matchWarnedAboutTheRoundCleaning == match) {
+            return;
+        }
+        matchWarnedAboutTheRoundCleaning = match;
+        adminNotifier.accept(warning);
+    }
+
+    private static String toFirstLine(String message) {
+        int lineBreakIndex = message.indexOf(TournamentMessages.LINE_BREAK);
+        return lineBreakIndex < 0 ? message : message.substring(0, lineBreakIndex);
+    }
+
+    private void sendFightersToTheTribune(Match match) {
+        for (Team team : match.getTeams()) {
+            for (Player player : collectOnlinePlayers(collectMembersWhoMayFight(match, team))) {
+                try {
+                    spectatorService.sendToTribune(player);
+                } catch (RuntimeException failure) {
+                    plugin.getLogger().log(Level.WARNING, "The fighter " + player.getName()
+                            + " could not be sent to the tribune before the arena cleaning between the rounds of "
+                            + "match " + match.getMatchId() + ", the remaining fighters are sent anyway", failure);
+                }
+            }
+        }
     }
 
     static List<String> buildDrawMessages(int roundNumber, String matchId, RoundOutcome outcome) {

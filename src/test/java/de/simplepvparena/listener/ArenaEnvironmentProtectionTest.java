@@ -11,6 +11,7 @@ import org.bukkit.block.BlockState;
 import org.bukkit.entity.Entity;
 import org.bukkit.event.block.BlockBurnEvent;
 import org.bukkit.event.block.BlockExplodeEvent;
+import org.bukkit.event.block.BlockFromToEvent;
 import org.bukkit.event.block.BlockIgniteEvent;
 import org.bukkit.event.block.BlockPistonExtendEvent;
 import org.bukkit.event.block.BlockPistonRetractEvent;
@@ -40,6 +41,8 @@ class ArenaEnvironmentProtectionTest {
     private static final int UNDER_THE_FLOOR_Y = ArenaMatchHarness.GROUND_Y - 1;
     private static final int FIRST_Y_UNDER_THE_CAPTURED_VOLUME =
             ArenaMatchHarness.GROUND_Y - ArenaBaselineService.DEFAULT_DEPTH_BELOW_FLOOR - 1;
+    private static final int OVER_THE_WALL_Y = ArenaMatchHarness.WALL_TOP_Y + 1;
+    private static final int LAST_X_INSIDE_THE_WALL = ArenaMatchHarness.WALL_MAXIMUM - 1;
 
     private ArenaMatchHarness harness;
     private ArenaMatchHarness.FakePlayer spectator;
@@ -203,6 +206,64 @@ class ArenaEnvironmentProtectionTest {
         assertFalse(isEntityChangeCancelled(ARENA_FLOOR_X, ArenaMatchHarness.GROUND_Y, ARENA_FLOOR_Z),
                 "while inside the fight area the cleaning restores what changes");
         assertFalse(isEntityChangeCancelled(OPEN_X, OPEN_Y, OPEN_Z));
+    }
+
+    @Test
+    void keepsLavaAndWaterFromFlowingOverTheWallOutOfTheFightArea() {
+        assertTrue(isFlowCancelled(Material.LAVA, LAST_X_INSIDE_THE_WALL, OVER_THE_WALL_Y, WALL_Z,
+                ArenaMatchHarness.WALL_MAXIMUM, OVER_THE_WALL_Y, WALL_Z), "lava onto the top of the wall");
+        assertTrue(isFlowCancelled(Material.WATER, 1, OVER_THE_WALL_Y, WALL_Z,
+                WALL_X, OVER_THE_WALL_Y, WALL_Z), "and water on the other side");
+    }
+
+    @Test
+    void letsALiquidFlowInsideTheFightArea() {
+        assertFalse(isFlowCancelled(Material.LAVA, ARENA_FLOOR_X, OPEN_Y, ARENA_FLOOR_Z,
+                ARENA_FLOOR_X + 1, OPEN_Y, ARENA_FLOOR_Z), "sideways");
+        assertFalse(isFlowCancelled(Material.WATER, ARENA_FLOOR_X, OPEN_Y + 2, ARENA_FLOOR_Z,
+                ARENA_FLOOR_X, OPEN_Y + 1, ARENA_FLOOR_Z), "and down");
+    }
+
+    @Test
+    void letsALiquidFlowOutsideTheFightAreaAndIntoIt() {
+        assertFalse(isFlowCancelled(Material.LAVA, TRIBUNE_X, OPEN_Y, TRIBUNE_Z,
+                TRIBUNE_X + 1, OPEN_Y, TRIBUNE_Z), "on the tribune");
+        assertFalse(isFlowCancelled(Material.WATER, ArenaMatchHarness.WALL_MAXIMUM, OVER_THE_WALL_Y, WALL_Z,
+                LAST_X_INSIDE_THE_WALL, OVER_THE_WALL_Y, WALL_Z), "and from the wall into the fight area");
+    }
+
+    @Test
+    void letsEveryLiquidFlowWhileNoFightAreaIsCalculated() {
+        harness.getArenaRegistry().getArena().setShape(null);
+
+        assertFalse(isFlowCancelled(Material.LAVA, LAST_X_INSIDE_THE_WALL, OVER_THE_WALL_Y, WALL_Z,
+                ArenaMatchHarness.WALL_MAXIMUM, OVER_THE_WALL_Y, WALL_Z));
+    }
+
+    @Test
+    void letsALiquidFlowInAnotherWorld() {
+        BlockFromToEvent event = new BlockFromToEvent(harness.createBlockInTheLobby(LAST_X_INSIDE_THE_WALL,
+                OVER_THE_WALL_Y, WALL_Z), harness.createBlockInTheLobby(ArenaMatchHarness.WALL_MAXIMUM,
+                OVER_THE_WALL_Y, WALL_Z));
+
+        protectionListener.onBlockFromTo(event);
+
+        assertFalse(event.isCancelled());
+    }
+
+    @Test
+    void letsADragonEggTeleportOutOfTheFightArea() {
+        assertFalse(isFlowCancelled(Material.DRAGON_EGG, LAST_X_INSIDE_THE_WALL, OVER_THE_WALL_Y, WALL_Z,
+                ArenaMatchHarness.WALL_MAXIMUM, OVER_THE_WALL_Y, WALL_Z));
+    }
+
+    private boolean isFlowCancelled(Material material, int sourceX, int sourceY, int sourceZ,
+                                    int destinationX, int destinationY, int destinationZ) {
+        harness.setBlock(sourceX, sourceY, sourceZ, material);
+        BlockFromToEvent event = new BlockFromToEvent(harness.createBlock(sourceX, sourceY, sourceZ),
+                harness.createBlock(destinationX, destinationY, destinationZ));
+        protectionListener.onBlockFromTo(event);
+        return event.isCancelled();
     }
 
     private List<Block> explodeAnEntity(Block... destroyedBlocks) {

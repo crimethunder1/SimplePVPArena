@@ -68,7 +68,7 @@ class ArenaConfigurationWriteFailureTest {
         fixture.messages().clear();
         fixture.failArenaConfigurationWrites(new IOException("disk full"));
 
-        fixture.click(ARENA_STANDINGS_BOARD_SLOT);
+        fixture.rightClickWithTheStandingsBoardTool(7, 63, -3);
         fixture.click(ARENA_STANDINGS_BOARD_SLOT);
 
         assertEquals(List.of(NOT_WRITTEN, "The standings board stands here now", NOT_WRITTEN,
@@ -82,7 +82,7 @@ class ArenaConfigurationWriteFailureTest {
         fixture.messages().clear();
         fixture.failArenaConfigurationWrites(new IOException("Platte voll"));
 
-        fixture.click(ARENA_STANDINGS_BOARD_SLOT);
+        fixture.rightClickWithTheStandingsBoardTool(7, 63, -3);
 
         assertEquals("Die Änderung gilt, aber config.yml konnte nicht geschrieben werden: Platte voll",
                 fixture.messages().getFirst());

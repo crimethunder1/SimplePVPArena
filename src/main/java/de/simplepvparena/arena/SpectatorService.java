@@ -33,7 +33,7 @@ public final class SpectatorService implements SpectatorToggleItemGiver {
         }
         player.teleport(tribuneLocation.get());
         player.setGameMode(GameMode.ADVENTURE);
-        giveSpectatorToggleItem(player);
+        giveSpectatorToggleItemIfMissing(player);
         spectatorModesByPlayer.put(player.getUniqueId(), SpectatorMode.TRIBUNE);
         return true;
     }
@@ -59,6 +59,15 @@ public final class SpectatorService implements SpectatorToggleItemGiver {
             return enterArenaFlight(player);
         }
         return sendToTribune(player);
+    }
+
+    public boolean isInsideEffectArea(Player player) {
+        Location location = player.getLocation();
+        return arenaRegistry.findEffectArea().map(effectArea -> effectArea.contains(location)).orElse(false);
+    }
+
+    public boolean hasTribuneSpawn() {
+        return arenaRegistry.getArena().getTribuneSpawn().flatMap(PositionSnapshot::toLocation).isPresent();
     }
 
     @Override

@@ -97,6 +97,22 @@ class AreaInventorySpectatorItemTest {
     }
 
     @Test
+    void aSpectatorWhoMovedTheSpectatorItemGetsNoSecondOneAtTheTribune() {
+        ArenaMatchHarness.FakePlayer spectator = fixture.addPlayerOutsideWithItems("Spectator");
+        spectator.keepItemsSetBySlot();
+        fixture.service().reconcile(spectator.player(), fixture.onTheTribune());
+        spectator.moveTo(fixture.onTheTribune());
+        ItemStack[] movedContents = AreaInventoryFixture.emptyContents();
+        movedContents[3] = spectator.contents()[SPECTATOR_TOGGLE_ITEM_SLOT];
+        spectator.setContents(movedContents);
+
+        assertTrue(harness.getSpectatorService().sendToTribune(spectator.player()));
+
+        assertArrayEquals(movedContents, spectator.contents());
+        assertEquals(1, countSpectatorItems(spectator));
+    }
+
+    @Test
     void withTheSwitchOffNobodyGetsTheSpectatorItemOnEntering() {
         ArenaMatchHarness.FakePlayer player = fixture.addPlayerOutsideWithItems("Visitor");
         player.keepItemsSetBySlot();
