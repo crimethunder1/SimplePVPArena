@@ -4,7 +4,9 @@ import de.simplepvparena.arena.ActiveArenaState;
 import de.simplepvparena.arena.AreaInventoryService;
 import de.simplepvparena.arena.Arena;
 import de.simplepvparena.arena.ArenaAudience;
+import de.simplepvparena.arena.ArenaBaselineFile;
 import de.simplepvparena.arena.ArenaBaselineRegistry;
+import de.simplepvparena.arena.ArenaBaselineSnapshot;
 import de.simplepvparena.arena.ArenaBaselineService;
 import de.simplepvparena.arena.ArenaBorderConfirmation;
 import de.simplepvparena.arena.ArenaCleaningService;
@@ -90,6 +92,8 @@ import de.simplepvparena.listener.PlayerInteractListener;
 import de.simplepvparena.listener.PlayerMoveListener;
 import de.simplepvparena.listener.PlayerRespawnListener;
 import de.simplepvparena.listener.RegistrationStationListener;
+import de.simplepvparena.listener.RegistrationMachineListener;
+import de.simplepvparena.listener.RegistrationStationButtonListener;
 import de.simplepvparena.listener.RegistrationStationWorldListener;
 import de.simplepvparena.listener.SpectatorBorderListener;
 import de.simplepvparena.listener.StandingsBoardToolListener;
@@ -104,12 +108,19 @@ import de.simplepvparena.message.MessageCatalogLoader;
 import de.simplepvparena.message.Messages;
 import de.simplepvparena.message.Placeholder;
 import de.simplepvparena.message.PluginMessage;
+import de.simplepvparena.placement.AutoMatchLeaderboard;
+import de.simplepvparena.placement.FileAutoMatchLeaderboardStorage;
 import de.simplepvparena.placement.PaperPlacementBoardEntities;
 import de.simplepvparena.placement.PlacementBoard;
+import de.simplepvparena.placement.PlacementBoardText;
 import de.simplepvparena.placement.PlacementService;
 import de.simplepvparena.placement.PlacementSidebar;
 import de.simplepvparena.registration.FileRegistrationStorage;
+import de.simplepvparena.registration.FileRegistrationMachineStorage;
 import de.simplepvparena.registration.PaperStationDisplayEntities;
+import de.simplepvparena.registration.RegistrationMachineDisplays;
+import de.simplepvparena.registration.RegistrationMachineService;
+import de.simplepvparena.registration.RegistrationMachines;
 import de.simplepvparena.registration.RandomTeamFormation;
 import de.simplepvparena.registration.RegistrationList;
 import de.simplepvparena.registration.RegistrationService;
@@ -144,6 +155,7 @@ import org.bukkit.plugin.java.JavaPlugin;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -157,6 +169,7 @@ public final class SimplePVPArenaPlugin extends JavaPlugin {
     private static final String CONFIGURATION_FILE_NAME = "config.yml";
     private static final long VISUALS_READINESS_CHECK_PERIOD_TICKS = 20L;
     private static final long STATION_BUTTON_CHECK_PERIOD_TICKS = 100L;
+    private static final long STATION_COUNTER_PERIOD_TICKS = 20L;
 
     private ArenaRegistry arenaRegistry;
     private TeamRegistry teamRegistry;
@@ -167,6 +180,10 @@ public final class SimplePVPArenaPlugin extends JavaPlugin {
     private RegistrationService registrationService;
     private RegistrationStationService registrationStationService;
     private RegistrationStationDisplays registrationStationDisplays;
+    private RegistrationMachineDisplays registrationMachineDisplays;
+    private RegistrationMachineService registrationMachineService;
+    private boolean machineVisualsWereReady;
+    private ArenaBaselineFile arenaBaselineFile;
     private RegistrationStationButtonCheck registrationStationButtonCheck;
     private KitService kitService;
     private KitLibrary kitLibrary;
@@ -208,6 +225,8 @@ public final class SimplePVPArenaPlugin extends JavaPlugin {
     private ConfiguredVisuals configuredVisuals;
     private PlacementSidebar placementSidebar;
     private PlacementBoard placementBoard;
+    private AutoMatchLeaderboard autoMatchLeaderboard;
+    private FileAutoMatchLeaderboardStorage autoMatchLeaderboardStorage;
     private StandingsBoardToolService standingsBoardToolService;
 
     @Override
@@ -272,6 +291,8 @@ public final class SimplePVPArenaPlugin extends JavaPlugin {
         borderSelectorModes = new BorderSelectorModeRegistry();
 
         arenaBaselineService = new ArenaBaselineService(this, new ArenaBaselineRegistry());
+        arenaBaselineFile = new ArenaBaselineFile(getServer(), getDataFolder());
+        arenaBaselineService.setCaptureListener(this::saveArenaBaseline);
 
         fighterColours = new ScoreboardFighterColours(getServer(), getLogger()::warning);
         fighterColours.clearColours();
@@ -339,8 +360,18 @@ public final class SimplePVPArenaPlugin extends JavaPlugin {
                 tournamentManager::getBracket, matchService::getActiveMatch, teamRegistry::findTeam);
         placementSidebar = new PlacementSidebar(this, arenaRegistry::findEffectArea,
                 placementService::findStandings);
+        autoMatchLeaderboardStorage = new FileAutoMatchLeaderboardStorage(
+                new File(getDataFolder(), FileAutoMatchLeaderboardStorage.FILE_NAME).toPath());
+        autoMatchLeaderboard = new AutoMatchLeaderboard(this::onAutoMatchLeaderboardChanged);
+        loadAutoMatchLeaderboard();
+        autoMatchService.addWinObserver(team -> autoMatchLeaderboard.recordWin(team.getMembers()));
+        PlacementBoardText placementBoardText = new PlacementBoardText(
+                () -> autoMatchLeaderboard.top(PlacementBoardText.LEADERBOARD_LIMIT),
+                () -> configuredVisuals == null ? Optional.empty() : configuredVisuals.findBoardTitleImage());
         placementBoard = new PlacementBoard(this, arenaRegistry.getArena()::getStandingsBoard, getServer()::getWorld,
-                new PaperPlacementBoardEntities(this), placementService::findStandings);
+                new PaperPlacementBoardEntities(this, part -> configuredVisuals == null ? Optional.empty()
+                        : configuredVisuals.findMachinePart(part)),
+                placementService::findStandings, placementBoardText::build);
         matchService.setMatchProgressListener(this::onPlacementChanged);
         arenaSetupService.setStandingsBoardListener(placementBoard::refresh);
         standingsBoardToolService = new StandingsBoardToolService(this, arenaSetupService, ItemStack::new);
@@ -414,11 +445,23 @@ public final class SimplePVPArenaPlugin extends JavaPlugin {
         configurationReloadService = new ConfigurationReloadService(this::getConfig, this::reloadConfig,
                 liveConfiguration, getLogger()::warning);
         configurationReloadService.applyStoredConfiguration();
+        loadArenaBaseline();
 
         registrationStationDisplays = new RegistrationStationDisplays(registrationStations, getServer()::getWorld,
                 new PaperStationDisplayEntities(this), configuredVisuals::findStationItem,
+                configuredVisuals::findStationTitleImage, registrationService::getCount,
                 configuredVisuals.getCustomVisuals()::isReady);
         registrationStationService.addObserver(registrationStationDisplays);
+        registrationStationService.setStationButtonLook(configuredVisuals::findStationItem);
+        RegistrationMachines registrationMachines = new RegistrationMachines();
+        registrationMachineDisplays = new RegistrationMachineDisplays(this, registrationMachines,
+                getServer()::getWorld, registrationService::getCount, configuredVisuals::findMachinePart);
+        registrationMachineService = new RegistrationMachineService(this, registrationMachines,
+                registrationMachineDisplays, registrationService, new FileRegistrationMachineStorage(
+                        new File(getDataFolder(), FileRegistrationMachineStorage.FILE_NAME).toPath()),
+                getLogger()::warning);
+        registrationMachineService.load();
+        registrationStationService.setHandOutItemFactory(registrationMachineService::createMachineItem);
         registrationStationButtonCheck = new RegistrationStationButtonCheck(registrationStations,
                 registrationStationService, getServer()::getWorld, Tag.BUTTONS::isTagged,
                 task -> getServer().getScheduler().runTask(this, task), getLogger()::warning);
@@ -436,6 +479,14 @@ public final class SimplePVPArenaPlugin extends JavaPlugin {
         registrationStationDisplays.showAll();
         getServer().getScheduler().runTaskTimer(this, registrationStationDisplays::refreshOnceReady,
                 VISUALS_READINESS_CHECK_PERIOD_TICKS, VISUALS_READINESS_CHECK_PERIOD_TICKS);
+        registrationMachineDisplays.showAll();
+        machineVisualsWereReady = configuredVisuals.getCustomVisuals().isReady();
+        getServer().getScheduler().runTaskTimer(this, this::rebuildMachinesOnceVisualsAreReady,
+                VISUALS_READINESS_CHECK_PERIOD_TICKS, VISUALS_READINESS_CHECK_PERIOD_TICKS);
+        getServer().getScheduler().runTaskTimer(this, registrationMachineDisplays::updateCounters,
+                STATION_COUNTER_PERIOD_TICKS, STATION_COUNTER_PERIOD_TICKS);
+        getServer().getScheduler().runTaskTimer(this, registrationStationDisplays::updateCounters,
+                STATION_COUNTER_PERIOD_TICKS, STATION_COUNTER_PERIOD_TICKS);
         getServer().getScheduler().runTaskTimer(this, registrationStationButtonCheck::checkLoadedStations,
                 STATION_BUTTON_CHECK_PERIOD_TICKS, STATION_BUTTON_CHECK_PERIOD_TICKS);
     }
@@ -493,6 +544,9 @@ public final class SimplePVPArenaPlugin extends JavaPlugin {
         if (registrationStationDisplays != null) {
             registrationStationDisplays.hideAll();
         }
+        if (registrationMachineDisplays != null) {
+            registrationMachineDisplays.hideAll();
+        }
         Messages.reset();
     }
 
@@ -507,6 +561,8 @@ public final class SimplePVPArenaPlugin extends JavaPlugin {
     public ConfigurationReloadReport reloadConfiguration() {
         ConfigurationReloadReport report = configurationReloadService.reloadFromFile();
         registrationStationDisplays.refreshAll();
+        registrationMachineDisplays.hideAll();
+        registrationMachineDisplays.showAll();
         placementBoard.rebuild();
         return report;
     }
@@ -514,6 +570,61 @@ public final class SimplePVPArenaPlugin extends JavaPlugin {
     public void onPlacementChanged() {
         placementSidebar.refresh();
         placementBoard.refresh();
+    }
+
+    private void rebuildMachinesOnceVisualsAreReady() {
+        if (machineVisualsWereReady || !configuredVisuals.getCustomVisuals().isReady()) {
+            return;
+        }
+        machineVisualsWereReady = true;
+        registrationMachineDisplays.hideAll();
+        registrationMachineDisplays.showAll();
+        placementBoard.rebuild();
+    }
+
+    private void saveArenaBaseline(ArenaBaselineSnapshot snapshot) {
+        try {
+            arenaBaselineFile.save(snapshot);
+        } catch (IOException | RuntimeException failure) {
+            getLogger().log(Level.WARNING, Messages.text(PluginMessage.ARENA_BASELINE_NOT_SAVED,
+                    Placeholder.of("file", ArenaBaselineFile.STRUCTURE_FILE_NAME)), failure);
+        }
+    }
+
+    private void loadArenaBaseline() {
+        arenaRegistry.getArena().getShape().ifPresent(shape -> {
+            try {
+                arenaBaselineFile.load(shape, arenaBaselineService.getDepthBelowFloor()).ifPresent(snapshot -> {
+                    arenaBaselineService.restoreSnapshot(snapshot);
+                    getLogger().info(Messages.text(PluginMessage.ARENA_BASELINE_LOADED,
+                            Placeholder.of("file", ArenaBaselineFile.STRUCTURE_FILE_NAME)));
+                });
+            } catch (IOException | RuntimeException failure) {
+                getLogger().log(Level.WARNING, Messages.text(PluginMessage.ARENA_BASELINE_NOT_LOADED,
+                        Placeholder.of("file", ArenaBaselineFile.STRUCTURE_FILE_NAME)), failure);
+            }
+        });
+    }
+
+    private void loadAutoMatchLeaderboard() {
+        try {
+            autoMatchLeaderboard.load(autoMatchLeaderboardStorage.load());
+        } catch (IOException failure) {
+            getLogger().log(Level.WARNING, Messages.text(PluginMessage.AUTO_MATCH_WINS_NOT_LOADED,
+                    Placeholder.of("file", FileAutoMatchLeaderboardStorage.FILE_NAME)), failure);
+        }
+    }
+
+    private void onAutoMatchLeaderboardChanged() {
+        try {
+            autoMatchLeaderboardStorage.save(autoMatchLeaderboard.all());
+        } catch (IOException failure) {
+            getLogger().log(Level.WARNING, Messages.text(PluginMessage.AUTO_MATCH_WINS_NOT_SAVED,
+                    Placeholder.of("file", FileAutoMatchLeaderboardStorage.FILE_NAME)), failure);
+        }
+        if (placementBoard != null) {
+            placementBoard.refresh();
+        }
     }
 
     public void onBorderMarksChanged() {
@@ -646,6 +757,10 @@ public final class SimplePVPArenaPlugin extends JavaPlugin {
         getServer().getPluginManager().registerEvents(
                 new RegistrationStationWorldListener(registrationStationDisplays, registrationStationButtonCheck),
                 this);
+        getServer().getPluginManager().registerEvents(
+                new RegistrationStationButtonListener(registrationStationDisplays, registrationStationService), this);
+        getServer().getPluginManager().registerEvents(
+                new RegistrationMachineListener(registrationMachineService, registrationMachineDisplays), this);
         getServer().getPluginManager().registerEvents(new PlacementBoardWorldListener(placementBoard), this);
         getServer().getPluginManager().registerEvents(
                 new StandingsBoardToolListener(standingsBoardToolService), this);

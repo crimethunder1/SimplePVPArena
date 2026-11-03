@@ -33,10 +33,10 @@ class ArenaAdminMenuSnapshotTest {
                 11 | REDSTONE_TORCH | Diagnose with a higher cell limit | One calculation with a limit you type, up to \
                 5000000 cells / Shows how far a fill through a gap really gets / config.yml stays untouched
                 12 | BLUE_BED | Set the first team spawn | Sets it to the position you stand on / \
-                Stand inside the border wall, where the first team starts / \
+                Stand inside the border wall or in a start box beside it, where the first team starts / \
                 A position on the wrong side of the fight area / is refused once the area is calculated
                 13 | RED_BED | Set the second team spawn | Sets it to the position you stand on / \
-                Stand inside the border wall, where the second team starts / \
+                Stand inside the border wall or in a start box beside it, where the second team starts / \
                 A position on the wrong side of the fight area / is refused once the area is calculated
                 14 | YELLOW_BED | Set the tribune spawn | Sets it to the position you stand on / \
                 Stand outside the border wall, where the spectators wait / \
@@ -114,10 +114,10 @@ class ArenaAdminMenuSnapshotTest {
                 11 | REDSTONE_TORCH | Diagnose with a higher cell limit | One calculation with a limit you type, up to \
                 5000000 cells / Shows how far a fill through a gap really gets / config.yml stays untouched
                 12 | BLUE_BED | Set the first team spawn | Sets it to the position you stand on / \
-                Stand inside the border wall, where the first team starts / \
+                Stand inside the border wall or in a start box beside it, where the first team starts / \
                 A position on the wrong side of the fight area / is refused once the area is calculated
                 13 | RED_BED | Set the second team spawn | Sets it to the position you stand on / \
-                Stand inside the border wall, where the second team starts / \
+                Stand inside the border wall or in a start box beside it, where the second team starts / \
                 A position on the wrong side of the fight area / is refused once the area is calculated
                 14 | YELLOW_BED | Set the tribune spawn | Sets it to the position you stand on / \
                 Stand outside the border wall, where the spectators wait / \
@@ -178,10 +178,10 @@ class ArenaAdminMenuSnapshotTest {
                 11 | REDSTONE_TORCH | Diagnose with a higher cell limit | One calculation with a limit you type, up to \
                 5000000 cells / Shows how far a fill through a gap really gets / config.yml stays untouched
                 12 | BLUE_BED | Set the first team spawn | Sets it to the position you stand on / \
-                Stand inside the border wall, where the first team starts / \
+                Stand inside the border wall or in a start box beside it, where the first team starts / \
                 A position on the wrong side of the fight area / is refused once the area is calculated
                 13 | RED_BED | Set the second team spawn | Sets it to the position you stand on / \
-                Stand inside the border wall, where the second team starts / \
+                Stand inside the border wall or in a start box beside it, where the second team starts / \
                 A position on the wrong side of the fight area / is refused once the area is calculated
                 14 | YELLOW_BED | Set the tribune spawn | Sets it to the position you stand on / \
                 Stand outside the border wall, where the spectators wait / \

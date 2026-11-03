@@ -66,6 +66,21 @@ public final class ConfiguredVisuals implements CountdownImages {
         return findItem(CustomVisualSettings.STATION_ITEM_CONFIGURATION_PATH, settings.stationItemIdentifier());
     }
 
+    public Optional<ItemStack> findMachinePart(String part) {
+        return findItem(CustomVisualSettings.MACHINE_PARTS_CONFIGURATION_PATH,
+                CustomVisualSettings.MACHINE_PART_IDENTIFIER_PREFIX + part);
+    }
+
+    public Optional<String> findStationTitleImage() {
+        return findFontImage(CustomVisualSettings.STATION_TITLE_IMAGE_CONFIGURATION_PATH,
+                settings.stationTitleImageIdentifier());
+    }
+
+    public Optional<String> findBoardTitleImage() {
+        return findFontImage(CustomVisualSettings.BOARD_TITLE_IMAGE_CONFIGURATION_PATH,
+                settings.boardTitleImageIdentifier());
+    }
+
     public boolean playTotemAnimation(Player player) {
         String identifier = settings.totemItemIdentifier();
         if (!isAskable(identifier)) {

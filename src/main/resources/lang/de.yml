@@ -658,11 +658,10 @@ arena:
     second-team: 'Spawn des zweiten Teams'
     tribune: 'Tribünen-Spawn'
   spawn-hint:
-    first-team: 'innerhalb der Arenawand, wo das erste Team startet'
-    second-team: 'innerhalb der Arenawand, wo das zweite Team startet'
+    first-team: 'innerhalb der Arenawand oder in einer Startbox daneben, wo das erste Team startet'
+    second-team: 'innerhalb der Arenawand oder in einer Startbox daneben, wo das zweite Team startet'
     tribune: 'außerhalb der Arenawand, wo die Zuschauer warten'
   spawn-placement:
-    must-lie-inside: 'Der {spawn} muss innerhalb der berechneten Kampffläche liegen, {position} liegt außerhalb davon'
     must-lie-outside: 'Der {spawn} muss außerhalb der berechneten Kampffläche liegen, {position} liegt darin'
     set-again: 'Steh {placement}, dann setze ihn erneut. Es wurde nichts gespeichert'
     click-tile-again: 'Setze ihn erneut: Steh {placement}, dann klicke auf seine Kachel'
@@ -1446,6 +1445,7 @@ match:
   halted:
     - 'Match {match} ist angehalten, kein Teilnehmer ist online'
     - 'Nutze {action}, um es zu entscheiden'
+  resumed: 'Match {match} geht weiter, {player} ist zurück'
   over: 'Match {match} ist vorbei, {team} gewinnt ({score})'
   round-cleaning:
     without-baseline: 'Die Arena wird zwischen den Runden nicht gereinigt, es ist kein Ausgangszustand gespeichert'
@@ -1532,6 +1532,21 @@ registration:
   tool:
     name: 'Werkzeug für die Anmelde-Station'
     lore: 'Klicke einen Knopf an, um ihn zur Anmelde-Station zu machen, klicke eine Station an, um sie wieder zu einem normalen Knopf zu machen'
+  machine:
+    item-name: 'Anmelde-Automat'
+    item-lore:
+      - 'Rechtsklick auf den Boden stellt einen 2x2-Automaten auf'
+      - 'Die Front zeigt zu dir, abbauen entfernt ihn wieder'
+    placed: 'Der Anmelde-Automat steht'
+    removed: 'Der Anmelde-Automat wurde entfernt'
+    no-room: 'Hier ist kein Platz für den Automaten, er braucht 2x2 freie Blöcke'
+    not-loaded: 'Die Automaten in {file} konnten nicht gelesen werden'
+    not-saved: 'Die Automaten konnten nicht in {file} geschrieben werden'
+  station-button:
+    name: 'Anmelde-Knopf'
+    lore:
+      - 'Setze den Knopf hin, er wird sofort zur Anmelde-Station'
+      - 'Abbauen entfernt die Station wieder'
   station:
     added: 'Dieser Knopf ist jetzt eine Anmelde-Station'
     removed: 'Dieser Knopf ist keine Anmelde-Station mehr'
@@ -1540,7 +1555,10 @@ registration:
     without-button: 'Die Anmelde-Station bei {x} {y} {z} in der Welt {world} hat keinen Knopf mehr und wurde entfernt'
   display:
     title: 'Anmelden'
-    hint: 'Klicke, um teilzunehmen'
+    hint: 'Drück den Knopf!'
+    count:
+      one: '{count} Spieler angemeldet'
+      other: '{count} Spieler angemeldet'
   forming:
     tournament-in-progress: 'Während eines Turniers lassen sich keine Teams bilden'
     auto-match: 'Während ein Auto-Match angesagt ist oder läuft, lassen sich keine Teams bilden'
@@ -1558,8 +1576,8 @@ registrations-menu:
     one: '{count} Spieler ist angemeldet'
     other: '{count} Spieler sind angemeldet'
   nobody-registered: 'Es ist kein Spieler angemeldet'
-  tool-handed-out: 'Das Werkzeug für die Anmelde-Station liegt in deinem Inventar'
-  tool-inventory-full: 'Dein Inventar ist voll, das Werkzeug für die Anmelde-Station konnte nicht ausgegeben werden'
+  tool-handed-out: 'Der Anmelde-Automat liegt in deinem Inventar, Rechtsklick auf den Boden stellt ihn auf'
+  tool-inventory-full: 'Dein Inventar ist voll, der Anmelde-Automat konnte nicht ausgegeben werden'
   registration-removed: 'Die Anmeldung von {player} wurde entfernt'
   registrations-cleared: 'Die Anmeldungen wurden geleert'
   coloured-teams-removed:
@@ -1586,8 +1604,8 @@ registrations-menu:
         one: 'Bei der Teamgröße {teamSize} ergibt das {count} Team'
         other: 'Bei der Teamgröße {teamSize} ergibt das {count} Teams'
     tool:
-      title: 'Werkzeug für die Anmelde-Station holen'
-      lore: 'Legt das Werkzeug für die Anmelde-Station in dein Inventar'
+      title: 'Anmelde-Automat holen'
+      lore: 'Legt einen Anmelde-Automaten in dein Inventar, Rechtsklick auf den Boden stellt ihn auf'
     form:
       title: 'Zufallsteams bilden'
       lore: 'Bildet aus allen Angemeldeten zufällig Teams in der Teamgröße'
@@ -1906,9 +1924,20 @@ config:
     tribune-outside-of-the-effect-area: '{warning}. Es wurde nichts verworfen, setze den Tribünen-Spawn näher an der Kampffläche neu oder erhöhe {path} in config.yml'
 plugin:
   kits-not-loaded: 'Die Kits konnten nicht geladen werden ({reason}), es gibt kein Kit, bis im Kit-Menü von /tournament eines angelegt wird'
+  auto-match-wins-not-loaded: 'Die Auto-Match-Siege in {file} konnten nicht gelesen werden, die Rangliste beginnt leer'
+  auto-match-wins-not-saved: 'Die Auto-Match-Siege konnten nicht in {file} geschrieben werden'
+  arena-baseline-loaded: 'Der saubere Zustand der Arena wurde aus {file} geladen, die Arena wird zwischen den Matches wieder gereinigt'
+  arena-baseline-not-loaded: 'Der saubere Zustand der Arena in {file} konnte nicht gelesen werden, berechne die Kampffläche neu'
+  arena-baseline-not-saved: 'Der saubere Zustand der Arena konnte nicht in {file} gespeichert werden, nach einem Neustart fehlt er'
 placement:
   title:
     tournament: 'Turnier'
+    auto-match: 'Auto-Match-Rangliste'
+  no-games-yet: 'Noch keine Spiele'
+  no-games-hint: 'Melde dich an und kämpfe um Platz 1!'
+  wins-entry:
+    one: '{place}. {player} - {count} Sieg'
+    other: '{place}. {player} - {count} Siege'
   round: 'Turnierrunde {round} von {rounds}'
   paused: 'Pausiert'
   over: 'Vorbei'

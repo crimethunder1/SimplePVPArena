@@ -47,7 +47,8 @@ class PaperStationDisplayEntitiesTest {
         Entity spawned = displayEntities.spawnTextDisplay(location, text);
 
         assertSame(display, spawned);
-        assertEquals(List.of("spawn TextDisplay at 10.5 65.7 20.5", "setPersistent false", "setBillboard CENTER",
+        assertEquals(List.of("spawn TextDisplay at 10.5 65.7 20.5", "setPersistent false", "setBillboard VERTICAL",
+                "setAlignment CENTER", "setLineWidth 110", "setBackgroundColor", "setShadowed true", "setTransformation",
                 "text " + text), calls);
         assertEquals(Map.of(MARKER_KEY, (byte) 1), persistentData);
     }
@@ -91,8 +92,12 @@ class PaperStationDisplayEntitiesTest {
                 case "getPersistentDataContainer" -> {
                     return SharedBukkitServer.createPersistentDataContainer(persistentData);
                 }
-                case "setPersistent", "setBillboard", "text", "setItemStack" -> {
+                case "setPersistent", "setBillboard", "text", "setItemStack", "setAlignment", "setShadowed", "setLineWidth" -> {
                     calls.add(method.getName() + " " + arguments[0]);
+                    return null;
+                }
+                case "setBackgroundColor", "setTransformation" -> {
+                    calls.add(method.getName());
                     return null;
                 }
                 default -> throw new UnsupportedOperationException(type.getSimpleName() + "." + method.getName());

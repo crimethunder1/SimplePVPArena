@@ -66,7 +66,7 @@ class RegistrationStationWorldListenerTest {
         fixture.listener.onChunkLoad(new ChunkLoadEvent(chunk(), false));
         fixture.listener.onChunkUnload(new ChunkUnloadEvent(chunk()));
 
-        assertEquals(List.of("text at 10.5 65.7 20.5", "remove text at 10.5 65.7 20.5"), displayCalls);
+        assertEquals(List.of("text at 10.5 65.9 20.5", "remove text at 10.5 65.9 20.5"), displayCalls);
         assertTrue(stations.isStation(STATION));
     }
 
@@ -136,7 +136,7 @@ class RegistrationStationWorldListenerTest {
                     material -> material.name().endsWith("_BUTTON"), () -> { },
                     material -> new RecordingItemStack(material, 1));
             RegistrationStationDisplays displays = new RegistrationStationDisplays(stations,
-                    worldName -> world, this, Optional::empty, () -> true);
+                    worldName -> world, this, Optional::empty, Optional::empty, () -> 0, () -> true);
             stationService.addObserver(displays);
             RegistrationStationButtonCheck buttonCheck = new RegistrationStationButtonCheck(stations, stationService,
                     worldName -> world, material -> material.name().endsWith("_BUTTON"), nextTickTasks::add,
@@ -163,8 +163,38 @@ class RegistrationStationWorldListenerTest {
         }
 
         @Override
+        public List<Entity> spawnButton(Location location) {
+            return List.of(silentEntity());
+        }
+
+        @Override
+        public Entity spawnClickArea(Location location) {
+            return silentEntity();
+        }
+
+        @Override
+        public Entity spawnButtonCover(Block buttonBlock, ItemStack image) {
+            throw new UnsupportedOperationException("no station item in this test");
+        }
+
+        @Override
+        public void changeText(Entity display, Component text) {
+        }
+
+        @Override
+        public void pressButton(Entity cap) {
+        }
+
+        @Override
         public boolean isStationDisplay(Entity entity) {
             return false;
+        }
+
+        private static Entity silentEntity() {
+            return SharedBukkitServer.proxy(Entity.class, (method, arguments) -> switch (method.getName()) {
+                case "remove" -> null;
+                default -> throw new UnsupportedOperationException("Entity." + method.getName());
+            });
         }
     }
 }

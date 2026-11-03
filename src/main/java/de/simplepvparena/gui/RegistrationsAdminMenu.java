@@ -10,6 +10,7 @@ import de.simplepvparena.message.TournamentMessages;
 import de.simplepvparena.registration.RandomTeamFormation;
 import de.simplepvparena.registration.RegistrationEntry;
 import de.simplepvparena.registration.RegistrationService;
+import de.simplepvparena.registration.RegistrationMachineService;
 import de.simplepvparena.registration.RegistrationStationService;
 import de.simplepvparena.registration.TeamChoiceService;
 import de.simplepvparena.registration.TeamMode;
@@ -92,7 +93,7 @@ final class RegistrationsAdminMenu implements AdminMenu {
                         Placeholder.of("teamSize", teamSizeSetting.getTeamSize())),
                 Messages.text(MenuMessage.PAGE_OF_PAGES, Placeholder.of("page", pagination.getPageNumber()),
                         Placeholder.of("pageCount", pagination.getPageCount())))));
-        canvas.set(REGISTRATIONS_TOOL_SLOT, MenuItems.create(RegistrationStationService.TOOL_MATERIAL,
+        canvas.set(REGISTRATIONS_TOOL_SLOT, MenuItems.create(RegistrationMachineService.ITEM_MATERIAL,
                 Messages.text(RegistrationMenuMessage.TOOL_TITLE), Messages.text(RegistrationMenuMessage.TOOL_LORE)));
         canvas.set(REGISTRATIONS_FORM_SLOT, buildFormItem());
         canvas.set(REGISTRATIONS_TEAM_MODE_SLOT, MenuItems.create(TEAM_MODE_MATERIAL,
@@ -217,7 +218,7 @@ final class RegistrationsAdminMenu implements AdminMenu {
     }
 
     private void handOutTool(Player player, AdminMenuHolder holder) {
-        Map<Integer, ItemStack> itemsThatDidNotFit = player.getInventory().addItem(stationService.createTool());
+        Map<Integer, ItemStack> itemsThatDidNotFit = player.getInventory().addItem(stationService.createHandOutItem());
         if (!itemsThatDidNotFit.isEmpty()) {
             TournamentMessages.sendWarning(player, Messages.text(RegistrationMenuMessage.TOOL_INVENTORY_FULL));
             return;

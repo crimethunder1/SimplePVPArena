@@ -16,10 +16,10 @@ class ArenaSpawnTypeTest {
     }
 
     @Test
-    void putsBothTeamsIntoTheFightAreaAndTheTribuneOutsideOfIt() {
-        assertTrue(ArenaSpawnType.FIRST_TEAM.belongsIntoFightArea());
-        assertTrue(ArenaSpawnType.SECOND_TEAM.belongsIntoFightArea());
-        assertFalse(ArenaSpawnType.TRIBUNE.belongsIntoFightArea());
+    void keepsOnlyTheTribuneOutsideOfTheFightArea() {
+        assertFalse(ArenaSpawnType.FIRST_TEAM.mustLieOutsideFightArea());
+        assertFalse(ArenaSpawnType.SECOND_TEAM.mustLieOutsideFightArea());
+        assertTrue(ArenaSpawnType.TRIBUNE.mustLieOutsideFightArea());
     }
 
     @Test
@@ -27,8 +27,9 @@ class ArenaSpawnTypeTest {
         for (ArenaSpawnType spawnType : ArenaSpawnType.values()) {
             String hint = spawnType.getPlacementHint();
             assertFalse(hint.isBlank(), spawnType.name());
-            assertTrue(hint.startsWith(spawnType.belongsIntoFightArea() ? "inside" : "outside"), hint);
+            assertTrue(hint.startsWith(spawnType.mustLieOutsideFightArea() ? "outside" : "inside"), hint);
         }
+        assertTrue(ArenaSpawnType.FIRST_TEAM.getPlacementHint().contains("start box"));
     }
 
     @Test

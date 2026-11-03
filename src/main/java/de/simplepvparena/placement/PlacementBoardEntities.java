@@ -11,4 +11,11 @@ public interface PlacementBoardEntities {
     void changeText(Entity board, Component text);
 
     boolean isBoard(Entity entity);
+
+    /**
+     * Removes the board together with every part that belongs to it.
+     */
+    default void removeBoard(Entity board) {
+        board.remove();
+    }
 }

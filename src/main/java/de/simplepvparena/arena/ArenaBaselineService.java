@@ -27,10 +27,24 @@ public final class ArenaBaselineService {
     private int blocksPerTick = DEFAULT_BLOCKS_PER_TICK;
     private int depthBelowFloor = DEFAULT_DEPTH_BELOW_FLOOR;
     private BukkitTask activeTask;
+    private Consumer<ArenaBaselineSnapshot> captureListener = snapshot -> { };
 
     public ArenaBaselineService(Plugin plugin, ArenaBaselineRegistry baselineRegistry) {
         this.plugin = plugin;
         this.baselineRegistry = baselineRegistry;
+    }
+
+    public void setCaptureListener(Consumer<ArenaBaselineSnapshot> captureListener) {
+        this.captureListener = captureListener;
+    }
+
+    /**
+     * Takes over a baseline that was saved before the restart, as long as no other one was taken since.
+     */
+    public void restoreSnapshot(ArenaBaselineSnapshot snapshot) {
+        if (!baselineRegistry.hasSnapshot() && activeTask == null) {
+            baselineRegistry.store(snapshot);
+        }
     }
 
     public void setBlocksPerTick(int blocksPerTick) {
@@ -120,6 +134,7 @@ public final class ArenaBaselineService {
         }
         stopCapture();
         baselineRegistry.store(snapshot);
+        captureListener.accept(snapshot);
         completionHandler.accept(ArenaBaselineReport.captured(snapshot));
     }
 

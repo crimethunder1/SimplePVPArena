@@ -5,4 +5,7 @@ public interface RegistrationStationObserver {
     void stationAdded(RegistrationStation station);
 
     void stationRemoved(RegistrationStation station);
+
+    default void stationUsed(RegistrationStation station) {
+    }
 }

@@ -18,8 +18,10 @@ import org.bukkit.plugin.Plugin;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.function.Function;
 import java.util.function.Predicate;
+import java.util.function.Supplier;
 
 public final class RegistrationStationService {
 
@@ -27,7 +29,10 @@ public final class RegistrationStationService {
 
     public static final String TOOL_KEY_NAME = "registration_station_tool";
 
+    public static final Material STATION_BUTTON_MATERIAL = Material.STONE_BUTTON;
+
     private static final String TOOL_KEY_VALUE = "registration-station";
+    private static final String STATION_BUTTON_KEY_VALUE = "registration-station-button";
 
     private final NamespacedKey toolKey;
     private final RegistrationStations stations;
@@ -36,6 +41,17 @@ public final class RegistrationStationService {
     private final Runnable stationSaver;
     private final Function<Material, ItemStack> itemStackFactory;
     private final List<RegistrationStationObserver> observers = new ArrayList<>();
+
+    private Supplier<Optional<ItemStack>> stationButtonLook = Optional::empty;
+    private Supplier<ItemStack> handOutItemFactory = () -> createStationButton();
+
+    public void setHandOutItemFactory(Supplier<ItemStack> handOutItemFactory) {
+        this.handOutItemFactory = Objects.requireNonNull(handOutItemFactory, "handOutItemFactory");
+    }
+
+    public ItemStack createHandOutItem() {
+        return handOutItemFactory.get();
+    }
 
     public RegistrationStationService(Plugin plugin, RegistrationStations stations,
                                       RegistrationService registrationService, Predicate<Material> buttonMaterials,
@@ -52,28 +68,68 @@ public final class RegistrationStationService {
         observers.add(Objects.requireNonNull(observer, "observer"));
     }
 
-    public ItemStack createTool() {
-        return labelled(itemStackFactory.apply(TOOL_MATERIAL));
+    public void setStationButtonLook(Supplier<Optional<ItemStack>> stationButtonLook) {
+        this.stationButtonLook = Objects.requireNonNull(stationButtonLook, "stationButtonLook");
     }
 
-    private ItemStack labelled(ItemStack itemStack) {
+    public ItemStack createTool() {
+        return labelled(itemStackFactory.apply(TOOL_MATERIAL), RegistrationMessage.TOOL_NAME,
+                RegistrationMessage.TOOL_LORE, TOOL_KEY_VALUE);
+    }
+
+    public ItemStack createStationButton() {
+        ItemStack button = itemStackFactory.apply(STATION_BUTTON_MATERIAL);
+        stationButtonLook.get().filter(ItemStack::hasItemMeta).ifPresent(look -> {
+            ItemMeta lookMeta = look.getItemMeta();
+            ItemMeta buttonMeta = button.getItemMeta();
+            if (lookMeta.hasItemModel()) {
+                buttonMeta.setItemModel(lookMeta.getItemModel());
+            }
+            if (lookMeta.hasCustomModelDataComponent()) {
+                buttonMeta.setCustomModelDataComponent(lookMeta.getCustomModelDataComponent());
+            }
+            button.setItemMeta(buttonMeta);
+        });
+        return labelled(button, RegistrationMessage.STATION_BUTTON_NAME, RegistrationMessage.STATION_BUTTON_LORE,
+                STATION_BUTTON_KEY_VALUE);
+    }
+
+    private ItemStack labelled(ItemStack itemStack, RegistrationMessage name, RegistrationMessage lore,
+                               String keyValue) {
         ItemMeta itemMeta = itemStack.getItemMeta();
-        itemMeta.displayName(Component.text(Messages.text(RegistrationMessage.TOOL_NAME))
-                .decoration(TextDecoration.ITALIC, false));
-        itemMeta.lore(Messages.lines(RegistrationMessage.TOOL_LORE).stream()
+        itemMeta.displayName(Component.text(Messages.text(name)).decoration(TextDecoration.ITALIC, false));
+        itemMeta.lore(Messages.lines(lore).stream()
                 .map(RegistrationStationService::lore)
                 .toList());
-        itemMeta.getPersistentDataContainer().set(toolKey, PersistentDataType.STRING, TOOL_KEY_VALUE);
+        itemMeta.getPersistentDataContainer().set(toolKey, PersistentDataType.STRING, keyValue);
         itemStack.setItemMeta(itemMeta);
         return itemStack;
     }
 
     public boolean isTool(ItemStack itemStack) {
+        return hasMarker(itemStack, TOOL_KEY_VALUE);
+    }
+
+    public boolean isStationButton(ItemStack itemStack) {
+        return hasMarker(itemStack, STATION_BUTTON_KEY_VALUE);
+    }
+
+    private boolean hasMarker(ItemStack itemStack, String keyValue) {
         if (itemStack == null || !itemStack.hasItemMeta()) {
             return false;
         }
-        return TOOL_KEY_VALUE.equals(itemStack.getItemMeta().getPersistentDataContainer()
+        return keyValue.equals(itemStack.getItemMeta().getPersistentDataContainer()
                 .get(toolKey, PersistentDataType.STRING));
+    }
+
+    public void placeStationButton(Player admin, Block placedBlock) {
+        RegistrationStation station = RegistrationStation.of(placedBlock);
+        if (!buttonMaterials.test(placedBlock.getType()) || !stations.add(station)) {
+            return;
+        }
+        stationSaver.run();
+        observers.forEach(observer -> observer.stationAdded(station));
+        TournamentMessages.sendSuccess(admin, Messages.text(RegistrationMessage.STATION_ADDED));
     }
 
     public void useTool(Player admin, Block clickedBlock) {
@@ -116,11 +172,19 @@ public final class RegistrationStationService {
         if (!isStation(block) || !buttonMaterials.test(block.getType())) {
             return;
         }
-        if (player.isSneaking()) {
-            registrationService.leave(player);
+        useStation(player, RegistrationStation.of(block));
+    }
+
+    public void useStation(Player player, RegistrationStation station) {
+        if (!stations.isStation(station)) {
             return;
         }
-        registrationService.join(player);
+        if (player.isSneaking()) {
+            registrationService.leave(player);
+        } else {
+            registrationService.join(player);
+        }
+        observers.forEach(observer -> observer.stationUsed(station));
     }
 
     public void refuseBreaking(Player player) {

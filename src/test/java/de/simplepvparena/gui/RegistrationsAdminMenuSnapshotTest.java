@@ -24,7 +24,7 @@ class RegistrationsAdminMenuSnapshotTest {
 
         assertEquals("""
                 Registrations (page 1) | 54
-                46 | BLAZE_ROD | Get the station tool | Puts the registration station tool into your inventory
+                46 | DISPENSER | Get a registration machine | Puts a registration machine into your inventory, right click the ground to set it up
                 47 | BOOK | Registrations | 0 players are registered / At the team size 2 that makes 0 teams / \
                 Page 1 of 1
                 48 | GRAY_DYE | Form random teams | At least 2 teams are needed, 0 players are registered
@@ -43,7 +43,7 @@ class RegistrationsAdminMenuSnapshotTest {
         assertEquals("""
                 Registrations (page 1) | 54
                 0 | PLAYER_HEAD | Steve | Click to remove the registration
-                46 | BLAZE_ROD | Get the station tool | Puts the registration station tool into your inventory
+                46 | DISPENSER | Get a registration machine | Puts a registration machine into your inventory, right click the ground to set it up
                 47 | BOOK | Registrations | 1 player is registered / At the team size 2 that makes 1 team / \
                 Page 1 of 1
                 48 | GRAY_DYE | Form random teams | At least 2 teams are needed, 1 player is registered
@@ -68,7 +68,7 @@ class RegistrationsAdminMenuSnapshotTest {
                 2 | PLAYER_HEAD | Notch | Click to remove the registration
                 3 | PLAYER_HEAD | Jeb_ | Click to remove the registration
                 4 | PLAYER_HEAD | Dinnerbone | Click to remove the registration
-                46 | BLAZE_ROD | Get the station tool | Puts the registration station tool into your inventory
+                46 | DISPENSER | Get a registration machine | Puts a registration machine into your inventory, right click the ground to set it up
                 47 | BOOK | Registrations | 5 players are registered / At the team size 2 that makes 3 teams / \
                 Page 1 of 1
                 48 | NETHER_STAR | Form random teams | \
@@ -99,7 +99,7 @@ class RegistrationsAdminMenuSnapshotTest {
         openTheRegistrations();
 
         assertEquals("Registrations (page 1) | 54\n" + describePlayerSlots(1, 45) + """
-                46 | BLAZE_ROD | Get the station tool | Puts the registration station tool into your inventory
+                46 | DISPENSER | Get a registration machine | Puts a registration machine into your inventory, right click the ground to set it up
                 47 | BOOK | Registrations | 46 players are registered / At the team size 2 that makes 23 teams / \
                 Page 1 of 2
                 48 | NETHER_STAR | Form random teams | \
@@ -124,7 +124,7 @@ class RegistrationsAdminMenuSnapshotTest {
                 Registrations (page 2) | 54
                 0 | PLAYER_HEAD | Player46 | Click to remove the registration
                 45 | ARROW | Previous page | Page 1 of 2
-                46 | BLAZE_ROD | Get the station tool | Puts the registration station tool into your inventory
+                46 | DISPENSER | Get a registration machine | Puts a registration machine into your inventory, right click the ground to set it up
                 47 | BOOK | Registrations | 46 players are registered / At the team size 2 that makes 23 teams / \
                 Page 2 of 2
                 48 | NETHER_STAR | Form random teams | \

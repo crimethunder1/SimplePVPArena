@@ -658,11 +658,10 @@ arena:
     second-team: 'second team spawn'
     tribune: 'tribune spawn'
   spawn-hint:
-    first-team: 'inside the border wall, where the first team starts'
-    second-team: 'inside the border wall, where the second team starts'
+    first-team: 'inside the border wall or in a start box beside it, where the first team starts'
+    second-team: 'inside the border wall or in a start box beside it, where the second team starts'
     tribune: 'outside the border wall, where the spectators wait'
   spawn-placement:
-    must-lie-inside: 'The {spawn} must lie inside the calculated fight area, {position} lies outside of it'
     must-lie-outside: 'The {spawn} must lie outside of the calculated fight area, {position} lies inside it'
     set-again: 'Stand {placement}, then set it again. Nothing was stored'
     click-tile-again: 'Set it again: stand {placement}, then click its tile'
@@ -1445,6 +1444,7 @@ match:
   halted:
     - 'Match {match} is halted, no participant is online'
     - 'Use {action} to resolve it'
+  resumed: 'Match {match} goes on, {player} is back'
   over: 'Match {match} is over, {team} wins ({score})'
   round-cleaning:
     without-baseline: 'The arena is not cleaned between the rounds, no baseline is stored'
@@ -1531,6 +1531,21 @@ registration:
   tool:
     name: 'Registration station tool'
     lore: 'Click a button to make it a registration station, click a station to make it a normal button again'
+  machine:
+    item-name: 'Registration machine'
+    item-lore:
+      - 'Right click the ground to set up a 2x2 machine'
+      - 'Its front faces you, breaking it removes it again'
+    placed: 'The registration machine is set up'
+    removed: 'The registration machine was removed'
+    no-room: 'There is no room for the machine here, it needs 2x2 free blocks'
+    not-loaded: 'The machines in {file} could not be read'
+    not-saved: 'The machines could not be written to {file}'
+  station-button:
+    name: 'Registration button'
+    lore:
+      - 'Place the button, it becomes a registration station at once'
+      - 'Breaking it removes the station again'
   station:
     added: 'This button is now a registration station'
     removed: 'This button is no longer a registration station'
@@ -1539,7 +1554,10 @@ registration:
     without-button: 'The registration station at {x} {y} {z} in world {world} has no button any more and was removed'
   display:
     title: 'Register'
-    hint: 'Click to take part'
+    hint: 'Press the button!'
+    count:
+      one: '{count} player registered'
+      other: '{count} players registered'
   forming:
     tournament-in-progress: 'Teams cannot be formed while a tournament is in progress'
     auto-match: 'Teams cannot be formed while an auto match is announced or running'
@@ -1557,8 +1575,8 @@ registrations-menu:
     one: '{count} player is registered'
     other: '{count} players are registered'
   nobody-registered: 'No player is registered'
-  tool-handed-out: 'The registration station tool is in your inventory'
-  tool-inventory-full: 'Your inventory is full, the registration station tool could not be handed out'
+  tool-handed-out: 'The registration machine is in your inventory, right click the ground to set it up'
+  tool-inventory-full: 'Your inventory is full, the registration machine could not be handed out'
   registration-removed: 'The registration of {player} was removed'
   registrations-cleared: 'The registrations were cleared'
   coloured-teams-removed:
@@ -1585,8 +1603,8 @@ registrations-menu:
         one: 'At the team size {teamSize} that makes {count} team'
         other: 'At the team size {teamSize} that makes {count} teams'
     tool:
-      title: 'Get the station tool'
-      lore: 'Puts the registration station tool into your inventory'
+      title: 'Get a registration machine'
+      lore: 'Puts a registration machine into your inventory, right click the ground to set it up'
     form:
       title: 'Form random teams'
       lore: 'Forms teams of the team size from every registered player at random'
@@ -1905,9 +1923,20 @@ config:
     tribune-outside-of-the-effect-area: '{warning}. Nothing was dropped, set the tribune spawn again closer to the fight area or raise {path} in config.yml'
 plugin:
   kits-not-loaded: 'The kits could not be loaded ({reason}), there is no kit until one is created in the kit menu of /tournament'
+  auto-match-wins-not-loaded: 'The auto match wins in {file} could not be read, the leaderboard starts empty'
+  auto-match-wins-not-saved: 'The auto match wins could not be written to {file}'
+  arena-baseline-loaded: 'The clean state of the arena was loaded from {file}, the arena is cleaned between the matches again'
+  arena-baseline-not-loaded: 'The clean state of the arena in {file} could not be read, calculate the fight area again'
+  arena-baseline-not-saved: 'The clean state of the arena could not be saved to {file}, it is missing after a restart'
 placement:
   title:
     tournament: 'Tournament'
+    auto-match: 'Auto match leaderboard'
+  no-games-yet: 'No games played yet'
+  no-games-hint: 'Register and fight for the first place!'
+  wins-entry:
+    one: '{place}. {player} - {count} win'
+    other: '{place}. {player} - {count} wins'
   round: 'Round {round} of {rounds}'
   paused: 'Paused'
   over: 'Over'

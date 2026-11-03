@@ -42,19 +42,17 @@ class ArenaTest {
     }
 
     @Test
-    void refusesATeamSpawnOutsideOfTheCalculatedFightArea() {
+    void acceptsATeamSpawnInAStartBoxOutsideOfTheCalculatedFightArea() {
         Arena arena = new Arena();
         arena.setShape(shape());
 
         for (ArenaSpawnType spawnType : List.of(ArenaSpawnType.FIRST_TEAM, ArenaSpawnType.SECOND_TEAM)) {
-            String rejection = arena.setSpawn(spawnType, position(50.5D, 50.5D)).orElseThrow();
+            PositionSnapshot spawn = position(50.5D, 50.5D);
 
-            assertTrue(rejection.contains("The " + spawnType.getDisplayName() + " must lie inside"),
-                    rejection);
-            assertTrue(rejection.contains("lies outside of it"), rejection);
-            assertTrue(rejection.contains(spawnType.getPlacementHint()), rejection);
-            assertTrue(arena.getConfiguredSpawn(spawnType).isEmpty());
+            assertTrue(arena.setSpawn(spawnType, spawn).isEmpty());
+            assertEquals(spawn, arena.getConfiguredSpawn(spawnType).orElseThrow());
         }
+        assertTrue(arena.findSpawnPlacementWarnings().isEmpty());
     }
 
     @Test
@@ -122,13 +120,10 @@ class ArenaTest {
         arena.setShape(shape());
         List<String> warnings = arena.findSpawnPlacementWarnings();
 
-        assertEquals(2, warnings.size());
-        assertTrue(warnings.get(0).contains("The second team spawn"));
-        assertTrue(warnings.get(0).contains("lies outside of it"));
-        assertTrue(warnings.get(0).contains(ArenaSpawnType.SECOND_TEAM.getPlacementHint()));
-        assertTrue(warnings.get(1).contains("The tribune spawn"));
-        assertTrue(warnings.get(1).contains("lies inside it"));
-        assertTrue(warnings.get(1).contains(ArenaSpawnType.TRIBUNE.getPlacementHint()));
+        assertEquals(1, warnings.size());
+        assertTrue(warnings.get(0).contains("The tribune spawn"));
+        assertTrue(warnings.get(0).contains("lies inside it"));
+        assertTrue(warnings.get(0).contains(ArenaSpawnType.TRIBUNE.getPlacementHint()));
     }
 
     @Test

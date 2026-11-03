@@ -336,7 +336,11 @@ public record PluginSettings(long roundResetDelayTicks,
                 readItemsAdderIdentifier(configuration, CustomVisualSettings.TOTEM_ITEM_CONFIGURATION_PATH,
                         CustomVisualSettings.SUGGESTED_TOTEM_ITEM_IDENTIFIER, problemReporter),
                 readItemsAdderIdentifier(configuration, CustomVisualSettings.STATION_ITEM_CONFIGURATION_PATH,
-                        CustomVisualSettings.SUGGESTED_STATION_ITEM_IDENTIFIER, problemReporter));
+                        CustomVisualSettings.SUGGESTED_STATION_ITEM_IDENTIFIER, problemReporter),
+                readItemsAdderIdentifier(configuration, CustomVisualSettings.STATION_TITLE_IMAGE_CONFIGURATION_PATH,
+                        CustomVisualSettings.SUGGESTED_STATION_TITLE_IMAGE_IDENTIFIER, problemReporter),
+                readItemsAdderIdentifier(configuration, CustomVisualSettings.BOARD_TITLE_IMAGE_CONFIGURATION_PATH,
+                        CustomVisualSettings.SUGGESTED_BOARD_TITLE_IMAGE_IDENTIFIER, problemReporter));
     }
 
     private static String readItemsAdderIdentifier(ConfigurationSection configuration, String path,

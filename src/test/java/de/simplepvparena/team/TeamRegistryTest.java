@@ -331,6 +331,60 @@ class TeamRegistryTest {
     }
 
     @Test
+    void tellsTheRemovalObserversTheStoredNameOfARemovedTeamOnce() {
+        TeamRegistry registry = registryOfAlphaBravoAndCharlie();
+        List<String> removals = new ArrayList<>();
+        registry.addRemovalObserver(removals::add);
+
+        registry.removeTeam("BRAVO");
+        registry.removeTeam("bravo");
+        registry.removeTeam("Delta");
+
+        assertEquals(List.of("Bravo"), removals);
+    }
+
+    @Test
+    void tellsTheRemovalObserversNothingWhenATeamIsRenamedOrChangesItsPlayers() {
+        TeamRegistry registry = registryOfAlphaBravoAndCharlie();
+        List<String> removals = new ArrayList<>();
+        registry.addRemovalObserver(removals::add);
+
+        registry.renameTeam("Bravo", "Delta");
+        registry.addMember("Delta", new TeamMember(UUID.randomUUID(), "Newcomer"));
+        registry.removeMember("Alpha", secondMember.uniqueId());
+
+        assertEquals(List.of(), removals);
+    }
+
+    @Test
+    void clearTellsTheRemovalObserversEveryTeamOnceInTheOrderOfTheRegistry() {
+        TeamRegistry registry = registryOfAlphaBravoAndCharlie();
+        List<String> removals = new ArrayList<>();
+        List<Integer> teamCountsWhenTold = new ArrayList<>();
+        registry.addRemovalObserver(teamName -> {
+            removals.add(teamName);
+            teamCountsWhenTold.add(registry.getTeamCount());
+        });
+
+        registry.clear();
+        registry.clear();
+
+        assertEquals(List.of("Alpha", "Bravo", "Charlie"), removals);
+        assertEquals(List.of(0, 0, 0), teamCountsWhenTold);
+    }
+
+    @Test
+    void clearOfAnEmptyRegistryTellsTheRemovalObserversNothing() {
+        TeamRegistry registry = new TeamRegistry();
+        List<String> removals = new ArrayList<>();
+        registry.addRemovalObserver(removals::add);
+
+        registry.clear();
+
+        assertEquals(List.of(), removals);
+    }
+
+    @Test
     void rejectsTheRenameOfAnUnknownTeam() {
         TeamRegistry registry = registryOfAlphaBravoAndCharlie();
 

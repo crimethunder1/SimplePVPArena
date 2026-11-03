@@ -11,6 +11,7 @@ public enum MatchMessage implements MessageKey {
     SUDDEN_DEATH_DRAW("match.round.sudden-death-draw", "round", "match"),
     POINT_SCORED("match.point-scored", "team", "score"),
     HALTED("match.halted", "match", "action"),
+    RESUMED("match.resumed", "match", "player"),
     OVER("match.over", "match", "team", "score"),
     ROUND_CLEANING_WITHOUT_BASELINE("match.round-cleaning.without-baseline"),
     ROUND_CLEANING_NOT_STARTED("match.round-cleaning.not-started", "reason"),

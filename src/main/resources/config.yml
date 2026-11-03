@@ -133,6 +133,10 @@ items-adder:
   totem-item: ''
   # Item of ItemsAdder floating above every registration station. Empty or an ID ItemsAdder does not know shows a short text above the station instead. Suggested ID: simplepvparena:station.
   station-item: ''
+  # Image of ItemsAdder shown as the title of the hologram above every registration station. Empty or an ID ItemsAdder does not know shows the bold title text. Suggested ID: simplepvparena:station_title.
+  station-title-image: ''
+  # Image of ItemsAdder shown as the title of the standings board. Empty or an ID ItemsAdder does not know shows the bold title text. Suggested ID: simplepvparena:board_title.
+  board-title-image: ''
 
 # Live placement of the tournament and of the auto matches.
 placement:

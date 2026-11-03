@@ -300,9 +300,6 @@ public final class ArenaSetupService {
     }
 
     private Optional<String> findEffectAreaRejection(ArenaSpawnType spawnType, PositionSnapshot position) {
-        if (spawnType != ArenaSpawnType.TRIBUNE) {
-            return Optional.empty();
-        }
         return activeArena.findEffectArea()
                 .filter(effectArea -> !effectArea.contains(position.worldName(), position.x(), position.z()))
                 .map(effectArea -> Messages.text(ArenaSetupMessage.SPAWN_OUTSIDE_OF_THE_EFFECT_AREA,

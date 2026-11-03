@@ -56,6 +56,7 @@ public final class PlayerConnectionListener implements Listener {
                     matchService.isLeftOutOfTheChosenFighters(match, player.getUniqueId())
                             ? ListenerMessage.REJOINED_NOT_CHOSEN : ListenerMessage.REJOINED_DURING_MATCH,
                     Placeholder.of("match", match.getMatchId())));
+            matchService.resumeHaltedMatch(player);
             return;
         }
         if (arenaRegistry.isTeleportOnJoin() && arenaRegistry.isArenaFullyConfigured()) {

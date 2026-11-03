@@ -76,14 +76,27 @@ class TribuneInTheEffectAreaTest {
     }
 
     @Test
-    void keepsTheCheckOfTheTeamSpawnsAsItWas() {
+    void acceptsATeamSpawnInAStartBoxOutsideOfTheFightAreaButInsideTheEffectArea() {
+        fixture.configureArena();
+        fixture.standAt(50.5D, CENTRE_Z);
+
+        fixture.arenaSetupService().setSpawn(fixture.admin(), ArenaSpawnType.FIRST_TEAM);
+
+        assertEquals(new PositionSnapshot(WORLD_NAME, 50.5D, 64.0D, CENTRE_Z, 0F, 0F),
+                arena().getConfiguredFirstTeamSpawn().orElseThrow());
+        assertEquals("Set the first team spawn to admin-menu 50.5/64.0/3.5", fixture.messages().getFirst());
+    }
+
+    @Test
+    void refusesATeamSpawnOutsideOfTheEffectArea() {
         fixture.configureArena();
         fixture.standAt(200.5D, CENTRE_Z);
 
         fixture.arenaSetupService().setSpawn(fixture.admin(), ArenaSpawnType.FIRST_TEAM);
 
-        assertTrue(fixture.messages().getFirst().startsWith("The first team spawn must lie inside the calculated "
-                + "fight area"), fixture.messages().toString());
+        assertTrue(fixture.messages().getFirst().startsWith("The first team spawn must lie inside the area of "
+                + "effect"), fixture.messages().toString());
+        assertEquals(0, fixture.arenaConfigurationSaveCount());
     }
 
     @Test

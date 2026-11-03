@@ -30,6 +30,7 @@ public final class TeamRegistry {
 
     private final Map<String, Team> teamsByLowerCaseName = new LinkedHashMap<>();
     private final List<BiConsumer<String, String>> renameObservers = new ArrayList<>();
+    private final List<Consumer<String>> removalObservers = new ArrayList<>();
 
     public static String describeNameRule() {
         return Messages.text(TeamMessage.NAME_RULE, Placeholder.of("maximumLength", MAXIMUM_NAME_LENGTH));
@@ -77,7 +78,12 @@ public final class TeamRegistry {
     }
 
     public boolean removeTeam(String teamName) {
-        return teamsByLowerCaseName.remove(toKey(teamName)) != null;
+        Team removedTeam = teamsByLowerCaseName.remove(toKey(teamName));
+        if (removedTeam == null) {
+            return false;
+        }
+        tellTheRemovalObservers(removedTeam);
+        return true;
     }
 
     public Team renameTeam(String teamName, String newName) {
@@ -103,6 +109,16 @@ public final class TeamRegistry {
 
     public void addRenameObserver(BiConsumer<String, String> renameObserver) {
         renameObservers.add(Objects.requireNonNull(renameObserver, "renameObserver"));
+    }
+
+    public void addRemovalObserver(Consumer<String> removalObserver) {
+        removalObservers.add(Objects.requireNonNull(removalObserver, "removalObserver"));
+    }
+
+    private void tellTheRemovalObservers(Team removedTeam) {
+        for (Consumer<String> removalObserver : List.copyOf(removalObservers)) {
+            removalObserver.accept(removedTeam.getTeamName());
+        }
     }
 
     public Team addMember(String teamName, TeamMember member) {
@@ -194,7 +210,9 @@ public final class TeamRegistry {
     }
 
     public void clear() {
+        List<Team> removedTeams = List.copyOf(teamsByLowerCaseName.values());
         teamsByLowerCaseName.clear();
+        removedTeams.forEach(this::tellTheRemovalObservers);
     }
 
     public List<String> loadFromConfiguration(ConfigurationSection rootSection) {

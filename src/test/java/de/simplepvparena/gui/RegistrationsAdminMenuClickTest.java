@@ -99,8 +99,8 @@ class RegistrationsAdminMenuClickTest {
         fixture.click(TOOL_SLOT);
 
         assertEquals(1, fixture.handedOutItems().size());
-        assertTrue(fixture.registrationStationService().isTool(fixture.handedOutItems().get(0)));
-        assertEquals(List.of("The registration station tool is in your inventory"), fixture.messages());
+        assertTrue(fixture.registrationStationService().isStationButton(fixture.handedOutItems().get(0)));
+        assertEquals(List.of("The registration machine is in your inventory, right click the ground to set it up"), fixture.messages());
     }
 
     @Test
@@ -111,7 +111,7 @@ class RegistrationsAdminMenuClickTest {
         fixture.click(TOOL_SLOT);
 
         assertEquals(List.of(), fixture.handedOutItems());
-        assertEquals(List.of("Your inventory is full, the registration station tool could not be handed out"),
+        assertEquals(List.of("Your inventory is full, the registration machine could not be handed out"),
                 fixture.messages());
     }
 

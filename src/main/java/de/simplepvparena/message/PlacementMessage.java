@@ -5,6 +5,10 @@ import java.util.Set;
 public enum PlacementMessage implements MessageKey {
 
     TOURNAMENT_TITLE("placement.title.tournament"),
+    AUTO_MATCH_TITLE("placement.title.auto-match"),
+    NO_GAMES_YET("placement.no-games-yet"),
+    NO_GAMES_HINT("placement.no-games-hint"),
+    WINS_ENTRY("placement.wins-entry", "place", "player", "count"),
     ROUND("placement.round", "round", "rounds"),
     PAUSED("placement.paused"),
     OVER("placement.over"),

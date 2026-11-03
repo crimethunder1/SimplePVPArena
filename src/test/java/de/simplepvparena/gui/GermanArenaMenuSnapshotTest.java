@@ -27,10 +27,10 @@ class GermanArenaMenuSnapshotTest {
             eingibst, bis zu 5000000 Zellen / Zeigt, wie weit eine Füllung durch eine Lücke wirklich kommt / \
             config.yml bleibt unberührt
             12 | BLUE_BED | Spawn des ersten Teams setzen | Setzt ihn auf die Stelle, an der du stehst / \
-            Steh innerhalb der Arenawand, wo das erste Team startet / \
+            Steh innerhalb der Arenawand oder in einer Startbox daneben, wo das erste Team startet / \
             Eine Stelle auf der falschen Seite der Kampffläche / wird abgelehnt, sobald die Fläche berechnet ist
             13 | RED_BED | Spawn des zweiten Teams setzen | Setzt ihn auf die Stelle, an der du stehst / \
-            Steh innerhalb der Arenawand, wo das zweite Team startet / \
+            Steh innerhalb der Arenawand oder in einer Startbox daneben, wo das zweite Team startet / \
             Eine Stelle auf der falschen Seite der Kampffläche / wird abgelehnt, sobald die Fläche berechnet ist
             14 | YELLOW_BED | Tribünen-Spawn setzen | Setzt ihn auf die Stelle, an der du stehst / \
             Steh außerhalb der Arenawand, wo die Zuschauer warten / \

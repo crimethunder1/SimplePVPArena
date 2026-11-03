@@ -27,6 +27,7 @@ public final class PlacementBoard {
     private final Function<String, World> worldLookup;
     private final PlacementBoardEntities boardEntities;
     private final Supplier<PlacementStandings> standingsSource;
+    private final Function<PlacementStandings, Optional<Component>> textSource;
 
     private boolean enabled = PluginSettings.DEFAULT_PLACEMENT_BOARD_ENABLED;
     private BukkitTask refreshTask;
@@ -37,11 +38,23 @@ public final class PlacementBoard {
     public PlacementBoard(Plugin plugin, Supplier<Optional<PositionSnapshot>> placeSource,
                           Function<String, World> worldLookup, PlacementBoardEntities boardEntities,
                           Supplier<PlacementStandings> standingsSource) {
+        this(plugin, placeSource, worldLookup, boardEntities, standingsSource, PlacementBoard::tournamentText);
+    }
+
+    public PlacementBoard(Plugin plugin, Supplier<Optional<PositionSnapshot>> placeSource,
+                          Function<String, World> worldLookup, PlacementBoardEntities boardEntities,
+                          Supplier<PlacementStandings> standingsSource,
+                          Function<PlacementStandings, Optional<Component>> textSource) {
         this.plugin = Objects.requireNonNull(plugin, "plugin");
         this.placeSource = Objects.requireNonNull(placeSource, "placeSource");
         this.worldLookup = Objects.requireNonNull(worldLookup, "worldLookup");
         this.boardEntities = Objects.requireNonNull(boardEntities, "boardEntities");
         this.standingsSource = Objects.requireNonNull(standingsSource, "standingsSource");
+        this.textSource = Objects.requireNonNull(textSource, "textSource");
+    }
+
+    private static Optional<Component> tournamentText(PlacementStandings standings) {
+        return standings.hasContent() ? Optional.of(PlacementLines.boardText(standings)) : Optional.empty();
     }
 
     public void setEnabled(boolean enabled) {
@@ -77,12 +90,13 @@ public final class PlacementBoard {
 
     public void refresh() {
         Optional<PositionSnapshot> place = enabled ? placeSource.get() : Optional.empty();
-        PlacementStandings standings = standingsSource.get();
-        if (place.isEmpty() || !standings.hasContent()) {
+        Optional<Component> shownContent = place.isEmpty() ? Optional.empty()
+                : textSource.apply(standingsSource.get());
+        if (shownContent.isEmpty()) {
             hide();
             return;
         }
-        Component text = PlacementLines.boardText(standings);
+        Component text = shownContent.get();
         if (board != null && (!place.get().equals(shownPlace) || !board.isValid())) {
             hide();
         }
@@ -103,7 +117,7 @@ public final class PlacementBoard {
 
     public void hide() {
         if (board != null) {
-            board.remove();
+            boardEntities.removeBoard(board);
         }
         board = null;
         shownPlace = null;

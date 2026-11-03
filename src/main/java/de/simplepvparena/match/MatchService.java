@@ -87,6 +87,7 @@ public final class MatchService {
     private MatchCompletionHandler matchCompletionHandler = (match, winnerTeamName) -> { };
     private MatchCompletionHandler autoMatchCompletionHandler = (match, winnerTeamName) -> { };
     private Runnable matchProgressListener = () -> { };
+    private Match haltedMatch;
     private Consumer<String> adminNotifier = message -> { };
     private RoundCleaning roundCleaning;
     private Match matchWarnedAboutTheRoundCleaning;
@@ -370,6 +371,27 @@ public final class MatchService {
         return true;
     }
 
+    /**
+     * A match that was halted because nobody of it was online goes on with its next round once one of its players
+     * comes back, so no admin has to decide it.
+     */
+    public boolean resumeHaltedMatch(Player player) {
+        Match match = haltedMatch;
+        if (match == null || match != activeMatch || match.getState() != MatchState.BETWEEN_ROUNDS
+                || !match.containsPlayer(player.getUniqueId())) {
+            return false;
+        }
+        haltedMatch = null;
+        announceToMatch(match, Messages.text(MatchMessage.RESUMED, Placeholder.of("match", match.getMatchId()),
+                Placeholder.of("player", player.getName())));
+        cleanTheArenaBeforeTheNextRound(match);
+        return true;
+    }
+
+    public boolean isHalted(Match match) {
+        return match != null && haltedMatch == match;
+    }
+
     public boolean isWaitingForReconnect(UUID playerUniqueId) {
         return reconnectWindows.containsKey(playerUniqueId);
     }
@@ -413,6 +435,7 @@ public final class MatchService {
             return;
         }
         Match cancelledMatch = activeMatch;
+        haltedMatch = null;
         unequalTeamVoteService.cancel();
         stopRoundTimer();
         stopStartAnimation();
@@ -665,6 +688,7 @@ public final class MatchService {
                 cleanTheArenaBeforeTheNextRound(match);
                 return;
             }
+            haltedMatch = match;
             announceWarningToMatch(match, Messages.text(MatchMessage.HALTED,
                     Placeholder.of("match", match.getMatchId()),
                     Placeholder.of("action", describeMatchMenuTile(MatchMenuMessage.FORCE_RESULT_TITLE))));
@@ -767,6 +791,7 @@ public final class MatchService {
     }
 
     private void finishMatch(Match match, String winnerTeamName, boolean decidedByAnAdmin) {
+        haltedMatch = null;
         unequalTeamVoteService.cancel();
         stopRoundTimer();
         stopStartAnimation();

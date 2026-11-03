@@ -7,7 +7,6 @@ public enum ArenaSetupMessage implements MessageKey {
     ARENA_MENU_REFERENCE("arena.menu-reference", "tile"),
     MISSING_FIGHT_AREA("arena.missing.fight-area", "action"),
     MISSING_TRIBUNE_SPAWN("arena.missing.tribune-spawn", "action"),
-    SPAWN_MUST_LIE_INSIDE("arena.spawn-placement.must-lie-inside", "spawn", "position"),
     SPAWN_MUST_LIE_OUTSIDE("arena.spawn-placement.must-lie-outside", "spawn", "position"),
     SPAWN_SET_AGAIN("arena.spawn-placement.set-again", "placement"),
     SPAWN_CLICK_TILE_AGAIN("arena.spawn-placement.click-tile-again", "placement"),

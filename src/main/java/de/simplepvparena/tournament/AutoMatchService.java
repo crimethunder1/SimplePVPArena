@@ -17,6 +17,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.scheduler.BukkitTask;
 
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
@@ -25,6 +26,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.function.Consumer;
 
 public final class AutoMatchService implements MatchCompletionHandler, AutoMatchReservation {
 
@@ -52,6 +54,7 @@ public final class AutoMatchService implements MatchCompletionHandler, AutoMatch
     private int secondsLeft;
     private Object runningCleaning;
     private PlayAgainRule playAgainRule = PlayAgainRule.NONE;
+    private final List<Consumer<Team>> winObservers = new ArrayList<>();
 
     public AutoMatchService(Plugin plugin, TeamRegistry teamRegistry, ArenaRegistry arenaRegistry,
                             MatchService matchService, TournamentManager tournamentManager, KitLibrary kitLibrary,
@@ -68,6 +71,11 @@ public final class AutoMatchService implements MatchCompletionHandler, AutoMatch
         this.matchService.setAutoMatchCompletionHandler(this);
         this.tournamentManager.setAutoMatchReservation(this);
         this.teamRegistry.addRenameObserver(this::followRenamedTeam);
+        this.teamRegistry.addRemovalObserver(this::forgetRemovedTeam);
+    }
+
+    public void addWinObserver(Consumer<Team> winObserver) {
+        winObservers.add(Objects.requireNonNull(winObserver, "winObserver"));
     }
 
     public void setPlayAgainRule(PlayAgainRule playAgainRule) {
@@ -134,6 +142,10 @@ public final class AutoMatchService implements MatchCompletionHandler, AutoMatch
         }
     }
 
+    private void forgetRemovedTeam(String teamName) {
+        lastAutoMatchNumberByTeamKey.remove(toKey(teamName));
+    }
+
     public Optional<List<Team>> findPairing() {
         List<Team> teamsByWaitingTime = teamRegistry.getTeams().stream()
                 .filter(this::hasFreeOnlineMember)
@@ -161,6 +173,9 @@ public final class AutoMatchService implements MatchCompletionHandler, AutoMatch
     @Override
     public void onMatchCompleted(Match match, String winnerTeamName) {
         if (state == AutoMatchState.RUNNING && match == runningMatch) {
+            Optional<Team> winnerTeam = winnerTeamName == null ? Optional.empty()
+                    : match.findTeamByName(winnerTeamName);
+            winnerTeam.ifPresent(team -> winObservers.forEach(observer -> observer.accept(team)));
             finishRunningMatch();
             playAgainRule.autoMatchFinished(match, settings.playAgainSeconds());
             stopTimerWhenIdle();

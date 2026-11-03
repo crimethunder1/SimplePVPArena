@@ -265,6 +265,30 @@ class ReconnectWindowTest {
     }
 
     @Test
+    void aHaltedMatchGoesOnWithItsNextRoundOnceOneOfItsPlayersIsBack() {
+        ArenaMatchHarness.FakePlayer spectator = addSpectator();
+        Match match = start();
+        for (ArenaMatchHarness.FakePlayer participant : List.of(fighter, mate, opponent, opponentMate)) {
+            disconnect(participant);
+        }
+        harness.advanceTicks(RECONNECT_TICKS + ROUND_RESET_DELAY_TICKS);
+        assertTrue(matchService.isHalted(match));
+
+        assertFalse(matchService.resumeHaltedMatch(spectator.player()), "a spectator does not resume it");
+        for (ArenaMatchHarness.FakePlayer participant : List.of(fighter, mate, opponent, opponentMate)) {
+            participant.setOnline(true);
+        }
+        assertTrue(matchService.resumeHaltedMatch(fighter.player()));
+        assertFalse(matchService.resumeHaltedMatch(mate.player()), "the match goes on only once");
+
+        assertFalse(matchService.isHalted(match));
+        assertEquals(1, count(spectator, "Match M1 goes on, Fighter is back"));
+        harness.advanceTicks(ROUND_RESET_DELAY_TICKS);
+        assertEquals(MatchState.RUNNING, match.getState());
+        assertTrue(matchService.isActiveFighter(fighter.uniqueId()));
+    }
+
+    @Test
     void aFighterWhoLeavesWhileTheMatchIsHaltedGetsNoWindow() {
         ArenaMatchHarness.FakePlayer spectator = addSpectator();
         Match match = start();

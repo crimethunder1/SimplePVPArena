@@ -9,6 +9,7 @@ import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.block.BlockBreakEvent;
+import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.inventory.EquipmentSlot;
 
@@ -42,6 +43,20 @@ public final class RegistrationStationListener implements Listener {
             return;
         }
         stationService.useStation(player, clickedBlock);
+    }
+
+    @EventHandler(priority = EventPriority.LOW)
+    public void onStationButtonPlace(BlockPlaceEvent event) {
+        if (stationService.isStationButton(event.getItemInHand()) && !AdminPermission.isAdmin(event.getPlayer())) {
+            event.setCancelled(true);
+        }
+    }
+
+    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+    public void onStationButtonPlaced(BlockPlaceEvent event) {
+        if (stationService.isStationButton(event.getItemInHand())) {
+            stationService.placeStationButton(event.getPlayer(), event.getBlockPlaced());
+        }
     }
 
     @EventHandler(priority = EventPriority.LOW, ignoreCancelled = true)

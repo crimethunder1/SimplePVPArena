@@ -19,8 +19,8 @@ class ArenaTextsTest {
     @UseLanguage("en")
     void namesTheSpawnsAndWhereToStandInEnglish() {
         assertEquals(List.of("first team spawn", "second team spawn", "tribune spawn"), displayNames());
-        assertEquals(List.of("inside the border wall, where the first team starts",
-                "inside the border wall, where the second team starts",
+        assertEquals(List.of("inside the border wall or in a start box beside it, where the first team starts",
+                "inside the border wall or in a start box beside it, where the second team starts",
                 "outside the border wall, where the spectators wait"), placementHints());
     }
 
@@ -28,8 +28,8 @@ class ArenaTextsTest {
     @UseLanguage("de")
     void namesTheSpawnsAndWhereToStandInGerman() {
         assertEquals(List.of("Spawn des ersten Teams", "Spawn des zweiten Teams", "Tribünen-Spawn"), displayNames());
-        assertEquals(List.of("innerhalb der Arenawand, wo das erste Team startet",
-                "innerhalb der Arenawand, wo das zweite Team startet",
+        assertEquals(List.of("innerhalb der Arenawand oder in einer Startbox daneben, wo das erste Team startet",
+                "innerhalb der Arenawand oder in einer Startbox daneben, wo das zweite Team startet",
                 "außerhalb der Arenawand, wo die Zuschauer warten"), placementHints());
     }
 
@@ -72,10 +72,8 @@ class ArenaTextsTest {
     void refusesASpawnOnTheWrongSideInEnglish() {
         Arena arena = arenaWithFightArea();
 
-        assertEquals("The first team spawn must lie inside the calculated fight area, world 50.5/64.0/50.5 lies "
-                        + "outside of it\nStand inside the border wall, where the first team starts, then set it "
-                        + "again. Nothing was stored",
-                arena.setSpawn(ArenaSpawnType.FIRST_TEAM, position(50.5D, 50.5D)).orElseThrow());
+        assertEquals("inside the border wall or in a start box beside it, where the first team starts",
+                ArenaSpawnType.FIRST_TEAM.getPlacementHint());
         assertEquals("The tribune spawn must lie outside of the calculated fight area, world 1.5/64.0/1.5 lies "
                         + "inside it\nStand outside the border wall, where the spectators wait, then set it again. "
                         + "Nothing was stored",
@@ -87,14 +85,10 @@ class ArenaTextsTest {
     void refusesASpawnOnTheWrongSideInGerman() {
         Arena arena = arenaWithFightArea();
 
-        assertEquals("Der Spawn des ersten Teams muss innerhalb der berechneten Kampffläche liegen, "
-                        + "world 50.5/64.0/50.5 liegt außerhalb davon\nSteh innerhalb der Arenawand, wo das erste "
-                        + "Team startet, dann setze ihn erneut. Es wurde nichts gespeichert",
-                arena.setSpawn(ArenaSpawnType.FIRST_TEAM, position(50.5D, 50.5D)).orElseThrow());
-        assertEquals("Der Spawn des zweiten Teams muss innerhalb der berechneten Kampffläche liegen, "
-                        + "world 50.5/64.0/50.5 liegt außerhalb davon\nSteh innerhalb der Arenawand, wo das zweite "
-                        + "Team startet, dann setze ihn erneut. Es wurde nichts gespeichert",
-                arena.setSpawn(ArenaSpawnType.SECOND_TEAM, position(50.5D, 50.5D)).orElseThrow());
+        assertEquals("innerhalb der Arenawand oder in einer Startbox daneben, wo das erste Team startet",
+                ArenaSpawnType.FIRST_TEAM.getPlacementHint());
+        assertEquals("innerhalb der Arenawand oder in einer Startbox daneben, wo das zweite Team startet",
+                ArenaSpawnType.SECOND_TEAM.getPlacementHint());
         assertEquals("Der Tribünen-Spawn muss außerhalb der berechneten Kampffläche liegen, world 1.5/64.0/1.5 "
                         + "liegt darin\nSteh außerhalb der Arenawand, wo die Zuschauer warten, dann setze ihn erneut. "
                         + "Es wurde nichts gespeichert",
@@ -109,10 +103,7 @@ class ArenaTextsTest {
         arena.setTribuneSpawn(position(2.5D, 2.5D));
         arena.setShape(fightArea());
 
-        assertEquals(List.of("Der Spawn des zweiten Teams muss innerhalb der berechneten Kampffläche liegen, "
-                        + "world 50.5/64.0/50.5 liegt außerhalb davon\nSetze ihn erneut: Steh innerhalb der "
-                        + "Arenawand, wo das zweite Team startet, dann klicke auf seine Kachel",
-                "Der Tribünen-Spawn muss außerhalb der berechneten Kampffläche liegen, world 2.5/64.0/2.5 liegt "
+        assertEquals(List.of("Der Tribünen-Spawn muss außerhalb der berechneten Kampffläche liegen, world 2.5/64.0/2.5 liegt "
                         + "darin\nSetze ihn erneut: Steh außerhalb der Arenawand, wo die Zuschauer warten, dann "
                         + "klicke auf seine Kachel"), arena.findSpawnPlacementWarnings());
     }

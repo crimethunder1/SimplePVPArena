@@ -183,17 +183,15 @@ public final class Arena {
     }
 
     private boolean fitsShape(ArenaSpawnType spawnType, PositionSnapshot position) {
-        if (shape == null) {
+        if (shape == null || !spawnType.mustLieOutsideFightArea()) {
             return true;
         }
-        return shape.contains(position.worldName(), position.x(), position.z())
-                == spawnType.belongsIntoFightArea();
+        return !shape.contains(position.worldName(), position.x(), position.z());
     }
 
     private String describeMisplacedSpawn(ArenaSpawnType spawnType, PositionSnapshot position) {
-        MessageKey sentence = spawnType.belongsIntoFightArea()
-                ? ArenaSetupMessage.SPAWN_MUST_LIE_INSIDE : ArenaSetupMessage.SPAWN_MUST_LIE_OUTSIDE;
-        return Messages.text(sentence, Placeholder.of("spawn", spawnType.getDisplayName()),
+        return Messages.text(ArenaSetupMessage.SPAWN_MUST_LIE_OUTSIDE,
+                Placeholder.of("spawn", spawnType.getDisplayName()),
                 Placeholder.of("position", position.describe()));
     }
 }

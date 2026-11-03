@@ -30,8 +30,8 @@ class GermanRegistrationsMenuSnapshotTest {
                 0 | PLAYER_HEAD | Steve | Klicke, um die Anmeldung zu entfernen
                 1 | PLAYER_HEAD | Alex | Klicke, um die Anmeldung zu entfernen
                 2 | PLAYER_HEAD | Notch | Klicke, um die Anmeldung zu entfernen
-                46 | BLAZE_ROD | Werkzeug für die Anmelde-Station holen | \
-                Legt das Werkzeug für die Anmelde-Station in dein Inventar
+                46 | DISPENSER | Anmelde-Automat holen | \
+                Legt einen Anmelde-Automaten in dein Inventar, Rechtsklick auf den Boden stellt ihn auf
                 47 | BOOK | Anmeldungen | 3 Spieler sind angemeldet / Bei der Teamgröße 2 ergibt das 2 Teams / \
                 Seite 1 von 1
                 48 | NETHER_STAR | Zufallsteams bilden | Bildet aus allen Angemeldeten zufällig Teams \
@@ -51,8 +51,8 @@ class GermanRegistrationsMenuSnapshotTest {
 
         assertEquals("""
                 Anmeldungen (Seite 1) | 54
-                46 | BLAZE_ROD | Werkzeug für die Anmelde-Station holen | \
-                Legt das Werkzeug für die Anmelde-Station in dein Inventar
+                46 | DISPENSER | Anmelde-Automat holen | \
+                Legt einen Anmelde-Automaten in dein Inventar, Rechtsklick auf den Boden stellt ihn auf
                 47 | BOOK | Anmeldungen | 0 Spieler sind angemeldet / Bei der Teamgröße 2 ergibt das 0 Teams / \
                 Seite 1 von 1
                 48 | GRAY_DYE | Zufallsteams bilden | Es braucht mindestens 2 Teams, angemeldet sind 0 Spieler
@@ -95,7 +95,7 @@ class GermanRegistrationsMenuSnapshotTest {
         fixture.click(FORM_SLOT);
         fixture.click(CONFIRM_YES_SLOT);
 
-        assertEquals(List.of("Das Werkzeug für die Anmelde-Station liegt in deinem Inventar",
+        assertEquals(List.of("Der Anmelde-Automat liegt in deinem Inventar, Rechtsklick auf den Boden stellt ihn auf",
                 "Aus 3 angemeldeten Spielern wurden 2 Teams gebildet"), fixture.messages());
         assertEquals(List.of("Rot", "Blau"), fixture.teamRegistry().getTeamNames());
     }

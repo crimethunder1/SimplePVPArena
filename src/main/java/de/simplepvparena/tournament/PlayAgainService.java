@@ -62,6 +62,7 @@ public final class PlayAgainService implements PlayAgainRule {
         this.clock = Objects.requireNonNull(clock, "clock");
         autoMatchService.setPlayAgainRule(this);
         teamRegistry.addRenameObserver(this::followRenamedTeam);
+        teamRegistry.addRemovalObserver(this::forgetRemovedTeam);
     }
 
     public static Component buildQuestion() {
@@ -191,6 +192,10 @@ public final class PlayAgainService implements PlayAgainRule {
         if (playAgainDeadline != null) {
             playAgainDeadlineByWaitingTeamKey.put(toKey(newTeamName), playAgainDeadline);
         }
+    }
+
+    private void forgetRemovedTeam(String teamName) {
+        playAgainDeadlineByWaitingTeamKey.remove(toKey(teamName));
     }
 
     private static String toKey(String teamName) {
