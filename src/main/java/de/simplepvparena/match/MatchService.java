@@ -371,10 +371,6 @@ public final class MatchService {
         return true;
     }
 
-    /**
-     * A match that was halted because nobody of it was online goes on with its next round once one of its players
-     * comes back, so no admin has to decide it.
-     */
     public boolean resumeHaltedMatch(Player player) {
         Match match = haltedMatch;
         if (match == null || match != activeMatch || match.getState() != MatchState.BETWEEN_ROUNDS

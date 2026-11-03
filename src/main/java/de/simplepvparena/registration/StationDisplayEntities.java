@@ -14,16 +14,10 @@ public interface StationDisplayEntities {
 
     Entity spawnTextDisplay(Location location, Component text);
 
-    /**
-     * Spawns the parts of the big button, the pressable cap is the last entity of the list.
-     */
     List<Entity> spawnButton(Location location);
 
     Entity spawnClickArea(Location location);
 
-    /**
-     * Lays the image of the item flat onto the face of the button block, it moves in when the button is pressed.
-     */
     Entity spawnButtonCover(Block buttonBlock, ItemStack image);
 
     void changeText(Entity display, Component text);

@@ -51,7 +51,6 @@ public final class FileAutoMatchLeaderboardStorage {
                 wins.add(new AutoMatchWins(UUID.fromString(key), player.getString(NAME_KEY, key),
                         player.getInt(WINS_KEY)));
             } catch (IllegalArgumentException ignored) {
-                // a hand edited entry without a valid unique id is skipped
             }
         }
         return wins;

@@ -30,11 +30,6 @@ import java.util.Optional;
 import java.util.UUID;
 import java.util.function.Function;
 
-/**
- * Shows the standings board as an arena cube that floats above its place on the flames of five thrusters, with a
- * screen on each of its four sides. Every part is a display entity around the middle of the cube; the cube turns
- * clockwise and bobs by teleporting every part, which the clients interpolate.
- */
 public final class PaperPlacementBoardEntities implements PlacementBoardEntities {
 
     public static final String MARKER_KEY_NAME = "placement_board_display";
@@ -238,9 +233,6 @@ public final class PaperPlacementBoardEntities implements PlacementBoardEntities
         }
     }
 
-    /**
-     * An engine under the cube: a mount, the nozzle, a chrome lip and the glowing core, scaled by size.
-     */
     private void addThruster(List<Entity> parts, Location centre, Quaternionf turn, float offset, float size) {
         float nozzleBottom = MOUNT_BOTTOM - NOZZLE_HEIGHT * size;
         float lipBottom = nozzleBottom - LIP_HEIGHT;
@@ -266,10 +258,6 @@ public final class PaperPlacementBoardEntities implements PlacementBoardEntities
         return new Quaternionf().rotationY((float) Math.toRadians(90.0D * side));
     }
 
-    /**
-     * The text grows upwards from its lower edge, so its lower edge is set by its number of lines to keep its top
-     * at the top of the screen.
-     */
     private static Transformation screenTransformation(Quaternionf turn, Component text) {
         String plain = PlainTextComponentSerializer.plainText().serialize(text);
         int lines = (int) plain.chars().filter(character -> character == '\n').count() + 1;
@@ -308,9 +296,6 @@ public final class PaperPlacementBoardEntities implements PlacementBoardEntities
                 new Quaternionf());
     }
 
-    /**
-     * A block display grows from its corner, an item display around its middle.
-     */
     private static Transformation centred(Transformation corner) {
         Vector3f halfSize = new Vector3f(corner.getScale()).mul(0.5F);
         Vector3f translation = new Vector3f(corner.getTranslation())

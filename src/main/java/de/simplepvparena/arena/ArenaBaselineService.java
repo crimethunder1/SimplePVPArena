@@ -38,9 +38,6 @@ public final class ArenaBaselineService {
         this.captureListener = captureListener;
     }
 
-    /**
-     * Takes over a baseline that was saved before the restart, as long as no other one was taken since.
-     */
     public void restoreSnapshot(ArenaBaselineSnapshot snapshot) {
         if (!baselineRegistry.hasSnapshot() && activeTask == null) {
             baselineRegistry.store(snapshot);

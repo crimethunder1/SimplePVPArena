@@ -20,11 +20,6 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
-/**
- * Keeps the baseline of the fight area on disk, so the arena is cleaned after a restart as well. The blocks of the
- * captured volume are saved with the structure format of the game, which keeps the contents of chests and every
- * other block entity, and a key names the fight area and depth the structure belongs to.
- */
 public final class ArenaBaselineFile {
 
     public static final String STRUCTURE_FILE_NAME = "arena-baseline.nbt";
@@ -42,9 +37,6 @@ public final class ArenaBaselineFile {
         this.keyFile = new File(dataFolder, KEY_FILE_NAME);
     }
 
-    /**
-     * Saves the blocks the snapshot was just taken of, read again from the world in the same tick.
-     */
     public void save(ArenaBaselineSnapshot snapshot) throws IOException {
         ArenaShape volume = snapshot.getCapturedVolume();
         World world = server.getWorld(volume.getWorldName());
@@ -65,9 +57,6 @@ public final class ArenaBaselineFile {
         Files.writeString(keyFile.toPath(), key.saveToString(), StandardCharsets.UTF_8);
     }
 
-    /**
-     * Loads the saved baseline when it belongs to exactly this fight area and depth.
-     */
     public Optional<ArenaBaselineSnapshot> load(ArenaShape shape, int depthBelowFloor) throws IOException {
         if (!structureFile.isFile() || !keyFile.isFile()) {
             return Optional.empty();

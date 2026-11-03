@@ -6,10 +6,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
-/**
- * A registration machine of two by two blocks. The anchor is its lower block on the left when looking at its front,
- * the front faces {@code facing}, the second column lies to the right of the anchor.
- */
 public record RegistrationMachine(String worldName, int blockX, int blockY, int blockZ, BlockFace facing) {
 
     public static final int WIDTH = 2;
@@ -27,9 +23,6 @@ public record RegistrationMachine(String worldName, int blockX, int blockY, int 
         return face == BlockFace.NORTH || face == BlockFace.EAST || face == BlockFace.SOUTH || face == BlockFace.WEST;
     }
 
-    /**
-     * The direction to the right of a player who stands in front of the machine and looks at it.
-     */
     public BlockFace right() {
         return switch (facing) {
             case SOUTH -> BlockFace.WEST;
@@ -71,9 +64,6 @@ public record RegistrationMachine(String worldName, int blockX, int blockY, int 
         return Math.min(blockZ, blockZ + right().getModZ());
     }
 
-    /**
-     * The x coordinate of the middle of the front face.
-     */
     public double frontCentreX() {
         return minimumX() + (right().getModX() != 0 ? 1.0D : 0.5D) + facing.getModX() * 0.5D;
     }

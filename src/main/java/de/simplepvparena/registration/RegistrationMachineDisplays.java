@@ -40,10 +40,6 @@ import java.util.UUID;
 import java.util.function.Function;
 import java.util.function.IntSupplier;
 
-/**
- * Builds the registration machine out of display entities. Every part is described in the local frame of the machine:
- * x runs across the front, y upwards and z out of the front, the origin is the middle of the lower edge of the front.
- */
 public final class RegistrationMachineDisplays {
 
     public static final String MARKER_KEY_NAME = "registration_machine_display";
@@ -285,10 +281,6 @@ public final class RegistrationMachineDisplays {
         });
     }
 
-    /**
-     * A block display grows from its corner, an item display around its middle, so the item display is moved by half
-     * of its turned size.
-     */
     private static Transformation shaped(Transformation cornerBased, boolean centred) {
         if (!centred) {
             return cornerBased;
@@ -300,19 +292,12 @@ public final class RegistrationMachineDisplays {
                 cornerBased.getRightRotation());
     }
 
-    /**
-     * The button on the slanted desk, a negative depth moves it into the desk along the normal of the desk.
-     */
     private static Transformation buttonTransformation(Quaternionf turn, float pressedDepth) {
         return part(turn, DESK_PIVOT, deskTilt(),
                 new Vector3f(-BUTTON_HALF_WIDTH, DESK_THICKNESS + pressedDepth, BUTTON_DESK_Z - BUTTON_HALF_WIDTH),
                 new Vector3f(BUTTON_HALF_WIDTH * 2, BUTTON_HEIGHT, BUTTON_HALF_WIDTH * 2));
     }
 
-    /**
-     * A box of the given size whose lower corner lies at {@code corner} in a frame that is tilted around the pivot,
-     * the whole is then turned with the machine.
-     */
     private static Transformation part(Quaternionf turn, Vector3f pivot, Quaternionf tilt, Vector3f corner,
                                        Vector3f size) {
         Vector3f translation = turn.transform(new Vector3f(pivot).add(tilt.transform(new Vector3f(corner))));
@@ -323,9 +308,6 @@ public final class RegistrationMachineDisplays {
         return new Quaternionf().rotationX((float) Math.toRadians(DESK_TILT_DEGREES));
     }
 
-    /**
-     * Turns the local frame so that its z axis, the front of the machine, points to the given facing.
-     */
     static Quaternionf turnOf(BlockFace facing) {
         float degrees = switch (facing) {
             case WEST -> -90.0F;
