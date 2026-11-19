@@ -18,11 +18,13 @@ import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
+import org.jspecify.annotations.NullMarked;
 
 import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
 
+@NullMarked
 public final class ArenaDamageListener implements Listener {
 
     private final MatchService matchService;

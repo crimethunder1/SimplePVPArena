@@ -2,6 +2,7 @@ package de.simplepvparena.message;
 
 import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.configuration.file.YamlConfiguration;
+import org.jspecify.annotations.NullMarked;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -17,6 +18,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
+@NullMarked
 public final class YamlMessageCatalog implements MessageCatalog {
 
     private final Map<String, List<String>> linesByPath;

@@ -14,12 +14,14 @@ import de.simplepvparena.tournament.BracketMatch;
 import de.simplepvparena.tournament.TournamentManager;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
+import org.jspecify.annotations.NullMarked;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
+@NullMarked
 final class BracketViewMenu implements AdminMenu {
 
     static final Material WAITING_FOR_TEAMS_MATERIAL = Material.GRAY_CONCRETE;

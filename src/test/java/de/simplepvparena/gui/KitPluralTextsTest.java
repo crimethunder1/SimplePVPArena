@@ -24,6 +24,7 @@ import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
+@SuppressWarnings("null")
 class KitPluralTextsTest {
 
     private static final int MAIN_KIT_SLOT = 24;

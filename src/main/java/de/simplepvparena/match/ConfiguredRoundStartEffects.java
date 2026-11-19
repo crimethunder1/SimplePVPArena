@@ -1,10 +1,12 @@
 package de.simplepvparena.match;
 
 import org.bukkit.entity.Player;
+import org.jspecify.annotations.NullMarked;
 
 import java.util.Objects;
 import java.util.function.Predicate;
 
+@NullMarked
 public final class ConfiguredRoundStartEffects implements RoundStartEffects {
 
     private final RoundStartEffects vanillaEffects;

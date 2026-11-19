@@ -4,6 +4,7 @@ import org.bukkit.GameMode;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
+import org.jspecify.annotations.NullMarked;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -12,6 +13,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 
+@NullMarked
 public final class SpectatorService implements SpectatorToggleItemGiver {
 
     private static final int SPECTATOR_TOGGLE_ITEM_SLOT = 8;

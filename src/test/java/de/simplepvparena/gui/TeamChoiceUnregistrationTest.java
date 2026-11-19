@@ -13,6 +13,7 @@ import java.util.UUID;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+@SuppressWarnings("null")
 class TeamChoiceUnregistrationTest {
 
     private static final String[] LEAVE = {"leave"};

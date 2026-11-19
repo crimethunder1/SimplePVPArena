@@ -1,9 +1,12 @@
 package de.simplepvparena.border;
 
+import org.jspecify.annotations.NullMarked;
+
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
+@NullMarked
 public final class BorderSelectorModeRegistry {
 
     private final Set<UUID> activeAdmins = ConcurrentHashMap.newKeySet();

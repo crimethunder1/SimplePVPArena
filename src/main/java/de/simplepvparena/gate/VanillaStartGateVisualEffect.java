@@ -3,7 +3,9 @@ package de.simplepvparena.gate;
 import de.simplepvparena.arena.BlockPositionCodec;
 import org.bukkit.Particle;
 import org.bukkit.World;
+import org.jspecify.annotations.NullMarked;
 
+@NullMarked
 public final class VanillaStartGateVisualEffect implements StartGateVisualEffect {
 
     public static final Particle GATE_PARTICLE = Particle.POOF;

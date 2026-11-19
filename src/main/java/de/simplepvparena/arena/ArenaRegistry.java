@@ -5,10 +5,13 @@ import de.simplepvparena.message.Messages;
 import de.simplepvparena.message.Placeholder;
 import org.bukkit.Location;
 import org.bukkit.configuration.ConfigurationSection;
+import org.jspecify.annotations.NullMarked;
+import org.jspecify.annotations.Nullable;
 
 import java.util.List;
 import java.util.Optional;
 
+@NullMarked
 public final class ArenaRegistry {
 
     public static final String ARENA_SECTION = "arena";
@@ -32,12 +35,12 @@ public final class ArenaRegistry {
 
     private final Arena arena = new Arena();
 
-    private String shapeLoadFailure;
+    private @Nullable String shapeLoadFailure;
     private int effectMargin = EffectArea.DEFAULT_MARGIN;
     private boolean teleportOnJoin = DEFAULT_TELEPORT_ON_JOIN;
-    private ArenaShape effectAreaShape;
+    private @Nullable ArenaShape effectAreaShape;
     private int effectAreaMargin;
-    private EffectArea effectArea;
+    private @Nullable EffectArea effectArea;
 
     public Arena getArena() {
         return arena;
@@ -83,7 +86,7 @@ public final class ArenaRegistry {
         if (effectArea == null || effectAreaShape != shape.get() || effectAreaMargin != effectMargin) {
             effectAreaShape = shape.get();
             effectAreaMargin = effectMargin;
-            effectArea = EffectArea.around(effectAreaShape, effectMargin);
+            effectArea = EffectArea.around(shape.get(), effectMargin);
         }
         return Optional.of(effectArea);
     }

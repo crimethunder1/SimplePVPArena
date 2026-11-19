@@ -10,6 +10,7 @@ import org.bukkit.structure.Palette;
 import org.bukkit.structure.Structure;
 import org.bukkit.structure.StructureManager;
 import org.bukkit.util.BlockVector;
+import org.jspecify.annotations.NullMarked;
 
 import java.io.File;
 import java.io.IOException;
@@ -20,6 +21,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
+@NullMarked
 public final class ArenaBaselineFile {
 
     public static final String STRUCTURE_FILE_NAME = "arena-baseline.nbt";

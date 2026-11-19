@@ -3,13 +3,16 @@ package de.simplepvparena.kit;
 import de.simplepvparena.message.KitMessage;
 import de.simplepvparena.message.Messages;
 import de.simplepvparena.message.Placeholder;
+import org.jspecify.annotations.NullMarked;
+import org.jspecify.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
-public record KitSaveResult(String kitName, boolean defaultKit, int equipmentItemCount, int inventoryItemCount,
-                            int unreadableItemCount, String rejectionMessage) {
+@NullMarked
+public record KitSaveResult(@Nullable String kitName, boolean defaultKit, int equipmentItemCount,
+                            int inventoryItemCount, int unreadableItemCount, @Nullable String rejectionMessage) {
 
     public KitSaveResult(String kitName, boolean defaultKit, int equipmentItemCount, int inventoryItemCount,
                          int unreadableItemCount) {

@@ -6,6 +6,7 @@ import de.simplepvparena.message.Placeholder;
 import org.bukkit.block.BlockState;
 import org.bukkit.block.TileState;
 import org.bukkit.block.data.BlockData;
+import org.jspecify.annotations.NullMarked;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -16,6 +17,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.function.Supplier;
 
+@NullMarked
 public final class ArenaBaselineSnapshotBuilder {
 
     public static final int MAXIMUM_PALETTE_SIZE = 65_535;

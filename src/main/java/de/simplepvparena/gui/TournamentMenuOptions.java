@@ -2,7 +2,9 @@ package de.simplepvparena.gui;
 
 import de.simplepvparena.tournament.FinalMatchStage;
 import de.simplepvparena.tournament.TournamentState;
+import org.jspecify.annotations.NullMarked;
 
+@NullMarked
 public record TournamentMenuOptions(boolean startOffered,
                                     boolean forceStartOffered,
                                     boolean pauseOffered,

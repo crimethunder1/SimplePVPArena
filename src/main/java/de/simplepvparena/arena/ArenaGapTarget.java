@@ -4,9 +4,11 @@ import de.simplepvparena.message.ArenaGapMessage;
 import de.simplepvparena.message.MessageKey;
 import de.simplepvparena.message.Messages;
 import de.simplepvparena.message.Placeholder;
+import org.jspecify.annotations.NullMarked;
 
 import java.util.Objects;
 
+@NullMarked
 public record ArenaGapTarget(String worldName, int blockX, int blockY, int blockZ, Reason reason) {
 
     public enum Reason {

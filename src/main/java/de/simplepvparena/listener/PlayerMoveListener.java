@@ -18,11 +18,13 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.event.player.PlayerTeleportEvent;
+import org.jspecify.annotations.NullMarked;
 
 import java.util.Optional;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+@NullMarked
 public final class PlayerMoveListener implements Listener {
 
     private final MatchService matchService;

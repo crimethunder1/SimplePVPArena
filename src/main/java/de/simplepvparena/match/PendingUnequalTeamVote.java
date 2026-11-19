@@ -1,5 +1,7 @@
 package de.simplepvparena.match;
 
+import org.jspecify.annotations.NullMarked;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedHashMap;
@@ -11,6 +13,7 @@ import java.util.TreeMap;
 import java.util.UUID;
 import java.util.random.RandomGenerator;
 
+@NullMarked
 public final class PendingUnequalTeamVote {
 
     private final String matchId;

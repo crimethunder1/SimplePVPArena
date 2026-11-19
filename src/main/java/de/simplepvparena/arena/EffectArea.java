@@ -4,10 +4,12 @@ import de.simplepvparena.message.ArenaSetupMessage;
 import de.simplepvparena.message.Messages;
 import de.simplepvparena.message.Placeholder;
 import org.bukkit.Location;
+import org.jspecify.annotations.NullMarked;
 
 import java.util.Locale;
 import java.util.Objects;
 
+@NullMarked
 public final class EffectArea {
 
     public static final String MARGIN_CONFIGURATION_PATH = "arena.effect-margin";

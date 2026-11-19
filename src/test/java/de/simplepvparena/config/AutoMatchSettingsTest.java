@@ -278,6 +278,7 @@ class AutoMatchSettingsTest {
     private static MemoryConfiguration configurationWith(boolean enabled, Object startDelaySeconds,
                                                          Object pauseSeconds) {
         MemoryConfiguration configuration = new MemoryConfiguration();
+        configuration.set(PluginSettings.SERVER_MODE_PATH, ServerMode.AUTO.getConfigurationName());
         configuration.set(PluginSettings.AUTO_MATCH_ENABLED_PATH, enabled);
         configuration.set(PluginSettings.AUTO_MATCH_START_DELAY_SECONDS_PATH, startDelaySeconds);
         configuration.set(PluginSettings.AUTO_MATCH_PAUSE_SECONDS_PATH, pauseSeconds);

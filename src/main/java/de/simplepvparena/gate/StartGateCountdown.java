@@ -2,7 +2,9 @@ package de.simplepvparena.gate;
 
 import de.simplepvparena.message.Messages;
 import de.simplepvparena.message.StartGateMessage;
+import org.jspecify.annotations.NullMarked;
 
+@NullMarked
 public final class StartGateCountdown {
 
     public static final int RELEASE_SECOND = 0;

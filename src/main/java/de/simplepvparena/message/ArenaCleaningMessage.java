@@ -1,7 +1,10 @@
 package de.simplepvparena.message;
 
+import org.jspecify.annotations.NullMarked;
+
 import java.util.Set;
 
+@NullMarked
 public enum ArenaCleaningMessage implements MessageKey {
 
     BASELINE_TAKEN("arena-cleaning.baseline.taken", "baseline", "cleanAction"),

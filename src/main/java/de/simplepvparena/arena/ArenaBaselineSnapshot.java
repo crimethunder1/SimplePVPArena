@@ -7,6 +7,7 @@ import de.simplepvparena.message.Placeholder;
 import org.bukkit.Material;
 import org.bukkit.block.BlockState;
 import org.bukkit.block.data.BlockData;
+import org.jspecify.annotations.NullMarked;
 
 import java.util.BitSet;
 import java.util.EnumSet;
@@ -15,6 +16,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 
+@NullMarked
 public final class ArenaBaselineSnapshot implements ArenaCleaningTarget {
 
     public static final long MAXIMUM_BLOCK_COUNT = 8_000_000L;

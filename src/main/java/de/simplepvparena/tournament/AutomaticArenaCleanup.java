@@ -3,11 +3,13 @@ package de.simplepvparena.tournament;
 import de.simplepvparena.arena.ArenaCleaningService;
 import de.simplepvparena.arena.ArenaSetupService;
 import de.simplepvparena.match.RoundCleaning;
+import org.jspecify.annotations.NullMarked;
 
 import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Consumer;
 
+@NullMarked
 public final class AutomaticArenaCleanup implements ArenaCleanup, RoundCleaning {
 
     private final ArenaSetupService arenaSetupService;

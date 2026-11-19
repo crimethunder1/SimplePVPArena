@@ -218,6 +218,8 @@ class GermanMenuSnapshotTest {
                 Ein laufendes Turnier hat Vorrang / Klicke, um ihn einzuschalten
                 19 | GRAY_DYE | Match neu starten | Es läuft kein Match
                 20 | GRAY_DYE | Ergebnis zurücknehmen | Es läuft kein Turnier
+                21 | HOPPER | Server-Modus | Auto: die Arena auf einem laufenden Server / \
+                Auto-Matches und Inventarabgabe beim Betreten des Bereichs / Klicke, um in den Event-Modus zu wechseln
                 22 | OAK_DOOR | Zurück | Zurück zum Hauptmenü
                 """, fixture.describeLastMenu());
     }
@@ -253,6 +255,8 @@ class GermanMenuSnapshotTest {
                 Fragt vorher nach einer Bestätigung
                 20 | BARRIER | Ergebnis zurücknehmen | \
                 Öffnet die entschiedenen Matches, deren Folgematch noch nicht begonnen hat
+                21 | HOPPER | Server-Modus | Auto: die Arena auf einem laufenden Server / \
+                Auto-Matches und Inventarabgabe beim Betreten des Bereichs / Klicke, um in den Event-Modus zu wechseln
                 22 | OAK_DOOR | Zurück | Zurück zum Hauptmenü
                 """.formatted(fixture.runningFirstTeamName(), fixture.runningSecondTeamName()),
                 fixture.describeLastMenu());

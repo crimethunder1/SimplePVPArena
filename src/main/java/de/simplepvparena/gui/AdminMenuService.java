@@ -24,12 +24,15 @@ import de.simplepvparena.tournament.KitChoiceService;
 import de.simplepvparena.tournament.TournamentManager;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.Plugin;
+import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.NullMarked;
 
 import java.util.Collection;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Supplier;
 
+@NullMarked
 public final class AdminMenuService {
 
     private final AdminMenuNavigator navigator;
@@ -46,7 +49,7 @@ public final class AdminMenuService {
 
     AdminMenuService(AdminMenuDependencies dependencies,
                      AdminMenuWindows windows,
-                     Supplier<Collection<? extends Player>> onlinePlayers) {
+                     Supplier<Collection<? extends @NonNull Player>> onlinePlayers) {
         Plugin plugin = Objects.requireNonNull(dependencies.plugin(), "plugin");
         AdminMenuDependencies.TournamentServices tournament = dependencies.tournament();
         AdminMenuDependencies.TeamServices teams = dependencies.teams();
@@ -105,7 +108,8 @@ public final class AdminMenuService {
         TournamentMenuStatus tournamentMenuStatus = new TournamentMenuStatus(tournamentManager, matchService);
         MatchAdminMenu matchAdminMenu = new MatchAdminMenu(navigator, tournamentManager, matchService,
                 tournamentMenuStatus, forceResultAdminMenu, waitingMatchesAdminMenu, decidedMatchesAdminMenu,
-                tournament.autoMatchService(), tournament.autoMatchModeWriter());
+                tournament.autoMatchService(), tournament.autoMatchModeWriter(), tournament.serverModeSetting(),
+                tournament.serverModeSwitch());
         TeamsAdminMenu teamsAdminMenu = new TeamsAdminMenu(navigator, teamRegistry, teamMemberLookup,
                 chatInputService, teamConfigurationSaver, tournamentManager.getTeamSizeSetting(),
                 tournamentManager::isTournamentInProgress, teamSizeWriter, registrationService::getCount);

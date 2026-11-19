@@ -1,7 +1,10 @@
 package de.simplepvparena.message;
 
+import org.jspecify.annotations.NullMarked;
+
 import java.util.Set;
 
+@NullMarked
 public enum WaitingMatchMessage implements MessageKey {
 
     TITLE("waiting-matches-menu.title", "page"),

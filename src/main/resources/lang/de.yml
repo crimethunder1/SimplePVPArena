@@ -157,6 +157,10 @@ match-menu:
     switched-off: 'Der Auto-Match-Modus ist aus'
     switched-on-not-written: 'Der Auto-Match-Modus ist an, aber config.yml konnte nicht geschrieben werden: {reason}'
     switched-off-not-written: 'Der Auto-Match-Modus ist aus, aber config.yml konnte nicht geschrieben werden: {reason}'
+  server-mode:
+    switched-to-event: 'Der Server läuft jetzt im Event-Modus: keine Auto-Matches, das Inventar bleibt bei den Spielern, wer joint, landet auf der Tribüne'
+    switched-to-auto: 'Der Server läuft jetzt im Auto-Modus: Auto-Matches folgen dem Auto-Match-Schalter, wer in den Bereich läuft, gibt sein Inventar ab'
+    not-switched: 'Der Server-Modus bleibt, wie er war, config.yml konnte nicht geschrieben werden: {reason}'
   tile:
     info:
       title: 'Turnier'
@@ -210,6 +214,17 @@ match-menu:
       tournament-running: 'Ein Turnier läuft, der Modus wirkt, wenn es vorbei ist'
       switch-on: 'Klicke, um ihn einzuschalten'
       switch-off: 'Klicke, um ihn auszuschalten'
+      only-in-auto-mode: 'Nur im Auto-Modus verfügbar, der Server läuft im Event-Modus'
+    server-mode:
+      title: 'Server-Modus'
+      event:
+        - 'Event: ein eigener Server nur für das Event'
+        - 'Keine Auto-Matches, keine Inventarabgabe, wer joint, landet auf der Tribüne'
+      auto:
+        - 'Auto: die Arena auf einem laufenden Server'
+        - 'Auto-Matches und Inventarabgabe beim Betreten des Bereichs'
+      switch-to-auto: 'Klicke, um in den Auto-Modus zu wechseln'
+      switch-to-event: 'Klicke, um in den Event-Modus zu wechseln'
 force-result-menu:
   title: 'Ergebnis von {match}'
   match-not-running: 'Match {match} läuft nicht mehr'
@@ -1570,6 +1585,30 @@ registration:
       other: 'Aus {players} angemeldeten Spielern wurden {count} Teams gebildet'
     playing-with-mates: 'Du spielst in Team {team} mit {mates}'
     playing-alone: 'Du spielst allein als Team {team}'
+  import:
+    usage: 'Mit /tournament import <Datei> entstehen die Teams aus einer Anmeldedatei des Import-Ordners'
+    no-files: 'Im Ordner {folder} liegt keine .txt-Datei, lege die Datei mit den Anmeldungen dort ab'
+    files: 'Dateien in {folder}: {files}'
+    already-running: 'Es läuft bereits ein Import, warte bis er fertig ist'
+    file-not-found: 'In {folder} gibt es keine Datei {file}'
+    file-not-read: 'Die Datei {file} ließ sich nicht lesen ({reason})'
+    no-players: 'Die Datei {file} enthält keinen gültigen Spielernamen'
+    invalid-name: 'Zeile {line}: {name} ist kein gültiger Minecraft-Name und wurde ausgelassen'
+    named-twice: 'Zeile {line}: {name} kommt mehrfach vor, nur die erste Nennung zählt'
+    group-too-large: 'Zeile {line}: {players} sind mehr Spieler, als ein Team mit {size} fasst, sie wurden aufgeteilt'
+    looking-up:
+      one: '{count} Spieler wird nachgeschlagen...'
+      other: '{count} Spieler werden nachgeschlagen...'
+    lookup-failed: 'Die Spieler ließen sich nicht nachschlagen ({reason})'
+    unknown-players:
+      one: '{count} Spieler ist unbekannt und wurde ausgelassen: {players}'
+      other: '{count} Spieler sind unbekannt und wurden ausgelassen: {players}'
+    too-few-teams:
+      one: 'Es braucht mindestens {minimum} Teams, die Datei ergibt nur {count} Team, die Teams bleiben wie sie waren'
+      other: 'Es braucht mindestens {minimum} Teams, die Datei ergibt nur {count} Teams, die Teams bleiben wie sie waren'
+    done:
+      one: 'Aus {file} wurde {count} Team mit {players} Spielern gebildet, die bisherigen Teams wurden ersetzt'
+      other: 'Aus {file} wurden {count} Teams mit {players} Spielern gebildet, die bisherigen Teams wurden ersetzt'
 registrations-menu:
   title: 'Anmeldungen (Seite {page})'
   registered-players:
@@ -1869,6 +1908,7 @@ config:
       one: '{path} muss eine ganze Zahl zwischen {minimum} und {maximum} Sekunden sein, stattdessen gilt {count} Sekunde'
       other: '{path} muss eine ganze Zahl zwischen {minimum} und {maximum} Sekunden sein, stattdessen gelten {count} Sekunden'
     team-mode-unknown: '{path} muss einer der Werte {modes} sein, stattdessen gilt {fallback}'
+    server-mode-unknown: '{path} muss einer der Werte {modes} sein, stattdessen gilt {fallback}'
     cleaning-duration-negative: '{path} darf nicht negativ sein, stattdessen gelten {seconds} Sekunden. Mit null reinigst du ohne die beiden farbigen Phasen'
     cleaning-columns-negative:
       one: '{path} darf nicht negativ sein, stattdessen gilt {count} Spalte pro Tick. Mit null wird keine gezeichnet'
@@ -1926,6 +1966,7 @@ plugin:
   kits-not-loaded: 'Die Kits konnten nicht geladen werden ({reason}), es gibt kein Kit, bis im Kit-Menü von /tournament eines angelegt wird'
   auto-match-wins-not-loaded: 'Die Auto-Match-Siege in {file} konnten nicht gelesen werden, die Rangliste beginnt leer'
   auto-match-wins-not-saved: 'Die Auto-Match-Siege konnten nicht in {file} geschrieben werden'
+  import-folder-not-created: 'Der Ordner {folder} für Anmeldedateien konnte nicht angelegt werden'
   arena-baseline-loaded: 'Der saubere Zustand der Arena wurde aus {file} geladen, die Arena wird zwischen den Matches wieder gereinigt'
   arena-baseline-not-loaded: 'Der saubere Zustand der Arena in {file} konnte nicht gelesen werden, berechne die Kampffläche neu'
   arena-baseline-not-saved: 'Der saubere Zustand der Arena konnte nicht in {file} gespeichert werden, nach einem Neustart fehlt er'

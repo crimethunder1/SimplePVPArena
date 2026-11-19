@@ -1,8 +1,11 @@
 package de.simplepvparena.match;
 
+import org.jspecify.annotations.NullMarked;
+
 import java.util.Objects;
 import java.util.Optional;
 
+@NullMarked
 public final class MatchScore {
 
     public static final int POINTS_REQUIRED_FOR_BEST_OF_THREE = 2;

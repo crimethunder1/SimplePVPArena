@@ -5,11 +5,14 @@ import de.simplepvparena.message.Messages;
 import de.simplepvparena.message.TeamMessage;
 import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.DyeColor;
+import org.jspecify.annotations.NullMarked;
+import org.jspecify.annotations.Nullable;
 
 import java.util.Arrays;
 import java.util.Locale;
 import java.util.Optional;
 
+@NullMarked
 public enum TeamColour {
 
     RED(DyeColor.RED, NamedTextColor.RED, TeamMessage.COLOUR_RED),
@@ -58,7 +61,7 @@ public enum TeamColour {
         return name().toLowerCase(Locale.ROOT).replace(ENUM_SEPARATOR, STORAGE_SEPARATOR);
     }
 
-    public static Optional<TeamColour> ofStorageName(String storageName) {
+    public static Optional<TeamColour> ofStorageName(@Nullable String storageName) {
         return Arrays.stream(values())
                 .filter(colour -> colour.getStorageName().equals(storageName))
                 .findFirst();

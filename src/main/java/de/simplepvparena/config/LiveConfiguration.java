@@ -8,7 +8,9 @@ import de.simplepvparena.match.UnequalTeamSettings;
 import de.simplepvparena.registration.TeamMode;
 import de.simplepvparena.tournament.AutoMatchSettings;
 import de.simplepvparena.visual.CustomVisualSettings;
+import org.jspecify.annotations.NullMarked;
 
+@NullMarked
 public interface LiveConfiguration {
 
     void setLanguage(String language);
@@ -34,6 +36,8 @@ public interface LiveConfiguration {
     void setTeamSize(int teamSize);
 
     void setTeamSizeAtStart(int teamSize);
+
+    void setServerMode(ServerMode serverMode);
 
     void setAutoMatchSettings(AutoMatchSettings autoMatchSettings);
 

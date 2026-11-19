@@ -1,11 +1,14 @@
 package de.simplepvparena.tournament;
 
+import org.jspecify.annotations.NullMarked;
+
 import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 
+@NullMarked
 public record SavedTournament(Instant startedAt,
                               Instant savedAt,
                               TournamentState state,

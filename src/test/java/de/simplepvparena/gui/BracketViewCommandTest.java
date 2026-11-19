@@ -14,6 +14,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+@SuppressWarnings("null")
 class BracketViewCommandTest {
 
     private static final String[] NO_ARGUMENTS = new String[0];
@@ -138,7 +139,7 @@ class BracketViewCommandTest {
 
     @Test
     void completesBracketAndSpectateForASenderWithBothPermissions() {
-        assertEquals(List.of("bracket", "spectate"), command.onTabComplete(console(), null, "tournament",
+        assertEquals(List.of("bracket", "import", "spectate"), command.onTabComplete(console(), null, "tournament",
                 new String[] {""}));
         assertEquals(List.of("spectate"), command.onTabComplete(console(), null, "tournament",
                 new String[] {"sp"}));

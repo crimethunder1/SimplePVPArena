@@ -2,9 +2,11 @@ package de.simplepvparena.border;
 
 import de.simplepvparena.visual.CustomVisualsSelection;
 import org.bukkit.plugin.PluginManager;
+import org.jspecify.annotations.NullMarked;
 
 import java.util.logging.Logger;
 
+@NullMarked
 public final class BorderVisualEffects {
 
     private BorderVisualEffects() {

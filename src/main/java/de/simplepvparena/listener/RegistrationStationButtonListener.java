@@ -8,10 +8,12 @@ import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerInteractEntityEvent;
 import org.bukkit.inventory.EquipmentSlot;
+import org.jspecify.annotations.NullMarked;
 
 import java.util.Objects;
 import java.util.Optional;
 
+@NullMarked
 public final class RegistrationStationButtonListener implements Listener {
 
     private final RegistrationStationDisplays stationDisplays;

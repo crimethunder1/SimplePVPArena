@@ -1,7 +1,10 @@
 package de.simplepvparena.message;
 
+import org.jspecify.annotations.NullMarked;
+
 import java.util.Set;
 
+@NullMarked
 public enum StartGateMessage implements MessageKey {
 
     RELEASE_TITLE("start-gate.countdown.release-title"),

@@ -18,10 +18,12 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.player.PlayerBucketEmptyEvent;
 import org.bukkit.event.player.PlayerBucketFillEvent;
+import org.jspecify.annotations.NullMarked;
 
 import java.util.Objects;
 import java.util.Optional;
 
+@NullMarked
 public final class ArenaBreakListener implements Listener {
 
     private final MatchService matchService;

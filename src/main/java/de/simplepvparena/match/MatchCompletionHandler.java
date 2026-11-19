@@ -1,5 +1,8 @@
 package de.simplepvparena.match;
 
+import org.jspecify.annotations.NullMarked;
+
+@NullMarked
 @FunctionalInterface
 public interface MatchCompletionHandler {
 

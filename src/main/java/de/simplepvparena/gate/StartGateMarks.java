@@ -2,6 +2,7 @@ package de.simplepvparena.gate;
 
 import de.simplepvparena.arena.BlockPositionCodec;
 import org.bukkit.Material;
+import org.jspecify.annotations.NullMarked;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -14,6 +15,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.TreeMap;
 
+@NullMarked
 public final class StartGateMarks {
 
     private static final long[][] NO_LAYERS = new long[0][];

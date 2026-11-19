@@ -1,5 +1,8 @@
 package de.simplepvparena.border;
 
+import org.jspecify.annotations.NullMarked;
+
+@NullMarked
 public enum BorderConnectivity {
 
     ISOLATED,

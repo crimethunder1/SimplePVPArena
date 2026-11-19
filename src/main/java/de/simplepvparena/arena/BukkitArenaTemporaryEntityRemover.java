@@ -17,7 +17,9 @@ import org.bukkit.entity.Painting;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.Projectile;
 import org.bukkit.entity.TNTPrimed;
+import org.jspecify.annotations.NullMarked;
 
+@NullMarked
 public final class BukkitArenaTemporaryEntityRemover implements ArenaTemporaryEntityRemover {
 
     @Override

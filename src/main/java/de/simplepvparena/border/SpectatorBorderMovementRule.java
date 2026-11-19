@@ -1,5 +1,8 @@
 package de.simplepvparena.border;
 
+import org.jspecify.annotations.NullMarked;
+
+@NullMarked
 public final class SpectatorBorderMovementRule {
 
     private SpectatorBorderMovementRule() {

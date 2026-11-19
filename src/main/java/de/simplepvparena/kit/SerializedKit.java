@@ -1,6 +1,7 @@
 package de.simplepvparena.kit;
 
 import org.bukkit.configuration.ConfigurationSection;
+import org.jspecify.annotations.NullMarked;
 
 import java.util.Collections;
 import java.util.EnumMap;
@@ -10,6 +11,7 @@ import java.util.Optional;
 import java.util.TreeMap;
 import java.util.function.Consumer;
 
+@NullMarked
 public record SerializedKit(Map<KitEquipmentSlot, String> equipmentItems, Map<Integer, String> inventoryItems) {
 
     public static final String EQUIPMENT_SECTION = "equipment";

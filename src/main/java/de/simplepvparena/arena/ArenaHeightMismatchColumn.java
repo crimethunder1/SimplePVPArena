@@ -3,7 +3,9 @@ package de.simplepvparena.arena;
 import de.simplepvparena.message.ArenaGapMessage;
 import de.simplepvparena.message.Messages;
 import de.simplepvparena.message.Placeholder;
+import org.jspecify.annotations.NullMarked;
 
+@NullMarked
 public record ArenaHeightMismatchColumn(int blockX, int blockZ, int lowestBorderY, int seedY) {
 
     public ArenaHeightMismatchColumn {

@@ -24,6 +24,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+@SuppressWarnings("null")
 class SimplePVPArenaPluginKitLoadingTest {
 
     private static final String LOAD_FAILURE_NOTICE = "The kits could not be loaded (the plugin folder cannot be "

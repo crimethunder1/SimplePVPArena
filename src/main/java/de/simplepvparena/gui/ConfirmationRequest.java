@@ -4,9 +4,12 @@ import de.simplepvparena.message.ConfirmationMessage;
 import de.simplepvparena.message.MessageKey;
 import de.simplepvparena.message.Messages;
 import de.simplepvparena.message.Placeholder;
+import org.jspecify.annotations.NullMarked;
+import org.jspecify.annotations.Nullable;
 
 import java.util.Optional;
 
+@NullMarked
 public enum ConfirmationRequest {
 
     CLEAN_ARENA(ConfirmationMessage.CLEAN_ARENA_QUESTION),
@@ -23,13 +26,13 @@ public enum ConfirmationRequest {
     REVOKE_RESULT(ConfirmationMessage.REVOKE_RESULT_QUESTION, "match");
 
     private final MessageKey question;
-    private final String subjectPlaceholderName;
+    private final @Nullable String subjectPlaceholderName;
 
     ConfirmationRequest(MessageKey question) {
         this(question, null);
     }
 
-    ConfirmationRequest(MessageKey question, String subjectPlaceholderName) {
+    ConfirmationRequest(MessageKey question, @Nullable String subjectPlaceholderName) {
         this.question = question;
         this.subjectPlaceholderName = subjectPlaceholderName;
     }
@@ -39,9 +42,10 @@ public enum ConfirmationRequest {
     }
 
     public String getTitle(Optional<String> subject) {
-        if (subjectPlaceholderName == null || subject.isEmpty()) {
+        String placeholderName = subjectPlaceholderName;
+        if (placeholderName == null || subject.isEmpty()) {
             return getTitle();
         }
-        return Messages.text(question, Placeholder.of(subjectPlaceholderName, subject.get()));
+        return Messages.text(question, Placeholder.of(placeholderName, subject.get()));
     }
 }

@@ -15,12 +15,14 @@ import de.simplepvparena.team.TeamSizeSetting;
 import de.simplepvparena.tournament.TournamentManager;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
+import org.jspecify.annotations.NullMarked;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
+@NullMarked
 final class TeamActionsAdminMenu implements AdminMenu {
 
     private static final int TEAM_RENAME_SLOT = 10;

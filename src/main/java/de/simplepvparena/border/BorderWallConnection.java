@@ -1,7 +1,9 @@
 package de.simplepvparena.border;
 
 import de.simplepvparena.arena.BlockPositionCodec;
+import org.jspecify.annotations.NullMarked;
 
+@NullMarked
 public record BorderWallConnection(long firstPosition, long secondPosition) {
 
     public static BorderWallConnection between(long onePosition, long otherPosition) {

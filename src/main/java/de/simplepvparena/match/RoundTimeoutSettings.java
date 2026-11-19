@@ -1,5 +1,8 @@
 package de.simplepvparena.match;
 
+import org.jspecify.annotations.NullMarked;
+
+@NullMarked
 public record RoundTimeoutSettings(int roundTimeoutSeconds,
                                    int suddenDeathWarningSeconds,
                                    double suddenDeathBaseDamage,

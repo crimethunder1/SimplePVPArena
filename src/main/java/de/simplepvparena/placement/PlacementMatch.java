@@ -2,9 +2,11 @@ package de.simplepvparena.placement;
 
 import de.simplepvparena.match.Match;
 import de.simplepvparena.match.MatchScore;
+import org.jspecify.annotations.NullMarked;
 
 import java.util.Objects;
 
+@NullMarked
 public record PlacementMatch(PlacementTeam firstTeam, int firstTeamPoints, PlacementTeam secondTeam,
                              int secondTeamPoints) {
 

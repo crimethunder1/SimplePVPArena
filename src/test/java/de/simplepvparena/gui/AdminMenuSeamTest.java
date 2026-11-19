@@ -22,6 +22,7 @@ import de.simplepvparena.border.BorderSelectorModeRegistry;
 import de.simplepvparena.border.BorderVisualEffect;
 import de.simplepvparena.border.BorderWallPreview;
 import de.simplepvparena.border.SpectatorBorderService;
+import de.simplepvparena.config.ServerModeSetting;
 import de.simplepvparena.diagnostics.PluginDryRunArena;
 import de.simplepvparena.diagnostics.TournamentDryRun;
 import de.simplepvparena.gate.StartGateDuration;
@@ -141,6 +142,8 @@ class AdminMenuSeamTest {
                         enabled -> {
                             throw new UnsupportedOperationException(
                                     "the auto match mode is not written in this test");
+                        }, new ServerModeSetting(), serverMode -> {
+                            throw new UnsupportedOperationException("the server mode is not switched in this test");
                         }),
                 new AdminMenuDependencies.TeamServices(teamRegistry, new TeamMemberLookup(server), () -> { },
                         teamSize -> {

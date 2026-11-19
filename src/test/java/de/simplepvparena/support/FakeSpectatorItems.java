@@ -6,6 +6,7 @@ import org.bukkit.inventory.ItemStack;
 import java.util.ArrayList;
 import java.util.List;
 
+@SuppressWarnings("null")
 public final class FakeSpectatorItems implements SpectatorItems {
 
     public static final String SPECTATOR_TOGGLE_LABEL = "spectator toggle";

@@ -2,6 +2,8 @@ package de.simplepvparena.team;
 
 import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.configuration.file.YamlConfiguration;
+import org.jspecify.annotations.NullMarked;
+import org.jspecify.annotations.Nullable;
 
 import java.io.File;
 import java.io.IOException;
@@ -15,6 +17,7 @@ import java.util.Objects;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+@NullMarked
 public final class TeamStorage {
 
     public static final String BROKEN_FILE_EXTENSION = ".broken";
@@ -122,7 +125,7 @@ public final class TeamStorage {
         }
     }
 
-    private static void removeTemporaryFile(Path temporaryFile, Exception writeFailure) {
+    private static void removeTemporaryFile(@Nullable Path temporaryFile, Exception writeFailure) {
         if (temporaryFile == null) {
             return;
         }

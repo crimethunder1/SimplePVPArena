@@ -4,10 +4,12 @@ import de.simplepvparena.message.ArenaCleaningMessage;
 import de.simplepvparena.message.Messages;
 import de.simplepvparena.message.Placeholder;
 import de.simplepvparena.message.TournamentMessages;
+import org.jspecify.annotations.NullMarked;
 
 import java.util.Objects;
 import java.util.Optional;
 
+@NullMarked
 public final class ArenaCleaningPlan {
 
     private final ArenaShape volume;

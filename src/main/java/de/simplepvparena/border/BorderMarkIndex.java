@@ -4,6 +4,7 @@ import de.simplepvparena.arena.ArenaShape;
 import de.simplepvparena.arena.BlockPositionCodec;
 import de.simplepvparena.arena.BorderColumnReader;
 import de.simplepvparena.arena.HorizontalCellCodec;
+import org.jspecify.annotations.NullMarked;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -14,6 +15,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 
+@NullMarked
 public final class BorderMarkIndex {
 
     private final Map<String, Map<Long, long[]>> positionsByColumnByWorld = new LinkedHashMap<>();

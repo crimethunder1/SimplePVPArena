@@ -4,6 +4,8 @@ import de.simplepvparena.message.Messages;
 import de.simplepvparena.message.Placeholder;
 import de.simplepvparena.message.TeamMessage;
 import org.bukkit.configuration.ConfigurationSection;
+import org.jspecify.annotations.NullMarked;
+import org.jspecify.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -17,6 +19,7 @@ import java.util.UUID;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
+@NullMarked
 public final class TeamRegistry {
 
     public static final int MAXIMUM_NAME_LENGTH = 16;
@@ -44,7 +47,7 @@ public final class TeamRegistry {
         return registerTeam(teamName, members, null);
     }
 
-    public Team registerTeam(String teamName, List<TeamMember> members, TeamColour colour) {
+    public Team registerTeam(String teamName, List<TeamMember> members, @Nullable TeamColour colour) {
         Objects.requireNonNull(teamName, "teamName");
         Optional<String> nameRejection = findNameRejection(teamName);
         if (nameRejection.isPresent()) {
@@ -53,7 +56,7 @@ public final class TeamRegistry {
         return register(teamName, members, colour);
     }
 
-    public static boolean isSameTeamName(String firstTeamName, String secondTeamName) {
+    public static boolean isSameTeamName(@Nullable String firstTeamName, @Nullable String secondTeamName) {
         return firstTeamName != null && secondTeamName != null && toKey(firstTeamName).equals(toKey(secondTeamName));
     }
 
@@ -61,7 +64,7 @@ public final class TeamRegistry {
         return findNameRejection(teamName).isEmpty();
     }
 
-    private Team register(String teamName, List<TeamMember> members, TeamColour colour) {
+    private Team register(String teamName, List<TeamMember> members, @Nullable TeamColour colour) {
         Objects.requireNonNull(teamName, "teamName");
         Objects.requireNonNull(members, "members");
         String key = toKey(teamName);
@@ -261,7 +264,7 @@ public final class TeamRegistry {
         return storedMembers;
     }
 
-    private Optional<String> loadTeam(Object teamEntry, int entryNumber, Consumer<String> colourWarnings) {
+    private Optional<String> loadTeam(@Nullable Object teamEntry, int entryNumber, Consumer<String> colourWarnings) {
         String entryDescription = "Entry " + entryNumber + " of the " + TEAMS_KEY + " list";
         if (!(teamEntry instanceof Map<?, ?> storedTeam)) {
             return Optional.of(entryDescription + ": it is no team");
@@ -285,7 +288,7 @@ public final class TeamRegistry {
         }
     }
 
-    private List<TeamMember> readMembers(Object storedMembers) {
+    private List<TeamMember> readMembers(@Nullable Object storedMembers) {
         if (!(storedMembers instanceof List<?> memberEntries)) {
             throw new IllegalArgumentException("the team has no readable " + MEMBERS_KEY + " list");
         }
@@ -298,7 +301,7 @@ public final class TeamRegistry {
         return members;
     }
 
-    private TeamMember readMember(Object memberEntry, int memberNumber) {
+    private TeamMember readMember(@Nullable Object memberEntry, int memberNumber) {
         String memberDescription = "member " + memberNumber;
         if (!(memberEntry instanceof Map<?, ?> storedMember)) {
             throw new IllegalArgumentException(memberDescription + " is no player");
@@ -319,14 +322,14 @@ public final class TeamRegistry {
         }
     }
 
-    private Optional<TeamColour> readColour(Object storedColour) {
+    private Optional<TeamColour> readColour(@Nullable Object storedColour) {
         if (storedColour == null) {
             return Optional.empty();
         }
         return TeamColour.ofStorageName(readText(storedColour));
     }
 
-    private String readText(Object storedValue) {
+    private @Nullable String readText(@Nullable Object storedValue) {
         if (storedValue instanceof String text && !text.isBlank()) {
             return text;
         }

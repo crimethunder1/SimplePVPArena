@@ -17,6 +17,7 @@ import static org.junit.jupiter.api.Assertions.assertNotSame;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+@SuppressWarnings("null")
 class ConfiguredVisualsTest {
 
     private static final String TOTEM_PATH = CustomVisualSettings.TOTEM_ITEM_CONFIGURATION_PATH;

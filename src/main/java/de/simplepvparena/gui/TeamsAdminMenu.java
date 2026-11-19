@@ -17,6 +17,7 @@ import de.simplepvparena.team.TeamSizeSetting;
 import de.simplepvparena.team.TeamSizeWriter;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
+import org.jspecify.annotations.NullMarked;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -27,6 +28,7 @@ import java.util.OptionalInt;
 import java.util.function.BooleanSupplier;
 import java.util.function.IntSupplier;
 
+@NullMarked
 final class TeamsAdminMenu implements AdminMenu {
 
     private static final int TEAM_MENU_SIZE = 54;

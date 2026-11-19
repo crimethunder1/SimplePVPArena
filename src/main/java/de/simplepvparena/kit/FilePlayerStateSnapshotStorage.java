@@ -3,6 +3,7 @@ package de.simplepvparena.kit;
 import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.inventory.ItemStack;
+import org.jspecify.annotations.NullMarked;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -13,6 +14,7 @@ import java.time.Instant;
 import java.util.Objects;
 import java.util.UUID;
 
+@NullMarked
 public final class FilePlayerStateSnapshotStorage implements PlayerStateSnapshotStorage {
 
     public static final String DIRECTORY_NAME = "player-snapshots";

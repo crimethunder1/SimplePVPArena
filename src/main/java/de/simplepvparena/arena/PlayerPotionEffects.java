@@ -1,9 +1,11 @@
 package de.simplepvparena.arena;
 
 import org.bukkit.entity.Player;
+import org.jspecify.annotations.NullMarked;
 
 import java.util.List;
 
+@NullMarked
 public interface PlayerPotionEffects {
 
     List<SavedPotionEffect> read(Player player);

@@ -1,5 +1,8 @@
 package de.simplepvparena.border;
 
+import org.jspecify.annotations.NullMarked;
+
+@NullMarked
 public final class BorderColumnConnectivity {
 
     private static final int[] COLUMN_OFFSETS_X = {1, -1, 0, 0, 1, 1, -1, -1};

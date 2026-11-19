@@ -3,6 +3,7 @@ package de.simplepvparena.tournament;
 import java.util.ArrayList;
 import java.util.List;
 
+@SuppressWarnings("null")
 final class RecordingKitChoicePresenter implements KitChoicePresenter {
 
     private final List<PendingKitChoice> shownChoices = new ArrayList<>();

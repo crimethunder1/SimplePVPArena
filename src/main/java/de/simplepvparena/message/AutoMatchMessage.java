@@ -1,7 +1,10 @@
 package de.simplepvparena.message;
 
+import org.jspecify.annotations.NullMarked;
+
 import java.util.Set;
 
+@NullMarked
 public enum AutoMatchMessage implements MessageKey {
 
     ANNOUNCEMENT("auto-match.announcement", "firstTeam", "secondTeam", "count"),

@@ -1,7 +1,10 @@
 package de.simplepvparena.message;
 
+import org.jspecify.annotations.NullMarked;
+
 import java.util.Set;
 
+@NullMarked
 public enum KitMenuMessage implements MessageKey {
 
     TITLE("kit-menu.title", "page"),

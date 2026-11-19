@@ -1,10 +1,13 @@
 package de.simplepvparena.arena;
 
+import org.jspecify.annotations.NullMarked;
+
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
 
+@NullMarked
 final class ArenaGapTrailRegistry {
 
     private final Map<UUID, Runnable> trailCancellersByPlayer = new HashMap<>();

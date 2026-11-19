@@ -1,7 +1,10 @@
 package de.simplepvparena.message;
 
+import org.jspecify.annotations.NullMarked;
+
 import java.util.Set;
 
+@NullMarked
 public enum ArenaSetupMessage implements MessageKey {
 
     ARENA_MENU_REFERENCE("arena.menu-reference", "tile"),

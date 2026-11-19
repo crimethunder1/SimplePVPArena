@@ -1,5 +1,8 @@
 package de.simplepvparena.arena;
 
+import org.jspecify.annotations.NullMarked;
+
+@NullMarked
 public final class ArenaCleaningLayerSchedule {
 
     public static final long MINIMUM_ANIMATED_LAYER_TICKS = 1L;

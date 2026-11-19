@@ -2,7 +2,9 @@ package de.simplepvparena.diagnostics;
 
 import de.simplepvparena.message.DryRunMessage;
 import de.simplepvparena.message.Messages;
+import org.jspecify.annotations.NullMarked;
 
+@NullMarked
 public enum DryRunStatus {
 
     PASSED(DryRunMessage.STATUS_PASSED),

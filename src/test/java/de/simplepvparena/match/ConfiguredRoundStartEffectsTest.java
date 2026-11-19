@@ -14,6 +14,7 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
+@SuppressWarnings("null")
 class ConfiguredRoundStartEffectsTest {
 
     private static final String TOTEM_IDENTIFIER = "simplepvparena:totem";

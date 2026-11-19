@@ -3,6 +3,8 @@ package de.simplepvparena.config;
 import de.simplepvparena.arena.ArenaConfigurationWriter;
 import de.simplepvparena.arena.ArenaRegistry;
 import org.bukkit.configuration.file.FileConfiguration;
+import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.NullMarked;
 
 import java.io.File;
 import java.io.IOException;
@@ -11,15 +13,16 @@ import java.util.function.Supplier;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+@NullMarked
 public final class ArenaConfigurationFileWriter implements ArenaConfigurationWriter {
 
     private final ArenaRegistry arenaRegistry;
-    private final Supplier<? extends FileConfiguration> configurationSource;
+    private final Supplier<? extends @NonNull FileConfiguration> configurationSource;
     private final File configurationFile;
     private final Logger logger;
 
     public ArenaConfigurationFileWriter(ArenaRegistry arenaRegistry,
-                                        Supplier<? extends FileConfiguration> configurationSource,
+                                        Supplier<? extends @NonNull FileConfiguration> configurationSource,
                                         File configurationFile, Logger logger) {
         this.arenaRegistry = Objects.requireNonNull(arenaRegistry, "arenaRegistry");
         this.configurationSource = Objects.requireNonNull(configurationSource, "configurationSource");

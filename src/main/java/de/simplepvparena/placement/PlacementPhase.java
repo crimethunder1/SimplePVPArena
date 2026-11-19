@@ -1,5 +1,8 @@
 package de.simplepvparena.placement;
 
+import org.jspecify.annotations.NullMarked;
+
+@NullMarked
 public enum PlacementPhase {
     TOURNAMENT_RUNNING,
     TOURNAMENT_PAUSED,

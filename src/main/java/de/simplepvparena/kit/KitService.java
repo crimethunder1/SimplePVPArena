@@ -16,6 +16,8 @@ import org.bukkit.plugin.Plugin;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 import org.bukkit.util.Vector;
+import org.jspecify.annotations.NullMarked;
+import org.jspecify.annotations.Nullable;
 
 import java.io.IOException;
 import java.util.HashMap;
@@ -25,6 +27,7 @@ import java.util.Objects;
 import java.util.UUID;
 import java.util.function.Consumer;
 
+@NullMarked
 public final class KitService {
 
     public static final String KIT_APPLIED_KEY_NAME = "kit_applied";
@@ -35,8 +38,8 @@ public final class KitService {
     private static final int FULL_FOOD_LEVEL = 20;
     private static final float FULL_SATURATION = 20.0f;
 
-    private final NamespacedKey kitAppliedKey;
-    private final PlayerStateSnapshotStorage snapshotStorage;
+    private final @Nullable NamespacedKey kitAppliedKey;
+    private final @Nullable PlayerStateSnapshotStorage snapshotStorage;
     private final Consumer<String> warningReporter;
     private final Map<UUID, PlayerStateSnapshot> snapshotsInMemory = new HashMap<>();
 
@@ -69,8 +72,9 @@ public final class KitService {
     }
 
     public void applyKit(Player player) {
-        if (snapshotStorage != null && !hasAppliedKit(player)) {
-            saveSnapshot(player);
+        PlayerStateSnapshotStorage storage = snapshotStorage;
+        if (storage != null && !hasAppliedKit(player)) {
+            saveSnapshot(storage, player);
         }
         resetPlayerState(player);
         PlayerInventory inventory = player.getInventory();
@@ -84,18 +88,19 @@ public final class KitService {
     }
 
     public void clearKit(Player player) {
-        if (snapshotStorage == null) {
+        PlayerStateSnapshotStorage storage = snapshotStorage;
+        if (storage == null) {
             clearWithoutSnapshot(player);
             return;
         }
         PlayerStateSnapshot snapshotInMemory = snapshotsInMemory.get(player.getUniqueId());
         if (snapshotInMemory != null) {
-            restoreFromSnapshot(player, snapshotInMemory);
+            restoreFromSnapshot(storage, player, snapshotInMemory);
             return;
         }
-        PlayerStateSnapshotLookup lookup = snapshotStorage.find(player.getUniqueId());
+        PlayerStateSnapshotLookup lookup = storage.find(player.getUniqueId());
         switch (lookup.outcome()) {
-            case FOUND -> restoreFromSnapshot(player, lookup.snapshot().orElseThrow());
+            case FOUND -> restoreFromSnapshot(storage, player, lookup.snapshot().orElseThrow());
             case MISSING -> {
                 if (hasAppliedKit(player)) {
                     clearWithoutSnapshot(player);
@@ -117,8 +122,8 @@ public final class KitService {
     }
 
     public boolean hasAppliedKit(Player player) {
-        return kitAppliedKey != null
-                && player.getPersistentDataContainer().has(kitAppliedKey, PersistentDataType.BYTE);
+        NamespacedKey key = kitAppliedKey;
+        return key != null && player.getPersistentDataContainer().has(key, PersistentDataType.BYTE);
     }
 
     private void clearWithoutSnapshot(Player player) {
@@ -126,7 +131,7 @@ public final class KitService {
         removeMarker(player);
     }
 
-    private void restoreFromSnapshot(Player player, PlayerStateSnapshot snapshot) {
+    private void restoreFromSnapshot(PlayerStateSnapshotStorage storage, Player player, PlayerStateSnapshot snapshot) {
         try {
             resetPlayerState(player);
             restoreSnapshot(player, snapshot);
@@ -137,16 +142,16 @@ public final class KitService {
             return;
         }
         removeMarker(player);
-        forgetSnapshot(player);
+        forgetSnapshot(storage, player);
     }
 
-    private void saveSnapshot(Player player) {
+    private void saveSnapshot(PlayerStateSnapshotStorage storage, Player player) {
         PlayerStateSnapshot snapshot = new PlayerStateSnapshot(player.getInventory().getContents(),
                 player.getLevel(), player.getExp(), player.getFoodLevel(), player.getSaturation(),
                 player.getHealth());
         snapshotsInMemory.put(player.getUniqueId(), snapshot);
         try {
-            snapshotStorage.save(player.getUniqueId(), snapshot);
+            storage.save(player.getUniqueId(), snapshot);
         } catch (IOException failure) {
             warningReporter.accept(Messages.text(PlayerStateMessage.NOT_WRITTEN,
                     Placeholder.of("player", player.getName()),
@@ -164,19 +169,20 @@ public final class KitService {
                 Math.min(snapshot.getHealth(), resolveMaximumHealth(player))));
     }
 
-    private void forgetSnapshot(Player player) {
+    private void forgetSnapshot(PlayerStateSnapshotStorage storage, Player player) {
         try {
-            snapshotStorage.delete(player.getUniqueId());
+            storage.delete(player.getUniqueId());
         } catch (IOException deleteFailure) {
-            setSnapshotAsideAsRestored(player, deleteFailure);
+            setSnapshotAsideAsRestored(storage, player, deleteFailure);
         } finally {
             snapshotsInMemory.remove(player.getUniqueId());
         }
     }
 
-    private void setSnapshotAsideAsRestored(Player player, IOException deleteFailure) {
+    private void setSnapshotAsideAsRestored(PlayerStateSnapshotStorage storage, Player player,
+                                            IOException deleteFailure) {
         try {
-            snapshotStorage.setAsideAsRestored(player.getUniqueId());
+            storage.setAsideAsRestored(player.getUniqueId());
         } catch (IOException setAsideFailure) {
             warningReporter.accept(Messages.text(PlayerStateMessage.FILE_NOT_DELETED,
                     Placeholder.of("player", player.getName()),

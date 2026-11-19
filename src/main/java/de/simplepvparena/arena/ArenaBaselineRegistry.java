@@ -1,10 +1,14 @@
 package de.simplepvparena.arena;
 
+import org.jspecify.annotations.NullMarked;
+import org.jspecify.annotations.Nullable;
+
 import java.util.Optional;
 
+@NullMarked
 public final class ArenaBaselineRegistry {
 
-    private ArenaBaselineSnapshot snapshot;
+    private @Nullable ArenaBaselineSnapshot snapshot;
 
     public void store(ArenaBaselineSnapshot snapshot) {
         this.snapshot = snapshot;

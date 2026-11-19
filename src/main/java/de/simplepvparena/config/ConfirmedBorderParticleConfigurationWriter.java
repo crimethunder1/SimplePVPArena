@@ -3,6 +3,8 @@ package de.simplepvparena.config;
 import de.simplepvparena.border.ConfirmedBorderParticleSettings;
 import de.simplepvparena.border.ConfirmedBorderParticleWriter;
 import org.bukkit.configuration.file.FileConfiguration;
+import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.NullMarked;
 
 import java.io.File;
 import java.io.IOException;
@@ -11,14 +13,16 @@ import java.util.function.Supplier;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+@NullMarked
 public final class ConfirmedBorderParticleConfigurationWriter implements ConfirmedBorderParticleWriter {
 
-    private final Supplier<? extends FileConfiguration> configurationSource;
+    private final Supplier<? extends @NonNull FileConfiguration> configurationSource;
     private final File configurationFile;
     private final Logger logger;
 
-    public ConfirmedBorderParticleConfigurationWriter(Supplier<? extends FileConfiguration> configurationSource,
-                                                      File configurationFile, Logger logger) {
+    public ConfirmedBorderParticleConfigurationWriter(
+            Supplier<? extends @NonNull FileConfiguration> configurationSource, File configurationFile,
+            Logger logger) {
         this.configurationSource = Objects.requireNonNull(configurationSource, "configurationSource");
         this.configurationFile = Objects.requireNonNull(configurationFile, "configurationFile");
         this.logger = Objects.requireNonNull(logger, "logger");

@@ -1,5 +1,8 @@
 package de.simplepvparena.match;
 
+import org.jspecify.annotations.NullMarked;
+
+@NullMarked
 public interface UnequalTeamVotePresenter {
 
     UnequalTeamVotePresenter NONE = new UnequalTeamVotePresenter() {

@@ -1,7 +1,10 @@
 package de.simplepvparena.message;
 
+import org.jspecify.annotations.NullMarked;
+
 import java.util.Set;
 
+@NullMarked
 public enum MatchMessage implements MessageKey {
 
     MENU_REFERENCE("match.menu-reference", "tile"),

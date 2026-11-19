@@ -160,6 +160,8 @@ class MatchAdminMenuAutoMatchTest {
                 Fragt vorher nach einer Bestätigung
                 20 | BARRIER | Ergebnis zurücknehmen | \
                 Öffnet die entschiedenen Matches, deren Folgematch noch nicht begonnen hat
+                21 | HOPPER | Server-Modus | Auto: die Arena auf einem laufenden Server / \
+                Auto-Matches und Inventarabgabe beim Betreten des Bereichs / Klicke, um in den Event-Modus zu wechseln
                 22 | OAK_DOOR | Zurück | Zurück zum Hauptmenü
                 """.formatted(fixture.runningFirstTeamName(), fixture.runningSecondTeamName()),
                 fixture.describeLastMenu());

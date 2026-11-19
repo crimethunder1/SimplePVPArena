@@ -4,10 +4,12 @@ import net.kyori.adventure.text.Component;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.plugin.Plugin;
+import org.jspecify.annotations.NullMarked;
 
 import java.util.Objects;
 import java.util.function.Consumer;
 
+@NullMarked
 final class InventoryAdminMenuWindows implements AdminMenuWindows {
 
     private final Plugin plugin;

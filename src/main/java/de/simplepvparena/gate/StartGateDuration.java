@@ -2,7 +2,9 @@ package de.simplepvparena.gate;
 
 import de.simplepvparena.message.Messages;
 import de.simplepvparena.message.StartGateMessage;
+import org.jspecify.annotations.NullMarked;
 
+@NullMarked
 public final class StartGateDuration {
 
     public static final int DEFAULT_SECONDS = 10;

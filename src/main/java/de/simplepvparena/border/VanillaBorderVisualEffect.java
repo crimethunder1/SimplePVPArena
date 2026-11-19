@@ -4,10 +4,12 @@ import org.bukkit.Color;
 import org.bukkit.Location;
 import org.bukkit.Particle;
 import org.bukkit.entity.Player;
+import org.jspecify.annotations.NullMarked;
 
 import java.util.Objects;
 import java.util.function.Consumer;
 
+@NullMarked
 public final class VanillaBorderVisualEffect implements BorderVisualEffect {
 
     public static final Particle COLOURED_BORDER_BLOCK_PARTICLE = Particle.DUST;

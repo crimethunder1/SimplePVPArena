@@ -5,9 +5,11 @@ import de.simplepvparena.message.MessageKey;
 import de.simplepvparena.message.Messages;
 import de.simplepvparena.message.Placeholder;
 import org.bukkit.Material;
+import org.jspecify.annotations.NullMarked;
 
 import java.util.List;
 
+@NullMarked
 final class MenuItems {
 
     static final Material INFO_MATERIAL = Material.BOOK;

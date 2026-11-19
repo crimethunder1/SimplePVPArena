@@ -1,8 +1,11 @@
 package de.simplepvparena.arena;
 
+import org.jspecify.annotations.NullMarked;
+
 import java.util.Arrays;
 import java.util.function.IntUnaryOperator;
 
+@NullMarked
 public final class ArenaCleaningColumnSample {
 
     private static final long[] NO_COLUMNS = new long[0];

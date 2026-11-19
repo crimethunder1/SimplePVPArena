@@ -3,9 +3,11 @@ package de.simplepvparena.arena;
 import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.util.BoundingBox;
+import org.jspecify.annotations.NullMarked;
 
 import java.util.Optional;
 
+@NullMarked
 public final class ArenaFightRegion {
 
     public static final int SEARCHED_BLOCKS_ABOVE_THE_WALL_TOP = 20;

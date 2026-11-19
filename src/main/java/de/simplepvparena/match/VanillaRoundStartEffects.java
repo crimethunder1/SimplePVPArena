@@ -4,7 +4,9 @@ import org.bukkit.EntityEffect;
 import org.bukkit.entity.Player;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
+import org.jspecify.annotations.NullMarked;
 
+@NullMarked
 public final class VanillaRoundStartEffects implements RoundStartEffects {
 
     private static final int BLINDNESS_AMPLIFIER = 0;

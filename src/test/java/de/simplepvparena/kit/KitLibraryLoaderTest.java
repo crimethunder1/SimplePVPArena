@@ -25,6 +25,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+@SuppressWarnings("null")
 class KitLibraryLoaderTest {
 
     private static final String MIGRATION_NOTICE = "The kit of config.yml was taken over into kits.yml as the kit "

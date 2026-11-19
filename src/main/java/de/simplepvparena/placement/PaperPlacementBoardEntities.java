@@ -20,6 +20,8 @@ import org.bukkit.scheduler.BukkitTask;
 import org.bukkit.util.Transformation;
 import org.joml.Quaternionf;
 import org.joml.Vector3f;
+import org.jspecify.annotations.NullMarked;
+import org.jspecify.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -30,6 +32,7 @@ import java.util.Optional;
 import java.util.UUID;
 import java.util.function.Function;
 
+@NullMarked
 public final class PaperPlacementBoardEntities implements PlacementBoardEntities {
 
     public static final String MARKER_KEY_NAME = "placement_board_display";
@@ -315,8 +318,8 @@ public final class PaperPlacementBoardEntities implements PlacementBoardEntities
         private final List<TextDisplay> screens;
         private final Location centre;
 
-        private BukkitTask spin;
-        private BukkitTask flames;
+        private @Nullable BukkitTask spin;
+        private @Nullable BukkitTask flames;
         private float yaw;
         private boolean up;
         private int burns;

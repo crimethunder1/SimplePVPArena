@@ -22,11 +22,13 @@ import org.bukkit.event.block.BlockPistonExtendEvent;
 import org.bukkit.event.block.BlockPistonRetractEvent;
 import org.bukkit.event.entity.EntityChangeBlockEvent;
 import org.bukkit.event.entity.EntityExplodeEvent;
+import org.jspecify.annotations.NullMarked;
 
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
+@NullMarked
 public final class ArenaEnvironmentProtectionListener implements Listener {
 
     private final ArenaRegistry arenaRegistry;

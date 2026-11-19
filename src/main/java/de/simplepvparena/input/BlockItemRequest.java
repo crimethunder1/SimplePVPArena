@@ -4,12 +4,14 @@ import de.simplepvparena.message.InputMessage;
 import de.simplepvparena.message.Messages;
 import de.simplepvparena.message.Placeholder;
 import org.bukkit.Material;
+import org.jspecify.annotations.NullMarked;
 
 import java.util.Locale;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Predicate;
 
+@NullMarked
 public record BlockItemRequest(Material material, int amount) {
 
     public static final int MINIMUM_AMOUNT = 1;

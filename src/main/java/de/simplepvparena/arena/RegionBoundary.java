@@ -2,9 +2,11 @@ package de.simplepvparena.arena;
 
 import org.bukkit.Location;
 import org.bukkit.World;
+import org.jspecify.annotations.NullMarked;
 
 import java.util.Objects;
 
+@NullMarked
 public final class RegionBoundary {
 
     private final String worldName;

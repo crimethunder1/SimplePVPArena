@@ -10,6 +10,8 @@ import de.simplepvparena.team.TeamMember;
 import de.simplepvparena.team.TeamRegistry;
 import de.simplepvparena.team.TeamSizeSetting;
 import org.bukkit.entity.Player;
+import org.jspecify.annotations.NullMarked;
+import org.jspecify.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -24,6 +26,7 @@ import java.util.function.BooleanSupplier;
 import java.util.function.Function;
 import java.util.random.RandomGenerator;
 
+@NullMarked
 public final class RandomTeamFormation {
 
     public static final int MINIMUM_TEAM_COUNT = 2;
@@ -90,7 +93,7 @@ public final class RandomTeamFormation {
         teamConfigurationSaver.run();
         TournamentMessages.sendSuccess(admin, Messages.plural(RegistrationMessage.FORMING_FORMED, teams.size(),
                 Placeholder.of("players", registrationService.getCount())));
-        teams.forEach(this::tellTheMembers);
+        teams.forEach(team -> tellTheMembers(team, onlinePlayerLookup));
         return true;
     }
 
@@ -98,14 +101,21 @@ public final class RandomTeamFormation {
         List<RegistrationEntry> entries = new ArrayList<>(registrationService.getEntries());
         Collections.shuffle(entries, randomGenerator);
         int teamSize = teamSizeSetting.getTeamSize();
-        TeamRegistry formedTeams = new TeamRegistry();
-        Set<String> usedNames = new HashSet<>();
+        List<List<TeamMember>> memberGroups = new ArrayList<>();
         for (int firstIndex = 0; firstIndex < entries.size(); firstIndex += teamSize) {
-            int teamNumber = formedTeams.getTeamCount() + 1;
-            List<TeamMember> members = entries.subList(firstIndex, Math.min(firstIndex + teamSize, entries.size()))
+            memberGroups.add(entries.subList(firstIndex, Math.min(firstIndex + teamSize, entries.size()))
                     .stream()
                     .map(entry -> new TeamMember(entry.uniqueId(), entry.playerName()))
-                    .toList();
+                    .toList());
+        }
+        return formNumberedTeams(memberGroups);
+    }
+
+    static List<Team> formNumberedTeams(List<List<TeamMember>> memberGroups) {
+        TeamRegistry formedTeams = new TeamRegistry();
+        Set<String> usedNames = new HashSet<>();
+        for (List<TeamMember> members : memberGroups) {
+            int teamNumber = formedTeams.getTeamCount() + 1;
             TeamColour colour = teamNumber <= TeamColour.values().length ? TeamColour.values()[teamNumber - 1] : null;
             String teamName = nameTeam(teamNumber, colour, usedNames);
             formedTeams.registerTeam(teamName, members, colour);
@@ -113,7 +123,7 @@ public final class RandomTeamFormation {
         return List.copyOf(formedTeams.getTeams());
     }
 
-    private static String nameTeam(int teamNumber, TeamColour colour, Set<String> usedNames) {
+    private static String nameTeam(int teamNumber, @Nullable TeamColour colour, Set<String> usedNames) {
         String teamName = colour == null ? null : colour.getDisplayName();
         if (teamName == null || !TeamRegistry.isAllowedTeamName(teamName)
                 || usedNames.contains(teamName.toLowerCase(Locale.ROOT))) {
@@ -123,7 +133,7 @@ public final class RandomTeamFormation {
         return teamName;
     }
 
-    private void tellTheMembers(Team team) {
+    static void tellTheMembers(Team team, Function<UUID, Player> onlinePlayerLookup) {
         for (TeamMember member : team.getMembers()) {
             Player player = onlinePlayerLookup.apply(member.uniqueId());
             if (player == null) {

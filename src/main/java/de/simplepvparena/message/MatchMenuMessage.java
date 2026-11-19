@@ -1,7 +1,10 @@
 package de.simplepvparena.message;
 
+import org.jspecify.annotations.NullMarked;
+
 import java.util.Set;
 
+@NullMarked
 public enum MatchMenuMessage implements MessageKey {
 
     TITLE("match-menu.title"),
@@ -46,6 +49,15 @@ public enum MatchMenuMessage implements MessageKey {
     AUTO_MATCH_SWITCHED_OFF("match-menu.auto-match.switched-off"),
     AUTO_MATCH_SWITCHED_ON_NOT_WRITTEN("match-menu.auto-match.switched-on-not-written", "reason"),
     AUTO_MATCH_SWITCHED_OFF_NOT_WRITTEN("match-menu.auto-match.switched-off-not-written", "reason"),
+    AUTO_MATCH_ONLY_IN_AUTO_MODE("match-menu.tile.auto-match.only-in-auto-mode"),
+    SERVER_MODE_TITLE("match-menu.tile.server-mode.title"),
+    SERVER_MODE_EVENT("match-menu.tile.server-mode.event"),
+    SERVER_MODE_AUTO("match-menu.tile.server-mode.auto"),
+    SERVER_MODE_SWITCH_TO_AUTO("match-menu.tile.server-mode.switch-to-auto"),
+    SERVER_MODE_SWITCH_TO_EVENT("match-menu.tile.server-mode.switch-to-event"),
+    SERVER_MODE_SWITCHED_TO_EVENT("match-menu.server-mode.switched-to-event"),
+    SERVER_MODE_SWITCHED_TO_AUTO("match-menu.server-mode.switched-to-auto"),
+    SERVER_MODE_NOT_SWITCHED("match-menu.server-mode.not-switched", "reason"),
     CANCEL_CONFIRMATION("match-menu.cancel-confirmation"),
     RESTART_CONFIRMATION("match-menu.restart-confirmation"),
     FORCE_RESULT_MENU_TITLE("force-result-menu.title", "match"),

@@ -1,9 +1,11 @@
 package de.simplepvparena.particle;
 
 import org.bukkit.Particle;
+import org.jspecify.annotations.NullMarked;
 
 import java.util.Optional;
 
+@NullMarked
 public final class ParticleTypes {
 
     private ParticleTypes() {

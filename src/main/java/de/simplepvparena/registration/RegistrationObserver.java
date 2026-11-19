@@ -1,10 +1,12 @@
 package de.simplepvparena.registration;
 
 import org.bukkit.entity.Player;
+import org.jspecify.annotations.NullMarked;
 
 import java.util.Optional;
 import java.util.UUID;
 
+@NullMarked
 public interface RegistrationObserver {
 
     void playerRegistered(Player player);

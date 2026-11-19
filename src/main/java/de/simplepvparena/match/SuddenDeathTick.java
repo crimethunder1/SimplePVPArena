@@ -1,5 +1,7 @@
 package de.simplepvparena.match;
 
+import org.jspecify.annotations.NullMarked;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -9,6 +11,7 @@ import java.util.Random;
 import java.util.UUID;
 import java.util.function.Consumer;
 
+@NullMarked
 public final class SuddenDeathTick {
 
     private final Random random;

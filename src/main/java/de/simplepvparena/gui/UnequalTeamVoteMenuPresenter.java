@@ -3,6 +3,8 @@ package de.simplepvparena.gui;
 import de.simplepvparena.match.PendingUnequalTeamVote;
 import de.simplepvparena.match.UnequalTeamVotePresenter;
 import org.bukkit.entity.Player;
+import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.NullMarked;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -13,14 +15,15 @@ import java.util.Objects;
 import java.util.UUID;
 import java.util.function.Supplier;
 
+@NullMarked
 final class UnequalTeamVoteMenuPresenter implements UnequalTeamVotePresenter {
 
     private final AdminMenuNavigation navigation;
-    private final Supplier<Collection<? extends Player>> onlinePlayers;
+    private final Supplier<Collection<? extends @NonNull Player>> onlinePlayers;
     private final Map<UUID, AdminMenuHolder> openedHoldersByPlayer = new HashMap<>();
 
     UnequalTeamVoteMenuPresenter(AdminMenuNavigation navigation,
-                                 Supplier<Collection<? extends Player>> onlinePlayers) {
+                                 Supplier<Collection<? extends @NonNull Player>> onlinePlayers) {
         this.navigation = Objects.requireNonNull(navigation, "navigation");
         this.onlinePlayers = Objects.requireNonNull(onlinePlayers, "onlinePlayers");
     }

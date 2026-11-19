@@ -1,12 +1,14 @@
 package de.simplepvparena.diagnostics;
 
 import de.simplepvparena.team.TeamMember;
+import org.jspecify.annotations.NullMarked;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
 
+@NullMarked
 public record DryRunTeam(String teamName, List<TeamMember> members) {
 
     public static final String FIRST_TEAM_NAME = "Dry-Run-Alpha";

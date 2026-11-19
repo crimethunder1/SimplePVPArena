@@ -1,7 +1,9 @@
 package de.simplepvparena.border;
 
 import de.simplepvparena.particle.ParticleNames;
+import org.jspecify.annotations.NullMarked;
 
+@NullMarked
 public record ConfirmedBorderParticleSettings(String particleName, double height, int red, int green, int blue) {
 
     public static final String SECTION_CONFIGURATION_PATH = "border.confirmed-particle";

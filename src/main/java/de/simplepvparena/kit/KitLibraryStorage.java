@@ -1,7 +1,10 @@
 package de.simplepvparena.kit;
 
+import org.jspecify.annotations.NullMarked;
+
 import java.io.IOException;
 
+@NullMarked
 public interface KitLibraryStorage {
 
     KitLibraryStorage NONE = new KitLibraryStorage() {

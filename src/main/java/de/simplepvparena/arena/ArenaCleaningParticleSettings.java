@@ -1,7 +1,9 @@
 package de.simplepvparena.arena;
 
 import de.simplepvparena.particle.ParticleNames;
+import org.jspecify.annotations.NullMarked;
 
+@NullMarked
 public record ArenaCleaningParticleSettings(boolean enabled, String particleName,
                                             double totalDurationSeconds, int columnsPerTick) {
 

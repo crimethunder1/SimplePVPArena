@@ -1,7 +1,10 @@
 package de.simplepvparena.match;
 
+import org.jspecify.annotations.NullMarked;
+
 import java.util.Optional;
 
+@NullMarked
 @FunctionalInterface
 public interface CountdownImages {
 

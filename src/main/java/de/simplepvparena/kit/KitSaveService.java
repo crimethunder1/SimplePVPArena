@@ -5,10 +5,12 @@ import de.simplepvparena.message.Messages;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
+import org.jspecify.annotations.NullMarked;
 
 import java.util.Objects;
 import java.util.Optional;
 
+@NullMarked
 public final class KitSaveService {
 
     private final KitLibrary kitLibrary;

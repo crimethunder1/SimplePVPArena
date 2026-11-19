@@ -1,7 +1,10 @@
 package de.simplepvparena.message;
 
+import org.jspecify.annotations.NullMarked;
+
 import java.util.Set;
 
+@NullMarked
 public enum MenuMessage implements MessageKey {
 
     BACK_NAME("menu.back.name"),

@@ -7,18 +7,21 @@ import de.simplepvparena.message.Messages;
 import de.simplepvparena.message.Placeholder;
 import de.simplepvparena.message.TournamentMessages;
 import org.bukkit.Location;
+import org.jspecify.annotations.NullMarked;
+import org.jspecify.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
+@NullMarked
 public final class Arena {
 
-    private ArenaShape shape;
-    private PositionSnapshot firstTeamSpawn;
-    private PositionSnapshot secondTeamSpawn;
-    private PositionSnapshot tribuneSpawn;
-    private PositionSnapshot standingsBoard;
+    private @Nullable ArenaShape shape;
+    private @Nullable PositionSnapshot firstTeamSpawn;
+    private @Nullable PositionSnapshot secondTeamSpawn;
+    private @Nullable PositionSnapshot tribuneSpawn;
+    private @Nullable PositionSnapshot standingsBoard;
 
     public void setShape(ArenaShape shape) {
         this.shape = shape;
@@ -138,7 +141,7 @@ public final class Arena {
         return Optional.ofNullable(tribuneSpawn);
     }
 
-    public void setStandingsBoard(PositionSnapshot position) {
+    public void setStandingsBoard(@Nullable PositionSnapshot position) {
         standingsBoard = position;
     }
 
@@ -183,10 +186,11 @@ public final class Arena {
     }
 
     private boolean fitsShape(ArenaSpawnType spawnType, PositionSnapshot position) {
-        if (shape == null || !spawnType.mustLieOutsideFightArea()) {
+        ArenaShape currentShape = shape;
+        if (currentShape == null || !spawnType.mustLieOutsideFightArea()) {
             return true;
         }
-        return !shape.contains(position.worldName(), position.x(), position.z());
+        return !currentShape.contains(position.worldName(), position.x(), position.z());
     }
 
     private String describeMisplacedSpawn(ArenaSpawnType spawnType, PositionSnapshot position) {

@@ -15,6 +15,7 @@ import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.event.ClickEvent;
 import net.kyori.adventure.text.event.HoverEvent;
 import org.bukkit.entity.Player;
+import org.jspecify.annotations.NullMarked;
 
 import java.util.HashMap;
 import java.util.LinkedHashSet;
@@ -29,6 +30,7 @@ import java.util.function.Function;
 import java.util.function.LongSupplier;
 import java.util.function.Supplier;
 
+@NullMarked
 public final class PlayAgainService implements PlayAgainRule {
 
     public static final String COMMAND_ARGUMENT = "playagain";

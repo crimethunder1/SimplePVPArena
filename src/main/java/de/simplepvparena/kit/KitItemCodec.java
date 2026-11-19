@@ -1,8 +1,11 @@
 package de.simplepvparena.kit;
 
+import org.jspecify.annotations.NullMarked;
+
 import java.util.Base64;
 import java.util.Optional;
 
+@NullMarked
 public final class KitItemCodec {
 
     private KitItemCodec() {

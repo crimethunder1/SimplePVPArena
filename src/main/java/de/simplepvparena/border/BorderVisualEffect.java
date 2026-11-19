@@ -2,9 +2,11 @@ package de.simplepvparena.border;
 
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
+import org.jspecify.annotations.NullMarked;
 
 import java.util.function.Consumer;
 
+@NullMarked
 public interface BorderVisualEffect {
 
     void showAt(Player player, Location borderBlockCenter, BorderConnectivity connectivity);

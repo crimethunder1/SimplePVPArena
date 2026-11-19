@@ -1,7 +1,10 @@
 package de.simplepvparena.message;
 
+import org.jspecify.annotations.NullMarked;
+
 import java.util.Set;
 
+@NullMarked
 public enum KitChoiceMessage implements MessageKey {
 
     TITLE("kit-choice-menu.title", "match"),

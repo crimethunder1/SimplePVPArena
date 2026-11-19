@@ -1,5 +1,8 @@
 package de.simplepvparena.arena;
 
+import org.jspecify.annotations.NullMarked;
+
+@NullMarked
 public final class BlockPositionCodec {
 
     public static final int MINIMUM_HORIZONTAL_COORDINATE = -(1 << 25);

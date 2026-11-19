@@ -2,7 +2,9 @@ package de.simplepvparena.arena;
 
 import de.simplepvparena.message.ArenaSetupMessage;
 import de.simplepvparena.message.MessageKey;
+import org.jspecify.annotations.NullMarked;
 
+@NullMarked
 public enum MarkClearingKind {
 
     BORDER_MARKS(ArenaSetupMessage.BORDER_MARKS_FORGOTTEN, ArenaSetupMessage.BORDER_MARKS_FORGOTTEN_NOT_WRITTEN),

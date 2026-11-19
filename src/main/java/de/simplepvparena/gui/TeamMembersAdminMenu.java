@@ -12,11 +12,13 @@ import de.simplepvparena.team.TeamSizeSetting;
 import de.simplepvparena.tournament.TournamentManager;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
+import org.jspecify.annotations.NullMarked;
 
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
+@NullMarked
 final class TeamMembersAdminMenu implements AdminMenu {
 
     private static final int FIRST_MEMBER_SLOT = 9;

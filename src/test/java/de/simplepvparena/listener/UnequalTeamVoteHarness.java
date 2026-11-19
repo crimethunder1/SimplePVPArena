@@ -32,6 +32,7 @@ import java.util.random.RandomGenerator;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+@SuppressWarnings("null")
 final class UnequalTeamVoteHarness {
 
     static final int AUTO_MATCH_START_DELAY_SECONDS = 10;

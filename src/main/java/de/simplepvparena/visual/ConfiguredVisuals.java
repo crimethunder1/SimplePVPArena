@@ -7,6 +7,7 @@ import de.simplepvparena.message.Placeholder;
 import de.simplepvparena.message.VisualMessage;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
+import org.jspecify.annotations.NullMarked;
 
 import java.util.HashSet;
 import java.util.Objects;
@@ -15,6 +16,7 @@ import java.util.Set;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
+@NullMarked
 public final class ConfiguredVisuals implements CountdownImages {
 
     private static final int THREE_SECONDS = 3;

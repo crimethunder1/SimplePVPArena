@@ -1,5 +1,8 @@
 package de.simplepvparena.arena;
 
+import org.jspecify.annotations.NullMarked;
+
+@NullMarked
 public final class HorizontalCellCodec {
 
     private static final long LOWER_MASK = 0xFFFFFFFFL;

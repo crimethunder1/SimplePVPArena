@@ -3,6 +3,7 @@ package de.simplepvparena.match;
 import java.util.ArrayList;
 import java.util.List;
 
+@SuppressWarnings("null")
 final class RecordingUnequalTeamVotePresenter implements UnequalTeamVotePresenter {
 
     private final List<PendingUnequalTeamVote> shownVotes = new ArrayList<>();

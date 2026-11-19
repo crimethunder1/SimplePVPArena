@@ -17,12 +17,14 @@ import org.bukkit.inventory.PlayerInventory;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.plugin.Plugin;
+import org.jspecify.annotations.NullMarked;
 
 import java.io.IOException;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Consumer;
 
+@NullMarked
 public final class RegistrationMachineService {
 
     public static final Material ITEM_MATERIAL = Material.DISPENSER;

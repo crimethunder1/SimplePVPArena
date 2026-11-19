@@ -4,10 +4,12 @@ import de.simplepvparena.message.ArenaSetupMessage;
 import de.simplepvparena.message.Messages;
 import de.simplepvparena.message.Placeholder;
 import org.bukkit.Location;
+import org.jspecify.annotations.NullMarked;
 
 import java.util.Arrays;
 import java.util.Objects;
 
+@NullMarked
 public final class ArenaShape {
 
     private final String worldName;

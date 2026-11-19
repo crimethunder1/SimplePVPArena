@@ -8,16 +8,18 @@ import de.simplepvparena.message.CommonMessage;
 import de.simplepvparena.message.ListenerMessage;
 import de.simplepvparena.message.Messages;
 import de.simplepvparena.message.Placeholder;
+import de.simplepvparena.message.RegistrationMessage;
 import de.simplepvparena.message.TournamentMessages;
 import de.simplepvparena.permission.AdminPermission;
 import de.simplepvparena.permission.ViewPermission;
 import de.simplepvparena.registration.RegistrationService;
+import de.simplepvparena.registration.TeamImportService;
 import de.simplepvparena.tournament.PlayAgainService;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.TabExecutor;
 import org.bukkit.entity.Player;
-import org.jetbrains.annotations.NotNull;
+import org.jspecify.annotations.NullMarked;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -26,6 +28,7 @@ import java.util.Objects;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+@NullMarked
 public final class TournamentCommand implements TabExecutor {
 
     public static final String SPECTATE_PERMISSION = "tournament.spectate";
@@ -37,12 +40,14 @@ public final class TournamentCommand implements TabExecutor {
     private static final String VOTE_ARGUMENT = "vote";
     private static final String TEAM_ARGUMENT = "team";
     private static final String PLAY_AGAIN_ARGUMENT = PlayAgainService.COMMAND_ARGUMENT;
+    private static final String IMPORT_ARGUMENT = "import";
 
     private final MatchService matchService;
     private final SpectatorService spectatorService;
     private final AdminMenuService adminMenuService;
     private final RegistrationService registrationService;
     private final PlayAgainService playAgainService;
+    private final TeamImportService teamImportService;
     private final Logger logger;
 
     public TournamentCommand(MatchService matchService,
@@ -50,18 +55,20 @@ public final class TournamentCommand implements TabExecutor {
                              AdminMenuService adminMenuService,
                              RegistrationService registrationService,
                              PlayAgainService playAgainService,
+                             TeamImportService teamImportService,
                              Logger logger) {
         this.matchService = Objects.requireNonNull(matchService, "matchService");
         this.spectatorService = Objects.requireNonNull(spectatorService, "spectatorService");
         this.adminMenuService = Objects.requireNonNull(adminMenuService, "adminMenuService");
         this.registrationService = Objects.requireNonNull(registrationService, "registrationService");
         this.playAgainService = Objects.requireNonNull(playAgainService, "playAgainService");
+        this.teamImportService = Objects.requireNonNull(teamImportService, "teamImportService");
         this.logger = Objects.requireNonNull(logger, "logger");
     }
 
     @Override
-    public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command,
-                             @NotNull String label, @NotNull String[] arguments) {
+    @SuppressWarnings("null")
+    public boolean onCommand(CommandSender sender, Command command, String label, String[] arguments) {
         if (arguments.length > 0 && arguments[0].toLowerCase(Locale.ROOT).equals(SPECTATE_ARGUMENT)) {
             handleSpectate(sender);
             return true;
@@ -88,6 +95,10 @@ public final class TournamentCommand implements TabExecutor {
         }
         if (arguments.length > 0 && arguments[0].toLowerCase(Locale.ROOT).equals(PLAY_AGAIN_ARGUMENT)) {
             playAgain(sender);
+            return true;
+        }
+        if (arguments.length > 0 && arguments[0].toLowerCase(Locale.ROOT).equals(IMPORT_ARGUMENT)) {
+            importTeams(sender, arguments);
             return true;
         }
         openAdminMenu(sender);
@@ -150,6 +161,19 @@ public final class TournamentCommand implements TabExecutor {
         playAgainService.playAgain(player);
     }
 
+    private void importTeams(CommandSender sender, String[] arguments) {
+        if (!AdminPermission.isAdmin(sender)) {
+            TournamentMessages.sendError(sender, Messages.text(CommonMessage.COMMAND_NOT_ALLOWED));
+            return;
+        }
+        if (arguments.length < 2) {
+            TournamentMessages.sendInfo(sender, Messages.text(RegistrationMessage.IMPORT_USAGE));
+            teamImportService.showFiles(sender);
+            return;
+        }
+        teamImportService.importFile(sender, String.join(" ", List.of(arguments).subList(1, arguments.length)));
+    }
+
     private void handleRegistration(CommandSender sender, boolean join) {
         if (!(sender instanceof Player player)) {
             TournamentMessages.sendError(sender, Messages.text(CommandMessage.ONLY_FOR_PLAYERS));
@@ -195,8 +219,15 @@ public final class TournamentCommand implements TabExecutor {
     }
 
     @Override
-    public List<String> onTabComplete(@NotNull CommandSender sender, @NotNull Command command,
-                                      @NotNull String label, @NotNull String[] arguments) {
+    @SuppressWarnings("null")
+    public List<String> onTabComplete(CommandSender sender, Command command, String label, String[] arguments) {
+        if (arguments.length == 2 && arguments[0].equalsIgnoreCase(IMPORT_ARGUMENT)
+                && AdminPermission.isAdmin(sender)) {
+            String filePrefix = arguments[1].toLowerCase(Locale.ROOT);
+            return teamImportService.listFileNames().stream()
+                    .filter(fileName -> fileName.toLowerCase(Locale.ROOT).startsWith(filePrefix))
+                    .toList();
+        }
         if (arguments.length != 1) {
             return List.of();
         }
@@ -220,6 +251,9 @@ public final class TournamentCommand implements TabExecutor {
         if (sender instanceof Player player && ViewPermission.mayView(player)
                 && playAgainService.hasOpenQuestion(player.getUniqueId())) {
             availableArguments.add(PLAY_AGAIN_ARGUMENT);
+        }
+        if (AdminPermission.isAdmin(sender)) {
+            availableArguments.add(IMPORT_ARGUMENT);
         }
         if (sender.hasPermission(SPECTATE_PERMISSION)) {
             availableArguments.add(SPECTATE_ARGUMENT);

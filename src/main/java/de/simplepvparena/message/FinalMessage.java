@@ -1,7 +1,10 @@
 package de.simplepvparena.message;
 
+import org.jspecify.annotations.NullMarked;
+
 import java.util.Set;
 
+@NullMarked
 public enum FinalMessage implements MessageKey {
 
     START_REFERENCE("final.start-reference", "tile"),

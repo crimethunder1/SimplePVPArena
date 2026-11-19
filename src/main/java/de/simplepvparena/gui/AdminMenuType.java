@@ -1,5 +1,8 @@
 package de.simplepvparena.gui;
 
+import org.jspecify.annotations.NullMarked;
+
+@NullMarked
 public enum AdminMenuType {
 
     MAIN(false),

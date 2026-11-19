@@ -3,6 +3,7 @@ package de.simplepvparena.gui;
 import de.simplepvparena.message.ConfirmationMessage;
 import de.simplepvparena.message.Messages;
 import org.bukkit.entity.Player;
+import org.jspecify.annotations.NullMarked;
 
 import java.util.EnumMap;
 import java.util.EnumSet;
@@ -11,6 +12,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 
+@NullMarked
 final class ConfirmationAdminMenu implements AdminMenu {
 
     private static final int CONFIRM_YES_SLOT = 11;

@@ -3,6 +3,8 @@ package de.simplepvparena.kit;
 import de.simplepvparena.message.KitMessage;
 import de.simplepvparena.message.Messages;
 import de.simplepvparena.message.Placeholder;
+import org.jspecify.annotations.NullMarked;
+import org.jspecify.annotations.Nullable;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -14,6 +16,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Consumer;
 
+@NullMarked
 public final class KitLibrary {
 
     public static final int MAXIMUM_NAME_LENGTH = 32;
@@ -25,8 +28,8 @@ public final class KitLibrary {
     private final Consumer<String> writeFailureReporter;
     private final Map<String, LibraryKit> kitsByLowerCaseName = new LinkedHashMap<>();
 
-    private String defaultKitLowerCaseName;
-    private String chosenKitLowerCaseName;
+    private @Nullable String defaultKitLowerCaseName;
+    private @Nullable String chosenKitLowerCaseName;
 
     public KitLibrary(KitLibraryStorage storage, KitService kitService, KitItemSerializer kitItemSerializer,
                       Consumer<String> itemProblemReporter, Consumer<String> writeFailureReporter) {
@@ -228,7 +231,8 @@ public final class KitLibrary {
         for (SavedKit savedKit : savedKitLibrary.kits()) {
             kitsByLowerCaseName.put(toLowerCase(savedKit.name()), decode(savedKit.name(), savedKit.serializedKit()));
         }
-        defaultKitLowerCaseName = savedKitLibrary.defaultKitName().map(KitLibrary::toLowerCase).orElse(null);
+        String defaultKitName = savedKitLibrary.defaultKitName().orElse(null);
+        defaultKitLowerCaseName = defaultKitName == null ? null : toLowerCase(defaultKitName);
         activateDefaultKit();
     }
 

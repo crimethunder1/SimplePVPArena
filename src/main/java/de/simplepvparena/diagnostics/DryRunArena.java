@@ -1,10 +1,12 @@
 package de.simplepvparena.diagnostics;
 
 import de.simplepvparena.arena.ArenaShape;
+import org.jspecify.annotations.NullMarked;
 
 import java.util.List;
 import java.util.Optional;
 
+@NullMarked
 public interface DryRunArena {
 
     boolean isReady();

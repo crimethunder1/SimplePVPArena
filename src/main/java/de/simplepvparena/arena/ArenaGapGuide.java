@@ -10,10 +10,12 @@ import org.bukkit.World;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.scheduler.BukkitTask;
+import org.jspecify.annotations.NullMarked;
 
 import java.util.Objects;
 import java.util.UUID;
 
+@NullMarked
 public final class ArenaGapGuide {
 
     public static final Particle TRAIL_PARTICLE = Particle.FLAME;

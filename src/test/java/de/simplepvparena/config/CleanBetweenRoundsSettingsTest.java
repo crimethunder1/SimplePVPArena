@@ -186,6 +186,6 @@ class CleanBetweenRoundsSettingsTest {
                         playerUniqueId -> false, borderConfirmation),
                 wallPreview, borderVisualEffect, new TeamSizeSetting(), new TeamRegistry(), () -> false,
                 notice -> { }, problems::add, language -> { }, autoMatchSettings -> { }, teamMode -> { },
-                enabled -> { }, settings -> { }, enabled -> { }, enabled -> { });
+                enabled -> { }, settings -> { }, enabled -> { }, enabled -> { }, serverMode -> { });
     }
 }

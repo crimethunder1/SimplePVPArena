@@ -4,10 +4,12 @@ import de.simplepvparena.message.Messages;
 import de.simplepvparena.message.Placeholder;
 import de.simplepvparena.message.VisualMessage;
 import org.bukkit.plugin.PluginManager;
+import org.jspecify.annotations.NullMarked;
 
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
+@NullMarked
 public final class CustomVisualsSelection {
 
     public static final String ITEMS_ADDER_PLUGIN_NAME = "ItemsAdder";

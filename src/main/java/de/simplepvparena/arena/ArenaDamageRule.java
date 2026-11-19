@@ -1,10 +1,12 @@
 package de.simplepvparena.arena;
 
 import org.bukkit.event.entity.EntityDamageEvent.DamageCause;
+import org.jspecify.annotations.NullMarked;
 
 import java.util.EnumSet;
 import java.util.Set;
 
+@NullMarked
 public final class ArenaDamageRule {
 
     private static final Set<DamageCause> ALWAYS_ALLOWED_CAUSES = EnumSet.of(

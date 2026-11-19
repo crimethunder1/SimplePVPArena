@@ -4,10 +4,12 @@ import org.bukkit.Material;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
+import org.jspecify.annotations.NullMarked;
 
 import java.util.Map;
 import java.util.Objects;
 
+@NullMarked
 public record KitItem(Material material, int amount, Map<Enchantment, Integer> enchantments) {
 
     public KitItem {

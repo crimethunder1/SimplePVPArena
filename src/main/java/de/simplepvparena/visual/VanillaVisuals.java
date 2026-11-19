@@ -2,9 +2,11 @@ package de.simplepvparena.visual;
 
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
+import org.jspecify.annotations.NullMarked;
 
 import java.util.Optional;
 
+@NullMarked
 public final class VanillaVisuals implements CustomVisuals {
 
     @Override

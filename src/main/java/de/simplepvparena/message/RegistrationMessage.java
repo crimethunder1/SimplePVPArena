@@ -1,7 +1,10 @@
 package de.simplepvparena.message;
 
+import org.jspecify.annotations.NullMarked;
+
 import java.util.Set;
 
+@NullMarked
 public enum RegistrationMessage implements MessageKey {
 
     FILE_SET_ASIDE("registration.file.set-aside", "file", "reason", "brokenFile"),
@@ -35,7 +38,22 @@ public enum RegistrationMessage implements MessageKey {
     FORMING_TOO_FEW_PLAYERS("registration.forming.too-few-players", "count", "minimum"),
     FORMING_FORMED("registration.forming.formed", "count", "players"),
     FORMING_PLAYING_WITH_MATES("registration.forming.playing-with-mates", "team", "mates"),
-    FORMING_PLAYING_ALONE("registration.forming.playing-alone", "team");
+    FORMING_PLAYING_ALONE("registration.forming.playing-alone", "team"),
+    IMPORT_USAGE("registration.import.usage"),
+    IMPORT_NO_FILES("registration.import.no-files", "folder"),
+    IMPORT_FILES("registration.import.files", "folder", "files"),
+    IMPORT_ALREADY_RUNNING("registration.import.already-running"),
+    IMPORT_FILE_NOT_FOUND("registration.import.file-not-found", "file", "folder"),
+    IMPORT_FILE_NOT_READ("registration.import.file-not-read", "file", "reason"),
+    IMPORT_NO_PLAYERS("registration.import.no-players", "file"),
+    IMPORT_INVALID_NAME("registration.import.invalid-name", "line", "name"),
+    IMPORT_NAMED_TWICE("registration.import.named-twice", "line", "name"),
+    IMPORT_GROUP_TOO_LARGE("registration.import.group-too-large", "line", "players", "size"),
+    IMPORT_LOOKING_UP("registration.import.looking-up", "count"),
+    IMPORT_LOOKUP_FAILED("registration.import.lookup-failed", "reason"),
+    IMPORT_UNKNOWN_PLAYERS("registration.import.unknown-players", "count", "players"),
+    IMPORT_TOO_FEW_TEAMS("registration.import.too-few-teams", "count", "minimum"),
+    IMPORT_DONE("registration.import.done", "count", "players", "file");
 
     private final String path;
     private final Set<String> placeholderNames;

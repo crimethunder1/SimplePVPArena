@@ -16,11 +16,13 @@ import org.bukkit.inventory.PlayerInventory;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.plugin.Plugin;
+import org.jspecify.annotations.NullMarked;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
+@NullMarked
 public final class ArenaHeightMarkerService {
 
     public static final Material MARKER_MATERIAL = Material.TARGET;

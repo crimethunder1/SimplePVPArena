@@ -19,6 +19,7 @@ import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+@SuppressWarnings("null")
 class MatchAdminMenuRestartTest {
 
     private static final int MAIN_MATCH_SLOT = 12;
@@ -98,6 +99,8 @@ class MatchAdminMenuRestartTest {
                 A running tournament has priority / Click to switch it on
                 19 | GRAY_DYE | Restart the match | An auto match cannot be restarted
                 20 | GRAY_DYE | Take back a result | No tournament is in progress
+                21 | HOPPER | Server mode | Auto: the arena on a running server / \
+                Auto matches and inventory hand-in when entering the area / Click to switch to event mode
                 22 | OAK_DOOR | Back | Returns to the main menu
                 """, fixture.describeLastMenu());
     }

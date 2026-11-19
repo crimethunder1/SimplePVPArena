@@ -43,6 +43,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+@SuppressWarnings("null")
 class LanguageSettingsTest {
 
     @TempDir
@@ -218,6 +219,6 @@ class LanguageSettingsTest {
                         playerUniqueId -> false, borderConfirmation),
                 wallPreview, borderVisualEffect, new TeamSizeSetting(), new TeamRegistry(), () -> false,
                 notice -> { }, problems::add, languageApplier, autoMatchSettings -> { }, teamMode -> { },
-                enabled -> { }, settings -> { }, enabled -> { }, enabled -> { });
+                enabled -> { }, settings -> { }, enabled -> { }, enabled -> { }, serverMode -> { });
     }
 }

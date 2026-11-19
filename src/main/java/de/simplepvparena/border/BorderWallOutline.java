@@ -7,6 +7,7 @@ import de.simplepvparena.arena.ArenaShape;
 import de.simplepvparena.arena.BlockPositionCodec;
 import de.simplepvparena.arena.BorderColumnReader;
 import de.simplepvparena.arena.HorizontalCellCodec;
+import org.jspecify.annotations.NullMarked;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -15,6 +16,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 
+@NullMarked
 public final class BorderWallOutline {
 
     public static final int DEFAULT_MAXIMUM_CONNECTION_COUNT = 1200;

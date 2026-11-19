@@ -1,6 +1,7 @@
 package de.simplepvparena.message;
 
 import org.bukkit.configuration.InvalidConfigurationException;
+import org.jspecify.annotations.NullMarked;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -12,6 +13,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Consumer;
 
+@NullMarked
 public final class MessageCatalogLoader {
 
     public static final String DEFAULT_LANGUAGE = "en";

@@ -1,7 +1,10 @@
 package de.simplepvparena.message;
 
+import org.jspecify.annotations.NullMarked;
+
 import java.util.Set;
 
+@NullMarked
 public enum PlayerStateMessage implements MessageKey {
 
     NOT_FOUND("player-state.not-found", "player"),

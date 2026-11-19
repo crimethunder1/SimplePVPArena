@@ -27,6 +27,7 @@ import de.simplepvparena.message.TournamentMessages;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
+import org.jspecify.annotations.NullMarked;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -35,6 +36,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 
+@NullMarked
 final class ArenaAdminMenu implements AdminMenu {
 
     private static final int ARENA_SMALLER_EFFECT_AREA_SLOT = 3;

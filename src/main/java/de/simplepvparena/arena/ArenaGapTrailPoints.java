@@ -1,5 +1,8 @@
 package de.simplepvparena.arena;
 
+import org.jspecify.annotations.NullMarked;
+
+@NullMarked
 final class ArenaGapTrailPoints {
 
     static final int POINT_COUNT = 12;

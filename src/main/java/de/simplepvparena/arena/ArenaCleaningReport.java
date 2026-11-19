@@ -4,9 +4,12 @@ import de.simplepvparena.message.ArenaCleaningMessage;
 import de.simplepvparena.message.MessageKey;
 import de.simplepvparena.message.Messages;
 import de.simplepvparena.message.Placeholder;
+import org.jspecify.annotations.NullMarked;
+import org.jspecify.annotations.Nullable;
 
+@NullMarked
 public record ArenaCleaningReport(long checkedBlockCount, long changedBlockCount, int clearedBorderMarkCount,
-                                  MessageKey changeDescription, String failureReason) {
+                                  MessageKey changeDescription, @Nullable String failureReason) {
 
     public ArenaCleaningReport(long checkedBlockCount, long changedBlockCount, int clearedBorderMarkCount,
                                MessageKey changeDescription) {

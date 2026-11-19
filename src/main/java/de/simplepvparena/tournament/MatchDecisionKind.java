@@ -1,8 +1,11 @@
 package de.simplepvparena.tournament;
 
+import org.jspecify.annotations.NullMarked;
+
 import java.util.Arrays;
 import java.util.Optional;
 
+@NullMarked
 public enum MatchDecisionKind {
     PLAYED("played"),
     WALKOVER("walkover"),

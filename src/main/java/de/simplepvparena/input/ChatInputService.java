@@ -7,12 +7,15 @@ import de.simplepvparena.message.TournamentMessages;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.scheduler.BukkitTask;
+import org.jspecify.annotations.NullMarked;
+import org.jspecify.annotations.Nullable;
 
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Consumer;
 
+@NullMarked
 public final class ChatInputService {
 
     public static final String CANCEL_KEYWORD = "cancel";
@@ -23,7 +26,7 @@ public final class ChatInputService {
     private final Plugin plugin;
     private final ChatInputRegistry registry;
 
-    private BukkitTask sweepTask;
+    private @Nullable BukkitTask sweepTask;
 
     public ChatInputService(Plugin plugin) {
         this(plugin, new ChatInputRegistry());

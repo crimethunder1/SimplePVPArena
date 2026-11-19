@@ -28,6 +28,7 @@ import de.simplepvparena.tournament.FinalMatchGate;
 import de.simplepvparena.tournament.FinalMatchStage;
 import de.simplepvparena.tournament.MatchSequence;
 import de.simplepvparena.tournament.TournamentState;
+import org.jspecify.annotations.NullMarked;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -37,6 +38,7 @@ import java.util.function.BooleanSupplier;
 import java.util.function.Supplier;
 import java.util.logging.Logger;
 
+@NullMarked
 public final class TournamentDryRun {
 
     static final DryRunMessage TEAM_STEP = DryRunMessage.TEAM_STEP;

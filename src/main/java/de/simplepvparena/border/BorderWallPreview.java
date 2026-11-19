@@ -5,12 +5,14 @@ import org.bukkit.World;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.scheduler.BukkitTask;
+import org.jspecify.annotations.NullMarked;
 
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
 
+@NullMarked
 public final class BorderWallPreview {
 
     public static final long DEFAULT_DURATION_TICKS = 20L * 4L;

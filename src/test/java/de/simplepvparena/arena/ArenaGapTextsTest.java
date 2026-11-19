@@ -12,6 +12,7 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
+@SuppressWarnings("null")
 class ArenaGapTextsTest {
 
     private static final String WORLD_NAME = "event";

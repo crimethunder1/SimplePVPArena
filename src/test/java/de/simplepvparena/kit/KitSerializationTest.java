@@ -13,6 +13,7 @@ import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
+@SuppressWarnings("null")
 class KitSerializationTest {
 
     private final KitSerialization kitSerialization = new KitSerialization(new UnstorableLabelSerializer());

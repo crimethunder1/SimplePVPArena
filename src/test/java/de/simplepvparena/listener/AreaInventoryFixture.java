@@ -21,6 +21,7 @@ import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicLong;
 
+@SuppressWarnings("null")
 final class AreaInventoryFixture {
 
     static final String KEPT_SAFE = "Your inventory is kept safe while you are in the event area, you get it back "

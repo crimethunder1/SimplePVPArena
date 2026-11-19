@@ -1,8 +1,11 @@
 package de.simplepvparena.kit;
 
+import org.jspecify.annotations.NullMarked;
+
 import java.util.Objects;
 import java.util.Optional;
 
+@NullMarked
 public record PlayerStateSnapshotLookup(Outcome outcome, Optional<PlayerStateSnapshot> snapshot, String fileName) {
 
     public enum Outcome {

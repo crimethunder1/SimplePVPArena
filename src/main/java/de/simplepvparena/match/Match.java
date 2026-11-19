@@ -3,6 +3,8 @@ package de.simplepvparena.match;
 import de.simplepvparena.arena.Arena;
 import de.simplepvparena.team.Team;
 import de.simplepvparena.team.TeamRegistry;
+import org.jspecify.annotations.NullMarked;
+import org.jspecify.annotations.Nullable;
 
 import java.util.Collection;
 import java.util.List;
@@ -10,6 +12,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
 
+@NullMarked
 public final class Match {
 
     private final String matchId;
@@ -21,9 +24,9 @@ public final class Match {
     private final boolean autoMatch;
 
     private MatchState state = MatchState.PREPARING;
-    private RoundParticipants roundParticipants;
+    private @Nullable RoundParticipants roundParticipants;
     private int roundNumber;
-    private Team teamWithChosenFighters;
+    private @Nullable Team teamWithChosenFighters;
     private List<UUID> chosenFighterUniqueIds = List.of();
 
     private Match(String matchId, Team firstTeam, Team secondTeam, Arena arena, boolean finalMatch,

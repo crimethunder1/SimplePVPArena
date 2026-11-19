@@ -27,12 +27,14 @@ import de.simplepvparena.team.TeamRegistry;
 import de.simplepvparena.team.TeamSizeSetting;
 import de.simplepvparena.tournament.AutoMatchSettings;
 import de.simplepvparena.visual.CustomVisualSettings;
+import org.jspecify.annotations.NullMarked;
 
 import java.util.Objects;
 import java.util.Optional;
 import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
 
+@NullMarked
 public final class PluginLiveConfiguration implements LiveConfiguration {
 
     private final MatchService matchService;
@@ -59,6 +61,7 @@ public final class PluginLiveConfiguration implements LiveConfiguration {
     private final Consumer<CustomVisualSettings> customVisualSettingsApplier;
     private final Consumer<Boolean> placementSidebarEnabledApplier;
     private final Consumer<Boolean> placementBoardEnabledApplier;
+    private final Consumer<ServerMode> serverModeApplier;
 
     public PluginLiveConfiguration(MatchService matchService,
                                    StartGateDuration startGateDuration,
@@ -83,7 +86,8 @@ public final class PluginLiveConfiguration implements LiveConfiguration {
                                    Consumer<Boolean> areaInventoryEnabledApplier,
                                    Consumer<CustomVisualSettings> customVisualSettingsApplier,
                                    Consumer<Boolean> placementSidebarEnabledApplier,
-                                   Consumer<Boolean> placementBoardEnabledApplier) {
+                                   Consumer<Boolean> placementBoardEnabledApplier,
+                                   Consumer<ServerMode> serverModeApplier) {
         this.matchService = Objects.requireNonNull(matchService, "matchService");
         this.startGateDuration = Objects.requireNonNull(startGateDuration, "startGateDuration");
         this.fighterColours = Objects.requireNonNull(fighterColours, "fighterColours");
@@ -114,6 +118,7 @@ public final class PluginLiveConfiguration implements LiveConfiguration {
                 "placementSidebarEnabledApplier");
         this.placementBoardEnabledApplier = Objects.requireNonNull(placementBoardEnabledApplier,
                 "placementBoardEnabledApplier");
+        this.serverModeApplier = Objects.requireNonNull(serverModeApplier, "serverModeApplier");
     }
 
     @Override
@@ -201,6 +206,11 @@ public final class PluginLiveConfiguration implements LiveConfiguration {
             problemReporter.accept(warning);
             adminNotifier.accept(warning);
         });
+    }
+
+    @Override
+    public void setServerMode(ServerMode serverMode) {
+        serverModeApplier.accept(serverMode);
     }
 
     @Override

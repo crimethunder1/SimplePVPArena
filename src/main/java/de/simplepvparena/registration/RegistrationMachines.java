@@ -1,10 +1,13 @@
 package de.simplepvparena.registration;
 
+import org.jspecify.annotations.NullMarked;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
+@NullMarked
 public final class RegistrationMachines {
 
     private final List<RegistrationMachine> machines = new ArrayList<>();

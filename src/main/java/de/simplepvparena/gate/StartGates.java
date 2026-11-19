@@ -1,5 +1,8 @@
 package de.simplepvparena.gate;
 
+import org.jspecify.annotations.NullMarked;
+
+@NullMarked
 public interface StartGates {
 
     StartGates NONE = new StartGates() {

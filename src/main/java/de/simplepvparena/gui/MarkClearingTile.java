@@ -6,11 +6,13 @@ import de.simplepvparena.message.CommonMessage;
 import de.simplepvparena.message.MessageKey;
 import de.simplepvparena.message.Messages;
 import org.bukkit.Material;
+import org.jspecify.annotations.NullMarked;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
+@NullMarked
 enum MarkClearingTile {
 
     BORDER_MARKS(Material.TNT_MINECART, ConfirmationRequest.CLEAR_BORDER_MARKS,

@@ -1,7 +1,9 @@
 package de.simplepvparena.gui;
 
 import org.bukkit.entity.Player;
+import org.jspecify.annotations.NullMarked;
 
+@NullMarked
 interface AdminMenu {
 
     String title(AdminMenuHolder holder);

@@ -1,5 +1,7 @@
 package de.simplepvparena.match;
 
+import org.jspecify.annotations.NullMarked;
+
 import java.util.Collection;
 import java.util.LinkedHashSet;
 import java.util.Objects;
@@ -7,6 +9,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 
+@NullMarked
 public final class RoundParticipants {
 
     private final String firstTeamName;

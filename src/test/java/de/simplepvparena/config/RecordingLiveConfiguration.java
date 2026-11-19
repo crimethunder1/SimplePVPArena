@@ -14,6 +14,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+@SuppressWarnings("null")
 final class RecordingLiveConfiguration implements LiveConfiguration {
 
     static final String LANGUAGE = "language";
@@ -48,11 +49,13 @@ final class RecordingLiveConfiguration implements LiveConfiguration {
     static final String CUSTOM_VISUALS = "customVisualSettings";
     static final String PLACEMENT_SIDEBAR_ENABLED = "placementSidebarEnabled";
     static final String PLACEMENT_BOARD_ENABLED = "placementBoardEnabled";
+    static final String SERVER_MODE = "serverMode";
 
     static final List<String> EVERY_APPLIED_VALUE = List.of(
             LANGUAGE,
             ROUND_RESET_DELAY, ROUND_TIMEOUT, SUDDEN_DEATH_IN_FINAL, START_GATE_DURATION, COUNTDOWN_SECONDS,
-            RECONNECT_SECONDS, UNEQUAL_TEAMS, CLEAN_BETWEEN_ROUNDS, TEAM_COLOURS, TEAM_SIZE, AUTO_MATCH, TEAM_MODE,
+            RECONNECT_SECONDS, UNEQUAL_TEAMS, CLEAN_BETWEEN_ROUNDS, TEAM_COLOURS, TEAM_SIZE, SERVER_MODE, AUTO_MATCH,
+            TEAM_MODE,
             CLEANING_BLOCKS_PER_TICK, BASELINE_BLOCKS_PER_TICK, BASELINE_DEPTH_BELOW_FLOOR,
             CLEANING_PARTICLE, MAXIMUM_CELL_COUNT, SAFETY_ZONE_RADIUS, EFFECT_MARGIN, TELEPORT_ON_JOIN,
             PARTICLE_PERIOD, PARTICLE_VIEW_RADIUS,
@@ -227,6 +230,11 @@ final class RecordingLiveConfiguration implements LiveConfiguration {
     @Override
     public void setPlacementBoardEnabled(boolean enabled) {
         appliedValues.put(PLACEMENT_BOARD_ENABLED, enabled);
+    }
+
+    @Override
+    public void setServerMode(ServerMode serverMode) {
+        appliedValues.put(SERVER_MODE, serverMode);
     }
 
     StartGateDuration startGateDuration() {

@@ -109,6 +109,7 @@ class AreaInventorySettingsTest {
 
     private static MemoryConfiguration configurationWithSwitch(Object enabled) {
         MemoryConfiguration configuration = new MemoryConfiguration();
+        configuration.set(PluginSettings.SERVER_MODE_PATH, ServerMode.AUTO.getConfigurationName());
         configuration.set(PluginSettings.ARENA_AREA_INVENTORY_ENABLED_PATH, enabled);
         return configuration;
     }

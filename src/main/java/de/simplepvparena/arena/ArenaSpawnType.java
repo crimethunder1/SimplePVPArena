@@ -3,7 +3,9 @@ package de.simplepvparena.arena;
 import de.simplepvparena.message.ArenaSpawnMessage;
 import de.simplepvparena.message.MessageKey;
 import de.simplepvparena.message.Messages;
+import org.jspecify.annotations.NullMarked;
 
+@NullMarked
 public enum ArenaSpawnType {
 
     FIRST_TEAM(ArenaSpawnMessage.FIRST_TEAM_NAME, false, ArenaSpawnMessage.FIRST_TEAM_PLACEMENT_HINT),

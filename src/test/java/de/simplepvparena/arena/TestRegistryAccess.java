@@ -10,6 +10,7 @@ import java.lang.reflect.Proxy;
 import java.util.List;
 import java.util.stream.Stream;
 
+@SuppressWarnings("null")
 public final class TestRegistryAccess implements RegistryAccess {
 
     @Override

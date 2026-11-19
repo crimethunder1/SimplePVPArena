@@ -2,6 +2,7 @@ package de.simplepvparena.tournament;
 
 import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.configuration.file.YamlConfiguration;
+import org.jspecify.annotations.NullMarked;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -18,6 +19,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 
+@NullMarked
 public final class FileTournamentStateStorage implements TournamentStateStorage {
 
     public static final String FILE_NAME = "tournament.yml";

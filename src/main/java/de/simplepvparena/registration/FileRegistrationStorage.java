@@ -5,6 +5,8 @@ import de.simplepvparena.message.Placeholder;
 import de.simplepvparena.message.RegistrationMessage;
 import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.configuration.file.YamlConfiguration;
+import org.jspecify.annotations.NullMarked;
+import org.jspecify.annotations.Nullable;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -24,6 +26,7 @@ import java.util.function.Consumer;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+@NullMarked
 public final class FileRegistrationStorage {
 
     public static final String FILE_NAME = "registrations.yml";
@@ -132,7 +135,8 @@ public final class FileRegistrationStorage {
         return configuration;
     }
 
-    private static List<RegistrationEntry> readPlayers(Object storedPlayers) throws InvalidConfigurationException {
+    private static List<RegistrationEntry> readPlayers(@Nullable Object storedPlayers)
+            throws InvalidConfigurationException {
         if (storedPlayers == null) {
             return List.of();
         }
@@ -154,7 +158,7 @@ public final class FileRegistrationStorage {
         return entries;
     }
 
-    private static RegistrationEntry readPlayer(Object playerEntry, int entryNumber)
+    private static RegistrationEntry readPlayer(@Nullable Object playerEntry, int entryNumber)
             throws InvalidConfigurationException {
         String entryDescription = "entry " + entryNumber + " of " + PLAYERS_KEY;
         if (!(playerEntry instanceof Map<?, ?> storedPlayer)) {
@@ -174,7 +178,7 @@ public final class FileRegistrationStorage {
         }
     }
 
-    private static List<RegistrationStation> readStations(Object storedStations)
+    private static List<RegistrationStation> readStations(@Nullable Object storedStations)
             throws InvalidConfigurationException {
         if (storedStations == null) {
             return List.of();
@@ -196,7 +200,7 @@ public final class FileRegistrationStorage {
         return stations;
     }
 
-    private static RegistrationStation readStation(Object stationEntry, int entryNumber)
+    private static RegistrationStation readStation(@Nullable Object stationEntry, int entryNumber)
             throws InvalidConfigurationException {
         String entryDescription = "entry " + entryNumber + " of " + STATIONS_KEY;
         if (!(stationEntry instanceof Map<?, ?> storedStation)) {
@@ -212,7 +216,7 @@ public final class FileRegistrationStorage {
         return new RegistrationStation(worldName, blockX, blockY, blockZ);
     }
 
-    private static String readText(Object storedValue) {
+    private static @Nullable String readText(@Nullable Object storedValue) {
         if (storedValue instanceof String text && !text.isBlank()) {
             return text;
         }
@@ -253,7 +257,7 @@ public final class FileRegistrationStorage {
         }
     }
 
-    private static void removeTemporaryFile(Path temporaryFile, Exception writeFailure) {
+    private static void removeTemporaryFile(@Nullable Path temporaryFile, Exception writeFailure) {
         if (temporaryFile == null) {
             return;
         }

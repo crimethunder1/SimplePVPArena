@@ -1,9 +1,12 @@
 package de.simplepvparena.arena;
 
+import org.jspecify.annotations.NullMarked;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+@NullMarked
 public final class ArenaShapeCodec {
 
     private static final String ROW_SEPARATOR = ":";

@@ -2,10 +2,12 @@ package de.simplepvparena.match;
 
 import de.simplepvparena.team.TeamMember;
 import net.kyori.adventure.text.format.NamedTextColor;
+import org.jspecify.annotations.NullMarked;
 
 import java.util.List;
 import java.util.Objects;
 
+@NullMarked
 public record MatchTeamColour(String scoreboardTeamName, String teamName, NamedTextColor colour,
                               List<TeamMember> fighters) {
 

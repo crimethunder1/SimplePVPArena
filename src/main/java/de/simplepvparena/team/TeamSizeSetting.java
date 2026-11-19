@@ -3,11 +3,13 @@ package de.simplepvparena.team;
 import de.simplepvparena.message.Messages;
 import de.simplepvparena.message.Placeholder;
 import de.simplepvparena.message.TeamMessage;
+import org.jspecify.annotations.NullMarked;
 
 import java.util.List;
 import java.util.Optional;
 import java.util.function.Function;
 
+@NullMarked
 public final class TeamSizeSetting {
 
     public static final int DEFAULT_TEAM_SIZE = 2;

@@ -1,11 +1,14 @@
 package de.simplepvparena.message;
 
+import org.jspecify.annotations.NullMarked;
+
 import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
+@NullMarked
 final class LayeredMessageCatalog implements MessageCatalog {
 
     private final List<MessageCatalog> layers;

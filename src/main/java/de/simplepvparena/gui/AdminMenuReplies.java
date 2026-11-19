@@ -8,12 +8,14 @@ import de.simplepvparena.permission.AdminPermission;
 import de.simplepvparena.permission.ViewPermission;
 import de.simplepvparena.tournament.TournamentOperationResult;
 import org.bukkit.entity.Player;
+import org.jspecify.annotations.NullMarked;
 
 import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
 import java.util.function.Supplier;
 
+@NullMarked
 final class AdminMenuReplies {
 
     private AdminMenuReplies() {

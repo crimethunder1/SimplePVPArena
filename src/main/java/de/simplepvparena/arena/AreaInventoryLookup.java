@@ -1,11 +1,13 @@
 package de.simplepvparena.arena;
 
 import org.bukkit.inventory.ItemStack;
+import org.jspecify.annotations.NullMarked;
 
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
+@NullMarked
 public record AreaInventoryLookup(Outcome outcome, Optional<ItemStack[]> contents, List<ItemStack> looseItems,
                                   Optional<AreaPlayerCondition> condition, String fileName) {
 

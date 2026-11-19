@@ -10,6 +10,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+@SuppressWarnings("null")
 public final class FakePlayerPotionEffects implements PlayerPotionEffects {
 
     private final Map<UUID, List<SavedPotionEffect>> potionEffectsByPlayer = new HashMap<>();

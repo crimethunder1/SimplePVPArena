@@ -8,9 +8,14 @@ import org.bukkit.World;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.scheduler.BukkitTask;
+import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.NullMarked;
+import org.jspecify.annotations.Nullable;
 
+import java.util.Collection;
 import java.util.Objects;
 
+@NullMarked
 public final class BorderParticleService {
 
     public static final int DEFAULT_VIEW_RADIUS = 12;
@@ -35,7 +40,7 @@ public final class BorderParticleService {
     private int maximumLinesPerPlayer = DEFAULT_MAXIMUM_LINES_PER_PLAYER;
     private long periodTicks = DEFAULT_PERIOD_TICKS;
     private boolean confirmedParticleEnabled = DEFAULT_CONFIRMED_PARTICLE_ENABLED;
-    private BukkitTask activeTask;
+    private @Nullable BukkitTask activeTask;
 
     public BorderParticleService(Plugin plugin, BorderMarkIndex borderMarks, BorderVisualEffect visualEffect,
                                  ActiveFighterLookup activeFighters, ArenaBorderConfirmation borderConfirmation) {
@@ -104,7 +109,8 @@ public final class BorderParticleService {
         if (!confirmedParticleEnabled && borderConfirmation.isConfirmed()) {
             return;
         }
-        for (Player player : plugin.getServer().getOnlinePlayers()) {
+        Collection<? extends @NonNull Player> onlinePlayers = plugin.getServer().getOnlinePlayers();
+        for (Player player : onlinePlayers) {
             if (activeFighters.isActiveFighter(player.getUniqueId())) {
                 continue;
             }

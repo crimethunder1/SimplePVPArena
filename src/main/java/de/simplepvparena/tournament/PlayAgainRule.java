@@ -2,7 +2,9 @@ package de.simplepvparena.tournament;
 
 import de.simplepvparena.match.Match;
 import de.simplepvparena.team.Team;
+import org.jspecify.annotations.NullMarked;
 
+@NullMarked
 public interface PlayAgainRule {
 
     PlayAgainRule NONE = new PlayAgainRule() {

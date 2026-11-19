@@ -1,7 +1,10 @@
 package de.simplepvparena.arena;
 
+import org.jspecify.annotations.NullMarked;
+
 import java.util.Optional;
 
+@NullMarked
 public final class ArenaEnvironmentProtectionRule {
 
     private ArenaEnvironmentProtectionRule() {

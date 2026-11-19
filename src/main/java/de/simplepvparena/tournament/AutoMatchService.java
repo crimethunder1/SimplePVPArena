@@ -16,6 +16,8 @@ import net.kyori.adventure.text.Component;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.scheduler.BukkitTask;
+import org.jspecify.annotations.NullMarked;
+import org.jspecify.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -28,6 +30,7 @@ import java.util.Optional;
 import java.util.UUID;
 import java.util.function.Consumer;
 
+@NullMarked
 public final class AutoMatchService implements MatchCompletionHandler, AutoMatchReservation {
 
     private static final String MATCH_ID_PREFIX = "auto-";
@@ -47,12 +50,12 @@ public final class AutoMatchService implements MatchCompletionHandler, AutoMatch
 
     private AutoMatchSettings settings = AutoMatchSettings.defaults();
     private AutoMatchState state = AutoMatchState.IDLE;
-    private BukkitTask timerTask;
+    private @Nullable BukkitTask timerTask;
     private long autoMatchCount;
-    private List<Team> announcedTeams;
-    private Match runningMatch;
+    private @Nullable List<Team> announcedTeams;
+    private @Nullable Match runningMatch;
     private int secondsLeft;
-    private Object runningCleaning;
+    private @Nullable Object runningCleaning;
     private PlayAgainRule playAgainRule = PlayAgainRule.NONE;
     private final List<Consumer<Team>> winObservers = new ArrayList<>();
 
@@ -119,10 +122,11 @@ public final class AutoMatchService implements MatchCompletionHandler, AutoMatch
 
     @Override
     public Optional<String> findAnnouncedTeamName(String teamName) {
-        if (announcedTeams == null || teamName == null) {
+        List<Team> teams = announcedTeams;
+        if (teams == null || teamName == null) {
             return Optional.empty();
         }
-        return announcedTeams.stream()
+        return teams.stream()
                 .map(Team::getTeamName)
                 .filter(announcedTeamName -> announcedTeamName.equalsIgnoreCase(teamName))
                 .findFirst();
@@ -286,7 +290,7 @@ public final class AutoMatchService implements MatchCompletionHandler, AutoMatch
         if (!isArenaFree()) {
             return Optional.of(AutoMatchMessage.CANCELLED_ARENA_NOT_READY);
         }
-        boolean everyTeamHasAFreePlayer = announcedTeams.stream()
+        boolean everyTeamHasAFreePlayer = Objects.requireNonNull(announcedTeams, "announcedTeams").stream()
                 .map(team -> teamRegistry.findTeam(team.getTeamName()))
                 .allMatch(registeredTeam -> registeredTeam.filter(this::hasFreeOnlineMember).isPresent());
         if (!everyTeamHasAFreePlayer) {
@@ -296,7 +300,7 @@ public final class AutoMatchService implements MatchCompletionHandler, AutoMatch
     }
 
     private void cancelAnnouncement(AutoMatchMessage reason) {
-        List<Team> teams = announcedTeams;
+        List<Team> teams = Objects.requireNonNull(announcedTeams, "announcedTeams");
         announcedTeams = null;
         state = AutoMatchState.IDLE;
         secondsLeft = settings.pauseSeconds();
@@ -305,8 +309,9 @@ public final class AutoMatchService implements MatchCompletionHandler, AutoMatch
     }
 
     private void startAnnouncedMatch() {
-        Team firstTeam = teamRegistry.findTeam(announcedTeams.get(0).getTeamName()).orElseThrow();
-        Team secondTeam = teamRegistry.findTeam(announcedTeams.get(1).getTeamName()).orElseThrow();
+        List<Team> teams = Objects.requireNonNull(announcedTeams, "announcedTeams");
+        Team firstTeam = teamRegistry.findTeam(teams.get(0).getTeamName()).orElseThrow();
+        Team secondTeam = teamRegistry.findTeam(teams.get(1).getTeamName()).orElseThrow();
         announcedTeams = null;
         autoMatchCount++;
         Match match = Match.autoMatch(MATCH_ID_PREFIX + autoMatchCount, firstTeam, secondTeam,
@@ -318,7 +323,7 @@ public final class AutoMatchService implements MatchCompletionHandler, AutoMatch
     }
 
     private void finishRunningMatch() {
-        Match match = runningMatch;
+        Match match = Objects.requireNonNull(runningMatch, "runningMatch");
         runningMatch = null;
         for (Team team : match.getTeams()) {
             lastAutoMatchNumberByTeamKey.put(toKey(team.getTeamName()), autoMatchCount);

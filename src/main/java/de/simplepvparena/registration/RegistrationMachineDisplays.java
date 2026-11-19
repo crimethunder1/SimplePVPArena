@@ -27,6 +27,7 @@ import org.bukkit.plugin.Plugin;
 import org.bukkit.util.Transformation;
 import org.joml.Quaternionf;
 import org.joml.Vector3f;
+import org.jspecify.annotations.NullMarked;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -40,6 +41,7 @@ import java.util.UUID;
 import java.util.function.Function;
 import java.util.function.IntSupplier;
 
+@NullMarked
 public final class RegistrationMachineDisplays {
 
     public static final String MARKER_KEY_NAME = "registration_machine_display";

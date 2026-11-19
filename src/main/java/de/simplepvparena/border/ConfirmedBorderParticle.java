@@ -5,11 +5,14 @@ import org.bukkit.Color;
 import org.bukkit.Location;
 import org.bukkit.Particle;
 import org.bukkit.entity.Player;
+import org.jspecify.annotations.NullMarked;
+import org.jspecify.annotations.Nullable;
 
 import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Consumer;
 
+@NullMarked
 public final class ConfirmedBorderParticle {
 
     public static final Particle DEFAULT_PARTICLE = Particle.END_ROD;
@@ -24,12 +27,12 @@ public final class ConfirmedBorderParticle {
 
     private final Particle particle;
 
-    private final Particle.DustOptions colour;
+    private final Particle.@Nullable DustOptions colour;
 
     private final double stepHeight;
     private final int particleCount;
 
-    private ConfirmedBorderParticle(Particle particle, Particle.DustOptions colour, double stepHeight,
+    private ConfirmedBorderParticle(Particle particle, Particle.@Nullable DustOptions colour, double stepHeight,
                                     int particleCount) {
         this.particle = Objects.requireNonNull(particle, "particle");
         this.colour = colour;

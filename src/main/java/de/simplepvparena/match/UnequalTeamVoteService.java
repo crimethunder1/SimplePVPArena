@@ -9,6 +9,8 @@ import de.simplepvparena.team.TeamMember;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.scheduler.BukkitTask;
+import org.jspecify.annotations.NullMarked;
+import org.jspecify.annotations.Nullable;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -18,20 +20,21 @@ import java.util.UUID;
 import java.util.function.Function;
 import java.util.random.RandomGenerator;
 
+@NullMarked
 public final class UnequalTeamVoteService {
 
     private static final long TICKS_PER_SECOND = 20L;
 
-    private final Plugin plugin;
-    private final Function<UUID, Player> onlinePlayerLookup;
-    private final RandomGenerator random;
+    private final @Nullable Plugin plugin;
+    private final @Nullable Function<UUID, Player> onlinePlayerLookup;
+    private final @Nullable RandomGenerator random;
 
     private UnequalTeamVotePresenter presenter = UnequalTeamVotePresenter.NONE;
-    private PendingUnequalTeamVote pendingVote;
-    private Match pendingMatch;
-    private Team votingTeam;
-    private Runnable pendingRoundStart;
-    private BukkitTask secondTask;
+    private @Nullable PendingUnequalTeamVote pendingVote;
+    private @Nullable Match pendingMatch;
+    private @Nullable Team votingTeam;
+    private @Nullable Runnable pendingRoundStart;
+    private @Nullable BukkitTask secondTask;
 
     public UnequalTeamVoteService() {
         this.plugin = null;
@@ -57,7 +60,8 @@ public final class UnequalTeamVoteService {
             throw new IllegalStateException("the players of match " + pendingVote.getMatchId()
                     + " are still voting, match " + match.getMatchId() + " cannot begin a second vote");
         }
-        if (plugin == null || settings.mode() == UnequalTeamsMode.ALL) {
+        Plugin votePlugin = plugin;
+        if (votePlugin == null || settings.mode() == UnequalTeamsMode.ALL) {
             startRounds.run();
             return;
         }
@@ -85,7 +89,7 @@ public final class UnequalTeamVoteService {
         for (UUID voterUniqueId : vote.getVoterUniqueIds()) {
             findOnlinePlayer(voterUniqueId).ifPresent(voter -> TournamentMessages.sendInfo(voter, announcement));
         }
-        plugin.getLogger().info("The players of " + vote.getVotingTeamName() + " vote which " + fighterCount
+        votePlugin.getLogger().info("The players of " + vote.getVotingTeamName() + " vote which " + fighterCount
                 + " of them fight in match " + vote.getMatchId());
         presenter.show(vote);
     }
@@ -133,8 +137,10 @@ public final class UnequalTeamVoteService {
     }
 
     public boolean isLeftOutOfThePendingVote(Match match, UUID playerUniqueId) {
-        return pendingVote != null && pendingMatch == match && votingTeam.containsPlayer(playerUniqueId)
-                && !pendingVote.isVoter(playerUniqueId);
+        PendingUnequalTeamVote vote = pendingVote;
+        Team team = votingTeam;
+        return vote != null && team != null && pendingMatch == match && team.containsPlayer(playerUniqueId)
+                && !vote.isVoter(playerUniqueId);
     }
 
     public boolean isVoter(UUID playerUniqueId) {
@@ -155,10 +161,10 @@ public final class UnequalTeamVoteService {
     }
 
     private void finish(PendingUnequalTeamVote vote) {
-        Match match = pendingMatch;
-        Team team = votingTeam;
-        Runnable startRounds = pendingRoundStart;
-        match.chooseFighters(team, vote.chooseFighters(random));
+        Match match = Objects.requireNonNull(pendingMatch, "pendingMatch");
+        Team team = Objects.requireNonNull(votingTeam, "votingTeam");
+        Runnable startRounds = Objects.requireNonNull(pendingRoundStart, "pendingRoundStart");
+        match.chooseFighters(team, vote.chooseFighters(Objects.requireNonNull(random, "random")));
         clearPendingVote();
         presenter.close(vote);
         startRounds.run();
@@ -176,7 +182,8 @@ public final class UnequalTeamVoteService {
     }
 
     private void scheduleNextSecond(PendingUnequalTeamVote vote) {
-        secondTask = plugin.getServer().getScheduler().runTaskLater(plugin, () -> countDown(vote),
+        Plugin votePlugin = Objects.requireNonNull(plugin, "plugin");
+        secondTask = votePlugin.getServer().getScheduler().runTaskLater(votePlugin, () -> countDown(vote),
                 TICKS_PER_SECOND);
     }
 
@@ -190,7 +197,7 @@ public final class UnequalTeamVoteService {
     }
 
     private Optional<Player> findOnlinePlayer(UUID playerUniqueId) {
-        Player player = onlinePlayerLookup.apply(playerUniqueId);
+        Player player = Objects.requireNonNull(onlinePlayerLookup, "onlinePlayerLookup").apply(playerUniqueId);
         if (player == null || !player.isOnline()) {
             return Optional.empty();
         }

@@ -4,11 +4,14 @@ import de.simplepvparena.message.ArenaGapMessage;
 import de.simplepvparena.message.Messages;
 import de.simplepvparena.message.Placeholder;
 import de.simplepvparena.message.TournamentMessages;
+import org.jspecify.annotations.NullMarked;
+import org.jspecify.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
+@NullMarked
 public final class ArenaShapeCalculation {
 
     public enum Status {
@@ -18,12 +21,12 @@ public final class ArenaShapeCalculation {
     }
 
     private final Status status;
-    private final ArenaShape shape;
-    private final String rejectionMessage;
-    private final ArenaFillDiagnostics diagnostics;
+    private final @Nullable ArenaShape shape;
+    private final @Nullable String rejectionMessage;
+    private final @Nullable ArenaFillDiagnostics diagnostics;
 
-    private ArenaShapeCalculation(Status status, ArenaShape shape, String rejectionMessage,
-                                  ArenaFillDiagnostics diagnostics) {
+    private ArenaShapeCalculation(Status status, @Nullable ArenaShape shape, @Nullable String rejectionMessage,
+                                  @Nullable ArenaFillDiagnostics diagnostics) {
         this.status = status;
         this.shape = shape;
         this.rejectionMessage = rejectionMessage;

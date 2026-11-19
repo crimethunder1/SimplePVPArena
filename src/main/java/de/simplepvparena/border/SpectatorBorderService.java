@@ -5,9 +5,11 @@ import de.simplepvparena.arena.BorderColumnReader;
 import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.block.Block;
+import org.jspecify.annotations.NullMarked;
 
 import java.util.Objects;
 
+@NullMarked
 public final class SpectatorBorderService {
 
     private final BorderMarkIndex borderMarks;

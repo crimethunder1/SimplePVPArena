@@ -1,6 +1,7 @@
 package de.simplepvparena.placement;
 
 import de.simplepvparena.team.TeamMember;
+import org.jspecify.annotations.NullMarked;
 
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -10,6 +11,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
 
+@NullMarked
 public final class AutoMatchLeaderboard {
 
     private final Map<UUID, AutoMatchWins> winsByPlayer = new LinkedHashMap<>();

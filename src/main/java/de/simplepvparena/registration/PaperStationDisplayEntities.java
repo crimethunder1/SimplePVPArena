@@ -24,10 +24,12 @@ import org.bukkit.plugin.Plugin;
 import org.bukkit.util.Transformation;
 import org.joml.AxisAngle4f;
 import org.joml.Vector3f;
+import org.jspecify.annotations.NullMarked;
 
 import java.util.List;
 import java.util.Objects;
 
+@NullMarked
 public final class PaperStationDisplayEntities implements StationDisplayEntities {
 
     public static final String MARKER_KEY_NAME = "registration_station_display";

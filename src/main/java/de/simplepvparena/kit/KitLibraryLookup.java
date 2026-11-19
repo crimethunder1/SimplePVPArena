@@ -1,8 +1,11 @@
 package de.simplepvparena.kit;
 
+import org.jspecify.annotations.NullMarked;
+
 import java.util.Objects;
 import java.util.Optional;
 
+@NullMarked
 public record KitLibraryLookup(Outcome outcome, Optional<SavedKitLibrary> savedKitLibrary, String fileName,
                                Optional<String> failureReason) {
 

@@ -5,7 +5,9 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.PlayerDeathEvent;
+import org.jspecify.annotations.NullMarked;
 
+@NullMarked
 public final class PlayerDeathListener implements Listener {
 
     private final MatchService matchService;

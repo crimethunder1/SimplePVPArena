@@ -4,18 +4,21 @@ import de.simplepvparena.input.ChatInputValues;
 import de.simplepvparena.message.ArenaSetupMessage;
 import de.simplepvparena.message.Messages;
 import de.simplepvparena.message.Placeholder;
+import org.jspecify.annotations.NullMarked;
+import org.jspecify.annotations.Nullable;
 
 import java.util.Optional;
 
+@NullMarked
 public final class ArenaDebugCellLimit {
 
     public static final int MINIMUM_CELL_COUNT = 1;
     public static final int REQUIRED_VALUE_COUNT = 1;
 
     private final int cellCount;
-    private final String rejectionMessage;
+    private final @Nullable String rejectionMessage;
 
-    private ArenaDebugCellLimit(int cellCount, String rejectionMessage) {
+    private ArenaDebugCellLimit(int cellCount, @Nullable String rejectionMessage) {
         this.cellCount = cellCount;
         this.rejectionMessage = rejectionMessage;
     }

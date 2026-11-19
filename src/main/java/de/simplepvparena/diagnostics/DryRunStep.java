@@ -1,8 +1,11 @@
 package de.simplepvparena.diagnostics;
 
+import org.jspecify.annotations.NullMarked;
+
 import java.util.List;
 import java.util.Objects;
 
+@NullMarked
 public record DryRunStep(String name, DryRunStatus status, List<String> details) {
 
     public DryRunStep {

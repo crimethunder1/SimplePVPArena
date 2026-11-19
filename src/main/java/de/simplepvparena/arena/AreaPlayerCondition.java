@@ -1,7 +1,10 @@
 package de.simplepvparena.arena;
 
+import org.jspecify.annotations.NullMarked;
+
 import java.util.List;
 
+@NullMarked
 public record AreaPlayerCondition(List<SavedPotionEffect> potionEffects, int foodLevel, float saturation,
                                   float exhaustion) {
 

@@ -14,10 +14,12 @@ import org.bukkit.inventory.PlayerInventory;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.plugin.Plugin;
+import org.jspecify.annotations.NullMarked;
 
 import java.util.Objects;
 import java.util.function.Function;
 
+@NullMarked
 public final class StandingsBoardToolService {
 
     public static final Material TOOL_MATERIAL = Material.NETHER_STAR;

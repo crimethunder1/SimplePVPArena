@@ -1,9 +1,13 @@
 package de.simplepvparena.arena;
 
+import org.jspecify.annotations.NullMarked;
+import org.jspecify.annotations.Nullable;
+
 import java.util.Optional;
 
+@NullMarked
 public record ArenaVolumeUpdate(ArenaShape volume, ArenaVolumeUpdate.Origin origin,
-                                ArenaShape droppedMarkedVolume) {
+                                @Nullable ArenaShape droppedMarkedVolume) {
 
     public enum Origin {
 
@@ -23,7 +27,7 @@ public record ArenaVolumeUpdate(ArenaShape volume, ArenaVolumeUpdate.Origin orig
     }
 
     public static ArenaVolumeUpdate readOffTheBorderWall(ArenaShape volume,
-                                                         ArenaShape droppedMarkedVolume) {
+                                                         @Nullable ArenaShape droppedMarkedVolume) {
         return new ArenaVolumeUpdate(volume, Origin.BORDER_WALL, droppedMarkedVolume);
     }
 

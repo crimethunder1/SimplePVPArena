@@ -15,6 +15,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+@SuppressWarnings("null")
 class RegistrationCommandTest {
 
     private static final String[] JOIN = {"join"};
@@ -148,7 +149,7 @@ class RegistrationCommandTest {
                 new String[] {"j"}));
         assertEquals(List.of("leave"), command.onTabComplete(steve.player(), null, "tournament",
                 new String[] {"LE"}));
-        assertEquals(List.of("bracket", "join", "leave"), command.onTabComplete(fixture.admin(), null,
+        assertEquals(List.of("bracket", "join", "leave", "import"), command.onTabComplete(fixture.admin(), null,
                 "tournament", new String[] {""}));
     }
 

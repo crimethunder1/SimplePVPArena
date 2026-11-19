@@ -18,6 +18,7 @@ import java.util.function.Consumer;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+@SuppressWarnings("null")
 final class TournamentAudienceHarness {
 
     static final double FAR_AWAY = 5000.5D;

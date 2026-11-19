@@ -12,6 +12,7 @@ import java.util.TreeMap;
 import java.util.UUID;
 import java.util.function.Consumer;
 
+@SuppressWarnings("null")
 final class RecordingAdminMenuWindows implements AdminMenuWindows {
 
     private final Map<UUID, RecordedMenu> lastOpenedMenus = new LinkedHashMap<>();

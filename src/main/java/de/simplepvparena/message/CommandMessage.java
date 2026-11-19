@@ -1,7 +1,10 @@
 package de.simplepvparena.message;
 
+import org.jspecify.annotations.NullMarked;
+
 import java.util.Set;
 
+@NullMarked
 public enum CommandMessage implements MessageKey {
 
     MENU_ONLY_FOR_PLAYERS("command.menu-only-for-players"),

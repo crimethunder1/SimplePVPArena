@@ -29,6 +29,8 @@ class MatchAdminMenuSnapshotTest {
                 A running tournament has priority / Click to switch it on
                 19 | GRAY_DYE | Restart the match | No match is running
                 20 | GRAY_DYE | Take back a result | No tournament is in progress
+                21 | HOPPER | Server mode | Auto: the arena on a running server / \
+                Auto matches and inventory hand-in when entering the area / Click to switch to event mode
                 22 | OAK_DOOR | Back | Returns to the main menu
                 """, fixture.describeLastMenu());
     }
@@ -55,6 +57,8 @@ class MatchAdminMenuSnapshotTest {
                 A running tournament has priority / Click to switch it on
                 19 | GRAY_DYE | Restart the match | No match is running
                 20 | GRAY_DYE | Take back a result | No tournament is in progress
+                21 | HOPPER | Server mode | Auto: the arena on a running server / \
+                Auto matches and inventory hand-in when entering the area / Click to switch to event mode
                 22 | OAK_DOOR | Back | Returns to the main menu
                 """, fixture.describeLastMenu());
     }
@@ -90,6 +94,8 @@ class MatchAdminMenuSnapshotTest {
                 The score is back at 0 : 0, the kit choice and the countdown run again / \
                 Asks for a confirmation first
                 20 | BARRIER | Take back a result | Opens the decided matches whose following match has not started
+                21 | HOPPER | Server mode | Auto: the arena on a running server / \
+                Auto matches and inventory hand-in when entering the area / Click to switch to event mode
                 22 | OAK_DOOR | Back | Returns to the main menu
                 """.formatted(fixture.runningFirstTeamName(), fixture.runningSecondTeamName()),
                 fixture.describeLastMenu());
@@ -126,6 +132,8 @@ class MatchAdminMenuSnapshotTest {
                 The score is back at 0 : 0, the kit choice and the countdown run again / \
                 Asks for a confirmation first
                 20 | BARRIER | Take back a result | Opens the decided matches whose following match has not started
+                21 | HOPPER | Server mode | Auto: the arena on a running server / \
+                Auto matches and inventory hand-in when entering the area / Click to switch to event mode
                 22 | OAK_DOOR | Back | Returns to the main menu
                 """.formatted(fixture.runningFirstTeamName(), fixture.runningSecondTeamName()),
                 fixture.describeLastMenu());
@@ -159,6 +167,8 @@ class MatchAdminMenuSnapshotTest {
                 Click to switch it on
                 19 | GRAY_DYE | Restart the match | No match is running
                 20 | BARRIER | Take back a result | Opens the decided matches whose following match has not started
+                21 | HOPPER | Server mode | Auto: the arena on a running server / \
+                Auto matches and inventory hand-in when entering the area / Click to switch to event mode
                 22 | OAK_DOOR | Back | Returns to the main menu
                 """, fixture.describeLastMenu());
     }
@@ -189,6 +199,8 @@ class MatchAdminMenuSnapshotTest {
                 A running tournament has priority / Click to switch it on
                 19 | GRAY_DYE | Restart the match | No match is running
                 20 | GRAY_DYE | Take back a result | No tournament is in progress
+                21 | HOPPER | Server mode | Auto: the arena on a running server / \
+                Auto matches and inventory hand-in when entering the area / Click to switch to event mode
                 22 | OAK_DOOR | Back | Returns to the main menu
                 """, fixture.describeLastMenu());
     }
@@ -225,6 +237,8 @@ class MatchAdminMenuSnapshotTest {
                 The score is back at 0 : 0, the kit choice and the countdown run again / \
                 Asks for a confirmation first
                 20 | BARRIER | Take back a result | Opens the decided matches whose following match has not started
+                21 | HOPPER | Server mode | Auto: the arena on a running server / \
+                Auto matches and inventory hand-in when entering the area / Click to switch to event mode
                 22 | OAK_DOOR | Back | Returns to the main menu
                 """.formatted(fixture.runningFirstTeamName(), fixture.runningSecondTeamName()),
                 fixture.describeLastMenu());

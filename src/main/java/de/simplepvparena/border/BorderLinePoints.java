@@ -1,7 +1,9 @@
 package de.simplepvparena.border;
 
 import de.simplepvparena.arena.BlockPositionCodec;
+import org.jspecify.annotations.NullMarked;
 
+@NullMarked
 final class BorderLinePoints {
 
     static final double BLOCK_CENTER_OFFSET = 0.5D;

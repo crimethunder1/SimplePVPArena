@@ -9,10 +9,12 @@ import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.FoodLevelChangeEvent;
+import org.jspecify.annotations.NullMarked;
 
 import java.util.EnumSet;
 import java.util.Set;
 
+@NullMarked
 public final class ArenaSafetyZoneListener implements Listener {
 
     private static final Set<EntityDamageEvent.DamageCause> PROTECTED_CAUSES = EnumSet.of(

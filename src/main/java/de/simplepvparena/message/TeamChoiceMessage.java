@@ -1,7 +1,10 @@
 package de.simplepvparena.message;
 
+import org.jspecify.annotations.NullMarked;
+
 import java.util.Set;
 
+@NullMarked
 public enum TeamChoiceMessage implements MessageKey {
 
     REGISTER_FIRST("team-choice.register-first"),

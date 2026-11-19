@@ -1,8 +1,11 @@
 package de.simplepvparena.tournament;
 
+import org.jspecify.annotations.NullMarked;
+
 import java.util.Objects;
 import java.util.Optional;
 
+@NullMarked
 public record TournamentStateLookup(Outcome outcome, Optional<SavedTournament> savedTournament, String fileName,
                                     Optional<String> failureReason) {
 

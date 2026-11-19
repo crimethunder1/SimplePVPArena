@@ -1,7 +1,10 @@
 package de.simplepvparena.arena;
 
+import org.jspecify.annotations.NullMarked;
+
 import java.util.Arrays;
 
+@NullMarked
 public final class ArenaOutline {
 
     private static final int[] NEIGHBOUR_X = {1, -1, 0, 0};

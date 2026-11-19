@@ -2,7 +2,9 @@ package de.simplepvparena.tournament;
 
 import de.simplepvparena.message.Messages;
 import de.simplepvparena.message.TournamentStatusMessage;
+import org.jspecify.annotations.NullMarked;
 
+@NullMarked
 public enum FinalMatchStage {
 
     PENDING,

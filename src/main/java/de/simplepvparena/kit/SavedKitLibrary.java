@@ -1,9 +1,12 @@
 package de.simplepvparena.kit;
 
+import org.jspecify.annotations.NullMarked;
+
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
+@NullMarked
 public record SavedKitLibrary(List<SavedKit> kits, Optional<String> defaultKitName) {
 
     public SavedKitLibrary {

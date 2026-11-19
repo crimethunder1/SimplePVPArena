@@ -9,6 +9,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
+@SuppressWarnings("null")
 public final class InMemoryKitLibraryStorage implements KitLibraryStorage {
 
     public static final String FILE_NAME = "memory-kits.yml";

@@ -3,6 +3,7 @@ package de.simplepvparena.arena;
 import de.simplepvparena.message.ArenaGapMessage;
 import de.simplepvparena.message.Messages;
 import de.simplepvparena.message.Placeholder;
+import org.jspecify.annotations.NullMarked;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -11,6 +12,7 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 
+@NullMarked
 public final class ArenaFillDiagnostics {
 
     public static final int FRONT_SAMPLE_SIZE = 8;

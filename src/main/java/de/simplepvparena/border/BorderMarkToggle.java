@@ -2,7 +2,9 @@ package de.simplepvparena.border;
 
 import de.simplepvparena.message.BorderMessage;
 import de.simplepvparena.message.Messages;
+import org.jspecify.annotations.NullMarked;
 
+@NullMarked
 public enum BorderMarkToggle {
 
     MARKED,

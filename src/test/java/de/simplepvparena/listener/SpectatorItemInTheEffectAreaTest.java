@@ -23,6 +23,7 @@ import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
+@SuppressWarnings("null")
 @UseLanguage("en")
 class SpectatorItemInTheEffectAreaTest {
 

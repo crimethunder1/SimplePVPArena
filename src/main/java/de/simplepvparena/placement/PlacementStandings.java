@@ -1,9 +1,12 @@
 package de.simplepvparena.placement;
 
+import org.jspecify.annotations.NullMarked;
+
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
+@NullMarked
 public record PlacementStandings(PlacementPhase phase,
                                  int roundNumber,
                                  int roundCount,

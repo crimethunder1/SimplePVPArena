@@ -1,5 +1,7 @@
 package de.simplepvparena.tournament;
 
+import org.jspecify.annotations.NullMarked;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
@@ -12,6 +14,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 
+@NullMarked
 public final class Bracket {
 
     public static final int MINIMUM_TEAM_COUNT = 2;

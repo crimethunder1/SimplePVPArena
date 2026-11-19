@@ -7,6 +7,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
+@SuppressWarnings("null")
 final class MapMessageCatalog implements MessageCatalog {
 
     private final Map<String, List<String>> linesByPath = new LinkedHashMap<>();

@@ -11,6 +11,7 @@ import de.simplepvparena.message.Placeholder;
 import de.simplepvparena.message.TournamentMessages;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
+import org.jspecify.annotations.NullMarked;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -18,6 +19,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.function.BooleanSupplier;
 
+@NullMarked
 final class KitActionsAdminMenu implements AdminMenu {
 
     private static final int KIT_DEFAULT_SLOT = 11;

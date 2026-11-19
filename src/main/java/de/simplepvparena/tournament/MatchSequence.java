@@ -1,7 +1,10 @@
 package de.simplepvparena.tournament;
 
+import org.jspecify.annotations.NullMarked;
+
 import java.util.Optional;
 
+@NullMarked
 public final class MatchSequence {
 
     private MatchSequence() {

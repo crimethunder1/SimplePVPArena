@@ -1,7 +1,10 @@
 package de.simplepvparena.message;
 
+import org.jspecify.annotations.NullMarked;
+
 import java.util.Set;
 
+@NullMarked
 public enum TeamMenuMessage implements MessageKey {
 
     TITLE("teams-menu.title", "page"),

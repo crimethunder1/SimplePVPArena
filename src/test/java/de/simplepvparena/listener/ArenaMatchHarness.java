@@ -54,6 +54,7 @@ import java.util.UUID;
 import java.util.function.Function;
 import java.util.logging.Logger;
 
+@SuppressWarnings("null")
 final class ArenaMatchHarness {
 
     static final String WORLD_NAME = "event";

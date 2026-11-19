@@ -5,9 +5,11 @@ import de.simplepvparena.message.MessageKey;
 import org.bukkit.Material;
 import org.bukkit.block.BlockState;
 import org.bukkit.block.data.BlockData;
+import org.jspecify.annotations.NullMarked;
 
 import java.util.Optional;
 
+@NullMarked
 public interface ArenaCleaningTarget {
 
     ArenaCleaningTarget EMPTY_ARENA = new ArenaCleaningTarget() {

@@ -1,7 +1,10 @@
 package de.simplepvparena.particle;
 
+import org.jspecify.annotations.NullMarked;
+
 import java.util.Locale;
 
+@NullMarked
 public final class ParticleNames {
 
     private static final char NAME_SEPARATOR = '_';

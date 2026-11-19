@@ -12,6 +12,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
+@SuppressWarnings("null")
 final class RecordingFighterColours implements FighterColours {
 
     private final Map<String, List<String>> fightersByScoreboardTeam = new LinkedHashMap<>();

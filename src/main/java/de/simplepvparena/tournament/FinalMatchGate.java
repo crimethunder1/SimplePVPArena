@@ -4,10 +4,12 @@ import de.simplepvparena.message.FinalMessage;
 import de.simplepvparena.message.MatchMenuMessage;
 import de.simplepvparena.message.Messages;
 import de.simplepvparena.message.Placeholder;
+import org.jspecify.annotations.NullMarked;
 
 import java.util.Objects;
 import java.util.Optional;
 
+@NullMarked
 public final class FinalMatchGate {
 
     private final AdminNotifier adminNotifier;

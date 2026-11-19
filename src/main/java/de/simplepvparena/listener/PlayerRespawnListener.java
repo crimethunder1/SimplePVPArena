@@ -15,10 +15,12 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerRespawnEvent;
 import org.bukkit.plugin.Plugin;
+import org.jspecify.annotations.NullMarked;
 
 import java.util.Optional;
 import java.util.logging.Level;
 
+@NullMarked
 public final class PlayerRespawnListener implements Listener {
 
     private final Plugin plugin;

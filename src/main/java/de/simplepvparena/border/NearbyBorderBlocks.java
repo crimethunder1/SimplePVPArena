@@ -1,7 +1,10 @@
 package de.simplepvparena.border;
 
+import org.jspecify.annotations.NullMarked;
+
 import java.util.Arrays;
 
+@NullMarked
 public final class NearbyBorderBlocks {
 
     private final long[] positions;

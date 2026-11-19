@@ -8,11 +8,14 @@ import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.scheduler.BukkitTask;
+import org.jspecify.annotations.NullMarked;
+import org.jspecify.annotations.Nullable;
 
 import java.util.Objects;
 import java.util.Optional;
 import java.util.logging.Level;
 
+@NullMarked
 public final class ArenaMobRemovalService {
 
     public static final long PERIOD_TICKS = 20L;
@@ -20,7 +23,7 @@ public final class ArenaMobRemovalService {
     private final Plugin plugin;
     private final ArenaRegistry arenaRegistry;
 
-    private BukkitTask activeTask;
+    private @Nullable BukkitTask activeTask;
 
     public ArenaMobRemovalService(Plugin plugin, ArenaRegistry arenaRegistry) {
         this.plugin = Objects.requireNonNull(plugin, "plugin");

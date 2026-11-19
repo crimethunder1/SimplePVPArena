@@ -7,11 +7,14 @@ import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.scheduler.BukkitTask;
+import org.jspecify.annotations.NullMarked;
+import org.jspecify.annotations.Nullable;
 
 import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.logging.Level;
 
+@NullMarked
 public final class ArenaBaselineService {
 
     public static final int DEFAULT_BLOCKS_PER_TICK = 16_384;
@@ -26,7 +29,7 @@ public final class ArenaBaselineService {
 
     private int blocksPerTick = DEFAULT_BLOCKS_PER_TICK;
     private int depthBelowFloor = DEFAULT_DEPTH_BELOW_FLOOR;
-    private BukkitTask activeTask;
+    private @Nullable BukkitTask activeTask;
     private Consumer<ArenaBaselineSnapshot> captureListener = snapshot -> { };
 
     public ArenaBaselineService(Plugin plugin, ArenaBaselineRegistry baselineRegistry) {

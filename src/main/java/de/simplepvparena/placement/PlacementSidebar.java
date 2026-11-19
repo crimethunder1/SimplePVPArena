@@ -15,6 +15,8 @@ import org.bukkit.scoreboard.Objective;
 import org.bukkit.scoreboard.Score;
 import org.bukkit.scoreboard.Scoreboard;
 import org.bukkit.scoreboard.ScoreboardManager;
+import org.jspecify.annotations.NullMarked;
+import org.jspecify.annotations.Nullable;
 
 import java.util.HashSet;
 import java.util.LinkedHashMap;
@@ -26,6 +28,7 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.function.Supplier;
 
+@NullMarked
 public final class PlacementSidebar implements EffectAreaPresence {
 
     public static final String OBJECTIVE_NAME = "placement";
@@ -39,7 +42,7 @@ public final class PlacementSidebar implements EffectAreaPresence {
 
     private boolean enabled = PluginSettings.DEFAULT_PLACEMENT_SIDEBAR_ENABLED;
     private PlacementStandings standings = PlacementStandings.none();
-    private BukkitTask refreshTask;
+    private @Nullable BukkitTask refreshTask;
 
     public PlacementSidebar(Plugin plugin, Supplier<Optional<EffectArea>> effectAreaSource,
                             Supplier<PlacementStandings> standingsSource) {
@@ -82,7 +85,7 @@ public final class PlacementSidebar implements EffectAreaPresence {
     public void refresh() {
         standings = standingsSource.get();
         Set<UUID> onlinePlayers = new HashSet<>();
-        for (Player player : List.copyOf(plugin.getServer().getOnlinePlayers())) {
+        for (Player player : List.<Player>copyOf(plugin.getServer().getOnlinePlayers())) {
             onlinePlayers.add(player.getUniqueId());
             reconcile(player, player.getLocation());
         }
@@ -99,7 +102,7 @@ public final class PlacementSidebar implements EffectAreaPresence {
     }
 
     public void giveEveryScoreboardBack() {
-        for (Player player : List.copyOf(plugin.getServer().getOnlinePlayers())) {
+        for (Player player : List.<Player>copyOf(plugin.getServer().getOnlinePlayers())) {
             giveBack(player);
         }
         shownSidebars.clear();

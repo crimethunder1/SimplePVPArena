@@ -28,6 +28,8 @@ import de.simplepvparena.border.BorderWallPreview;
 import de.simplepvparena.border.SpectatorBorderService;
 import de.simplepvparena.command.TournamentCommand;
 import de.simplepvparena.config.ConfigurationReloadReport;
+import de.simplepvparena.config.ServerMode;
+import de.simplepvparena.config.ServerModeSetting;
 import de.simplepvparena.diagnostics.PluginDryRunArena;
 import de.simplepvparena.diagnostics.TournamentDryRun;
 import de.simplepvparena.gate.StartGateDuration;
@@ -56,6 +58,7 @@ import de.simplepvparena.registration.RegistrationService;
 import de.simplepvparena.registration.RegistrationStationService;
 import de.simplepvparena.registration.RegistrationStations;
 import de.simplepvparena.registration.TeamChoiceService;
+import de.simplepvparena.registration.TeamImportService;
 import de.simplepvparena.registration.TeamMode;
 import de.simplepvparena.registration.TeamModeSetting;
 import de.simplepvparena.support.FakeKitItemSerializer;
@@ -67,6 +70,7 @@ import de.simplepvparena.support.TickingScheduler;
 import de.simplepvparena.team.TeamMember;
 import de.simplepvparena.team.TeamMemberLookup;
 import de.simplepvparena.team.TeamRegistry;
+import de.simplepvparena.team.TeamSizeSetting;
 import de.simplepvparena.tournament.AutoMatchService;
 import de.simplepvparena.tournament.AutoMatchState;
 import de.simplepvparena.tournament.AutomaticArenaCleanup;
@@ -94,6 +98,7 @@ import org.bukkit.scheduler.BukkitScheduler;
 import org.bukkit.scheduler.BukkitTask;
 
 import java.io.IOException;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -103,11 +108,13 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
 import java.util.logging.Logger;
 import java.util.random.RandomGenerator;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+@SuppressWarnings("null")
 final class AdminMenuFixture {
 
     private static final String WORLD_NAME = "admin-menu";
@@ -155,6 +162,9 @@ final class AdminMenuFixture {
     private final List<TeamMode> writtenTeamModes = new ArrayList<>();
     private final List<String> markClearingWarnings = new ArrayList<>();
     private final TeamModeSetting teamModeSetting = new TeamModeSetting();
+    private final ServerModeSetting serverModeSetting = startingInAutoMode();
+    private final List<ServerMode> switchedServerModes = new ArrayList<>();
+    private IOException serverModeSwitchFailure;
     private final TickingScheduler kitChoiceScheduler = new TickingScheduler();
     private final TickingScheduler voteScheduler = new TickingScheduler();
     private final RegistrationList registrationList = new RegistrationList();
@@ -273,7 +283,7 @@ final class AdminMenuFixture {
         menuService = new AdminMenuService(new AdminMenuDependencies(plugin, chatInputService,
                 this::reloadConfiguration,
                 new AdminMenuDependencies.TournamentServices(tournamentManager, tournamentDryRun, matchService,
-                        autoMatchService, this::writeAutoMatchMode),
+                        autoMatchService, this::writeAutoMatchMode, serverModeSetting, this::switchServerMode),
                 new AdminMenuDependencies.TeamServices(teamRegistry, new TeamMemberLookup(server),
                         this::saveTeamConfiguration, this::writeTeamSize),
                 new AdminMenuDependencies.ArenaServices(arenaSetupService,
@@ -338,7 +348,14 @@ final class AdminMenuFixture {
     TournamentCommand createTournamentCommand(Logger logger) {
         return new TournamentCommand(matchService,
                 new SpectatorService(arenaRegistry, new SpectatorItemFactory(plugin)), menuService,
-                registrationService, playAgainService, logger);
+                registrationService, playAgainService, createTeamImportService(), logger);
+    }
+
+    private TeamImportService createTeamImportService() {
+        return new TeamImportService(Path.of("build", "no-imports"), teamRegistry, new TeamSizeSetting(),
+                () -> false, () -> false, () -> { }, uniqueId -> null, RandomGenerator.getDefault(),
+                playerName -> CompletableFuture.completedFuture(Optional.empty()),
+                Runnable::run);
     }
 
     void letTheAdminLeave() {
@@ -504,6 +521,18 @@ final class AdminMenuFixture {
 
     AutoMatchService autoMatchService() {
         return autoMatchService;
+    }
+
+    ServerModeSetting serverModeSetting() {
+        return serverModeSetting;
+    }
+
+    List<ServerMode> switchedServerModes() {
+        return switchedServerModes;
+    }
+
+    void failTheServerModeSwitch(IOException failure) {
+        serverModeSwitchFailure = failure;
     }
 
     List<Boolean> writtenAutoMatchModes() {
@@ -916,6 +945,21 @@ final class AdminMenuFixture {
             throw teamSizeWriteFailure;
         }
         writtenTeamSizes.add(teamSize);
+    }
+
+    private static ServerModeSetting startingInAutoMode() {
+        ServerModeSetting setting = new ServerModeSetting();
+        setting.setServerMode(ServerMode.AUTO);
+        return setting;
+    }
+
+    private void switchServerMode(ServerMode serverMode) throws IOException {
+        if (serverModeSwitchFailure != null) {
+            throw serverModeSwitchFailure;
+        }
+        switchedServerModes.add(serverMode);
+        serverModeSetting.setServerMode(serverMode);
+        autoMatchService.setEnabled(serverMode.allowsAutoMatches() && autoMatchService.isEnabled());
     }
 
     private void writeAutoMatchMode(boolean enabled) throws IOException {

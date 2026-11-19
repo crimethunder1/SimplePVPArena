@@ -1,7 +1,10 @@
 package de.simplepvparena.visual;
 
+import org.jspecify.annotations.NullMarked;
+
 import java.util.Objects;
 
+@NullMarked
 public record CustomVisualSettings(boolean enabled,
                                    String threeImageIdentifier,
                                    String twoImageIdentifier,

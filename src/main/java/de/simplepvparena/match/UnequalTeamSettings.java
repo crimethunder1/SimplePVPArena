@@ -1,7 +1,10 @@
 package de.simplepvparena.match;
 
+import org.jspecify.annotations.NullMarked;
+
 import java.util.Objects;
 
+@NullMarked
 public record UnequalTeamSettings(UnequalTeamsMode mode, int voteSeconds) {
 
     public static final UnequalTeamsMode DEFAULT_MODE = UnequalTeamsMode.VOTE;

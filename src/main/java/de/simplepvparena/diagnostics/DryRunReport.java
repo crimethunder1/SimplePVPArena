@@ -4,12 +4,15 @@ import de.simplepvparena.message.DryRunMessage;
 import de.simplepvparena.message.Messages;
 import de.simplepvparena.message.Placeholder;
 import de.simplepvparena.message.TournamentMessages;
+import org.jspecify.annotations.NullMarked;
+import org.jspecify.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
+@NullMarked
 public final class DryRunReport {
 
     private static final String STEP_INDENT = "  ";
@@ -17,10 +20,10 @@ public final class DryRunReport {
     private static final String MARKER_OPENING = "[";
     private static final String MARKER_CLOSING = "] ";
 
-    private final String rejectionReason;
+    private final @Nullable String rejectionReason;
     private final List<DryRunStep> steps;
 
-    private DryRunReport(String rejectionReason, List<DryRunStep> steps) {
+    private DryRunReport(@Nullable String rejectionReason, List<DryRunStep> steps) {
         this.rejectionReason = rejectionReason;
         this.steps = List.copyOf(steps);
     }
@@ -58,8 +61,8 @@ public final class DryRunReport {
     }
 
     public List<String> describe() {
-        if (isRejected()) {
-            return describeRejection();
+        if (rejectionReason != null) {
+            return describeRejection(rejectionReason);
         }
         List<String> lines = new ArrayList<>();
         lines.add(describeSummary());
@@ -92,10 +95,10 @@ public final class DryRunReport {
         return Messages.plural(DryRunMessage.SUMMARY, steps.size(), passed);
     }
 
-    private List<String> describeRejection() {
+    private List<String> describeRejection(String reason) {
         List<String> lines = new ArrayList<>();
         lines.add(Messages.text(DryRunMessage.REJECTED));
-        lines.addAll(List.of(rejectionReason.split(TournamentMessages.LINE_BREAK, -1)));
+        lines.addAll(List.of(reason.split(TournamentMessages.LINE_BREAK, -1)));
         return List.copyOf(lines);
     }
 }

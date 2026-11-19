@@ -10,6 +10,7 @@ import de.simplepvparena.team.TeamMember;
 import de.simplepvparena.team.TeamRegistry;
 import de.simplepvparena.team.TeamSizeSetting;
 import org.bukkit.entity.Player;
+import org.jspecify.annotations.NullMarked;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -19,6 +20,7 @@ import java.util.UUID;
 import java.util.function.BooleanSupplier;
 import java.util.function.Function;
 
+@NullMarked
 public final class TeamChoiceService implements RegistrationObserver {
 
     public static final int MINIMUM_OFFERED_COLOUR_COUNT = 2;

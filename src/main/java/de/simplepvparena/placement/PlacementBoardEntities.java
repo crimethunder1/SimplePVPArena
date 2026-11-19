@@ -3,7 +3,9 @@ package de.simplepvparena.placement;
 import net.kyori.adventure.text.Component;
 import org.bukkit.Location;
 import org.bukkit.entity.Entity;
+import org.jspecify.annotations.NullMarked;
 
+@NullMarked
 public interface PlacementBoardEntities {
 
     Entity spawnBoard(Location location, Component text);

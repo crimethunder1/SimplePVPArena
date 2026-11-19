@@ -1,7 +1,9 @@
 package de.simplepvparena.permission;
 
 import org.bukkit.permissions.Permissible;
+import org.jspecify.annotations.NullMarked;
 
+@NullMarked
 public final class AdminPermission {
 
     public static final String ADMIN_PERMISSION_NAME = "tournament.admin";

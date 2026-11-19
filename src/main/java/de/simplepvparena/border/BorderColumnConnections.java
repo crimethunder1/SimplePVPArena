@@ -3,6 +3,7 @@ package de.simplepvparena.border;
 import de.simplepvparena.arena.BlockPositionCodec;
 import de.simplepvparena.arena.BorderColumnReader;
 import de.simplepvparena.arena.HorizontalCellCodec;
+import org.jspecify.annotations.NullMarked;
 
 import java.util.HashMap;
 import java.util.LinkedHashSet;
@@ -10,6 +11,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+@NullMarked
 public final class BorderColumnConnections {
 
     private static final int[] COLUMN_OFFSETS_X = {1, -1, 0, 0, 1, 1, -1, -1};

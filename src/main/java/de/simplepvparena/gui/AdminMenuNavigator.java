@@ -1,6 +1,7 @@
 package de.simplepvparena.gui;
 
 import org.bukkit.entity.Player;
+import org.jspecify.annotations.NullMarked;
 
 import java.util.EnumMap;
 import java.util.EnumSet;
@@ -8,6 +9,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 
+@NullMarked
 final class AdminMenuNavigator implements AdminMenuNavigation {
 
     private final AdminMenuWindows windows;

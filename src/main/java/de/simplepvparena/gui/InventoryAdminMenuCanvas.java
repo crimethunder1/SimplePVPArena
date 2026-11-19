@@ -5,11 +5,13 @@ import net.kyori.adventure.text.format.TextDecoration;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
+import org.jspecify.annotations.NullMarked;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
+@NullMarked
 final class InventoryAdminMenuCanvas implements AdminMenuCanvas {
 
     private final Inventory inventory;

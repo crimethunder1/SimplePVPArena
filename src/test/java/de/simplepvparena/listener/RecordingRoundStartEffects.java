@@ -8,6 +8,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+@SuppressWarnings("null")
 final class RecordingRoundStartEffects implements RoundStartEffects {
 
     private final Map<String, Integer> blindnessTicksByPlayerName = new LinkedHashMap<>();

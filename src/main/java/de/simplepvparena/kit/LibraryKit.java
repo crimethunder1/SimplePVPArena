@@ -1,7 +1,10 @@
 package de.simplepvparena.kit;
 
+import org.jspecify.annotations.NullMarked;
+
 import java.util.Objects;
 
+@NullMarked
 public record LibraryKit(String name, SerializedKit serializedKit, KitDefinition kitDefinition) {
 
     public LibraryKit {

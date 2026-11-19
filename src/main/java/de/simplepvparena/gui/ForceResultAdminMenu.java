@@ -12,12 +12,14 @@ import de.simplepvparena.team.TeamMember;
 import de.simplepvparena.tournament.TournamentManager;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
+import org.jspecify.annotations.NullMarked;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
+@NullMarked
 final class ForceResultAdminMenu implements AdminMenu {
 
     private static final int FORCE_RESULT_FIRST_TEAM_SLOT = 11;

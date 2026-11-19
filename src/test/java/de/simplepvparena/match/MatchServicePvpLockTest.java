@@ -8,6 +8,7 @@ import java.util.UUID;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+@SuppressWarnings("null")
 class MatchServicePvpLockTest {
 
     private static final UUID FIRST_FIGHTER = UUID.randomUUID();

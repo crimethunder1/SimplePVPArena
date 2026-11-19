@@ -20,6 +20,7 @@ import de.simplepvparena.team.TeamSizeSetting;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
+import org.jspecify.annotations.NullMarked;
 
 import java.io.IOException;
 import java.util.List;
@@ -28,6 +29,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.OptionalInt;
 
+@NullMarked
 final class RegistrationsAdminMenu implements AdminMenu {
 
     private static final int REGISTRATIONS_MENU_SIZE = 54;

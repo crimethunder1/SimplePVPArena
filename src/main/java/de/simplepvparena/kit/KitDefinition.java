@@ -4,6 +4,7 @@ import de.simplepvparena.message.KitMessage;
 import de.simplepvparena.message.Messages;
 import de.simplepvparena.message.Placeholder;
 import org.bukkit.inventory.ItemStack;
+import org.jspecify.annotations.NullMarked;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -13,6 +14,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.TreeMap;
 
+@NullMarked
 public record KitDefinition(Map<KitEquipmentSlot, ItemStack> equipmentItems,
                             Map<Integer, ItemStack> inventoryItems) {
 

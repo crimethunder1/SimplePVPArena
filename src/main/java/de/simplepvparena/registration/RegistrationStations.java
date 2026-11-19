@@ -2,12 +2,14 @@ package de.simplepvparena.registration;
 
 import org.bukkit.Location;
 import org.bukkit.World;
+import org.jspecify.annotations.NullMarked;
 
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 
+@NullMarked
 public final class RegistrationStations {
 
     private final Set<RegistrationStation> stations = new LinkedHashSet<>();

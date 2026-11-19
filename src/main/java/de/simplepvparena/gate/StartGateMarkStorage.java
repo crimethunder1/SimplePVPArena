@@ -2,6 +2,7 @@ package de.simplepvparena.gate;
 
 import org.bukkit.Material;
 import org.bukkit.configuration.file.YamlConfiguration;
+import org.jspecify.annotations.NullMarked;
 
 import java.io.File;
 import java.io.IOException;
@@ -17,6 +18,7 @@ import java.util.Objects;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+@NullMarked
 public final class StartGateMarkStorage {
 
     public static final String FILE_NAME = "startgates.yml";

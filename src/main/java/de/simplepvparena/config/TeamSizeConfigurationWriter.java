@@ -2,6 +2,8 @@ package de.simplepvparena.config;
 
 import de.simplepvparena.team.TeamSizeWriter;
 import org.bukkit.configuration.file.FileConfiguration;
+import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.NullMarked;
 
 import java.io.File;
 import java.io.IOException;
@@ -10,13 +12,14 @@ import java.util.function.Supplier;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+@NullMarked
 public final class TeamSizeConfigurationWriter implements TeamSizeWriter {
 
-    private final Supplier<? extends FileConfiguration> configurationSource;
+    private final Supplier<? extends @NonNull FileConfiguration> configurationSource;
     private final File configurationFile;
     private final Logger logger;
 
-    public TeamSizeConfigurationWriter(Supplier<? extends FileConfiguration> configurationSource,
+    public TeamSizeConfigurationWriter(Supplier<? extends @NonNull FileConfiguration> configurationSource,
                                        File configurationFile, Logger logger) {
         this.configurationSource = Objects.requireNonNull(configurationSource, "configurationSource");
         this.configurationFile = Objects.requireNonNull(configurationFile, "configurationFile");

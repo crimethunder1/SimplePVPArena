@@ -6,6 +6,8 @@ import org.bukkit.Server;
 import org.bukkit.scoreboard.Scoreboard;
 import org.bukkit.scoreboard.ScoreboardManager;
 import org.bukkit.scoreboard.Team;
+import org.jspecify.annotations.NullMarked;
+import org.jspecify.annotations.Nullable;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -14,6 +16,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.function.Consumer;
 
+@NullMarked
 public final class ScoreboardFighterColours implements FighterColours {
 
     private final Server server;
@@ -22,7 +25,7 @@ public final class ScoreboardFighterColours implements FighterColours {
     private final Map<String, String> previousTeamNameByFighter = new LinkedHashMap<>();
 
     private TeamColourSettings settings = TeamColourSettings.defaults();
-    private Match colouredMatch;
+    private @Nullable Match colouredMatch;
     private boolean missingScoreboardReported;
 
     public ScoreboardFighterColours(Server server, Consumer<String> problemReporter) {

@@ -1,7 +1,10 @@
 package de.simplepvparena.message;
 
+import org.jspecify.annotations.NullMarked;
+
 import java.util.Set;
 
+@NullMarked
 public enum ConfigMessage implements MessageKey {
 
     LANGUAGE_NOT_SHIPPED("config.problem.language-not-shipped", "path", "language", "fallback", "languages"),
@@ -26,6 +29,7 @@ public enum ConfigMessage implements MessageKey {
     AUTO_MATCH_PLAY_AGAIN_OUT_OF_RANGE("config.problem.auto-match-play-again-out-of-range", "path", "minimum",
             "maximum", "count"),
     TEAM_MODE_UNKNOWN("config.problem.team-mode-unknown", "path", "modes", "fallback"),
+    SERVER_MODE_UNKNOWN("config.problem.server-mode-unknown", "path", "modes", "fallback"),
     CLEANING_DURATION_NEGATIVE("config.problem.cleaning-duration-negative", "path", "seconds"),
     CLEANING_COLUMNS_NEGATIVE("config.problem.cleaning-columns-negative", "path", "count"),
     START_GATE_DURATION_TOO_SHORT("config.problem.start-gate-duration-too-short", "path", "minimum", "count"),

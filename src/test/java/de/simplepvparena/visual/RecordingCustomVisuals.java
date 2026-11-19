@@ -11,6 +11,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
+@SuppressWarnings("null")
 public final class RecordingCustomVisuals implements CustomVisuals {
 
     private final Map<String, String> fontImages = new LinkedHashMap<>();

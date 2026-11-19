@@ -1,11 +1,13 @@
 package de.simplepvparena.registration;
 
 import org.bukkit.block.BlockFace;
+import org.jspecify.annotations.NullMarked;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
+@NullMarked
 public record RegistrationMachine(String worldName, int blockX, int blockY, int blockZ, BlockFace facing) {
 
     public static final int WIDTH = 2;

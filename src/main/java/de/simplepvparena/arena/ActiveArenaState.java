@@ -1,8 +1,11 @@
 package de.simplepvparena.arena;
 
+import org.jspecify.annotations.NullMarked;
+
 import java.util.Objects;
 import java.util.Optional;
 
+@NullMarked
 public final class ActiveArenaState {
 
     private final ArenaRegistry arenaRegistry;

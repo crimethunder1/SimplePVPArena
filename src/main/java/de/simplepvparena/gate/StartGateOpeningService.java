@@ -6,6 +6,8 @@ import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.scheduler.BukkitTask;
+import org.jspecify.annotations.NullMarked;
+import org.jspecify.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -13,6 +15,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.logging.Level;
 
+@NullMarked
 public final class StartGateOpeningService implements StartGates {
 
     private static final long OPENING_PERIOD_TICKS = 1L;
@@ -22,7 +25,7 @@ public final class StartGateOpeningService implements StartGates {
     private final StartGateDuration duration;
     private final StartGateVisualEffect visualEffect;
 
-    private BukkitTask activeTask;
+    private @Nullable BukkitTask activeTask;
     private int countdownSeconds;
 
     public StartGateOpeningService(Plugin plugin, StartGateMarks gateMarks, StartGateDuration duration) {

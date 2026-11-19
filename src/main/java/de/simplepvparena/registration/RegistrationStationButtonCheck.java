@@ -7,6 +7,7 @@ import org.bukkit.Chunk;
 import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.block.Block;
+import org.jspecify.annotations.NullMarked;
 
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -16,6 +17,7 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
 
+@NullMarked
 public final class RegistrationStationButtonCheck {
 
     private static final int CHUNK_SHIFT = 4;

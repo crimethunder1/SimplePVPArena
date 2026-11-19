@@ -15,6 +15,7 @@ import static de.simplepvparena.arena.ArenaBaselineSnapshotTest.position;
 import static de.simplepvparena.arena.ArenaBaselineSnapshotTest.shape;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
+@SuppressWarnings("null")
 class ArenaCleaningTextsTest {
 
     private static final long ANIMATION_TICKS = 90L;

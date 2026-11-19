@@ -7,6 +7,8 @@ import org.bukkit.NamespacedKey;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.inventory.ItemStack;
+import org.jspecify.annotations.NullMarked;
+import org.jspecify.annotations.Nullable;
 
 import java.util.EnumMap;
 import java.util.LinkedHashMap;
@@ -18,6 +20,7 @@ import java.util.TreeMap;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
+@NullMarked
 public final class KitConfigurationLoader {
 
     private static final String ARMOR_SECTION = "armor";
@@ -97,7 +100,7 @@ public final class KitConfigurationLoader {
         return inventoryItems;
     }
 
-    private Optional<ItemStack> readItemStack(Map<?, ?> itemValues, ConfigurationSection itemSection) {
+    private Optional<ItemStack> readItemStack(Map<?, ?> itemValues, @Nullable ConfigurationSection itemSection) {
         Object rawMaterial = itemValues.get("material");
         if (rawMaterial == null) {
             problemReporter.accept("Kit item without material found, skipping it");
@@ -130,20 +133,20 @@ public final class KitConfigurationLoader {
         return failure.getMessage() == null ? failure.getClass().getSimpleName() : failure.getMessage();
     }
 
-    private Map<Enchantment, Integer> readEnchantments(ConfigurationSection enchantmentSection) {
+    private Map<Enchantment, Integer> readEnchantments(@Nullable ConfigurationSection enchantmentSection) {
         if (enchantmentSection == null) {
             return Map.of();
         }
         return readEnchantments(enchantmentSection.getValues(false));
     }
 
-    private Map<Enchantment, Integer> readEnchantments(Object rawEnchantments) {
+    private Map<Enchantment, Integer> readEnchantments(@Nullable Object rawEnchantments) {
         if (!(rawEnchantments instanceof Map<?, ?> enchantmentValues)) {
             return Map.of();
         }
         Map<Enchantment, Integer> enchantments = new LinkedHashMap<>();
         enchantmentValues.forEach((rawKey, rawLevel) -> {
-            Enchantment enchantment = resolveEnchantment(rawKey.toString());
+            Enchantment enchantment = resolveEnchantment(String.valueOf(rawKey));
             if (enchantment == null) {
                 problemReporter.accept("Unknown enchantment in kit configuration: " + rawKey);
                 return;
@@ -154,7 +157,7 @@ public final class KitConfigurationLoader {
         return enchantments;
     }
 
-    private Enchantment resolveEnchantment(String enchantmentName) {
+    private @Nullable Enchantment resolveEnchantment(String enchantmentName) {
         NamespacedKey namespacedKey = NamespacedKey.fromString(enchantmentName.toLowerCase(Locale.ROOT));
         if (namespacedKey == null) {
             return null;

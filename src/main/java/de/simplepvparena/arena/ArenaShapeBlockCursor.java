@@ -1,7 +1,10 @@
 package de.simplepvparena.arena;
 
+import org.jspecify.annotations.NullMarked;
+
 import java.util.Objects;
 
+@NullMarked
 public final class ArenaShapeBlockCursor {
 
     private final ArenaShape shape;

@@ -1,10 +1,12 @@
 package de.simplepvparena.kit;
 
 import org.bukkit.inventory.EquipmentSlot;
+import org.jspecify.annotations.NullMarked;
 
 import java.util.Locale;
 import java.util.Optional;
 
+@NullMarked
 public enum KitEquipmentSlot {
 
     HEAD("head", EquipmentSlot.HEAD),

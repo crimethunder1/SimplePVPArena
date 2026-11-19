@@ -1,7 +1,9 @@
 package de.simplepvparena.kit;
 
 import org.bukkit.inventory.ItemStack;
+import org.jspecify.annotations.NullMarked;
 
+@NullMarked
 public final class BukkitKitItemSerializer implements KitItemSerializer {
 
     @Override

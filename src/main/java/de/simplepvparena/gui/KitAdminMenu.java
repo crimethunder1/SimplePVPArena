@@ -15,12 +15,14 @@ import de.simplepvparena.message.Placeholder;
 import de.simplepvparena.message.TournamentMessages;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
+import org.jspecify.annotations.NullMarked;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.OptionalInt;
 
+@NullMarked
 final class KitAdminMenu implements AdminMenu {
 
     private static final int KIT_MENU_SIZE = 54;

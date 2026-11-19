@@ -2,9 +2,11 @@ package de.simplepvparena.border;
 
 import de.simplepvparena.arena.ArenaShape;
 import de.simplepvparena.arena.BlockPositionCodec;
+import org.jspecify.annotations.NullMarked;
 
 import java.util.Arrays;
 
+@NullMarked
 public final class MarkedBlockPositions {
 
     public static final long[] EMPTY_POSITIONS = new long[0];

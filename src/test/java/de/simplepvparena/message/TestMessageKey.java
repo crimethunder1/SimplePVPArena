@@ -2,6 +2,7 @@ package de.simplepvparena.message;
 
 import java.util.Set;
 
+@SuppressWarnings("null")
 record TestMessageKey(String path, Set<String> placeholderNames) implements MessageKey {
 
     static TestMessageKey of(String path, String... placeholderNames) {

@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
+@SuppressWarnings("null")
 final class InMemoryTournamentStateStorage implements TournamentStateStorage {
 
     static final String FILE_NAME = "memory.yml";

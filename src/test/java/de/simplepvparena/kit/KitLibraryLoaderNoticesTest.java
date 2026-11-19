@@ -16,6 +16,7 @@ import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
+@SuppressWarnings("null")
 class KitLibraryLoaderNoticesTest {
 
     private static final String BROKEN_FILE_NAME = "kits.yml.broken";

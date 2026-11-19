@@ -1,8 +1,12 @@
 package de.simplepvparena.input;
 
+import org.jspecify.annotations.NullMarked;
+import org.jspecify.annotations.Nullable;
+
 import java.util.Optional;
 
-public record BlockItemRequestResult(BlockItemRequest request, String rejectionMessage) {
+@NullMarked
+public record BlockItemRequestResult(@Nullable BlockItemRequest request, @Nullable String rejectionMessage) {
 
     public static BlockItemRequestResult accepted(BlockItemRequest request) {
         return new BlockItemRequestResult(request, null);

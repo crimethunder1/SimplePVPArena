@@ -8,12 +8,14 @@ import de.simplepvparena.message.TournamentMessages;
 import de.simplepvparena.message.UnequalTeamVoteMessage;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
+import org.jspecify.annotations.NullMarked;
 
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
 
+@NullMarked
 final class UnequalTeamVoteMenu implements AdminMenu {
 
     static final int FIRST_PLAYER_SLOT = 9;

@@ -3,7 +3,9 @@ package de.simplepvparena.arena;
 import de.simplepvparena.message.ArenaHeightMessage;
 import de.simplepvparena.message.MessageKey;
 import de.simplepvparena.message.Messages;
+import org.jspecify.annotations.NullMarked;
 
+@NullMarked
 public enum ArenaHeightMarkerMode {
 
     LOWEST(ArenaHeightMessage.LOWEST_POINT),

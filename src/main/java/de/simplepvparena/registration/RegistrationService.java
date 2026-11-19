@@ -4,6 +4,7 @@ import de.simplepvparena.message.Messages;
 import de.simplepvparena.message.RegistrationMessage;
 import de.simplepvparena.message.TournamentMessages;
 import org.bukkit.entity.Player;
+import org.jspecify.annotations.NullMarked;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -13,6 +14,7 @@ import java.util.UUID;
 import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
 
+@NullMarked
 public final class RegistrationService {
 
     private final RegistrationList registrationList;

@@ -3,6 +3,8 @@ package de.simplepvparena.arena;
 import de.simplepvparena.team.Team;
 import org.bukkit.Server;
 import org.bukkit.entity.Player;
+import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.NullMarked;
 
 import java.util.Collection;
 import java.util.HashSet;
@@ -15,16 +17,18 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.function.Supplier;
 
+@NullMarked
 public final class ArenaAudience {
 
-    private final Supplier<Collection<? extends Player>> onlinePlayers;
+    private final Supplier<Collection<? extends @NonNull Player>> onlinePlayers;
     private final ArenaRegistry arenaRegistry;
 
     public ArenaAudience(Server server, ArenaRegistry arenaRegistry) {
-        this(Objects.requireNonNull(server, "server")::getOnlinePlayers, arenaRegistry);
+        Objects.requireNonNull(server, "server");
+        this(() -> server.getOnlinePlayers(), arenaRegistry);
     }
 
-    public ArenaAudience(Supplier<Collection<? extends Player>> onlinePlayers, ArenaRegistry arenaRegistry) {
+    public ArenaAudience(Supplier<Collection<? extends @NonNull Player>> onlinePlayers, ArenaRegistry arenaRegistry) {
         this.onlinePlayers = Objects.requireNonNull(onlinePlayers, "onlinePlayers");
         this.arenaRegistry = Objects.requireNonNull(arenaRegistry, "arenaRegistry");
     }

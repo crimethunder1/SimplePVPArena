@@ -17,6 +17,7 @@ import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
+@SuppressWarnings("null")
 class TournamentCommandTextsTest {
 
     private static final String[] NO_ARGUMENTS = new String[0];

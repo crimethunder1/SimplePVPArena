@@ -2,11 +2,13 @@ package de.simplepvparena.gate;
 
 import de.simplepvparena.arena.BlockPositionCodec;
 import org.bukkit.Material;
+import org.jspecify.annotations.NullMarked;
 
 import java.util.Locale;
 import java.util.Objects;
 import java.util.Optional;
 
+@NullMarked
 public record StartGateMarkLine(long encodedPosition, Material material) {
 
     public static final String SEPARATOR = " ";

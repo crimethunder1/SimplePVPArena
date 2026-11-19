@@ -12,9 +12,11 @@ import org.bukkit.World;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.CompassMeta;
+import org.jspecify.annotations.NullMarked;
 
 import java.util.Map;
 
+@NullMarked
 public final class ArenaGapCompass {
 
     public static final Material MATERIAL = Material.COMPASS;

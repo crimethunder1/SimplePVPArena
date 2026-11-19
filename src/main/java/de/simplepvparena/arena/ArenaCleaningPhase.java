@@ -1,5 +1,8 @@
 package de.simplepvparena.arena;
 
+import org.jspecify.annotations.NullMarked;
+
+@NullMarked
 public enum ArenaCleaningPhase {
 
     FLOOD(255, 48, 48, false),

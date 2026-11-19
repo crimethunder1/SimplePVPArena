@@ -1,7 +1,10 @@
 package de.simplepvparena.gui;
 
+import org.jspecify.annotations.NullMarked;
+
 import java.util.OptionalInt;
 
+@NullMarked
 public record MenuPagination(int itemCount, int itemsPerPage, int pageIndex) {
 
     public static final int DEFAULT_ITEMS_PER_PAGE = 45;

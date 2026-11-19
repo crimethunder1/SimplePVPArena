@@ -3,6 +3,8 @@ package de.simplepvparena.gui;
 import de.simplepvparena.registration.TeamChoicePresenter;
 import de.simplepvparena.registration.TeamChoiceService;
 import org.bukkit.entity.Player;
+import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.NullMarked;
 
 import java.util.Collection;
 import java.util.HashMap;
@@ -13,16 +15,17 @@ import java.util.UUID;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
+@NullMarked
 final class TeamChoiceMenuPresenter implements TeamChoicePresenter {
 
     private final AdminMenuNavigation navigation;
     private final TeamChoiceService teamChoiceService;
-    private final Supplier<Collection<? extends Player>> onlinePlayers;
+    private final Supplier<Collection<? extends @NonNull Player>> onlinePlayers;
     private final Consumer<Runnable> nextTickScheduler;
     private final Map<UUID, AdminMenuHolder> openedHoldersByPlayer = new HashMap<>();
 
     TeamChoiceMenuPresenter(AdminMenuNavigation navigation, TeamChoiceService teamChoiceService,
-                            Supplier<Collection<? extends Player>> onlinePlayers,
+                            Supplier<Collection<? extends @NonNull Player>> onlinePlayers,
                             Consumer<Runnable> nextTickScheduler) {
         this.navigation = Objects.requireNonNull(navigation, "navigation");
         this.teamChoiceService = Objects.requireNonNull(teamChoiceService, "teamChoiceService");

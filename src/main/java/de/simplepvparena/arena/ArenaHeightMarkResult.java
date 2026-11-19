@@ -1,9 +1,13 @@
 package de.simplepvparena.arena;
 
+import org.jspecify.annotations.NullMarked;
+import org.jspecify.annotations.Nullable;
+
 import java.util.Optional;
 
+@NullMarked
 public record ArenaHeightMarkResult(ArenaHeightMarkerMode markedEnd, ArenaHeightMarkerMode nextEnd,
-                                    String rejectionMessage) {
+                                    @Nullable String rejectionMessage) {
 
     public static ArenaHeightMarkResult taken(ArenaHeightMarkerMode markedEnd,
                                               ArenaHeightMarkerMode nextEnd) {

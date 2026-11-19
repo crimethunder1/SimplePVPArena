@@ -25,6 +25,7 @@ import java.util.Optional;
 import java.util.TreeMap;
 import java.util.UUID;
 
+@SuppressWarnings("null")
 final class DryRunFixture {
 
     static final String WORLD = "event";

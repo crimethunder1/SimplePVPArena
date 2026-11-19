@@ -3,12 +3,14 @@ package de.simplepvparena.placement;
 import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.scoreboard.Scoreboard;
 import org.bukkit.scoreboard.Team;
+import org.jspecify.annotations.NullMarked;
 
 import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 
+@NullMarked
 public final class ScoreboardTeamMirror {
 
     private ScoreboardTeamMirror() {

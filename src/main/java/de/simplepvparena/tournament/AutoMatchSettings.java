@@ -1,5 +1,8 @@
 package de.simplepvparena.tournament;
 
+import org.jspecify.annotations.NullMarked;
+
+@NullMarked
 public record AutoMatchSettings(boolean enabled, int startDelaySeconds, int pauseSeconds, int playAgainSeconds) {
 
     public static final boolean DEFAULT_ENABLED = false;

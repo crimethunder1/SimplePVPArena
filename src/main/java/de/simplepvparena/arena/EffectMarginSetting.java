@@ -1,9 +1,12 @@
 package de.simplepvparena.arena;
 
+import org.jspecify.annotations.NullMarked;
+
 import java.util.Objects;
 import java.util.Optional;
 import java.util.function.IntConsumer;
 
+@NullMarked
 public final class EffectMarginSetting {
 
     public static final int LARGE_STEP = 8;

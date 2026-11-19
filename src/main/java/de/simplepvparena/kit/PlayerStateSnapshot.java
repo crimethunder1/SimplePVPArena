@@ -1,9 +1,11 @@
 package de.simplepvparena.kit;
 
 import org.bukkit.inventory.ItemStack;
+import org.jspecify.annotations.NullMarked;
 
 import java.util.Objects;
 
+@NullMarked
 public final class PlayerStateSnapshot {
 
     private final ItemStack[] contents;

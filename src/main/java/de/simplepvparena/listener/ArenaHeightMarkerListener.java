@@ -10,7 +10,9 @@ import org.bukkit.event.block.Action;
 import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.inventory.EquipmentSlot;
+import org.jspecify.annotations.NullMarked;
 
+@NullMarked
 public final class ArenaHeightMarkerListener implements Listener {
 
     private final ArenaHeightMarkerService heightMarkerService;

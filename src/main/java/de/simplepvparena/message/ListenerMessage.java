@@ -1,7 +1,10 @@
 package de.simplepvparena.message;
 
+import org.jspecify.annotations.NullMarked;
+
 import java.util.Set;
 
+@NullMarked
 public enum ListenerMessage implements MessageKey {
 
     BREAK_OUTSIDE_THE_ARENA("listener.break.outside-the-arena"),

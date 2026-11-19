@@ -4,19 +4,23 @@ import de.simplepvparena.input.ChatInputValues;
 import de.simplepvparena.message.Messages;
 import de.simplepvparena.message.Placeholder;
 import de.simplepvparena.message.TeamMessage;
+import org.jspecify.annotations.NullMarked;
+import org.jspecify.annotations.Nullable;
 
 import java.util.List;
 import java.util.Optional;
 
+@NullMarked
 public final class TeamCreationRequest {
 
     public static final int MINIMUM_VALUE_COUNT = 1 + Team.MINIMUM_MEMBER_COUNT;
 
-    private final String teamName;
-    private final List<String> playerNames;
-    private final String rejectionMessage;
+    private final @Nullable String teamName;
+    private final @Nullable List<String> playerNames;
+    private final @Nullable String rejectionMessage;
 
-    private TeamCreationRequest(String teamName, List<String> playerNames, String rejectionMessage) {
+    private TeamCreationRequest(@Nullable String teamName, @Nullable List<String> playerNames,
+                                @Nullable String rejectionMessage) {
         this.teamName = teamName;
         this.playerNames = playerNames;
         this.rejectionMessage = rejectionMessage;
@@ -76,8 +80,8 @@ public final class TeamCreationRequest {
         return Optional.empty();
     }
 
-    private <T> T requireAccepted(T value) {
-        if (!isAccepted()) {
+    private <T> T requireAccepted(@Nullable T value) {
+        if (!isAccepted() || value == null) {
             throw new IllegalStateException("a rejected team line has no values");
         }
         return value;

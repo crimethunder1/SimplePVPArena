@@ -5,9 +5,13 @@ import de.simplepvparena.permission.AdminPermission;
 import net.kyori.adventure.text.Component;
 import org.bukkit.Server;
 import org.bukkit.entity.Player;
+import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.NullMarked;
 
+import java.util.Collection;
 import java.util.Objects;
 
+@NullMarked
 public final class OnlineAdminNotifier implements AdminNotifier {
 
     private final Server server;
@@ -19,7 +23,8 @@ public final class OnlineAdminNotifier implements AdminNotifier {
     @Override
     public void notifyAdmins(String message) {
         Component notification = TournamentMessages.warning(message);
-        for (Player player : server.getOnlinePlayers()) {
+        Collection<? extends @NonNull Player> onlinePlayers = server.getOnlinePlayers();
+        for (Player player : onlinePlayers) {
             if (AdminPermission.isAdmin(player)) {
                 player.sendMessage(notification);
             }

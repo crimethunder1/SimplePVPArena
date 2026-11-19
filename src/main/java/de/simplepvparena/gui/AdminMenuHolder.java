@@ -3,37 +3,41 @@ package de.simplepvparena.gui;
 import de.simplepvparena.match.Match;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.InventoryHolder;
-import org.jetbrains.annotations.NotNull;
+import org.jspecify.annotations.NullMarked;
+import org.jspecify.annotations.Nullable;
 
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 
+@NullMarked
 public final class AdminMenuHolder implements InventoryHolder {
 
     private final AdminMenuType menuType;
-    private final String subject;
-    private final ConfirmationRequest confirmationRequest;
+    private final @Nullable String subject;
+    private final @Nullable ConfirmationRequest confirmationRequest;
     private final int pageIndex;
     private final boolean openedFromMainMenu;
-    private final Match match;
+    private final @Nullable Match match;
     private final Map<Integer, String> matchIdsBySlot = new HashMap<>();
 
-    private Inventory inventory;
+    private @Nullable Inventory inventory;
 
-    private AdminMenuHolder(AdminMenuType menuType, String subject, ConfirmationRequest confirmationRequest,
-                            int pageIndex) {
+    private AdminMenuHolder(AdminMenuType menuType, @Nullable String subject,
+                            @Nullable ConfirmationRequest confirmationRequest, int pageIndex) {
         this(menuType, subject, confirmationRequest, pageIndex, false);
     }
 
-    private AdminMenuHolder(AdminMenuType menuType, String subject, ConfirmationRequest confirmationRequest,
-                            int pageIndex, boolean openedFromMainMenu) {
+    private AdminMenuHolder(AdminMenuType menuType, @Nullable String subject,
+                            @Nullable ConfirmationRequest confirmationRequest, int pageIndex,
+                            boolean openedFromMainMenu) {
         this(menuType, subject, confirmationRequest, pageIndex, openedFromMainMenu, null);
     }
 
-    private AdminMenuHolder(AdminMenuType menuType, String subject, ConfirmationRequest confirmationRequest,
-                            int pageIndex, boolean openedFromMainMenu, Match match) {
+    private AdminMenuHolder(AdminMenuType menuType, @Nullable String subject,
+                            @Nullable ConfirmationRequest confirmationRequest, int pageIndex,
+                            boolean openedFromMainMenu, @Nullable Match match) {
         this.menuType = Objects.requireNonNull(menuType, "menuType");
         this.subject = subject;
         this.confirmationRequest = confirmationRequest;
@@ -103,7 +107,7 @@ public final class AdminMenuHolder implements InventoryHolder {
         return new AdminMenuHolder(AdminMenuType.DECIDED_MATCHES, null, null, pageIndex);
     }
 
-    public static AdminMenuHolder confirmation(ConfirmationRequest confirmationRequest, String subject,
+    public static AdminMenuHolder confirmation(ConfirmationRequest confirmationRequest, @Nullable String subject,
                                                int pageIndex) {
         return new AdminMenuHolder(AdminMenuType.CONFIRMATION, subject,
                 Objects.requireNonNull(confirmationRequest, "confirmationRequest"), pageIndex);
@@ -169,7 +173,7 @@ public final class AdminMenuHolder implements InventoryHolder {
     }
 
     @Override
-    public @NotNull Inventory getInventory() {
+    public Inventory getInventory() {
         if (inventory == null) {
             throw new IllegalStateException("the inventory of the " + menuType + " menu was not built yet");
         }

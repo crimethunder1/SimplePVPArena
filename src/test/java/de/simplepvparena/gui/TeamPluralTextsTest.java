@@ -21,6 +21,7 @@ import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
+@SuppressWarnings("null")
 class TeamPluralTextsTest {
 
     private static final int MAIN_TEAMS_SLOT = 11;

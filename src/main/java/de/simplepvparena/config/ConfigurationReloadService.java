@@ -1,6 +1,7 @@
 package de.simplepvparena.config;
 
 import org.bukkit.configuration.ConfigurationSection;
+import org.jspecify.annotations.NullMarked;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -8,6 +9,7 @@ import java.util.Objects;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
+@NullMarked
 public final class ConfigurationReloadService {
 
     private final Supplier<ConfigurationSection> configurationSource;

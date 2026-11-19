@@ -11,12 +11,14 @@ import de.simplepvparena.tournament.MatchDecisionKind;
 import de.simplepvparena.tournament.TournamentManager;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
+import org.jspecify.annotations.NullMarked;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
+@NullMarked
 final class DecidedMatchesAdminMenu implements AdminMenu {
 
     private static final int DECIDED_MATCHES_MENU_SIZE = 54;

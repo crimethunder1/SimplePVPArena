@@ -38,6 +38,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+@SuppressWarnings("null")
 class ArenaCleaningBetweenMatchesTest {
 
     private static final String CLEAN_OUTCOME = "The arena is clean\n4 of 27 checked blocks were restored";

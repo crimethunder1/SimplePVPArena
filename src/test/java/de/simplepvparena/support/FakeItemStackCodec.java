@@ -10,6 +10,7 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 
+@SuppressWarnings("null")
 public final class FakeItemStackCodec implements ItemStackCodec {
 
     @Override

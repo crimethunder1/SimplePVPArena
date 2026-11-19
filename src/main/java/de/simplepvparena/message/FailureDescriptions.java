@@ -1,5 +1,8 @@
 package de.simplepvparena.message;
 
+import org.jspecify.annotations.NullMarked;
+
+@NullMarked
 public final class FailureDescriptions {
 
     private FailureDescriptions() {

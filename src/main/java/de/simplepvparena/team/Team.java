@@ -3,6 +3,8 @@ package de.simplepvparena.team;
 import de.simplepvparena.message.Messages;
 import de.simplepvparena.message.Placeholder;
 import de.simplepvparena.message.TeamMessage;
+import org.jspecify.annotations.NullMarked;
+import org.jspecify.annotations.Nullable;
 
 import java.util.HashSet;
 import java.util.LinkedHashSet;
@@ -13,6 +15,7 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+@NullMarked
 public final class Team {
 
     public static final int MINIMUM_MEMBER_COUNT = 1;
@@ -20,13 +23,13 @@ public final class Team {
 
     private final String teamName;
     private final List<TeamMember> members;
-    private final TeamColour colour;
+    private final @Nullable TeamColour colour;
 
     public Team(String teamName, List<TeamMember> members) {
         this(teamName, members, null);
     }
 
-    public Team(String teamName, List<TeamMember> members, TeamColour colour) {
+    public Team(String teamName, List<TeamMember> members, @Nullable TeamColour colour) {
         Objects.requireNonNull(teamName, "teamName");
         Objects.requireNonNull(members, "members");
         if (teamName.isBlank()) {

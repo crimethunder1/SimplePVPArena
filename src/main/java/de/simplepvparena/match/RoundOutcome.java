@@ -1,8 +1,11 @@
 package de.simplepvparena.match;
 
+import org.jspecify.annotations.NullMarked;
+
 import java.util.Objects;
 import java.util.Optional;
 
+@NullMarked
 public record RoundOutcome(Optional<String> winnerTeamName, boolean fromSuddenDeath) {
 
     public RoundOutcome {

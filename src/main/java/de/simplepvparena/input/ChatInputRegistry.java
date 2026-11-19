@@ -1,5 +1,7 @@
 package de.simplepvparena.input;
 
+import org.jspecify.annotations.NullMarked;
+
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -11,6 +13,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
 import java.util.function.LongSupplier;
 
+@NullMarked
 public final class ChatInputRegistry {
 
     public static final long DEFAULT_TIMEOUT_MILLIS = 60_000L;

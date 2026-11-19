@@ -1,7 +1,10 @@
 package de.simplepvparena.message;
 
+import org.jspecify.annotations.NullMarked;
+
 import java.util.Set;
 
+@NullMarked
 public enum TournamentStatusMessage implements MessageKey {
 
     STATE_IDLE("tournament-status.state.idle"),

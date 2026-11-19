@@ -13,11 +13,13 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.entity.AreaEffectCloudApplyEvent;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.PotionSplashEvent;
+import org.jspecify.annotations.NullMarked;
 
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
+@NullMarked
 public final class GlobalPvpLockListener implements Listener {
 
     private final MatchService matchService;

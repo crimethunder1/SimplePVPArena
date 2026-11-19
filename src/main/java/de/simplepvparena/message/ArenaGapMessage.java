@@ -1,7 +1,10 @@
 package de.simplepvparena.message;
 
+import org.jspecify.annotations.NullMarked;
+
 import java.util.Set;
 
+@NullMarked
 public enum ArenaGapMessage implements MessageKey {
 
     SEED_INSIDE_BORDER("arena-gap.seed-inside-border"),

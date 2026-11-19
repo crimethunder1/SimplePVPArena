@@ -16,6 +16,8 @@ import org.bukkit.inventory.PlayerInventory;
 import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.scheduler.BukkitTask;
+import org.jspecify.annotations.NullMarked;
+import org.jspecify.annotations.Nullable;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -30,6 +32,7 @@ import java.util.function.LongSupplier;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 
+@NullMarked
 public final class AreaInventoryService implements EffectAreaPresence {
 
     public static final String ENABLED_CONFIGURATION_PATH = "arena.area-inventory.enabled";
@@ -56,7 +59,7 @@ public final class AreaInventoryService implements EffectAreaPresence {
     private final Map<UUID, Long> lastBackChatMillisByPlayer = new HashMap<>();
 
     private boolean enabled = DEFAULT_ENABLED;
-    private BukkitTask reconcileTask;
+    private @Nullable BukkitTask reconcileTask;
 
     public AreaInventoryService(Plugin plugin, Supplier<Optional<EffectArea>> effectAreaSource,
                                 AreaInventoryStorage storage, Predicate<Player> kitWorn,
@@ -107,7 +110,7 @@ public final class AreaInventoryService implements EffectAreaPresence {
     }
 
     public void reconcileOnlinePlayers() {
-        for (Player player : List.copyOf(plugin.getServer().getOnlinePlayers())) {
+        for (Player player : List.<Player>copyOf(plugin.getServer().getOnlinePlayers())) {
             reconcile(player);
         }
     }
@@ -132,7 +135,7 @@ public final class AreaInventoryService implements EffectAreaPresence {
     }
 
     public void giveEveryInventoryBackQuietly() {
-        for (Player player : List.copyOf(plugin.getServer().getOnlinePlayers())) {
+        for (Player player : List.<Player>copyOf(plugin.getServer().getOnlinePlayers())) {
             if (hasDeposited(player) && !isWearingKit(player)) {
                 giveBack(player, false);
             }

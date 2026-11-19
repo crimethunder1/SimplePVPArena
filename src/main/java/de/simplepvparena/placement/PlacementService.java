@@ -5,6 +5,7 @@ import de.simplepvparena.team.Team;
 import de.simplepvparena.tournament.Bracket;
 import de.simplepvparena.tournament.BracketMatch;
 import de.simplepvparena.tournament.TournamentState;
+import org.jspecify.annotations.NullMarked;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -15,6 +16,7 @@ import java.util.Set;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
+@NullMarked
 public final class PlacementService {
 
     private static final int CHAMPION_PLACE = 1;

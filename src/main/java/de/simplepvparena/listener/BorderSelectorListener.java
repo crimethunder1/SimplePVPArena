@@ -17,10 +17,12 @@ import org.bukkit.event.block.Action;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
+import org.jspecify.annotations.NullMarked;
 
 import java.util.Objects;
 import java.util.function.Predicate;
 
+@NullMarked
 public final class BorderSelectorListener implements Listener {
 
     private final BorderSelectorModeRegistry selectorModes;

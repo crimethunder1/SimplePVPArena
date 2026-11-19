@@ -1,5 +1,7 @@
 package de.simplepvparena.kit;
 
+import org.jspecify.annotations.NullMarked;
+
 import java.util.EnumMap;
 import java.util.Map;
 import java.util.Optional;
@@ -7,6 +9,7 @@ import java.util.TreeMap;
 import java.util.function.Function;
 import java.util.function.IntFunction;
 
+@NullMarked
 public final class KitInventoryCapture {
 
     private KitInventoryCapture() {

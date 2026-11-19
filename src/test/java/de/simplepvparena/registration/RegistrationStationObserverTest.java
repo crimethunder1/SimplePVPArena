@@ -8,6 +8,7 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
+@SuppressWarnings("null")
 class RegistrationStationObserverTest {
 
     private final StationTestServer server = new StationTestServer();

@@ -1,5 +1,7 @@
 package de.simplepvparena.arena;
 
+import org.jspecify.annotations.NullMarked;
+
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Deque;
@@ -7,6 +9,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 
+@NullMarked
 public final class ArenaShapeFloodFill {
 
     public static final int DEFAULT_MAXIMUM_CELL_COUNT = 50_000;

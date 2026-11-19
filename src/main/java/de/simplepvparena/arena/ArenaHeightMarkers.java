@@ -3,14 +3,17 @@ package de.simplepvparena.arena;
 import de.simplepvparena.message.ArenaHeightMessage;
 import de.simplepvparena.message.Messages;
 import de.simplepvparena.message.Placeholder;
+import org.jspecify.annotations.NullMarked;
+import org.jspecify.annotations.Nullable;
 
 import java.util.Optional;
 import java.util.OptionalInt;
 
+@NullMarked
 public final class ArenaHeightMarkers {
 
-    private Integer lowestY;
-    private Integer highestY;
+    private @Nullable Integer lowestY;
+    private @Nullable Integer highestY;
     private ArenaHeightMarkerMode nextEnd = ArenaHeightMarkerMode.LOWEST;
 
     public ArenaHeightMarkerMode getNextEnd() {
@@ -37,16 +40,18 @@ public final class ArenaHeightMarkers {
     }
 
     private Optional<String> storeLowest(int blockY) {
-        if (highestY != null && blockY >= highestY) {
-            return Optional.of(refusal(ArenaHeightMarkerMode.LOWEST, blockY, highestY));
+        Integer highest = highestY;
+        if (highest != null && blockY >= highest) {
+            return Optional.of(refusal(ArenaHeightMarkerMode.LOWEST, blockY, highest));
         }
         lowestY = blockY;
         return Optional.empty();
     }
 
     private Optional<String> storeHighest(int blockY) {
-        if (lowestY != null && blockY <= lowestY) {
-            return Optional.of(refusal(ArenaHeightMarkerMode.HIGHEST, blockY, lowestY));
+        Integer lowest = lowestY;
+        if (lowest != null && blockY <= lowest) {
+            return Optional.of(refusal(ArenaHeightMarkerMode.HIGHEST, blockY, lowest));
         }
         highestY = blockY;
         return Optional.empty();
@@ -73,10 +78,12 @@ public final class ArenaHeightMarkers {
     }
 
     public Optional<ArenaShape> applyTo(ArenaShape shape) {
-        if (!isComplete()) {
+        Integer lowest = lowestY;
+        Integer highest = highestY;
+        if (lowest == null || highest == null) {
             return Optional.empty();
         }
-        return Optional.of(shape.withVerticalExtent(lowestY, highestY));
+        return Optional.of(shape.withVerticalExtent(lowest, highest));
     }
 
     public void clear() {

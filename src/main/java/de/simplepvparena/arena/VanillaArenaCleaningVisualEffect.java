@@ -4,6 +4,7 @@ import de.simplepvparena.particle.ParticleTypes;
 import org.bukkit.Color;
 import org.bukkit.Particle;
 import org.bukkit.World;
+import org.jspecify.annotations.NullMarked;
 
 import java.util.EnumMap;
 import java.util.Map;
@@ -13,6 +14,7 @@ import java.util.concurrent.ThreadLocalRandom;
 import java.util.function.Consumer;
 import java.util.function.IntUnaryOperator;
 
+@NullMarked
 public final class VanillaArenaCleaningVisualEffect implements ArenaCleaningVisualEffect {
 
     public static final Particle DEFAULT_PARTICLE = Particle.DUST;

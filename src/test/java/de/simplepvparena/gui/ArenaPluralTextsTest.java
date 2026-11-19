@@ -26,6 +26,7 @@ import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
+@SuppressWarnings("null")
 class ArenaPluralTextsTest {
 
     private static final int MAIN_ARENA_SLOT = 10;

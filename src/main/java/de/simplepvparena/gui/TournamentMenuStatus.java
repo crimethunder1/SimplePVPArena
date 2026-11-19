@@ -8,9 +8,11 @@ import de.simplepvparena.message.Messages;
 import de.simplepvparena.message.Placeholder;
 import de.simplepvparena.tournament.TournamentManager;
 import org.bukkit.Material;
+import org.jspecify.annotations.NullMarked;
 
 import java.util.Objects;
 
+@NullMarked
 final class TournamentMenuStatus {
 
     private final TournamentManager tournamentManager;

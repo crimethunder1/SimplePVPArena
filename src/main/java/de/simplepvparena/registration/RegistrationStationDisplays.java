@@ -12,6 +12,8 @@ import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.entity.Entity;
 import org.bukkit.inventory.ItemStack;
+import org.jspecify.annotations.NullMarked;
+import org.jspecify.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -27,6 +29,7 @@ import java.util.function.Function;
 import java.util.function.IntSupplier;
 import java.util.function.Supplier;
 
+@NullMarked
 public final class RegistrationStationDisplays implements RegistrationStationObserver {
 
     public static final double BUTTON_HEIGHT_ABOVE_THE_BLOCK = 0.15D;
@@ -236,12 +239,13 @@ public final class RegistrationStationDisplays implements RegistrationStationObs
 
         private final List<Entity> entities;
         private final Entity cap;
-        private final Entity clickArea;
+        private final @Nullable Entity clickArea;
         private final Entity text;
 
         private int shownCount;
 
-        private StationDisplay(List<Entity> entities, Entity cap, Entity clickArea, Entity text, int shownCount) {
+        private StationDisplay(List<Entity> entities, Entity cap, @Nullable Entity clickArea, Entity text,
+                               int shownCount) {
             this.entities = entities;
             this.cap = cap;
             this.clickArea = clickArea;

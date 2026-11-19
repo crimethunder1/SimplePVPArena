@@ -3,10 +3,12 @@ package de.simplepvparena.placement;
 import de.simplepvparena.team.Team;
 import de.simplepvparena.team.TeamColour;
 import net.kyori.adventure.text.format.NamedTextColor;
+import org.jspecify.annotations.NullMarked;
 
 import java.util.Objects;
 import java.util.Optional;
 
+@NullMarked
 public record PlacementTeam(String name, NamedTextColor colour) {
 
     public static final NamedTextColor COLOUR_WITHOUT_TEAM_COLOUR = NamedTextColor.WHITE;

@@ -10,6 +10,8 @@ import de.simplepvparena.border.BorderParticleService;
 import de.simplepvparena.border.BorderSelectorModeRegistry;
 import de.simplepvparena.border.ConfirmedBorderParticleWriter;
 import de.simplepvparena.config.ConfigurationReloadReport;
+import de.simplepvparena.config.ServerModeSetting;
+import de.simplepvparena.config.ServerModeSwitch;
 import de.simplepvparena.diagnostics.TournamentDryRun;
 import de.simplepvparena.gate.StartGateItemService;
 import de.simplepvparena.input.ChatInputService;
@@ -29,9 +31,11 @@ import de.simplepvparena.tournament.AutoMatchModeWriter;
 import de.simplepvparena.tournament.AutoMatchService;
 import de.simplepvparena.tournament.TournamentManager;
 import org.bukkit.plugin.Plugin;
+import org.jspecify.annotations.NullMarked;
 
 import java.util.function.Supplier;
 
+@NullMarked
 public record AdminMenuDependencies(Plugin plugin,
                                     ChatInputService chatInputService,
                                     Supplier<ConfigurationReloadReport> configurationReloader,
@@ -45,7 +49,9 @@ public record AdminMenuDependencies(Plugin plugin,
                                      TournamentDryRun tournamentDryRun,
                                      MatchService matchService,
                                      AutoMatchService autoMatchService,
-                                     AutoMatchModeWriter autoMatchModeWriter) {
+                                     AutoMatchModeWriter autoMatchModeWriter,
+                                     ServerModeSetting serverModeSetting,
+                                     ServerModeSwitch serverModeSwitch) {
     }
 
     public record TeamServices(TeamRegistry teamRegistry,

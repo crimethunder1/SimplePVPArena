@@ -4,10 +4,12 @@ import de.simplepvparena.message.KitMessage;
 import de.simplepvparena.message.Messages;
 import de.simplepvparena.message.Placeholder;
 import org.bukkit.configuration.ConfigurationSection;
+import org.jspecify.annotations.NullMarked;
 
 import java.util.Objects;
 import java.util.function.Consumer;
 
+@NullMarked
 public final class KitLibraryLoader {
 
     public static final String MIGRATED_KIT_NAME = "default";

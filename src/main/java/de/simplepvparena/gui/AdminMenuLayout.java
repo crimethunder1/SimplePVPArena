@@ -1,5 +1,8 @@
 package de.simplepvparena.gui;
 
+import org.jspecify.annotations.NullMarked;
+
+@NullMarked
 final class AdminMenuLayout {
 
     static final int INFO_SLOT = 4;

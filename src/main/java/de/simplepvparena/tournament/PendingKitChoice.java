@@ -1,9 +1,12 @@
 package de.simplepvparena.tournament;
 
+import org.jspecify.annotations.NullMarked;
+
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Objects;
 
+@NullMarked
 public record PendingKitChoice(String matchId, String firstTeamName, String secondTeamName, String defaultKitName,
                                Instant deadline) {
 

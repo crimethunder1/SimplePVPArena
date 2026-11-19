@@ -29,6 +29,7 @@ import static de.simplepvparena.arena.ArenaBaselineSnapshotTest.position;
 import static de.simplepvparena.arena.ArenaBaselineSnapshotTest.shape;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
+@SuppressWarnings("null")
 class ArenaServicePluralTextsTest {
 
     private static final String SINGULAR_MARK = "[one] ";

@@ -1,9 +1,11 @@
 package de.simplepvparena.arena;
 
 import org.bukkit.World;
+import org.jspecify.annotations.NullMarked;
 
 import java.util.function.Consumer;
 
+@NullMarked
 public interface ArenaCleaningVisualEffect {
 
     ArenaCleaningVisualEffect NONE = new ArenaCleaningVisualEffect() {

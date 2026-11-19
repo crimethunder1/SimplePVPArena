@@ -1,6 +1,11 @@
 # Language of the texts players and admins see: en or de. The texts live in the files of the lang folder next to this file.
 language: en
 
+# event: a server of its own for the event. No auto matches, no inventory hand-in, joining players go to the tribune.
+# auto: the arena on a running server. Auto matches follow auto-match.enabled, players entering the area of effect hand in their inventory.
+# The match menu of /tournament switches the mode and writes this value.
+server-mode: event
+
 # Rounds, the round time limit, sudden death, the start gate, the countdown before the fight, the time to come back after a lost connection, the team size and team colours.
 match:
   # Ticks between the end of a round and the start of the next one (20 ticks are one second).

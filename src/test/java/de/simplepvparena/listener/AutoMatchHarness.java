@@ -44,6 +44,7 @@ import java.util.function.Consumer;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+@SuppressWarnings("null")
 final class AutoMatchHarness {
 
     static final int START_DELAY_SECONDS = 10;

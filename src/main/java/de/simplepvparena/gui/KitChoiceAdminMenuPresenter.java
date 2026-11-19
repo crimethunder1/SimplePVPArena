@@ -5,6 +5,8 @@ import de.simplepvparena.permission.AdminPermission;
 import de.simplepvparena.tournament.KitChoicePresenter;
 import de.simplepvparena.tournament.PendingKitChoice;
 import org.bukkit.entity.Player;
+import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.NullMarked;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -12,13 +14,14 @@ import java.util.List;
 import java.util.Objects;
 import java.util.function.Supplier;
 
+@NullMarked
 final class KitChoiceAdminMenuPresenter implements KitChoicePresenter {
 
     private final AdminMenuNavigation navigation;
-    private final Supplier<Collection<? extends Player>> onlinePlayers;
+    private final Supplier<Collection<? extends @NonNull Player>> onlinePlayers;
 
     KitChoiceAdminMenuPresenter(AdminMenuNavigation navigation,
-                                Supplier<Collection<? extends Player>> onlinePlayers) {
+                                Supplier<Collection<? extends @NonNull Player>> onlinePlayers) {
         this.navigation = Objects.requireNonNull(navigation, "navigation");
         this.onlinePlayers = Objects.requireNonNull(onlinePlayers, "onlinePlayers");
     }

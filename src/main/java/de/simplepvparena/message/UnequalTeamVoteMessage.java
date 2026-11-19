@@ -1,7 +1,10 @@
 package de.simplepvparena.message;
 
+import org.jspecify.annotations.NullMarked;
+
 import java.util.Set;
 
+@NullMarked
 public enum UnequalTeamVoteMessage implements MessageKey {
 
     MENU_TITLE("unequal-team-vote-menu.title", "match"),

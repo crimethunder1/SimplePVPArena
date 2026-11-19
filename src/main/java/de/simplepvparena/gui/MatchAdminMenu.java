@@ -1,5 +1,8 @@
 package de.simplepvparena.gui;
 
+import de.simplepvparena.config.ServerMode;
+import de.simplepvparena.config.ServerModeSetting;
+import de.simplepvparena.config.ServerModeSwitch;
 import de.simplepvparena.match.Match;
 import de.simplepvparena.match.MatchService;
 import de.simplepvparena.message.CommonMessage;
@@ -15,6 +18,7 @@ import de.simplepvparena.tournament.TournamentManager;
 import de.simplepvparena.tournament.TournamentOperationResult;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
+import org.jspecify.annotations.NullMarked;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -23,6 +27,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Supplier;
 
+@NullMarked
 final class MatchAdminMenu implements AdminMenu {
 
     private static final int MATCH_START_SLOT = 10;
@@ -35,6 +40,7 @@ final class MatchAdminMenu implements AdminMenu {
     private static final int MATCH_AUTO_MATCH_SLOT = 17;
     private static final int MATCH_RESTART_SLOT = 19;
     private static final int MATCH_REVOKE_RESULT_SLOT = 20;
+    private static final int MATCH_SERVER_MODE_SLOT = 21;
 
     private final AdminMenuNavigation navigation;
     private final TournamentManager tournamentManager;
@@ -45,11 +51,14 @@ final class MatchAdminMenu implements AdminMenu {
     private final DecidedMatchesAdminMenu decidedMatchesAdminMenu;
     private final AutoMatchService autoMatchService;
     private final AutoMatchModeWriter autoMatchModeWriter;
+    private final ServerModeSetting serverModeSetting;
+    private final ServerModeSwitch serverModeSwitch;
 
     MatchAdminMenu(AdminMenuNavigation navigation, TournamentManager tournamentManager, MatchService matchService,
                    TournamentMenuStatus tournamentMenuStatus, ForceResultAdminMenu forceResultAdminMenu,
                    WaitingMatchesAdminMenu waitingMatchesAdminMenu, DecidedMatchesAdminMenu decidedMatchesAdminMenu,
-                   AutoMatchService autoMatchService, AutoMatchModeWriter autoMatchModeWriter) {
+                   AutoMatchService autoMatchService, AutoMatchModeWriter autoMatchModeWriter,
+                   ServerModeSetting serverModeSetting, ServerModeSwitch serverModeSwitch) {
         this.navigation = Objects.requireNonNull(navigation, "navigation");
         this.tournamentManager = Objects.requireNonNull(tournamentManager, "tournamentManager");
         this.matchService = Objects.requireNonNull(matchService, "matchService");
@@ -59,6 +68,8 @@ final class MatchAdminMenu implements AdminMenu {
         this.decidedMatchesAdminMenu = Objects.requireNonNull(decidedMatchesAdminMenu, "decidedMatchesAdminMenu");
         this.autoMatchService = Objects.requireNonNull(autoMatchService, "autoMatchService");
         this.autoMatchModeWriter = Objects.requireNonNull(autoMatchModeWriter, "autoMatchModeWriter");
+        this.serverModeSetting = Objects.requireNonNull(serverModeSetting, "serverModeSetting");
+        this.serverModeSwitch = Objects.requireNonNull(serverModeSwitch, "serverModeSwitch");
     }
 
     @Override
@@ -107,8 +118,12 @@ final class MatchAdminMenu implements AdminMenu {
                         Messages.lines(MatchMenuMessage.FORCE_RESULT_LORE))
                 : MenuItems.unavailable(Messages.text(MatchMenuMessage.FORCE_RESULT_TITLE),
                         Messages.text(MatchMenuMessage.NO_MATCH_RUNNING)));
-        canvas.set(MATCH_AUTO_MATCH_SLOT, MenuItems.create(Material.COMPARATOR,
-                Messages.text(MatchMenuMessage.AUTO_MATCH_TITLE), buildAutoMatchLore()));
+        canvas.set(MATCH_AUTO_MATCH_SLOT, serverModeSetting.getServerMode().allowsAutoMatches()
+                ? MenuItems.create(Material.COMPARATOR, Messages.text(MatchMenuMessage.AUTO_MATCH_TITLE),
+                        buildAutoMatchLore())
+                : MenuItems.unavailable(Messages.text(MatchMenuMessage.AUTO_MATCH_TITLE),
+                        Messages.text(MatchMenuMessage.AUTO_MATCH_ONLY_IN_AUTO_MODE)));
+        canvas.set(MATCH_SERVER_MODE_SLOT, buildServerModeItem());
         canvas.set(MATCH_RESTART_SLOT, buildRestartItem());
         canvas.set(MATCH_REVOKE_RESULT_SLOT, tournamentManager.isTournamentInProgress()
                 ? MenuItems.create(Material.BARRIER, Messages.text(MatchMenuMessage.REVOKE_RESULT_TITLE),
@@ -131,6 +146,7 @@ final class MatchAdminMenu implements AdminMenu {
             case MATCH_AUTO_MATCH_SLOT -> switchAutoMatchMode(player, holder);
             case MATCH_RESTART_SLOT -> askForTheRestart(player);
             case MATCH_REVOKE_RESULT_SLOT -> decidedMatchesAdminMenu.openDecidedMatchesMenu(player);
+            case MATCH_SERVER_MODE_SLOT -> switchServerMode(player, holder);
             case AdminMenuLayout.BACK_SLOT -> navigation.open(player, AdminMenuHolder.main());
             default -> { }
         }
@@ -247,7 +263,38 @@ final class MatchAdminMenu implements AdminMenu {
         return lore;
     }
 
+    private MenuTile buildServerModeItem() {
+        ServerMode serverMode = serverModeSetting.getServerMode();
+        List<String> lore = new ArrayList<>(Messages.lines(serverMode == ServerMode.AUTO
+                ? MatchMenuMessage.SERVER_MODE_AUTO
+                : MatchMenuMessage.SERVER_MODE_EVENT));
+        lore.add(Messages.text(serverMode == ServerMode.AUTO
+                ? MatchMenuMessage.SERVER_MODE_SWITCH_TO_EVENT
+                : MatchMenuMessage.SERVER_MODE_SWITCH_TO_AUTO));
+        return MenuItems.create(serverMode == ServerMode.AUTO ? Material.HOPPER : Material.BEACON,
+                Messages.text(MatchMenuMessage.SERVER_MODE_TITLE), lore);
+    }
+
+    private void switchServerMode(Player player, AdminMenuHolder holder) {
+        ServerMode newMode = serverModeSetting.getServerMode().switched();
+        try {
+            serverModeSwitch.switchTo(newMode);
+            TournamentMessages.sendSuccess(player, Messages.text(newMode == ServerMode.AUTO
+                    ? MatchMenuMessage.SERVER_MODE_SWITCHED_TO_AUTO
+                    : MatchMenuMessage.SERVER_MODE_SWITCHED_TO_EVENT));
+        } catch (IOException failure) {
+            TournamentMessages.sendError(player, Messages.text(MatchMenuMessage.SERVER_MODE_NOT_SWITCHED,
+                    Placeholder.of("reason", FailureDescriptions.describe(failure))));
+        }
+        navigation.refresh(player, holder);
+    }
+
     private void switchAutoMatchMode(Player player, AdminMenuHolder holder) {
+        if (!serverModeSetting.getServerMode().allowsAutoMatches()) {
+            TournamentMessages.sendError(player, Messages.text(MatchMenuMessage.AUTO_MATCH_ONLY_IN_AUTO_MODE));
+            navigation.refresh(player, holder);
+            return;
+        }
         boolean enabled = !autoMatchService.isEnabled();
         autoMatchService.setEnabled(enabled);
         try {

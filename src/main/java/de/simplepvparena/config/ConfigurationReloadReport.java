@@ -2,10 +2,12 @@ package de.simplepvparena.config;
 
 import de.simplepvparena.message.ConfigMessage;
 import de.simplepvparena.message.Messages;
+import org.jspecify.annotations.NullMarked;
 
 import java.util.ArrayList;
 import java.util.List;
 
+@NullMarked
 public record ConfigurationReloadReport(List<String> problems) {
 
     private static final List<ConfigMessage> RELOADED_CATEGORIES = List.of(

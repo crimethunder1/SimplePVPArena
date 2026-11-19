@@ -1,7 +1,10 @@
 package de.simplepvparena.registration;
 
+import org.jspecify.annotations.NullMarked;
+
 import java.util.Objects;
 
+@NullMarked
 public final class TeamModeSetting {
 
     private TeamMode teamMode = TeamMode.DEFAULT_TEAM_MODE;

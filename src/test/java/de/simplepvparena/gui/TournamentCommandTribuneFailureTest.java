@@ -21,6 +21,7 @@ import java.util.logging.Logger;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertSame;
 
+@SuppressWarnings("null")
 class TournamentCommandTribuneFailureTest {
 
     private static final String[] SPECTATE = {"spectate"};

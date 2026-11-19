@@ -1,10 +1,13 @@
 package de.simplepvparena.tournament;
 
 import de.simplepvparena.team.TeamRegistry;
+import org.jspecify.annotations.NullMarked;
+import org.jspecify.annotations.Nullable;
 
 import java.util.Objects;
 import java.util.Optional;
 
+@NullMarked
 public final class BracketMatch {
 
     public static final int FIRST_SLOT_INDEX = 0;
@@ -14,9 +17,9 @@ public final class BracketMatch {
     private final int roundIndex;
     private final int positionIndex;
 
-    private String firstTeamName;
-    private String secondTeamName;
-    private String winnerTeamName;
+    private @Nullable String firstTeamName;
+    private @Nullable String secondTeamName;
+    private @Nullable String winnerTeamName;
 
     BracketMatch(String matchId, int roundIndex, int positionIndex) {
         this.matchId = Objects.requireNonNull(matchId, "matchId");
@@ -126,7 +129,7 @@ public final class BracketMatch {
     }
 
     String getSingleParticipant() {
-        return firstTeamName != null ? firstTeamName : secondTeamName;
+        return firstTeamName != null ? firstTeamName : Objects.requireNonNull(secondTeamName, "secondTeamName");
     }
 
     @Override

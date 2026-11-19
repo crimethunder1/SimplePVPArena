@@ -1,12 +1,14 @@
 package de.simplepvparena.match;
 
 import net.kyori.adventure.text.format.NamedTextColor;
+import org.jspecify.annotations.NullMarked;
 
 import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
 import java.util.Optional;
 
+@NullMarked
 public record TeamColourSettings(NamedTextColor firstTeamColour, NamedTextColor secondTeamColour) {
 
     public static final String SECTION_CONFIGURATION_PATH = "match.team-colours";
@@ -43,7 +45,7 @@ public record TeamColourSettings(NamedTextColor firstTeamColour, NamedTextColor 
     }
 
     public static String nameOf(NamedTextColor colour) {
-        return NamedTextColor.NAMES.key(colour);
+        return NamedTextColor.NAMES.keyOrThrow(colour);
     }
 
     public static List<String> knownColourNames() {

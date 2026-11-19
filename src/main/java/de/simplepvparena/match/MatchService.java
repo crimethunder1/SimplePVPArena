@@ -21,6 +21,8 @@ import org.bukkit.Location;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.scheduler.BukkitTask;
+import org.jspecify.annotations.NullMarked;
+import org.jspecify.annotations.Nullable;
 
 import java.time.Duration;
 import java.util.ArrayList;
@@ -37,6 +39,7 @@ import java.util.UUID;
 import java.util.function.Consumer;
 import java.util.logging.Level;
 
+@NullMarked
 public final class MatchService {
 
     private static final long DEFAULT_ROUND_RESET_DELAY_TICKS = 100L;
@@ -87,17 +90,17 @@ public final class MatchService {
     private MatchCompletionHandler matchCompletionHandler = (match, winnerTeamName) -> { };
     private MatchCompletionHandler autoMatchCompletionHandler = (match, winnerTeamName) -> { };
     private Runnable matchProgressListener = () -> { };
-    private Match haltedMatch;
+    private @Nullable Match haltedMatch;
     private Consumer<String> adminNotifier = message -> { };
-    private RoundCleaning roundCleaning;
-    private Match matchWarnedAboutTheRoundCleaning;
-    private Match matchCleanedBetweenRounds;
+    private @Nullable RoundCleaning roundCleaning;
+    private @Nullable Match matchWarnedAboutTheRoundCleaning;
+    private @Nullable Match matchCleanedBetweenRounds;
     private RoundStartEffects roundStartEffects = new VanillaRoundStartEffects();
     private CountdownImages countdownImages = CountdownImages.NONE;
-    private ArenaAudience arenaAudience;
-    private Match activeMatch;
-    private ScheduledRoundTimer activeRoundTimer;
-    private StartAnimation activeStartAnimation;
+    private @Nullable ArenaAudience arenaAudience;
+    private @Nullable Match activeMatch;
+    private @Nullable ScheduledRoundTimer activeRoundTimer;
+    private @Nullable StartAnimation activeStartAnimation;
     private boolean insideSuddenDeathTick;
     private long roundResetDelayTicks = DEFAULT_ROUND_RESET_DELAY_TICKS;
     private RoundTimeoutSettings roundTimeoutSettings = RoundTimeoutSettings.defaults();
@@ -337,7 +340,8 @@ public final class MatchService {
     }
 
     public boolean isStartAnimationRunning() {
-        return activeStartAnimation != null && activeStartAnimation.running;
+        StartAnimation animation = activeStartAnimation;
+        return animation != null && animation.running;
     }
 
     public void handlePlayerDisconnected(Player player) {
@@ -365,8 +369,9 @@ public final class MatchService {
         }
         announceToMatch(runningMatch.get(), Messages.text(MatchMessage.RECONNECT_RETURNED,
                 Placeholder.of("player", player.getName())));
-        if (isStartAnimationRunning()) {
-            blindFighter(activeStartAnimation, player);
+        StartAnimation animation = activeStartAnimation;
+        if (animation != null && animation.running) {
+            blindFighter(animation, player);
         }
         return true;
     }
@@ -462,7 +467,7 @@ public final class MatchService {
     }
 
     public Optional<RoundTimer> findRoundTimer() {
-        return Optional.ofNullable(activeRoundTimer).map(ScheduledRoundTimer::timer);
+        return Optional.<ScheduledRoundTimer>ofNullable(activeRoundTimer).map(ScheduledRoundTimer::timer);
     }
 
     private Optional<RoundParticipants> findRunningRoundParticipants() {
@@ -707,17 +712,18 @@ public final class MatchService {
     }
 
     private void cleanTheArenaBeforeTheNextRound(Match match) {
-        if (roundCleaning == null || !cleanBetweenRounds) {
+        RoundCleaning cleaning = roundCleaning;
+        if (cleaning == null || !cleanBetweenRounds) {
             scheduleNextRound(match);
             return;
         }
-        if (!roundCleaning.hasBaseline()) {
+        if (!cleaning.hasBaseline()) {
             warnAdminsAboutTheRoundCleaning(match, Messages.text(MatchMessage.ROUND_CLEANING_WITHOUT_BASELINE));
             scheduleNextRound(match);
             return;
         }
         matchCleanedBetweenRounds = match;
-        Optional<String> skipReason = roundCleaning.startCleaningBetweenRounds(
+        Optional<String> skipReason = cleaning.startCleaningBetweenRounds(
                 outcome -> continueAfterTheRoundCleaning(match, outcome));
         if (skipReason.isPresent()) {
             matchCleanedBetweenRounds = null;
@@ -848,10 +854,11 @@ public final class MatchService {
     }
 
     private void handleRoundTimerTick(Match match) {
-        if (activeRoundTimer == null || match.getState() != MatchState.RUNNING) {
+        ScheduledRoundTimer scheduledTimer = activeRoundTimer;
+        if (scheduledTimer == null || match.getState() != MatchState.RUNNING) {
             return;
         }
-        RoundTimer roundTimer = activeRoundTimer.timer();
+        RoundTimer roundTimer = scheduledTimer.timer();
         switch (roundTimer.tick()) {
             case WARNING -> announceActionBarToMatch(match,
                     Messages.plural(MatchMessage.SUDDEN_DEATH_WARNING, roundTimer.getRemainingSeconds()));

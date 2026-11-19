@@ -1,5 +1,8 @@
 package de.simplepvparena.gate;
 
+import org.jspecify.annotations.NullMarked;
+
+@NullMarked
 public final class StartGateOpeningSchedule {
 
     public static final long TICKS_PER_SECOND = 20L;

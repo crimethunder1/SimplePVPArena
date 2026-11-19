@@ -3,11 +3,13 @@ package de.simplepvparena.arena;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.World;
+import org.jspecify.annotations.NullMarked;
 
 import java.util.Locale;
 import java.util.Objects;
 import java.util.Optional;
 
+@NullMarked
 public record PositionSnapshot(String worldName, double x, double y, double z, float yaw, float pitch) {
 
     public PositionSnapshot {

@@ -10,12 +10,15 @@ import org.bukkit.block.BlockState;
 import org.bukkit.block.data.BlockData;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.scheduler.BukkitTask;
+import org.jspecify.annotations.NullMarked;
+import org.jspecify.annotations.Nullable;
 
 import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.logging.Level;
 
+@NullMarked
 public final class ArenaCleaningService {
 
     public static final int DEFAULT_BLOCKS_PER_TICK = 4096;
@@ -32,7 +35,7 @@ public final class ArenaCleaningService {
 
     private int blocksPerTick = DEFAULT_BLOCKS_PER_TICK;
     private long animationDurationTicks = ArenaCleaningParticleSettings.defaults().animationDurationTicks();
-    private BukkitTask activeTask;
+    private @Nullable BukkitTask activeTask;
 
     public ArenaCleaningService(Plugin plugin, CleanedArenaHandler cleanedArenaHandler) {
         this(plugin, cleanedArenaHandler, ArenaCleaningVisualEffect.NONE);
@@ -161,7 +164,7 @@ public final class ArenaCleaningService {
         }
     }
 
-    private void finish(ArenaCleaningTarget cleaningTarget, CleaningRun run, String failureReason,
+    private void finish(ArenaCleaningTarget cleaningTarget, CleaningRun run, @Nullable String failureReason,
                         Consumer<ArenaCleaningReport> completionHandler) {
         stopCleaning();
         completionHandler.accept(new ArenaCleaningReport(run.checkedBlockCount, run.changedBlockCount,

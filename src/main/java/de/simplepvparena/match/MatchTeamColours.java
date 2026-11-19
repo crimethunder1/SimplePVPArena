@@ -4,10 +4,12 @@ import de.simplepvparena.team.Team;
 import de.simplepvparena.team.TeamColour;
 import de.simplepvparena.team.TeamMember;
 import net.kyori.adventure.text.format.NamedTextColor;
+import org.jspecify.annotations.NullMarked;
 
 import java.util.List;
 import java.util.Objects;
 
+@NullMarked
 public final class MatchTeamColours {
 
     public static final String FIRST_TEAM_SCOREBOARD_NAME = "etcc_team_1";

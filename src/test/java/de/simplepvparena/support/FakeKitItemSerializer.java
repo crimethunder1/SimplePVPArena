@@ -6,6 +6,7 @@ import org.bukkit.inventory.ItemStack;
 import java.nio.charset.StandardCharsets;
 import java.util.Set;
 
+@SuppressWarnings("null")
 public final class FakeKitItemSerializer implements KitItemSerializer {
 
     private final Set<String> undecodableLabels;

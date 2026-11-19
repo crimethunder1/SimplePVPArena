@@ -1,12 +1,15 @@
 package de.simplepvparena.arena;
 
 import de.simplepvparena.border.ActiveFighterLookup;
+import org.jspecify.annotations.NullMarked;
+import org.jspecify.annotations.Nullable;
 
 import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.function.Supplier;
 
+@NullMarked
 public final class ArenaSafetyZone {
 
     public static final String RADIUS_CONFIGURATION_PATH = "arena.safety-zone-radius";
@@ -16,8 +19,8 @@ public final class ArenaSafetyZone {
     private final ActiveFighterLookup activeFighterLookup;
 
     private int radius = DEFAULT_RADIUS;
-    private ArenaShape contourShape;
-    private ArenaOutline contour;
+    private @Nullable ArenaShape contourShape;
+    private @Nullable ArenaOutline contour;
 
     public ArenaSafetyZone(Supplier<Optional<ArenaShape>> shapeSource, ActiveFighterLookup activeFighterLookup) {
         this.shapeSource = Objects.requireNonNull(shapeSource, "shapeSource");
@@ -62,10 +65,12 @@ public final class ArenaSafetyZone {
     }
 
     private ArenaOutline findContour(ArenaShape shape) {
-        if (contour == null || contourShape != shape) {
+        ArenaOutline outline = contour;
+        if (outline == null || contourShape != shape) {
             contourShape = shape;
-            contour = ArenaOutline.of(shape);
+            outline = ArenaOutline.of(shape);
+            contour = outline;
         }
-        return contour;
+        return outline;
     }
 }

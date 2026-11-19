@@ -3,11 +3,13 @@ package de.simplepvparena.input;
 import de.simplepvparena.message.InputMessage;
 import de.simplepvparena.message.Messages;
 import de.simplepvparena.message.Placeholder;
+import org.jspecify.annotations.NullMarked;
 
 import java.util.List;
 import java.util.Optional;
 import java.util.regex.Pattern;
 
+@NullMarked
 public record ChatInputValues(List<String> values) {
 
     private static final Pattern SEPARATOR = Pattern.compile("\\s+");

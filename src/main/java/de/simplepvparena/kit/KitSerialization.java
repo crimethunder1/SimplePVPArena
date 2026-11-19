@@ -1,6 +1,7 @@
 package de.simplepvparena.kit;
 
 import org.bukkit.inventory.ItemStack;
+import org.jspecify.annotations.NullMarked;
 
 import java.util.EnumMap;
 import java.util.Map;
@@ -9,6 +10,7 @@ import java.util.Optional;
 import java.util.TreeMap;
 import java.util.function.Consumer;
 
+@NullMarked
 public final class KitSerialization {
 
     private final KitItemSerializer kitItemSerializer;

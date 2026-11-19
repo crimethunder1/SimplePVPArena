@@ -9,12 +9,15 @@ import org.bukkit.World;
 import org.bukkit.entity.Entity;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.scheduler.BukkitTask;
+import org.jspecify.annotations.NullMarked;
+import org.jspecify.annotations.Nullable;
 
 import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
+@NullMarked
 public final class PlacementBoard {
 
     public static final double HEIGHT_ABOVE_THE_PLACE = 2.0D;
@@ -30,10 +33,10 @@ public final class PlacementBoard {
     private final Function<PlacementStandings, Optional<Component>> textSource;
 
     private boolean enabled = PluginSettings.DEFAULT_PLACEMENT_BOARD_ENABLED;
-    private BukkitTask refreshTask;
-    private Entity board;
-    private PositionSnapshot shownPlace;
-    private Component shownText;
+    private @Nullable BukkitTask refreshTask;
+    private @Nullable Entity board;
+    private @Nullable PositionSnapshot shownPlace;
+    private @Nullable Component shownText;
 
     public PlacementBoard(Plugin plugin, Supplier<Optional<PositionSnapshot>> placeSource,
                           Function<String, World> worldLookup, PlacementBoardEntities boardEntities,
@@ -97,15 +100,17 @@ public final class PlacementBoard {
             return;
         }
         Component text = shownContent.get();
-        if (board != null && (!place.get().equals(shownPlace) || !board.isValid())) {
+        Entity shownBoard = board;
+        if (shownBoard != null && (!place.get().equals(shownPlace) || !shownBoard.isValid())) {
             hide();
+            shownBoard = null;
         }
-        if (board == null) {
+        if (shownBoard == null) {
             spawn(place.get(), text);
             return;
         }
         if (!text.equals(shownText)) {
-            boardEntities.changeText(board, text);
+            boardEntities.changeText(shownBoard, text);
             shownText = text;
         }
     }

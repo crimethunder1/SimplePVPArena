@@ -10,7 +10,9 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.plugin.Plugin;
+import org.jspecify.annotations.NullMarked;
 
+@NullMarked
 public final class SpectatorItemFactory implements SpectatorItems {
 
     private static final Material SPECTATOR_TOGGLE_MATERIAL = Material.COMPASS;

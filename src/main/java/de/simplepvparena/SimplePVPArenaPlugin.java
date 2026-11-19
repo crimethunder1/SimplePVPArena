@@ -46,6 +46,8 @@ import de.simplepvparena.config.ConfirmedBorderParticleConfigurationWriter;
 import de.simplepvparena.config.EffectMarginConfigurationWriter;
 import de.simplepvparena.config.PluginLiveConfiguration;
 import de.simplepvparena.config.PluginSettings;
+import de.simplepvparena.config.ServerModeConfigurationWriter;
+import de.simplepvparena.config.ServerModeSetting;
 import de.simplepvparena.config.TeamModeConfigurationWriter;
 import de.simplepvparena.config.TeamSizeConfigurationWriter;
 import de.simplepvparena.diagnostics.PluginDryRunArena;
@@ -121,10 +123,12 @@ import de.simplepvparena.registration.PaperStationDisplayEntities;
 import de.simplepvparena.registration.RegistrationMachineDisplays;
 import de.simplepvparena.registration.RegistrationMachineService;
 import de.simplepvparena.registration.RegistrationMachines;
+import de.simplepvparena.registration.PaperPlayerNameResolver;
 import de.simplepvparena.registration.RandomTeamFormation;
 import de.simplepvparena.registration.RegistrationList;
 import de.simplepvparena.registration.RegistrationService;
 import de.simplepvparena.registration.TeamChoiceService;
+import de.simplepvparena.registration.TeamImportService;
 import de.simplepvparena.registration.TeamModeSetting;
 import de.simplepvparena.registration.RegistrationStationButtonCheck;
 import de.simplepvparena.registration.RegistrationStationDisplays;
@@ -152,6 +156,7 @@ import org.bukkit.command.PluginCommand;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.jspecify.annotations.NullMarked;
 
 import java.io.File;
 import java.io.IOException;
@@ -161,6 +166,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.random.RandomGenerator;
 
+@NullMarked
 public final class SimplePVPArenaPlugin extends JavaPlugin {
 
     private static final String COMMAND_NAME = "tournament";
@@ -218,6 +224,8 @@ public final class SimplePVPArenaPlugin extends JavaPlugin {
     private TournamentManager tournamentManager;
     private AutoMatchService autoMatchService;
     private PlayAgainService playAgainService;
+    private TeamImportService teamImportService;
+    private final ServerModeSetting serverModeSetting = new ServerModeSetting();
     private TournamentDryRun tournamentDryRun;
     private ConfigurationReloadService configurationReloadService;
     private PluginLiveConfiguration liveConfiguration;
@@ -228,6 +236,10 @@ public final class SimplePVPArenaPlugin extends JavaPlugin {
     private AutoMatchLeaderboard autoMatchLeaderboard;
     private FileAutoMatchLeaderboardStorage autoMatchLeaderboardStorage;
     private StandingsBoardToolService standingsBoardToolService;
+
+    @SuppressWarnings("null")
+    public SimplePVPArenaPlugin() {
+    }
 
     @Override
     public void onEnable() {
@@ -383,6 +395,12 @@ public final class SimplePVPArenaPlugin extends JavaPlugin {
                 teamSizeSetting, tournamentManager::isTournamentInProgress,
                 () -> autoMatchService.isAnnounced() || autoMatchService.getState() == AutoMatchState.RUNNING,
                 this::saveTeamConfiguration, getServer()::getPlayer, RandomGenerator.getDefault());
+        teamImportService = new TeamImportService(new File(getDataFolder(), TeamImportService.FOLDER_NAME).toPath(),
+                teamRegistry, teamSizeSetting, tournamentManager::isTournamentInProgress,
+                () -> autoMatchService.isAnnounced() || autoMatchService.getState() == AutoMatchState.RUNNING,
+                this::saveTeamConfiguration, getServer()::getPlayer, RandomGenerator.getDefault(),
+                new PaperPlayerNameResolver(getServer()), task -> getServer().getScheduler().runTask(this, task));
+        createImportFolder();
         TeamModeSetting teamModeSetting = new TeamModeSetting();
         TeamChoiceService teamChoiceService = new TeamChoiceService(registrationService, teamRegistry,
                 teamSizeSetting, teamModeSetting, tournamentManager::isTournamentInProgress,
@@ -398,12 +416,18 @@ public final class SimplePVPArenaPlugin extends JavaPlugin {
                 startGateMarks, startGateDuration, teamSizeSetting, getLogger());
 
         chatInputService = new ChatInputService(this);
+        ServerModeConfigurationWriter serverModeWriter = new ServerModeConfigurationWriter(this::getConfig,
+                new File(getDataFolder(), CONFIGURATION_FILE_NAME), getLogger());
         TeamMemberLookup teamMemberLookup = new TeamMemberLookup(getServer());
         adminMenuService = new AdminMenuService(new AdminMenuDependencies(this, chatInputService,
                 this::reloadConfiguration,
                 new AdminMenuDependencies.TournamentServices(tournamentManager, tournamentDryRun, matchService,
                         autoMatchService, new AutoMatchConfigurationWriter(this::getConfig,
-                                new File(getDataFolder(), CONFIGURATION_FILE_NAME), getLogger())),
+                                new File(getDataFolder(), CONFIGURATION_FILE_NAME), getLogger()),
+                        serverModeSetting, serverMode -> {
+                            serverModeWriter.write(serverMode);
+                            reloadConfiguration();
+                        }),
                 new AdminMenuDependencies.TeamServices(teamRegistry, teamMemberLookup, this::saveTeamConfiguration,
                         new TeamSizeConfigurationWriter(this::getConfig,
                                 new File(getDataFolder(), CONFIGURATION_FILE_NAME), getLogger())),
@@ -441,7 +465,8 @@ public final class SimplePVPArenaPlugin extends JavaPlugin {
                         adminNotifier::notifyAdmins,
                         getLogger()::warning, messageCatalogLoader::useLanguage, autoMatchService::applySettings,
                         teamModeSetting::setTeamMode, areaInventoryService::setEnabled,
-                        configuredVisuals::applySettings, placementSidebar::setEnabled, placementBoard::setEnabled);
+                        configuredVisuals::applySettings, placementSidebar::setEnabled, placementBoard::setEnabled,
+                        serverModeSetting::setServerMode);
         configurationReloadService = new ConfigurationReloadService(this::getConfig, this::reloadConfig,
                 liveConfiguration, getLogger()::warning);
         configurationReloadService.applyStoredConfiguration();
@@ -582,6 +607,15 @@ public final class SimplePVPArenaPlugin extends JavaPlugin {
         placementBoard.rebuild();
     }
 
+    private void createImportFolder() {
+        try {
+            teamImportService.createFolder();
+        } catch (IOException | RuntimeException failure) {
+            getLogger().log(Level.WARNING, Messages.text(PluginMessage.IMPORT_FOLDER_NOT_CREATED,
+                    Placeholder.of("folder", teamImportService.describeFolder())), failure);
+        }
+    }
+
     private void saveArenaBaseline(ArenaBaselineSnapshot snapshot) {
         try {
             arenaBaselineFile.save(snapshot);
@@ -706,7 +740,7 @@ public final class SimplePVPArenaPlugin extends JavaPlugin {
             return;
         }
         TournamentCommand tournamentCommand = new TournamentCommand(matchService, spectatorService,
-                adminMenuService, registrationService, playAgainService, getLogger());
+                adminMenuService, registrationService, playAgainService, teamImportService, getLogger());
         pluginCommand.setExecutor(tournamentCommand);
         pluginCommand.setTabCompleter(tournamentCommand);
     }

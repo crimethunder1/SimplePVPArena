@@ -6,6 +6,7 @@ import de.simplepvparena.message.Messages;
 import de.simplepvparena.message.Placeholder;
 import de.simplepvparena.message.TournamentMessages;
 import org.bukkit.command.CommandSender;
+import org.jspecify.annotations.NullMarked;
 
 import java.io.IOException;
 import java.util.Objects;
@@ -14,6 +15,7 @@ import java.util.function.Consumer;
 import java.util.function.IntSupplier;
 import java.util.function.Supplier;
 
+@NullMarked
 public final class MarkClearing {
 
     private final MarkClearingKind kind;

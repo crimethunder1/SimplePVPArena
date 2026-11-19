@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+@SuppressWarnings("null")
 final class BorderWall implements BorderColumnReader {
 
     private final Map<Long, List<Integer>> heightsByCell = new HashMap<>();

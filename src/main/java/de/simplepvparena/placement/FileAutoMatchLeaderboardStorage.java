@@ -3,6 +3,7 @@ package de.simplepvparena.placement;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.configuration.file.YamlConfiguration;
+import org.jspecify.annotations.NullMarked;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -13,6 +14,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
 
+@NullMarked
 public final class FileAutoMatchLeaderboardStorage {
 
     public static final String FILE_NAME = "auto-match-wins.yml";

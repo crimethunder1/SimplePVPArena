@@ -1,5 +1,8 @@
 package de.simplepvparena.arena;
 
+import org.jspecify.annotations.NullMarked;
+
+@NullMarked
 public final class ArenaWorldBuildRule {
 
     private ArenaWorldBuildRule() {

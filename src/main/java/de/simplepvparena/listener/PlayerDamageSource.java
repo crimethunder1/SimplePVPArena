@@ -10,11 +10,13 @@ import org.bukkit.entity.TNTPrimed;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectTypeCategory;
 import org.bukkit.projectiles.ProjectileSource;
+import org.jspecify.annotations.NullMarked;
 
 import java.util.Collection;
 import java.util.Optional;
 import java.util.UUID;
 
+@NullMarked
 final class PlayerDamageSource {
 
     private PlayerDamageSource() {

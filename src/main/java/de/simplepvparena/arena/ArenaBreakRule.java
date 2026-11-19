@@ -1,9 +1,11 @@
 package de.simplepvparena.arena;
 
 import org.bukkit.Material;
+import org.jspecify.annotations.NullMarked;
 
 import java.util.Optional;
 
+@NullMarked
 public final class ArenaBreakRule {
 
     private ArenaBreakRule() {

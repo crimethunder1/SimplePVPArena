@@ -38,6 +38,7 @@ import java.util.logging.Logger;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+@SuppressWarnings("null")
 final class TournamentManagerFixture {
 
     static final String SKIPPED_CLEANING_REASON = "no baseline of the fight area is stored";

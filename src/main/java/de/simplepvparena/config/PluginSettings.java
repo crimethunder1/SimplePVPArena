@@ -28,6 +28,7 @@ import de.simplepvparena.tournament.AutoMatchSettings;
 import de.simplepvparena.visual.CustomVisualSettings;
 import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.configuration.ConfigurationSection;
+import org.jspecify.annotations.NullMarked;
 
 import java.util.List;
 import java.util.Locale;
@@ -35,6 +36,7 @@ import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.function.IntConsumer;
 
+@NullMarked
 public record PluginSettings(long roundResetDelayTicks,
                              RoundTimeoutSettings roundTimeoutSettings,
                              boolean suddenDeathDisabledInFinal,
@@ -65,11 +67,13 @@ public record PluginSettings(long roundResetDelayTicks,
                              boolean areaInventoryEnabled,
                              CustomVisualSettings customVisualSettings,
                              boolean placementSidebarEnabled,
-                             boolean placementBoardEnabled) {
+                             boolean placementBoardEnabled,
+                             ServerMode serverMode) {
 
     public static final String KIT_SECTION_PATH = "kit";
 
     public static final String LANGUAGE_PATH = "language";
+    public static final String SERVER_MODE_PATH = "server-mode";
 
     public static final String ROUND_RESET_DELAY_PATH = "match.round-reset-delay-ticks";
     public static final String ROUND_TIMEOUT_SECONDS_PATH = "match.round-timeout-seconds";
@@ -200,7 +204,8 @@ public record PluginSettings(long roundResetDelayTicks,
                 AreaInventoryService.DEFAULT_ENABLED,
                 CustomVisualSettings.defaults(),
                 DEFAULT_PLACEMENT_SIDEBAR_ENABLED,
-                DEFAULT_PLACEMENT_BOARD_ENABLED);
+                DEFAULT_PLACEMENT_BOARD_ENABLED,
+                ServerMode.DEFAULT_MODE);
     }
 
     public static PluginSettings read(ConfigurationSection configuration, Consumer<String> problemReporter) {
@@ -245,7 +250,8 @@ public record PluginSettings(long roundResetDelayTicks,
                 readPlacementEnabled(configuration, PLACEMENT_SIDEBAR_ENABLED_PATH,
                         DEFAULT_PLACEMENT_SIDEBAR_ENABLED, problemReporter),
                 readPlacementEnabled(configuration, PLACEMENT_BOARD_ENABLED_PATH,
-                        DEFAULT_PLACEMENT_BOARD_ENABLED, problemReporter));
+                        DEFAULT_PLACEMENT_BOARD_ENABLED, problemReporter),
+                readServerMode(configuration, problemReporter));
         readLanguage(configuration, problemReporter);
         return settings;
     }
@@ -285,7 +291,10 @@ public record PluginSettings(long roundResetDelayTicks,
         liveConfiguration.setCleanBetweenRounds(cleanBetweenRounds);
         liveConfiguration.setTeamColourSettings(teamColourSettings);
         teamSizeTarget.accept(teamSize);
-        liveConfiguration.setAutoMatchSettings(autoMatchSettings);
+        liveConfiguration.setServerMode(serverMode);
+        liveConfiguration.setAutoMatchSettings(serverMode.allowsAutoMatches()
+                ? autoMatchSettings
+                : autoMatchSettings.withEnabled(false));
         liveConfiguration.setTeamMode(teamMode);
         liveConfiguration.setArenaCleaningBlocksPerTick(arenaCleaningBlocksPerTick);
         liveConfiguration.setArenaBaselineBlocksPerTick(arenaBaselineBlocksPerTick);
@@ -294,7 +303,7 @@ public record PluginSettings(long roundResetDelayTicks,
         liveConfiguration.setMaximumArenaCellCount(maximumArenaCellCount);
         liveConfiguration.setSafetyZoneRadius(safetyZoneRadius);
         liveConfiguration.setArenaEffectMargin(arenaEffectMargin);
-        liveConfiguration.setTeleportOnJoin(teleportOnJoin);
+        liveConfiguration.setTeleportOnJoin(serverMode.sendsJoiningPlayersToTheTribune() && teleportOnJoin);
         liveConfiguration.setBorderParticlePeriodTicks(borderParticlePeriodTicks);
         liveConfiguration.setBorderParticleViewRadius(borderParticleViewRadius);
         liveConfiguration.setBorderParticleMaximumBlocksPerPlayer(borderParticleMaximumBlocksPerPlayer);
@@ -302,7 +311,7 @@ public record PluginSettings(long roundResetDelayTicks,
         liveConfiguration.setBorderWallPreviewDurationTicks(borderWallPreviewDurationTicks);
         liveConfiguration.setConfirmedBorderParticleSettings(confirmedBorderParticleSettings);
         liveConfiguration.setConfirmedBorderParticleEnabled(confirmedBorderParticleEnabled);
-        liveConfiguration.setAreaInventoryEnabled(areaInventoryEnabled);
+        liveConfiguration.setAreaInventoryEnabled(serverMode.keepsAreaInventories() && areaInventoryEnabled);
         liveConfiguration.setCustomVisualSettings(customVisualSettings);
         liveConfiguration.setPlacementSidebarEnabled(placementSidebarEnabled);
         liveConfiguration.setPlacementBoardEnabled(placementBoardEnabled);
@@ -525,6 +534,27 @@ public record PluginSettings(long roundResetDelayTicks,
                 Placeholder.of("path", AUTO_MATCH_ENABLED_PATH),
                 Placeholder.of("fallback", AutoMatchSettings.DEFAULT_ENABLED)));
         return AutoMatchSettings.DEFAULT_ENABLED;
+    }
+
+    private static ServerMode readServerMode(ConfigurationSection configuration,
+                                             Consumer<String> problemReporter) {
+        if (!configuration.isSet(SERVER_MODE_PATH)) {
+            return ServerMode.DEFAULT_MODE;
+        }
+        if (configuration.isString(SERVER_MODE_PATH)) {
+            String writtenMode = configuration.getString(SERVER_MODE_PATH);
+            Optional<ServerMode> serverMode = writtenMode == null
+                    ? Optional.empty()
+                    : ServerMode.fromConfigurationName(writtenMode);
+            if (serverMode.isPresent()) {
+                return serverMode.get();
+            }
+        }
+        problemReporter.accept(Messages.text(ConfigMessage.SERVER_MODE_UNKNOWN,
+                Placeholder.of("path", SERVER_MODE_PATH),
+                Placeholder.of("modes", Messages.join(ServerMode.configurationNames())),
+                Placeholder.of("fallback", ServerMode.DEFAULT_MODE.getConfigurationName())));
+        return ServerMode.DEFAULT_MODE;
     }
 
     private static TeamMode readTeamMode(ConfigurationSection configuration, Consumer<String> problemReporter) {
