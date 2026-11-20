@@ -26,7 +26,6 @@ import de.simplepvparena.team.Team;
 import de.simplepvparena.team.TeamSizeSetting;
 import de.simplepvparena.tournament.AutoMatchSettings;
 import de.simplepvparena.visual.CustomVisualSettings;
-import de.simplepvparena.voice.VoiceIsolation;
 import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.configuration.ConfigurationSection;
 import org.jspecify.annotations.NullMarked;
@@ -118,6 +117,7 @@ public record PluginSettings(long roundResetDelayTicks,
     public static final int DEFAULT_WALL_PREVIEW_SECONDS = 4;
     public static final boolean DEFAULT_PLACEMENT_SIDEBAR_ENABLED = true;
     public static final boolean DEFAULT_PLACEMENT_BOARD_ENABLED = true;
+    public static final boolean DEFAULT_VOICE_CHAT_ENABLED = true;
 
     public static final long TICKS_PER_SECOND = 20L;
 
@@ -210,7 +210,7 @@ public record PluginSettings(long roundResetDelayTicks,
                 DEFAULT_PLACEMENT_SIDEBAR_ENABLED,
                 DEFAULT_PLACEMENT_BOARD_ENABLED,
                 ServerMode.DEFAULT_MODE,
-                VoiceIsolation.DEFAULT_ENABLED);
+                DEFAULT_VOICE_CHAT_ENABLED);
     }
 
     public static PluginSettings read(ConfigurationSection configuration, Consumer<String> problemReporter) {
@@ -257,7 +257,8 @@ public record PluginSettings(long roundResetDelayTicks,
                 readPlacementEnabled(configuration, PLACEMENT_BOARD_ENABLED_PATH,
                         DEFAULT_PLACEMENT_BOARD_ENABLED, problemReporter),
                 readServerMode(configuration, problemReporter),
-                readVoiceChatEnabled(configuration, problemReporter));
+                readTruthValue(configuration, VOICE_CHAT_ENABLED_PATH, DEFAULT_VOICE_CHAT_ENABLED,
+                        ConfigMessage.VOICE_CHAT_ENABLED_NOT_A_TRUTH_VALUE, problemReporter));
         readLanguage(configuration, problemReporter);
         return settings;
     }
@@ -798,28 +799,20 @@ public record PluginSettings(long roundResetDelayTicks,
 
     private static boolean readPlacementEnabled(ConfigurationSection configuration, String path,
                                                 boolean defaultEnabled, Consumer<String> problemReporter) {
+        return readTruthValue(configuration, path, defaultEnabled, ConfigMessage.PLACEMENT_ENABLED_NOT_A_TRUTH_VALUE,
+                problemReporter);
+    }
+
+    private static boolean readTruthValue(ConfigurationSection configuration, String path, boolean defaultValue,
+                                          ConfigMessage notATruthValue, Consumer<String> problemReporter) {
         if (!configuration.isSet(path)) {
-            return defaultEnabled;
+            return defaultValue;
         }
         if (configuration.isBoolean(path)) {
             return configuration.getBoolean(path);
         }
-        problemReporter.accept(Messages.text(ConfigMessage.PLACEMENT_ENABLED_NOT_A_TRUTH_VALUE,
-                Placeholder.of("path", path), Placeholder.of("fallback", defaultEnabled)));
-        return defaultEnabled;
-    }
-
-    private static boolean readVoiceChatEnabled(ConfigurationSection configuration,
-                                                Consumer<String> problemReporter) {
-        if (!configuration.isSet(VOICE_CHAT_ENABLED_PATH)) {
-            return VoiceIsolation.DEFAULT_ENABLED;
-        }
-        if (configuration.isBoolean(VOICE_CHAT_ENABLED_PATH)) {
-            return configuration.getBoolean(VOICE_CHAT_ENABLED_PATH);
-        }
-        problemReporter.accept(Messages.text(ConfigMessage.VOICE_CHAT_ENABLED_NOT_A_TRUTH_VALUE,
-                Placeholder.of("path", VOICE_CHAT_ENABLED_PATH),
-                Placeholder.of("fallback", VoiceIsolation.DEFAULT_ENABLED)));
-        return VoiceIsolation.DEFAULT_ENABLED;
+        problemReporter.accept(Messages.text(notATruthValue, Placeholder.of("path", path),
+                Placeholder.of("fallback", defaultValue)));
+        return defaultValue;
     }
 }

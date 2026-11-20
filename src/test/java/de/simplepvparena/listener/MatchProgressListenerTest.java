@@ -34,6 +34,22 @@ class MatchProgressListenerTest {
         assertEquals(List.of("Alpha 0 : 0 Bravo", "no match"), calls);
     }
 
+    @Test
+    void theFighterChangeListenerHearsTheStartOfAMatchAndEveryFighterWhoIsOut() {
+        AutoMatchHarness harness = new AutoMatchHarness("Alpha", "Bravo");
+        List<String> calls = new ArrayList<>();
+        harness.matchService().setFighterChangeListener(() -> calls.add(harness.matchService().getActiveMatch()
+                .flatMap(match -> match.getRoundParticipants()
+                        .map(participants -> participants.getAllActivePlayers().size() + " active"))
+                .orElse("starting")));
+        harness.switchOn();
+        harness.advanceUntilTheAutoMatchRuns();
+
+        harness.winRound("Alpha");
+
+        assertEquals(List.of("starting", "1 active"), calls);
+    }
+
     private static List<String> recordCalls(AutoMatchHarness harness) {
         List<String> calls = new ArrayList<>();
         harness.matchService().setMatchProgressListener(() -> calls.add(harness.matchService().getActiveMatch()

@@ -25,7 +25,6 @@ import java.util.function.Consumer;
 @NullMarked
 public final class SimpleVoiceChatBridge implements VoicechatPlugin, VoiceGroups {
 
-    public static final String PLUGIN_NAME = "voicechat";
     public static final String PLUGIN_ID = "simplepvparena";
 
     private final VoiceIsolation isolation;
@@ -94,6 +93,11 @@ public final class SimpleVoiceChatBridge implements VoicechatPlugin, VoiceGroups
     }
 
     @Override
+    public boolean isConnected() {
+        return serverApi != null;
+    }
+
+    @Override
     public boolean leaveGroup(UUID player) {
         VoicechatServerApi api = serverApi;
         if (api == null) {
@@ -104,6 +108,6 @@ public final class SimpleVoiceChatBridge implements VoicechatPlugin, VoiceGroups
             return false;
         }
         connection.setGroup(null);
-        return true;
+        return !connection.isInGroup();
     }
 }

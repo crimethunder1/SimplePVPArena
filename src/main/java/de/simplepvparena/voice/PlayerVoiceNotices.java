@@ -36,6 +36,11 @@ public final class PlayerVoiceNotices implements VoiceNotices {
     }
 
     @Override
+    public void backInTheFight(UUID fighter) {
+        send(fighter, VoiceMessage.BACK_IN_THE_FIGHT);
+    }
+
+    @Override
     public void groupRefused(UUID fighter) {
         send(fighter, VoiceMessage.GROUP_REFUSED);
     }

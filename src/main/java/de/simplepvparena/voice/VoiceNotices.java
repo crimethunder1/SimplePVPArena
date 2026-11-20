@@ -13,5 +13,7 @@ public interface VoiceNotices {
 
     void eliminated(UUID fighter);
 
+    void backInTheFight(UUID fighter);
+
     void groupRefused(UUID fighter);
 }

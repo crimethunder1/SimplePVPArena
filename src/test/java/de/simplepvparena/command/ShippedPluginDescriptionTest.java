@@ -2,6 +2,8 @@ package de.simplepvparena.command;
 
 import de.simplepvparena.permission.AdminPermission;
 import de.simplepvparena.permission.ViewPermission;
+import de.simplepvparena.voice.VoiceChatHook;
+import de.simplepvparena.voice.VoiceIsolation;
 import org.bukkit.permissions.Permission;
 import org.bukkit.permissions.PermissionDefault;
 import org.bukkit.plugin.InvalidDescriptionException;
@@ -54,6 +56,19 @@ class ShippedPluginDescriptionTest {
         for (String subcommand : SUBCOMMANDS) {
             assertTrue(commandDescription.contains("/tournament " + subcommand), subcommand);
         }
+    }
+
+    @Test
+    void loadsAfterSimpleVoiceChatWithoutDependingOnIt() {
+        PluginDescriptionFile description = shippedDescription();
+
+        assertTrue(description.getSoftDepend().contains(VoiceChatHook.SIMPLE_VOICE_CHAT_PLUGIN_NAME),
+                description.getSoftDepend().toString());
+    }
+
+    @Test
+    void grantsTheVoiceChatBypassToOperatorsByDefault() {
+        assertEquals(PermissionDefault.OP, findPermission(VoiceIsolation.BYPASS_PERMISSION_NAME).getDefault());
     }
 
     @Test

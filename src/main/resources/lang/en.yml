@@ -1536,10 +1536,13 @@ visual:
   lookup-failed: 'ItemsAdder could not hand out {identifier}, set in {path} of config.yml ({reason}), the own title or effect of the plugin is used instead'
 voice:
   simple-voice-chat-used: 'SimpleVoiceChat was found, during a match the fighters only hear the other fighters and players with {permission}, {path} false in config.yml switches this off'
+  simple-voice-chat-switched-off: 'SimpleVoiceChat was found, but {path} in config.yml is false, the fighters hear every player in the voice chat'
   simple-voice-chat-service-missing: 'SimpleVoiceChat runs but offers no interface for plugins, the fighters keep hearing every player in the voice chat'
+  simple-voice-chat-not-connected: 'SimpleVoiceChat did not connect the plugin, the fighters keep hearing every player in the voice chat. This happens when only SimplePVPArena was reloaded, restart the server'
   isolated: 'Voice chat: during the match you only hear the fighters, the spectators are muted for you'
   left-group: 'Voice chat: you left your group for the match'
   eliminated: 'Voice chat: you are out, you now hear your team and the spectators, the opponents no longer hear you'
+  back-in-the-fight: 'Voice chat: you are back in the fight and only hear the fighters'
   group-refused: 'Voice chat: you cannot join a group during your match'
 command:
   menu-only-for-players:

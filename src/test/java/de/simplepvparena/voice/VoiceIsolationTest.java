@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -25,23 +26,36 @@ class VoiceIsolationTest {
     private static final VoiceRoster MATCH = new VoiceRoster(Map.of(RED, "Red", BLUE, "Blue"), Set.of(), Set.of());
 
     private final AtomicReference<VoiceRoster> source = new AtomicReference<>(MATCH);
+    private final AtomicLong clock = new AtomicLong(1_000_000L);
     private final List<String> notices = new ArrayList<>();
     private final Set<UUID> playersInAGroup = new HashSet<>(Set.of(RED, SPECTATOR));
-    private final VoiceIsolation isolation = new VoiceIsolation(source::get, new RecordingNotices());
+    private final RecordingGroups groups = new RecordingGroups();
+    private final VoiceIsolation isolation = new VoiceIsolation(source::get, new RecordingNotices(), clock::get);
 
     @Test
     void staysOpenUntilSimpleVoiceChatIsAttached() {
         isolation.refresh();
 
         assertFalse(isolation.isAttached());
+        assertFalse(isolation.isConnected());
         assertSame(VoiceRoster.EMPTY, isolation.getRoster());
         assertTrue(isolation.canHear(SPECTATOR, RED));
         assertEquals(List.of(), notices);
     }
 
     @Test
+    void isConnectedOnlyOnceSimpleVoiceChatHandedOverItsInterface() {
+        isolation.attach(groups);
+        assertTrue(isolation.isAttached());
+        assertFalse(isolation.isConnected());
+
+        groups.connected = true;
+        assertTrue(isolation.isConnected());
+    }
+
+    @Test
     void theMatchStartIsolatesTheFightersAndTakesThemOutOfTheirGroup() {
-        isolation.attach(this::leaveGroup);
+        isolation.attach(groups);
 
         isolation.refresh();
 
@@ -50,13 +64,13 @@ class VoiceIsolationTest {
         assertFalse(isolation.mayJoinGroup(RED));
         assertTrue(isolation.mayJoinGroup(SPECTATOR));
         assertEquals(Set.of(SPECTATOR), playersInAGroup, "only the fighter leaves his group");
-        assertTrue(notices.containsAll(List.of("isolated " + RED, "isolated " + BLUE, "left " + RED)), notices::toString);
+        assertEquals(Set.of("isolated " + RED, "isolated " + BLUE, "left " + RED), Set.copyOf(notices));
         assertEquals(3, notices.size(), notices::toString);
     }
 
     @Test
-    void tellsTheFightersOnlyOnceAndTellsWhoIsOut() {
-        isolation.attach(this::leaveGroup);
+    void tellsTheFightersOnlyOnceAndTellsWhoIsOutAndWhoIsBack() {
+        isolation.attach(groups);
         isolation.refresh();
         notices.clear();
 
@@ -67,11 +81,15 @@ class VoiceIsolationTest {
         isolation.refresh();
         isolation.refresh();
         assertEquals(List.of("out " + BLUE), notices);
+
+        source.set(MATCH);
+        isolation.refresh();
+        assertEquals(List.of("out " + BLUE, "back " + BLUE), notices);
     }
 
     @Test
     void aFighterWhoJoinsAGroupAnywayIsTakenOutAgain() {
-        isolation.attach(this::leaveGroup);
+        isolation.attach(groups);
         isolation.refresh();
         notices.clear();
 
@@ -84,7 +102,7 @@ class VoiceIsolationTest {
 
     @Test
     void switchedOffNobodyIsIsolated() {
-        isolation.attach(this::leaveGroup);
+        isolation.attach(groups);
 
         isolation.setEnabled(false);
 
@@ -99,7 +117,7 @@ class VoiceIsolationTest {
 
     @Test
     void theMatchEndOpensTheVoiceChatAgain() {
-        isolation.attach(this::leaveGroup);
+        isolation.attach(groups);
         isolation.refresh();
 
         source.set(VoiceRoster.EMPTY);
@@ -111,7 +129,7 @@ class VoiceIsolationTest {
 
     @Test
     void detachingOpensTheVoiceChat() {
-        isolation.attach(this::leaveGroup);
+        isolation.attach(groups);
         isolation.refresh();
 
         isolation.detach();
@@ -121,14 +139,31 @@ class VoiceIsolationTest {
     }
 
     @Test
-    void aRefusedGroupIsReportedToThePlayer() {
+    void aRefusedGroupIsToldAtMostOnceEveryThreeSeconds() {
+        isolation.refuseGroup(RED);
+        isolation.refuseGroup(RED);
+        clock.addAndGet(VoiceIsolation.GROUP_REFUSAL_NOTICE_PAUSE_MILLIS - 1);
+        isolation.refuseGroup(RED);
+        isolation.refuseGroup(BLUE);
+        clock.addAndGet(1);
         isolation.refuseGroup(RED);
 
-        assertEquals(List.of("refused " + RED), notices);
+        assertEquals(List.of("refused " + RED, "refused " + BLUE, "refused " + RED), notices);
     }
 
-    private boolean leaveGroup(UUID player) {
-        return playersInAGroup.remove(player);
+    private final class RecordingGroups implements VoiceGroups {
+
+        private boolean connected;
+
+        @Override
+        public boolean isConnected() {
+            return connected;
+        }
+
+        @Override
+        public boolean leaveGroup(UUID player) {
+            return playersInAGroup.remove(player);
+        }
     }
 
     private final class RecordingNotices implements VoiceNotices {
@@ -146,6 +181,11 @@ class VoiceIsolationTest {
         @Override
         public void eliminated(UUID fighter) {
             notices.add("out " + fighter);
+        }
+
+        @Override
+        public void backInTheFight(UUID fighter) {
+            notices.add("back " + fighter);
         }
 
         @Override

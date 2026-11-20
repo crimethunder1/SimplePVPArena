@@ -31,7 +31,8 @@ class ShippedLanguageFilesTest {
             StartGateMessage.class, TournamentStatusMessage.class, FinalMessage.class, MatchMessage.class,
             TournamentMessage.class, CommandMessage.class, PlayerStateMessage.class, DryRunMessage.class,
             DryRunCheckMessage.class, ConfigMessage.class, PluginMessage.class, BracketViewMessage.class,
-            AutoMatchMessage.class, AreaInventoryMessage.class, VisualMessage.class, VoiceMessage.class, RegistrationMessage.class,
+            AutoMatchMessage.class, AreaInventoryMessage.class, VisualMessage.class, VoiceMessage.class,
+            RegistrationMessage.class,
             RegistrationMenuMessage.class, UnequalTeamVoteMessage.class, DecidedMatchMessage.class,
             TeamChoiceMessage.class, PlacementMessage.class);
 

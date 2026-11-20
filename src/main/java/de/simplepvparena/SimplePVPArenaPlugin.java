@@ -112,7 +112,6 @@ import de.simplepvparena.message.MessageCatalogLoader;
 import de.simplepvparena.message.Messages;
 import de.simplepvparena.message.Placeholder;
 import de.simplepvparena.message.PluginMessage;
-import de.simplepvparena.message.VoiceMessage;
 import de.simplepvparena.placement.AutoMatchLeaderboard;
 import de.simplepvparena.placement.BracketBoardDisplays;
 import de.simplepvparena.placement.BracketBoardService;
@@ -161,6 +160,7 @@ import de.simplepvparena.visual.CustomVisualsSelection;
 import de.simplepvparena.visual.ItemsAdderVisuals;
 import de.simplepvparena.voice.PlayerVoiceNotices;
 import de.simplepvparena.voice.SimpleVoiceChatBridge;
+import de.simplepvparena.voice.VoiceChatHook;
 import de.simplepvparena.voice.VoiceIsolation;
 import de.simplepvparena.voice.VoiceRoster;
 import org.bukkit.Tag;
@@ -491,6 +491,7 @@ public final class SimplePVPArenaPlugin extends JavaPlugin {
                         serverModeSetting::setServerMode);
         voiceIsolation = new VoiceIsolation(this::buildVoiceRoster, new PlayerVoiceNotices(getServer()::getPlayer));
         liveConfiguration.setVoiceChatIsolationEnabledApplier(voiceIsolation::setEnabled);
+        matchService.setFighterChangeListener(voiceIsolation::refresh);
         configurationReloadService = new ConfigurationReloadService(this::getConfig, this::reloadConfig,
                 liveConfiguration, getLogger()::warning);
         configurationReloadService.applyStoredConfiguration();
@@ -640,6 +641,9 @@ public final class SimplePVPArenaPlugin extends JavaPlugin {
     }
 
     public void onPlacementChanged() {
+        if (voiceIsolation != null) {
+            voiceIsolation.refresh();
+        }
         placementSidebar.refresh();
         placementBoard.refresh();
         if (bracketBoardDisplays != null) {
@@ -746,19 +750,18 @@ public final class SimplePVPArenaPlugin extends JavaPlugin {
     }
 
     private void hookSimpleVoiceChat() {
-        if (!getServer().getPluginManager().isPluginEnabled(SimpleVoiceChatBridge.PLUGIN_NAME)) {
+        boolean hooked = VoiceChatHook.hook(getServer().getPluginManager(),
+                () -> SimpleVoiceChatBridge.register(getServer(), voiceIsolation,
+                        task -> getServer().getScheduler().runTask(this, task)),
+                voiceIsolation.isEnabled(), getLogger()::info, getLogger()::warning);
+        if (!hooked) {
             return;
         }
-        if (!SimpleVoiceChatBridge.register(getServer(), voiceIsolation,
-                task -> getServer().getScheduler().runTask(this, task))) {
-            getLogger().warning(Messages.text(VoiceMessage.SIMPLE_VOICE_CHAT_SERVICE_MISSING));
-            return;
-        }
-        getLogger().info(Messages.text(VoiceMessage.SIMPLE_VOICE_CHAT_USED,
-                Placeholder.of("path", PluginSettings.VOICE_CHAT_ENABLED_PATH),
-                Placeholder.of("permission", VoiceIsolation.BYPASS_PERMISSION_NAME)));
         getServer().getScheduler().runTaskTimer(this, voiceIsolation::refresh, VoiceIsolation.REFRESH_PERIOD_TICKS,
                 VoiceIsolation.REFRESH_PERIOD_TICKS);
+        getServer().getScheduler().runTaskLater(this,
+                () -> VoiceChatHook.checkConnection(voiceIsolation, getLogger()::warning),
+                VoiceChatHook.CONNECTION_CHECK_DELAY_TICKS);
     }
 
     private CustomVisuals createItemsAdderVisuals() {

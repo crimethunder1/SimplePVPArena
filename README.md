@@ -299,7 +299,15 @@ When SimpleVoiceChat runs on the server and `voice-chat.enabled` is `true`, a ru
 - Reserves left out of the chosen fighters count as spectators.
 - At the start of the match every fighter leaves his group, and joining or creating a group is refused until the match is over.
 
-This lasts from the start of the match through the breaks between the rounds until the match is over or cancelled. Every fighter reads once per match what he hears. The log names SimpleVoiceChat at the start of the server when it is used. Built against `voicechat-api` 2.6.0, tested rules for SimpleVoiceChat 2.6.x.
+This lasts from the start of the match through the breaks between the rounds until the match is over or cancelled. In a break between the rounds a fighter who was out is back in the fight and only hears the fighters again. A fighter reads in the chat when he is isolated, when he left his group, when he is out and when he is back in the fight. A refused group join is told at most once every 3 seconds. The rules follow the match at once and are renewed twice a second.
+
+Notes:
+
+- The spectators hear the fighters only within the voice range of SimpleVoiceChat (`max_voice_distance`, 48 blocks by default) and not while they sit in an isolated group. A tribune farther away than that hears nothing; this is a setting of SimpleVoiceChat.
+- A fighter who types `/voicechat join` still reads the success line of SimpleVoiceChat, although the join was refused; he stays outside the group.
+- SimpleVoiceChat connects plugins only once at the start of the server. After reloading only SimplePVPArena (for example with PlugMan) the isolation does not work until a restart; the log warns about it 5 seconds after the start.
+
+The log names SimpleVoiceChat at the start of the server and says whether `voice-chat.enabled` is off. Built against `voicechat-api` 2.6.0, checked against SimpleVoiceChat 2.6.x.
 
 ## ItemsAdder (optional)
 

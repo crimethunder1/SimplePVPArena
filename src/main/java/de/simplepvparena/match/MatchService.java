@@ -90,6 +90,7 @@ public final class MatchService {
     private MatchCompletionHandler matchCompletionHandler = (match, winnerTeamName) -> { };
     private MatchCompletionHandler autoMatchCompletionHandler = (match, winnerTeamName) -> { };
     private Runnable matchProgressListener = () -> { };
+    private Runnable fighterChangeListener = () -> { };
     private @Nullable Match haltedMatch;
     private Consumer<String> adminNotifier = message -> { };
     private @Nullable RoundCleaning roundCleaning;
@@ -143,6 +144,10 @@ public final class MatchService {
 
     public void setMatchProgressListener(Runnable matchProgressListener) {
         this.matchProgressListener = Objects.requireNonNull(matchProgressListener, "matchProgressListener");
+    }
+
+    public void setFighterChangeListener(Runnable fighterChangeListener) {
+        this.fighterChangeListener = Objects.requireNonNull(fighterChangeListener, "fighterChangeListener");
     }
 
     public void setAdminNotifier(Consumer<String> adminNotifier) {
@@ -230,6 +235,7 @@ public final class MatchService {
             throw new IllegalStateException("match " + activeMatch.getMatchId() + " is still running in the arena");
         }
         activeMatch = match;
+        fighterChangeListener.run();
         unequalTeamVoteService.begin(match, unequalTeamSettings, () -> beginFirstRound(match));
     }
 
@@ -412,6 +418,7 @@ public final class MatchService {
         }
         removeStartAnimationBlindness(playerUniqueId);
         closeReconnectWindow(playerUniqueId);
+        fighterChangeListener.run();
         if (insideSuddenDeathTick) {
             return;
         }
