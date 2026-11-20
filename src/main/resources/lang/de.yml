@@ -1991,6 +1991,9 @@ plugin:
   arena-baseline-loaded: 'Der saubere Zustand der Arena wurde aus {file} geladen, die Arena wird zwischen den Matches wieder gereinigt'
   arena-baseline-not-loaded: 'Der saubere Zustand der Arena in {file} konnte nicht gelesen werden, berechne die Kampffläche neu'
   arena-baseline-not-saved: 'Der saubere Zustand der Arena konnte nicht in {file} gespeichert werden, nach einem Neustart fehlt er'
+  items-adder-content-installed: 'Die Modelle der Platzierungstafel und des Turnierbaums wurden nach ItemsAdder/contents/simplepvparena geschrieben, die alten Dateien sind entfernt'
+  items-adder-content-not-installed: 'Die Modelle der Tafeln konnten nicht nach ItemsAdder/contents/simplepvparena geschrieben werden, die Tafeln werden aus Blöcken gebaut'
+  items-adder-pack-rebuilt: 'Die Modelle der Tafeln sind neu, das Ressourcenpaket von ItemsAdder wird mit /iazip neu gebaut'
 placement:
   title:
     tournament: 'Turnier'

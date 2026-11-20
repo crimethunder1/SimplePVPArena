@@ -10,12 +10,22 @@ import org.bukkit.event.Listener;
 import org.bukkit.inventory.ItemStack;
 import org.jspecify.annotations.NullMarked;
 
+import java.util.Objects;
 import java.util.Optional;
 
 @NullMarked
 public final class ItemsAdderVisuals implements CustomVisuals, Listener {
 
+    private final Runnable loadListener;
     private volatile boolean ready = ItemsAdder.areItemsLoaded();
+
+    public ItemsAdderVisuals() {
+        this(() -> { });
+    }
+
+    public ItemsAdderVisuals(Runnable loadListener) {
+        this.loadListener = Objects.requireNonNull(loadListener, "loadListener");
+    }
 
     @Override
     public Optional<String> findFontImage(String identifier) {
@@ -54,5 +64,6 @@ public final class ItemsAdderVisuals implements CustomVisuals, Listener {
     @EventHandler
     public void onItemsAdderLoadData(ItemsAdderLoadDataEvent event) {
         ready = true;
+        loadListener.run();
     }
 }

@@ -157,6 +157,7 @@ import de.simplepvparena.tournament.TournamentManager;
 import de.simplepvparena.visual.ConfiguredVisuals;
 import de.simplepvparena.visual.CustomVisuals;
 import de.simplepvparena.visual.CustomVisualsSelection;
+import de.simplepvparena.visual.ItemsAdderContentInstaller;
 import de.simplepvparena.visual.ItemsAdderVisuals;
 import de.simplepvparena.voice.PlayerVoiceNotices;
 import de.simplepvparena.voice.SimpleVoiceChatBridge;
@@ -173,6 +174,8 @@ import org.jspecify.annotations.NullMarked;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
@@ -190,6 +193,7 @@ public final class SimplePVPArenaPlugin extends JavaPlugin {
     private static final String BORDERS_FILE_NAME = "borders.yml";
     private static final String CONFIGURATION_FILE_NAME = "config.yml";
     private static final long VISUALS_READINESS_CHECK_PERIOD_TICKS = 20L;
+    private static final String ITEMS_ADDER_ZIP_COMMAND = "iazip";
     private static final long STATION_BUTTON_CHECK_PERIOD_TICKS = 100L;
     private static final long STATION_COUNTER_PERIOD_TICKS = 20L;
     private static final long BRACKET_BOARD_PERIOD_TICKS = 20L;
@@ -207,7 +211,10 @@ public final class SimplePVPArenaPlugin extends JavaPlugin {
     private RegistrationMachineService registrationMachineService;
     private BracketBoardDisplays bracketBoardDisplays;
     private BracketBoardService bracketBoardService;
-    private boolean machineVisualsWereReady;
+    private volatile boolean machineVisualsWereReady;
+    private boolean itemsAdderContentChanged;
+    private boolean itemsAdderZipRequested;
+    private IOException itemsAdderContentFailure;
     private ArenaBaselineFile arenaBaselineFile;
     private RegistrationStationButtonCheck registrationStationButtonCheck;
     private KitService kitService;
@@ -262,6 +269,22 @@ public final class SimplePVPArenaPlugin extends JavaPlugin {
     }
 
     @Override
+    public void onLoad() {
+        Path pluginsFolder = getDataFolder().toPath().toAbsolutePath().getParent();
+        if (pluginsFolder == null || !Files.isDirectory(pluginsFolder.resolve(
+                ItemsAdderContentInstaller.ITEMS_ADDER_FOLDER))) {
+            return;
+        }
+        try {
+            itemsAdderContentChanged = new ItemsAdderContentInstaller(
+                    ItemsAdderContentInstaller.namespaceFolder(pluginsFolder))
+                    .install(ItemsAdderContentInstaller.readBundledFiles(getFile().toPath()));
+        } catch (IOException | RuntimeException failure) {
+            itemsAdderContentFailure = failure instanceof IOException io ? io : new IOException(failure);
+        }
+    }
+
+    @Override
     public void onEnable() {
         saveDefaultConfig();
 
@@ -272,6 +295,7 @@ public final class SimplePVPArenaPlugin extends JavaPlugin {
         messageCatalogLoader.installShippedFiles();
         Messages.useWarningLogger(getLogger()::warning);
         messageCatalogLoader.useLanguage(PluginSettings.readLanguage(getConfig(), problem -> { }));
+        reportItemsAdderContent();
 
         arenaRegistry = new ArenaRegistry();
         warnAboutLegacyMultiArenaConfiguration();
@@ -764,8 +788,29 @@ public final class SimplePVPArenaPlugin extends JavaPlugin {
                 VoiceChatHook.CONNECTION_CHECK_DELAY_TICKS);
     }
 
+    private void reportItemsAdderContent() {
+        if (itemsAdderContentFailure != null) {
+            getLogger().log(Level.WARNING, Messages.text(PluginMessage.ITEMS_ADDER_CONTENT_NOT_INSTALLED),
+                    itemsAdderContentFailure);
+        } else if (itemsAdderContentChanged) {
+            getLogger().info(Messages.text(PluginMessage.ITEMS_ADDER_CONTENT_INSTALLED));
+        }
+    }
+
+    private void onItemsAdderLoaded() {
+        machineVisualsWereReady = false;
+        if (!itemsAdderContentChanged || itemsAdderZipRequested) {
+            return;
+        }
+        itemsAdderZipRequested = true;
+        getServer().getScheduler().runTask(this, () -> {
+            getLogger().info(Messages.text(PluginMessage.ITEMS_ADDER_PACK_REBUILT));
+            getServer().dispatchCommand(getServer().getConsoleSender(), ITEMS_ADDER_ZIP_COMMAND);
+        });
+    }
+
     private CustomVisuals createItemsAdderVisuals() {
-        ItemsAdderVisuals itemsAdderVisuals = new ItemsAdderVisuals();
+        ItemsAdderVisuals itemsAdderVisuals = new ItemsAdderVisuals(this::onItemsAdderLoaded);
         getServer().getPluginManager().registerEvents(itemsAdderVisuals, this);
         return itemsAdderVisuals;
     }

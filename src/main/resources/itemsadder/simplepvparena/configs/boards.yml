@@ -1,0 +1,31 @@
+info:
+  namespace: simplepvparena
+
+# Generiert von CraftCoreTools/simplepvparena_board_gen.py, nicht von Hand aendern.
+# Das Plugin SimplePVPArena sucht diese IDs selbst (items-adder.enabled: true) und baut die Tafeln dann
+# aus diesen Modellen statt aus einzelnen Bloecken. Die _glow-Modelle werden immer voll hell gezeigt.
+items:
+  standings_board:
+    display_name: "Platzierungstafel (Modell)"
+    resource:
+      material: PAPER
+      generate: false
+      model_path: item/board/standings_board
+  standings_board_glow:
+    display_name: "Platzierungstafel (Leuchtteile)"
+    resource:
+      material: PAPER
+      generate: false
+      model_path: item/board/standings_board_glow
+  bracket_board:
+    display_name: "Turnierbaum (Modell)"
+    resource:
+      material: PAPER
+      generate: false
+      model_path: item/board/bracket_board
+  bracket_board_glow:
+    display_name: "Turnierbaum (Leuchtteile)"
+    resource:
+      material: PAPER
+      generate: false
+      model_path: item/board/bracket_board_glow

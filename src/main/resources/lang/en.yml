@@ -1990,6 +1990,9 @@ plugin:
   arena-baseline-loaded: 'The clean state of the arena was loaded from {file}, the arena is cleaned between the matches again'
   arena-baseline-not-loaded: 'The clean state of the arena in {file} could not be read, calculate the fight area again'
   arena-baseline-not-saved: 'The clean state of the arena could not be saved to {file}, it is missing after a restart'
+  items-adder-content-installed: 'The models of the standings board and the bracket board were written to ItemsAdder/contents/simplepvparena, the old files are removed'
+  items-adder-content-not-installed: 'The models of the boards could not be written to ItemsAdder/contents/simplepvparena, the boards are built from blocks'
+  items-adder-pack-rebuilt: 'The models of the boards are new, the resource pack of ItemsAdder is rebuilt with /iazip'
 placement:
   title:
     tournament: 'Tournament'
