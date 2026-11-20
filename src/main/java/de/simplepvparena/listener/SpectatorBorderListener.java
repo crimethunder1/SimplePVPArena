@@ -15,6 +15,8 @@ import org.bukkit.event.player.PlayerTeleportEvent;
 import org.jspecify.annotations.NullMarked;
 
 import java.util.Objects;
+import java.util.UUID;
+import java.util.function.Predicate;
 
 @NullMarked
 public final class SpectatorBorderListener implements Listener {
@@ -22,6 +24,7 @@ public final class SpectatorBorderListener implements Listener {
     private final MatchService matchService;
     private final SpectatorService spectatorService;
     private final SpectatorBorderService spectatorBorderService;
+    private Predicate<UUID> movementExemption = playerUniqueId -> false;
 
     public SpectatorBorderListener(MatchService matchService, SpectatorService spectatorService,
                                    SpectatorBorderService spectatorBorderService) {
@@ -37,8 +40,15 @@ public final class SpectatorBorderListener implements Listener {
         }
     }
 
+    public void setMovementExemption(Predicate<UUID> movementExemption) {
+        this.movementExemption = Objects.requireNonNull(movementExemption, "movementExemption");
+    }
+
     @EventHandler(priority = EventPriority.LOW, ignoreCancelled = true)
     public void onPlayerMove(PlayerMoveEvent event) {
+        if (movementExemption.test(event.getPlayer().getUniqueId())) {
+            return;
+        }
         if (event instanceof PlayerTeleportEvent) {
             return;
         }

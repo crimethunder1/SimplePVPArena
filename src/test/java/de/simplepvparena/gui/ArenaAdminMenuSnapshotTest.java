@@ -62,9 +62,11 @@ class ArenaAdminMenuSnapshotTest {
                 Only the particles at the confirmed border wall / Click to hide them
                 22 | OAK_DOOR | Back | Returns to the main menu
                 23 | OAK_SIGN | Get the standings board tool | Puts the standings board tool into your inventory / \
-                The board shows the round, the match and the placement / of a tournament
+                The board shows the round, the match and the placement / of a tournament / \
+                Shift-click deletes the data of the board: the auto match wins / and the result of the last tournament
                 24 | PAINTING | Get a tournament bracket | Puts a tournament bracket into your inventory / \
-                Once set up it shows who fights now, who is next / and the whole bracket, it updates by itself
+                Once set up it shows who fights now, who is next / and the whole bracket, it updates by itself / \
+                Shift-click empties the bracket of the last tournament / Only while no tournament is running
                 25 | GRAY_DYE | Clear the start gate marks | Nothing is marked
                 """, fixture.describeLastMenu());
     }
@@ -151,9 +153,11 @@ class ArenaAdminMenuSnapshotTest {
                 Only the particles at the confirmed border wall / Click to hide them
                 22 | OAK_DOOR | Back | Returns to the main menu
                 23 | OAK_SIGN | Get the standings board tool | Puts the standings board tool into your inventory / \
-                The board shows the round, the match and the placement / of a tournament
+                The board shows the round, the match and the placement / of a tournament / \
+                Shift-click deletes the data of the board: the auto match wins / and the result of the last tournament
                 24 | PAINTING | Get a tournament bracket | Puts a tournament bracket into your inventory / \
-                Once set up it shows who fights now, who is next / and the whole bracket, it updates by itself
+                Once set up it shows who fights now, who is next / and the whole bracket, it updates by itself / \
+                Shift-click empties the bracket of the last tournament / Only while no tournament is running
                 25 | GRAY_DYE | Clear the start gate marks | Nothing is marked
                 """, fixture.describeLastMenu());
     }
@@ -215,9 +219,11 @@ class ArenaAdminMenuSnapshotTest {
                 Only the particles at the confirmed border wall / Click to hide them
                 22 | OAK_DOOR | Back | Returns to the main menu
                 23 | OAK_SIGN | Get the standings board tool | Puts the standings board tool into your inventory / \
-                The board shows the round, the match and the placement / of a tournament
+                The board shows the round, the match and the placement / of a tournament / \
+                Shift-click deletes the data of the board: the auto match wins / and the result of the last tournament
                 24 | PAINTING | Get a tournament bracket | Puts a tournament bracket into your inventory / \
-                Once set up it shows who fights now, who is next / and the whole bracket, it updates by itself
+                Once set up it shows who fights now, who is next / and the whole bracket, it updates by itself / \
+                Shift-click empties the bracket of the last tournament / Only while no tournament is running
                 25 | GRAY_DYE | Clear the start gate marks | Nothing is marked
                 """, fixture.describeLastMenu());
     }

@@ -76,7 +76,7 @@ class StandingsBoardToolTest {
     void theTileWithoutABoardHandsTheToolOut() {
         fixture.openMenuFromTheMainMenu(MAIN_ARENA_SLOT);
         assertEquals("23 | OAK_SIGN | Get the standings board tool | Puts the standings board tool into your "
-                + "inventory / The board shows the round, the match and the placement / of a tournament",
+                + "inventory / The board shows the round, the match and the placement / of a tournament / Shift-click deletes the data of the board: the auto match wins / and the result of the last tournament",
                 describeStandingsBoardTile());
 
         fixture.click(ARENA_STANDINGS_BOARD_SLOT);
@@ -154,7 +154,7 @@ class StandingsBoardToolTest {
         rightClick(admin, toolService.createTool(), block(7, 63, -3));
         fixture.openMenuFromTheMainMenu(MAIN_ARENA_SLOT);
         assertEquals("23 | OAK_SIGN | Remove the standings board | Stands at admin-menu 7.5/63.0/-2.5 / "
-                + "Click to remove it", describeStandingsBoardTile());
+                + "Click to remove it / Shift-click deletes the data of the board: the auto match wins / and the result of the last tournament", describeStandingsBoardTile());
 
         fixture.click(ARENA_STANDINGS_BOARD_SLOT);
 
@@ -221,7 +221,7 @@ class StandingsBoardToolTest {
         fixture.openMenuFromTheMainMenu(MAIN_ARENA_SLOT);
         assertEquals("23 | OAK_SIGN | Werkzeug für die Platzierungstafel holen | Legt das Werkzeug für die "
                 + "Platzierungstafel in dein Inventar / Die Tafel zeigt die Turnierrunde, das Match und die "
-                + "Platzierung / eines Turniers", describeStandingsBoardTile());
+                + "Platzierung / eines Turniers / Shift-Klick löscht die Daten der Tafel: die Auto-Match-Siege / und das Ergebnis des letzten Turniers", describeStandingsBoardTile());
         fixture.click(ARENA_STANDINGS_BOARD_SLOT);
         fixture.fillAdminInventory();
         fixture.click(ARENA_STANDINGS_BOARD_SLOT);

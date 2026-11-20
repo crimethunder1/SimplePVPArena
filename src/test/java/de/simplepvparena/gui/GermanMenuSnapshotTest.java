@@ -406,6 +406,8 @@ class GermanMenuSnapshotTest {
         assertEquals(Map.ofEntries(
                 Map.entry(ConfirmationRequest.CLEAN_ARENA, "Arena reinigen?"),
                 Map.entry(ConfirmationRequest.RESET_ARENA, "Arena zurücksetzen?"),
+                Map.entry(ConfirmationRequest.RESET_STANDINGS_DATA, "Daten der Platzierungstafel löschen?"),
+                Map.entry(ConfirmationRequest.RESET_BRACKET_DATA, "Turnierbaum leeren?"),
                 Map.entry(ConfirmationRequest.REPLACE_KIT, "Kit durch dein Inventar ersetzen?"),
                 Map.entry(ConfirmationRequest.DELETE_KIT, "Kit löschen?"),
                 Map.entry(ConfirmationRequest.REMOVE_TEAM, "Team entfernen?"),

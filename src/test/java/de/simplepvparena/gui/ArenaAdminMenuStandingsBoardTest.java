@@ -26,7 +26,7 @@ class ArenaAdminMenuStandingsBoardTest {
         fixture.arenaSetupService().setStandingsBoardListener(() -> boardChanges.add("changed"));
         fixture.openMenuFromTheMainMenu(MAIN_ARENA_SLOT);
         assertEquals("23 | OAK_SIGN | Get the standings board tool | Puts the standings board tool into your "
-                + "inventory / The board shows the round, the match and the placement / of a tournament",
+                + "inventory / The board shows the round, the match and the placement / of a tournament / Shift-click deletes the data of the board: the auto match wins / and the result of the last tournament",
                 describeStandingsBoardTile());
 
         placeTheBoardWithTheTool();
@@ -38,7 +38,7 @@ class ArenaAdminMenuStandingsBoardTest {
         assertEquals(1, fixture.arenaConfigurationSaveCount());
         assertEquals(List.of("changed"), boardChanges);
         assertEquals("23 | OAK_SIGN | Remove the standings board | Stands at admin-menu 7.5/63.0/-2.5 / "
-                + "Click to remove it", describeStandingsBoardTile());
+                + "Click to remove it / Shift-click deletes the data of the board: the auto match wins / and the result of the last tournament", describeStandingsBoardTile());
     }
 
     @Test
@@ -54,7 +54,7 @@ class ArenaAdminMenuStandingsBoardTest {
         assertEquals(2, fixture.arenaConfigurationSaveCount());
         assertEquals(List.of("changed", "changed"), boardChanges);
         assertEquals("23 | OAK_SIGN | Get the standings board tool | Puts the standings board tool into your "
-                + "inventory / The board shows the round, the match and the placement / of a tournament",
+                + "inventory / The board shows the round, the match and the placement / of a tournament / Shift-click deletes the data of the board: the auto match wins / and the result of the last tournament",
                 describeStandingsBoardTile());
     }
 
@@ -83,14 +83,14 @@ class ArenaAdminMenuStandingsBoardTest {
         assertEquals(List.of("Die Platzierungstafel steht jetzt hier"), fixture.messages());
         fixture.openMenuFromTheMainMenu(MAIN_ARENA_SLOT);
         assertEquals("23 | OAK_SIGN | Platzierungstafel entfernen | Steht bei admin-menu 7.5/63.0/-2.5 / "
-                + "Klicke, um sie zu entfernen", describeStandingsBoardTile());
+                + "Klicke, um sie zu entfernen / Shift-Klick löscht die Daten der Tafel: die Auto-Match-Siege / und das Ergebnis des letzten Turniers", describeStandingsBoardTile());
 
         fixture.click(ARENA_STANDINGS_BOARD_SLOT);
 
         assertEquals(List.of("Die Platzierungstafel wurde entfernt"), fixture.messages());
         assertEquals("23 | OAK_SIGN | Werkzeug für die Platzierungstafel holen | Legt das Werkzeug für die "
                 + "Platzierungstafel in dein Inventar / Die Tafel zeigt die Turnierrunde, das Match und die "
-                + "Platzierung / eines Turniers", describeStandingsBoardTile());
+                + "Platzierung / eines Turniers / Shift-Klick löscht die Daten der Tafel: die Auto-Match-Siege / und das Ergebnis des letzten Turniers", describeStandingsBoardTile());
     }
 
     private void placeTheBoardWithTheTool() {

@@ -261,6 +261,19 @@ public final class TournamentManager implements MatchCompletionHandler {
         return TournamentOperationResult.failure(Messages.text(CommonMessage.NO_TOURNAMENT_IN_PROGRESS));
     }
 
+    public boolean forgetFinishedTournament() {
+        if (isTournamentInProgress() || bracket == null) {
+            return false;
+        }
+        bracket = null;
+        startedAt = null;
+        decisionKindsByMatchId.clear();
+        matchIdsWarnedAboutMissingTeams.clear();
+        finalMatchGate.reset();
+        state = TournamentState.IDLE;
+        return true;
+    }
+
     public TournamentOperationResult cancelTournament() {
         if (!isTournamentInProgress()) {
             return TournamentOperationResult.failure(Messages.text(CommonMessage.NO_TOURNAMENT_IN_PROGRESS));

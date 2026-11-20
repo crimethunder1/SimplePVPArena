@@ -20,7 +20,10 @@ import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.event.player.PlayerTeleportEvent;
 import org.jspecify.annotations.NullMarked;
 
+import java.util.Objects;
 import java.util.Optional;
+import java.util.UUID;
+import java.util.function.Predicate;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -31,6 +34,7 @@ public final class PlayerMoveListener implements Listener {
     private final SpectatorService spectatorService;
     private final ArenaRegistry arenaRegistry;
     private final Logger logger;
+    private Predicate<UUID> movementExemption = playerUniqueId -> false;
 
     public PlayerMoveListener(MatchService matchService,
                               SpectatorService spectatorService,
@@ -42,8 +46,15 @@ public final class PlayerMoveListener implements Listener {
         this.logger = logger;
     }
 
+    public void setMovementExemption(Predicate<UUID> movementExemption) {
+        this.movementExemption = Objects.requireNonNull(movementExemption, "movementExemption");
+    }
+
     @EventHandler(ignoreCancelled = true)
     public void onPlayerMove(PlayerMoveEvent event) {
+        if (movementExemption.test(event.getPlayer().getUniqueId())) {
+            return;
+        }
         Location from = event.getFrom();
         Location to = event.getTo();
         if (!hasChangedBlock(from, to)) {
@@ -70,6 +81,9 @@ public final class PlayerMoveListener implements Listener {
 
     @EventHandler(ignoreCancelled = true)
     public void onPlayerTeleport(PlayerTeleportEvent event) {
+        if (movementExemption.test(event.getPlayer().getUniqueId())) {
+            return;
+        }
         if (event.getCause() == PlayerTeleportEvent.TeleportCause.PLUGIN
                 || event.getCause() == PlayerTeleportEvent.TeleportCause.UNKNOWN) {
             return;

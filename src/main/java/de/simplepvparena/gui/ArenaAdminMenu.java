@@ -76,6 +76,7 @@ final class ArenaAdminMenu implements AdminMenu {
     private final EffectMarginWriter effectMarginWriter;
     private final StandingsBoardToolService standingsBoardToolService;
     private final Supplier<ItemStack> bracketBoardItemFactory;
+    private final BoardDataReset boardDataReset;
 
     ArenaAdminMenu(AdminMenuNavigation navigation, ArenaSetupService arenaSetupService,
                    ArenaHeightMarkerService heightMarkerService, StartGateItemService gateItemService,
@@ -84,6 +85,20 @@ final class ArenaAdminMenu implements AdminMenu {
                    MarkClearing startGateMarkClearing, EffectMarginSetting effectMarginSetting,
                    EffectMarginWriter effectMarginWriter, StandingsBoardToolService standingsBoardToolService,
                    Supplier<ItemStack> bracketBoardItemFactory) {
+        this(navigation, arenaSetupService, heightMarkerService, gateItemService, chatInputService,
+                borderParticleService, confirmedBorderParticleWriter, borderMarkClearing, startGateMarkClearing,
+                effectMarginSetting, effectMarginWriter, standingsBoardToolService, bracketBoardItemFactory,
+                BoardDataReset.NONE);
+    }
+
+    ArenaAdminMenu(AdminMenuNavigation navigation, ArenaSetupService arenaSetupService,
+                   ArenaHeightMarkerService heightMarkerService, StartGateItemService gateItemService,
+                   ChatInputService chatInputService, BorderParticleService borderParticleService,
+                   ConfirmedBorderParticleWriter confirmedBorderParticleWriter, MarkClearing borderMarkClearing,
+                   MarkClearing startGateMarkClearing, EffectMarginSetting effectMarginSetting,
+                   EffectMarginWriter effectMarginWriter, StandingsBoardToolService standingsBoardToolService,
+                   Supplier<ItemStack> bracketBoardItemFactory, BoardDataReset boardDataReset) {
+        this.boardDataReset = Objects.requireNonNull(boardDataReset, "boardDataReset");
         this.navigation = Objects.requireNonNull(navigation, "navigation");
         this.arenaSetupService = Objects.requireNonNull(arenaSetupService, "arenaSetupService");
         this.heightMarkerService = Objects.requireNonNull(heightMarkerService, "heightMarkerService");
@@ -141,7 +156,8 @@ final class ArenaAdminMenu implements AdminMenu {
         canvas.set(ARENA_STANDINGS_BOARD_SLOT, buildStandingsBoardTile());
         canvas.set(ARENA_BRACKET_BOARD_SLOT, MenuItems.create(BRACKET_BOARD_TILE_MATERIAL,
                 Messages.text(ArenaMenuMessage.BRACKET_BOARD_TITLE),
-                Messages.lines(ArenaMenuMessage.BRACKET_BOARD_LORE)));
+                withLines(Messages.lines(ArenaMenuMessage.BRACKET_BOARD_LORE),
+                        Messages.lines(ArenaMenuMessage.BRACKET_BOARD_RESET_LORE))));
         canvas.set(ARENA_CLEAR_START_GATE_MARKS_SLOT,
                 MarkClearingTile.START_GATE_MARKS.build(startGateMarkClearing));
         canvas.set(AdminMenuLayout.BACK_SLOT, MenuItems.back(MenuMessage.BACK_TO_MAIN_MENU));
@@ -172,8 +188,21 @@ final class ArenaAdminMenu implements AdminMenu {
             case ARENA_RESET_SLOT -> askForResetConfirmation(player);
             case ARENA_CLEAR_BORDER_MARKS_SLOT -> askForMarkClearingConfirmation(player, MarkClearingTile.BORDER_MARKS,
                     borderMarkClearing);
-            case ARENA_STANDINGS_BOARD_SLOT -> switchStandingsBoard(player, holder);
-            case ARENA_BRACKET_BOARD_SLOT -> handOutBracketBoard(player);
+            case ARENA_STANDINGS_BOARD_SLOT -> {
+                if (shiftClick) {
+                    navigation.open(player, AdminMenuHolder.confirmation(ConfirmationRequest.RESET_STANDINGS_DATA,
+                            null, 0));
+                } else {
+                    switchStandingsBoard(player, holder);
+                }
+            }
+            case ARENA_BRACKET_BOARD_SLOT -> {
+                if (shiftClick) {
+                    askForBracketDataResetConfirmation(player);
+                } else {
+                    handOutBracketBoard(player);
+                }
+            }
             case ARENA_CLEAR_START_GATE_MARKS_SLOT -> askForMarkClearingConfirmation(player,
                     MarkClearingTile.START_GATE_MARKS, startGateMarkClearing);
             case AdminMenuLayout.BACK_SLOT -> navigation.open(player, AdminMenuHolder.main());
@@ -217,6 +246,51 @@ final class ArenaAdminMenu implements AdminMenu {
                 return AdminMenuHolder.arena();
             }
         };
+    }
+
+    AdminMenuConfirmation resetStandingsDataConfirmation() {
+        return boardDataConfirmation(ArenaMenuMessage.STANDINGS_BOARD_RESET_LORE, Optional::empty,
+                boardDataReset::resetStandings);
+    }
+
+    AdminMenuConfirmation resetBracketDataConfirmation() {
+        return boardDataConfirmation(ArenaMenuMessage.BRACKET_BOARD_RESET_LORE, boardDataReset::findBracketRejection,
+                boardDataReset::resetBracket);
+    }
+
+    private AdminMenuConfirmation boardDataConfirmation(ArenaMenuMessage description,
+                                                        Supplier<Optional<String>> rejection,
+                                                        Supplier<String> reset) {
+        return new AdminMenuConfirmation() {
+            @Override
+            public List<String> describe(AdminMenuHolder holder) {
+                return Messages.lines(description);
+            }
+
+            @Override
+            public void carryOut(Player player, AdminMenuHolder holder) {
+                Optional<String> refusal = rejection.get();
+                if (refusal.isPresent()) {
+                    TournamentMessages.sendError(player, refusal.get());
+                    return;
+                }
+                TournamentMessages.sendSuccess(player, reset.get());
+            }
+
+            @Override
+            public AdminMenuHolder returnMenu(AdminMenuHolder holder) {
+                return AdminMenuHolder.arena();
+            }
+        };
+    }
+
+    private void askForBracketDataResetConfirmation(Player player) {
+        Optional<String> rejection = boardDataReset.findBracketRejection();
+        if (rejection.isPresent()) {
+            TournamentMessages.sendError(player, rejection.get());
+            return;
+        }
+        navigation.open(player, AdminMenuHolder.confirmation(ConfirmationRequest.RESET_BRACKET_DATA, null, 0));
     }
 
     AdminMenuConfirmation clearBorderMarksConfirmation() {
@@ -478,14 +552,21 @@ final class ArenaAdminMenu implements AdminMenu {
     }
 
     private MenuTile buildStandingsBoardTile() {
+        List<String> resetLore = Messages.lines(ArenaMenuMessage.STANDINGS_BOARD_RESET_LORE);
         return arenaSetupService.findStandingsBoard()
                 .map(place -> MenuItems.create(STANDINGS_BOARD_TILE_MATERIAL,
                         Messages.text(ArenaMenuMessage.STANDINGS_BOARD_REMOVE_TITLE),
-                        Messages.lines(ArenaMenuMessage.STANDINGS_BOARD_REMOVE_LORE,
-                                Placeholder.of("position", place.describe()))))
+                        withLines(Messages.lines(ArenaMenuMessage.STANDINGS_BOARD_REMOVE_LORE,
+                                Placeholder.of("position", place.describe())), resetLore)))
                 .orElseGet(() -> MenuItems.create(STANDINGS_BOARD_TILE_MATERIAL,
                         Messages.text(ArenaMenuMessage.STANDINGS_BOARD_TOOL_TITLE),
-                        Messages.lines(ArenaMenuMessage.STANDINGS_BOARD_TOOL_LORE)));
+                        withLines(Messages.lines(ArenaMenuMessage.STANDINGS_BOARD_TOOL_LORE), resetLore)));
+    }
+
+    private static List<String> withLines(List<String> lines, List<String> furtherLines) {
+        List<String> combined = new ArrayList<>(lines);
+        combined.addAll(furtherLines);
+        return combined;
     }
 
     private void switchStandingsBoard(Player player, AdminMenuHolder holder) {

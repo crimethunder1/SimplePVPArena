@@ -93,6 +93,9 @@ public final class MatchService {
     private Runnable fighterChangeListener = () -> { };
     private @Nullable Match haltedMatch;
     private Consumer<String> adminNotifier = message -> { };
+    private Consumer<Player> tribuneArrivalHandler = player -> { };
+    private Consumer<Match> firstRoundListener = match -> { };
+    private Consumer<Player> deadPlayerRespawner = player -> player.spigot().respawn();
     private @Nullable RoundCleaning roundCleaning;
     private @Nullable Match matchWarnedAboutTheRoundCleaning;
     private @Nullable Match matchCleanedBetweenRounds;
@@ -148,6 +151,18 @@ public final class MatchService {
 
     public void setFighterChangeListener(Runnable fighterChangeListener) {
         this.fighterChangeListener = Objects.requireNonNull(fighterChangeListener, "fighterChangeListener");
+    }
+
+    public void setFirstRoundListener(Consumer<Match> firstRoundListener) {
+        this.firstRoundListener = Objects.requireNonNull(firstRoundListener, "firstRoundListener");
+    }
+
+    public void setTribuneArrivalHandler(Consumer<Player> tribuneArrivalHandler) {
+        this.tribuneArrivalHandler = Objects.requireNonNull(tribuneArrivalHandler, "tribuneArrivalHandler");
+    }
+
+    public void setDeadPlayerRespawner(Consumer<Player> deadPlayerRespawner) {
+        this.deadPlayerRespawner = Objects.requireNonNull(deadPlayerRespawner, "deadPlayerRespawner");
     }
 
     public void setAdminNotifier(Consumer<String> adminNotifier) {
@@ -245,6 +260,9 @@ public final class MatchService {
         }
         match.findTeamWithChosenFighters().ifPresent(team -> announceChosenFighters(match, team));
         beginRound(match);
+        if (activeMatch == match && match.getState() == MatchState.RUNNING) {
+            firstRoundListener.accept(match);
+        }
     }
 
     private void announceChosenFighters(Match match, Team team) {
@@ -311,6 +329,7 @@ public final class MatchService {
     public void equipActiveFighter(Player player) {
         if (isActiveFighter(player.getUniqueId())) {
             kitService.applyKit(player);
+            resyncInventory(player);
         }
     }
 
@@ -770,13 +789,16 @@ public final class MatchService {
     private void sendFightersToTheTribune(Match match) {
         for (Team team : match.getTeams()) {
             for (Player player : collectOnlinePlayers(collectMembersWhoMayFight(match, team))) {
-                try {
-                    spectatorService.sendToTribune(player);
-                } catch (RuntimeException failure) {
-                    plugin.getLogger().log(Level.WARNING, "The fighter " + player.getName()
-                            + " could not be sent to the tribune before the arena cleaning between the rounds of "
-                            + "match " + match.getMatchId() + ", the remaining fighters are sent anyway", failure);
-                }
+                whenAlive(player, alive -> {
+                    try {
+                        spectatorService.sendToTribune(alive);
+                    } catch (RuntimeException failure) {
+                        plugin.getLogger().log(Level.WARNING, "The fighter " + alive.getName()
+                                + " could not be sent to the tribune before the arena cleaning between the rounds "
+                                + "of match " + match.getMatchId() + ", the remaining fighters are sent anyway",
+                                failure);
+                    }
+                });
             }
         }
     }
@@ -911,8 +933,10 @@ public final class MatchService {
         Optional<Location> spawnLocation = spawnPosition.flatMap(PositionSnapshot::toLocation);
         for (Player player : collectOnlinePlayers(fighterUniqueIds)) {
             spectatorService.clearAssignment(player.getUniqueId());
-            spawnLocation.ifPresent(player::teleport);
-            kitService.applyKit(player);
+            whenAlive(player, alive -> {
+                spawnLocation.ifPresent(alive::teleport);
+                kitService.applyKit(alive);
+            });
         }
         if (spawnLocation.isEmpty()) {
             plugin.getLogger().warning("The arena has no usable spawn position for team " + team.getTeamName());
@@ -922,23 +946,60 @@ public final class MatchService {
     private void releaseParticipants(Match match) {
         for (Team team : match.getTeams()) {
             for (Player player : collectOnlinePlayers(collectMembersWhoMayFight(match, team))) {
-                try {
-                    kitService.clearKit(player);
-                } catch (RuntimeException failure) {
-                    plugin.getLogger().log(Level.WARNING, "The participant " + player.getName()
-                            + " could not be reset after match " + match.getMatchId()
-                            + ", they are sent to the tribune anyway", failure);
-                }
-                try {
-                    spectatorService.sendToTribune(player);
-                } catch (RuntimeException failure) {
-                    plugin.getLogger().log(Level.WARNING, "The participant " + player.getName()
-                            + " could not be sent to the tribune after match " + match.getMatchId()
-                            + ", the remaining participants are released anyway", failure);
-                }
+                whenAlive(player, alive -> releaseParticipant(match, alive));
             }
         }
         fighterColours.clearColours();
+    }
+
+    private void releaseParticipant(Match match, Player player) {
+        try {
+            kitService.clearKit(player);
+        } catch (RuntimeException failure) {
+            plugin.getLogger().log(Level.WARNING, "The participant " + player.getName()
+                    + " could not be reset after match " + match.getMatchId()
+                    + ", they are sent to the tribune anyway", failure);
+        }
+        try {
+            if (spectatorService.sendToTribune(player)) {
+                tribuneArrivalHandler.accept(player);
+            }
+        } catch (RuntimeException failure) {
+            plugin.getLogger().log(Level.WARNING, "The participant " + player.getName()
+                    + " could not be sent to the tribune after match " + match.getMatchId()
+                    + ", the remaining participants are released anyway", failure);
+        }
+    }
+
+    private void whenAlive(Player player, Consumer<Player> action) {
+        if (!player.isDead()) {
+            action.accept(player);
+            resyncInventory(player);
+            return;
+        }
+        UUID playerUniqueId = player.getUniqueId();
+        plugin.getServer().getScheduler().runTask(plugin, () -> {
+            Player dead = plugin.getServer().getPlayer(playerUniqueId);
+            if (dead == null || !dead.isOnline()) {
+                return;
+            }
+            if (dead.isDead()) {
+                deadPlayerRespawner.accept(dead);
+            }
+            plugin.getServer().getScheduler().runTask(plugin, () -> {
+                Player alive = plugin.getServer().getPlayer(playerUniqueId);
+                if (alive != null && alive.isOnline() && !alive.isDead()) {
+                    action.accept(alive);
+                    resyncInventory(alive);
+                }
+            });
+        });
+    }
+
+    private static void resyncInventory(Player player) {
+        if (player.isOnline() && !player.isDead()) {
+            player.updateInventory();
+        }
     }
 
     private boolean hasAnyOnlineParticipant(Match match) {

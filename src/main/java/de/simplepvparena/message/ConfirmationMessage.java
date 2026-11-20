@@ -13,6 +13,8 @@ public enum ConfirmationMessage implements MessageKey {
     REFUSE_LORE("confirmation.tile.refuse.lore"),
     CLEAN_ARENA_QUESTION("confirmation.question.clean-arena"),
     RESET_ARENA_QUESTION("confirmation.question.reset-arena"),
+    RESET_STANDINGS_DATA_QUESTION("confirmation.question.reset-standings-data"),
+    RESET_BRACKET_DATA_QUESTION("confirmation.question.reset-bracket-data"),
     REPLACE_KIT_QUESTION("confirmation.question.replace-kit"),
     DELETE_KIT_QUESTION("confirmation.question.delete-kit"),
     REMOVE_TEAM_QUESTION("confirmation.question.remove-team"),

@@ -312,6 +312,8 @@ confirmation:
   question:
     clean-arena: 'Clean the arena?'
     reset-arena: 'Reset the arena?'
+    reset-standings-data: 'Delete the data of the standings board?'
+    reset-bracket-data: 'Empty the bracket board?'
     replace-kit: 'Replace the kit with your inventory?'
     delete-kit: 'Delete the kit?'
     remove-team: 'Remove the team?'
@@ -935,12 +937,18 @@ arena-menu:
       remove-lore:
         - 'Stands at {position}'
         - 'Click to remove it'
+      reset-lore:
+        - 'Shift-click deletes the data of the board: the auto match wins'
+        - 'and the result of the last tournament'
     bracket-board:
       title: 'Get a tournament bracket'
       lore:
         - 'Puts a tournament bracket into your inventory'
         - 'Once set up it shows who fights now, who is next'
         - 'and the whole bracket, it updates by itself'
+      reset-lore:
+        - 'Shift-click empties the bracket of the last tournament'
+        - 'Only while no tournament is running'
     clear-border-marks:
       title: 'Clear the border marks'
       lore:
@@ -1049,9 +1057,13 @@ arena-menu:
     tool-handed-out: 'The standings board tool is in your inventory'
     tool-inventory-full: 'Your inventory is full, the standings board tool could not be handed out'
     click-a-block: 'Right click a block'
+    data-reset: 'The data of the standings board was deleted'
+    data-reset-tournament-kept: 'The auto match wins were deleted, the running tournament stays on the board'
   bracket-board:
     handed-out: 'The tournament bracket is in your inventory, right click a wall to set it up'
     inventory-full: 'Your inventory is full, the tournament bracket could not be handed out'
+    data-reset: 'The bracket board was emptied'
+    data-reset-tournament-running: 'A tournament is running, cancel it first to empty the bracket board'
   diagnosis-input:
     description: 'the diagnosis cell limit'
     prompt:

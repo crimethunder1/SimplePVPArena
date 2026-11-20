@@ -159,9 +159,11 @@ class ArenaAdminMenuBorderParticlesTest {
                 Nur die Partikel an der bestätigten Arenawand / Klicke, um sie anzuzeigen
                 22 | OAK_DOOR | Zurück | Zurück zum Hauptmenü
                 23 | OAK_SIGN | Werkzeug für die Platzierungstafel holen | Legt das Werkzeug für die Platzierungstafel \
-                in dein Inventar / Die Tafel zeigt die Turnierrunde, das Match und die Platzierung / eines Turniers
+                in dein Inventar / Die Tafel zeigt die Turnierrunde, das Match und die Platzierung / eines Turniers / \
+                Shift-Klick löscht die Daten der Tafel: die Auto-Match-Siege / und das Ergebnis des letzten Turniers
                 24 | PAINTING | Turnierbaum holen | Legt einen Turnierbaum in dein Inventar / \
-                Aufgestellt zeigt er, wer gerade kämpft, wer danach dran ist / und den ganzen Baum, er aktualisiert sich von selbst
+                Aufgestellt zeigt er, wer gerade kämpft, wer danach dran ist / und den ganzen Baum, er aktualisiert sich von selbst / \
+                Shift-Klick leert den Baum des letzten Turniers / Nur, wenn gerade kein Turnier läuft
                 25 | GRAY_DYE | Starttor-Markierungen löschen | Es ist nichts markiert
                 """, fixture.describeLastMenu());
     }

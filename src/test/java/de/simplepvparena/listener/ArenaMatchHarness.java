@@ -533,6 +533,8 @@ final class ArenaMatchHarness {
         private boolean keepingLooseItemsOnClose;
         private int closeInventoryCount;
         private Runnable damageReaction = () -> { };
+        private boolean dead;
+        private int inventoryUpdateCount;
 
         private FakePlayer(String playerName, Location location) {
             this.playerName = playerName;
@@ -602,6 +604,11 @@ final class ArenaMatchHarness {
                 case "setFallDistance", "setFireTicks",
                      "removePotionEffect", "setAbsorptionAmount", "setArrowsInBody", "setFreezeTicks",
                      "setRemainingAir", "setVelocity", "setCooldown" -> null;
+                case "isDead" -> dead;
+                case "updateInventory" -> {
+                    inventoryUpdateCount++;
+                    yield null;
+                }
                 case "getMaximumAir" -> 300;
                 case "getCooldown" -> 0;
                 case "getHealth" -> health;
@@ -638,6 +645,14 @@ final class ArenaMatchHarness {
 
         Player player() {
             return player;
+        }
+
+        void setDead(boolean dead) {
+            this.dead = dead;
+        }
+
+        int inventoryUpdateCount() {
+            return inventoryUpdateCount;
         }
 
         String name() {

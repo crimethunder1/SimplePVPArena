@@ -72,7 +72,25 @@ public record AdminMenuDependencies(Plugin plugin,
                                 EffectMarginSetting effectMarginSetting,
                                 EffectMarginWriter effectMarginWriter,
                                 StandingsBoardToolService standingsBoardToolService,
-                                Supplier<ItemStack> bracketBoardItemFactory) {
+                                Supplier<ItemStack> bracketBoardItemFactory,
+                                BoardDataReset boardDataReset) {
+
+        public ArenaServices(ArenaSetupService arenaSetupService,
+                             ArenaHeightMarkerService heightMarkerService,
+                             StartGateItemService gateItemService,
+                             BorderSelectorModeRegistry borderSelectorModes,
+                             BorderParticleService borderParticleService,
+                             ConfirmedBorderParticleWriter confirmedBorderParticleWriter,
+                             MarkClearing borderMarkClearing,
+                             MarkClearing startGateMarkClearing,
+                             EffectMarginSetting effectMarginSetting,
+                             EffectMarginWriter effectMarginWriter,
+                             StandingsBoardToolService standingsBoardToolService,
+                             Supplier<ItemStack> bracketBoardItemFactory) {
+            this(arenaSetupService, heightMarkerService, gateItemService, borderSelectorModes, borderParticleService,
+                    confirmedBorderParticleWriter, borderMarkClearing, startGateMarkClearing, effectMarginSetting,
+                    effectMarginWriter, standingsBoardToolService, bracketBoardItemFactory, BoardDataReset.NONE);
+        }
     }
 
     public record KitServices(KitLibrary kitLibrary, KitSaveService kitSaveService) {

@@ -312,6 +312,8 @@ confirmation:
   question:
     clean-arena: 'Arena reinigen?'
     reset-arena: 'Arena zurücksetzen?'
+    reset-standings-data: 'Daten der Platzierungstafel löschen?'
+    reset-bracket-data: 'Turnierbaum leeren?'
     replace-kit: 'Kit durch dein Inventar ersetzen?'
     delete-kit: 'Kit löschen?'
     remove-team: 'Team entfernen?'
@@ -935,12 +937,18 @@ arena-menu:
       remove-lore:
         - 'Steht bei {position}'
         - 'Klicke, um sie zu entfernen'
+      reset-lore:
+        - 'Shift-Klick löscht die Daten der Tafel: die Auto-Match-Siege'
+        - 'und das Ergebnis des letzten Turniers'
     bracket-board:
       title: 'Turnierbaum holen'
       lore:
         - 'Legt einen Turnierbaum in dein Inventar'
         - 'Aufgestellt zeigt er, wer gerade kämpft, wer danach dran ist'
         - 'und den ganzen Baum, er aktualisiert sich von selbst'
+      reset-lore:
+        - 'Shift-Klick leert den Baum des letzten Turniers'
+        - 'Nur, wenn gerade kein Turnier läuft'
     clear-border-marks:
       title: 'Wandmarkierungen löschen'
       lore:
@@ -1050,9 +1058,13 @@ arena-menu:
     tool-handed-out: 'Das Werkzeug für die Platzierungstafel liegt in deinem Inventar'
     tool-inventory-full: 'Dein Inventar ist voll, das Werkzeug für die Platzierungstafel konnte nicht ausgegeben werden'
     click-a-block: 'Klicke mit Rechtsklick auf einen Block'
+    data-reset: 'Die Daten der Platzierungstafel wurden gelöscht'
+    data-reset-tournament-kept: 'Die Auto-Match-Siege wurden gelöscht, das laufende Turnier bleibt auf der Tafel'
   bracket-board:
     handed-out: 'Der Turnierbaum liegt in deinem Inventar, stelle ihn mit Rechtsklick an eine Wand'
     inventory-full: 'Dein Inventar ist voll, der Turnierbaum konnte nicht ausgegeben werden'
+    data-reset: 'Der Turnierbaum wurde geleert'
+    data-reset-tournament-running: 'Ein Turnier läuft gerade, brich es erst ab, um den Turnierbaum zu leeren'
   diagnosis-input:
     description: 'die Diagnose mit einem höheren Zellenlimit'
     prompt:

@@ -113,6 +113,7 @@ import de.simplepvparena.message.Messages;
 import de.simplepvparena.message.Placeholder;
 import de.simplepvparena.message.PluginMessage;
 import de.simplepvparena.placement.AutoMatchLeaderboard;
+import de.simplepvparena.placement.BoardDataResetService;
 import de.simplepvparena.placement.BracketBoardDisplays;
 import de.simplepvparena.placement.BracketBoardService;
 import de.simplepvparena.placement.BracketBoardText;
@@ -157,6 +158,8 @@ import de.simplepvparena.tournament.TournamentManager;
 import de.simplepvparena.visual.ConfiguredVisuals;
 import de.simplepvparena.visual.CustomVisuals;
 import de.simplepvparena.visual.CustomVisualsSelection;
+import de.simplepvparena.intro.VersusIntroService;
+import de.simplepvparena.listener.VersusIntroListener;
 import de.simplepvparena.visual.ItemsAdderContentInstaller;
 import de.simplepvparena.visual.ItemsAdderVisuals;
 import de.simplepvparena.voice.PlayerVoiceNotices;
@@ -212,6 +215,7 @@ public final class SimplePVPArenaPlugin extends JavaPlugin {
     private BracketBoardDisplays bracketBoardDisplays;
     private BracketBoardService bracketBoardService;
     private volatile boolean machineVisualsWereReady;
+    private VersusIntroService versusIntroService;
     private boolean itemsAdderContentChanged;
     private boolean itemsAdderZipRequested;
     private IOException itemsAdderContentFailure;
@@ -374,6 +378,9 @@ public final class SimplePVPArenaPlugin extends JavaPlugin {
                 startGateOpeningService, temporaryEntityRemover);
         ArenaAudience arenaAudience = new ArenaAudience(getServer(), arenaRegistry);
         matchService.setArenaAudience(arenaAudience);
+        versusIntroService = new VersusIntroService(this, arenaRegistry, kitService::getKitDefinition,
+                match -> arenaAudience.findMatchAudience(match.getTeams()), matchService::isActiveFighter);
+        matchService.setFirstRoundListener(versusIntroService::play);
         matchService.setUnequalTeamVoteService(new UnequalTeamVoteService(this, getServer()::getPlayer,
                 RandomGenerator.getDefault()));
 
@@ -403,6 +410,7 @@ public final class SimplePVPArenaPlugin extends JavaPlugin {
         AutomaticArenaCleanup arenaCleanup = new AutomaticArenaCleanup(arenaSetupService, arenaCleaningService);
         matchService.setRoundCleaning(arenaCleanup);
         matchService.setAdminNotifier(adminNotifier::notifyAdmins);
+        matchService.setTribuneArrivalHandler(this::emptyInventoryOnTheTribune);
         tournamentManager = new TournamentManager(this, teamRegistry, arenaRegistry, matchService, arenaCleanup,
                 adminNotifier, new FileTournamentStateStorage(
                         new File(getDataFolder(), FileTournamentStateStorage.FILE_NAME).toPath()),
@@ -490,7 +498,9 @@ public final class SimplePVPArenaPlugin extends JavaPlugin {
                         new EffectMarginSetting(arenaRegistry, margin -> liveConfiguration.setArenaEffectMargin(margin)),
                         new EffectMarginConfigurationWriter(this::getConfig,
                                 new File(getDataFolder(), CONFIGURATION_FILE_NAME), getLogger()),
-                        standingsBoardToolService, () -> bracketBoardService.createBoardItem()),
+                        standingsBoardToolService, () -> bracketBoardService.createBoardItem(),
+                        new BoardDataResetService(autoMatchLeaderboard, tournamentManager,
+                                this::onPlacementChanged)),
                 new AdminMenuDependencies.KitServices(kitLibrary, kitSaveService),
                 new AdminMenuDependencies.RegistrationServices(registrationService, registrationStationService,
                         randomTeamFormation, teamModeSetting, new TeamModeConfigurationWriter(this::getConfig,
@@ -582,6 +592,9 @@ public final class SimplePVPArenaPlugin extends JavaPlugin {
 
     @Override
     public void onDisable() {
+        if (versusIntroService != null) {
+            versusIntroService.stop();
+        }
         if (chatInputService != null) {
             chatInputService.stop();
         }
@@ -788,6 +801,15 @@ public final class SimplePVPArenaPlugin extends JavaPlugin {
                 VoiceChatHook.CONNECTION_CHECK_DELAY_TICKS);
     }
 
+    private void emptyInventoryOnTheTribune(Player player) {
+        if (!areaInventoryService.hasDeposited(player) || kitService.hasAppliedKit(player)) {
+            return;
+        }
+        player.getInventory().clear();
+        player.setItemOnCursor(null);
+        spectatorService.giveSpectatorToggleItemIfMissing(player);
+    }
+
     private void reportItemsAdderContent() {
         if (itemsAdderContentFailure != null) {
             getLogger().log(Level.WARNING, Messages.text(PluginMessage.ITEMS_ADDER_CONTENT_NOT_INSTALLED),
@@ -880,12 +902,17 @@ public final class SimplePVPArenaPlugin extends JavaPlugin {
                 new PlayerConnectionListener(matchService, spectatorService, arenaRegistry,
                         borderSelectorModes, kitService, getLogger()), this);
         getServer().getPluginManager().registerEvents(new PlayerDeathListener(matchService), this);
+        getServer().getPluginManager().registerEvents(new VersusIntroListener(versusIntroService), this);
         getServer().getPluginManager().registerEvents(
                 new PlayerRespawnListener(this, matchService, spectatorService, arenaRegistry), this);
-        getServer().getPluginManager().registerEvents(
-                new PlayerMoveListener(matchService, spectatorService, arenaRegistry, getLogger()), this);
-        getServer().getPluginManager().registerEvents(
-                new SpectatorBorderListener(matchService, spectatorService, spectatorBorderService), this);
+        PlayerMoveListener playerMoveListener = new PlayerMoveListener(matchService, spectatorService, arenaRegistry,
+                getLogger());
+        playerMoveListener.setMovementExemption(versusIntroService::isWatching);
+        getServer().getPluginManager().registerEvents(playerMoveListener, this);
+        SpectatorBorderListener spectatorBorderListener = new SpectatorBorderListener(matchService,
+                spectatorService, spectatorBorderService);
+        spectatorBorderListener.setMovementExemption(versusIntroService::isWatching);
+        getServer().getPluginManager().registerEvents(spectatorBorderListener, this);
         getServer().getPluginManager().registerEvents(
                 new PlayerInteractListener(matchService, spectatorService, borderSelectorModes, getLogger()),
                 this);
@@ -914,8 +941,10 @@ public final class SimplePVPArenaPlugin extends JavaPlugin {
         getServer().getPluginManager().registerEvents(new FriendlyFireListener(matchService), this);
         getServer().getPluginManager().registerEvents(
                 new ArenaDamageListener(matchService, spectatorService, arenaRegistry, getServer()), this);
-        getServer().getPluginManager().registerEvents(
-                new AreaInventoryListener(this, areaInventoryService, placementSidebar), this);
+        AreaInventoryListener areaInventoryListener = new AreaInventoryListener(this, areaInventoryService,
+                placementSidebar);
+        areaInventoryListener.setMovementExemption(versusIntroService::isWatching);
+        getServer().getPluginManager().registerEvents(areaInventoryListener, this);
         getServer().getPluginManager().registerEvents(
                 new RegistrationStationListener(registrationStationService), this);
         getServer().getPluginManager().registerEvents(

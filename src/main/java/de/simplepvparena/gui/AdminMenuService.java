@@ -121,7 +121,7 @@ public final class AdminMenuService {
                 gateItemService, chatInputService, arena.borderParticleService(),
                 arena.confirmedBorderParticleWriter(), arena.borderMarkClearing(), arena.startGateMarkClearing(),
                 arena.effectMarginSetting(), arena.effectMarginWriter(), arena.standingsBoardToolService(),
-                arena.bracketBoardItemFactory());
+                arena.bracketBoardItemFactory(), arena.boardDataReset());
         bracketViewMenu = new BracketViewMenu(navigator, tournamentManager, matchService);
         MainAdminMenu mainAdminMenu = new MainAdminMenu(navigator, tournamentManager, tournamentDryRun, teamRegistry,
                 matchService, arenaSetupService, borderSelectorModes, configurationReloader, tournamentMenuStatus,
@@ -129,6 +129,10 @@ public final class AdminMenuService {
         ConfirmationAdminMenu confirmationAdminMenu = new ConfirmationAdminMenu(navigator);
         confirmationAdminMenu.register(ConfirmationRequest.CLEAN_ARENA, arenaAdminMenu.cleanConfirmation());
         confirmationAdminMenu.register(ConfirmationRequest.RESET_ARENA, arenaAdminMenu.resetConfirmation());
+        confirmationAdminMenu.register(ConfirmationRequest.RESET_STANDINGS_DATA,
+                arenaAdminMenu.resetStandingsDataConfirmation());
+        confirmationAdminMenu.register(ConfirmationRequest.RESET_BRACKET_DATA,
+                arenaAdminMenu.resetBracketDataConfirmation());
         confirmationAdminMenu.register(ConfirmationRequest.CLEAR_BORDER_MARKS,
                 arenaAdminMenu.clearBorderMarksConfirmation());
         confirmationAdminMenu.register(ConfirmationRequest.CLEAR_START_GATE_MARKS,

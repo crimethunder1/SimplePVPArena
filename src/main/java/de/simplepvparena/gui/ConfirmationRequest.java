@@ -14,6 +14,8 @@ public enum ConfirmationRequest {
 
     CLEAN_ARENA(ConfirmationMessage.CLEAN_ARENA_QUESTION),
     RESET_ARENA(ConfirmationMessage.RESET_ARENA_QUESTION),
+    RESET_STANDINGS_DATA(ConfirmationMessage.RESET_STANDINGS_DATA_QUESTION),
+    RESET_BRACKET_DATA(ConfirmationMessage.RESET_BRACKET_DATA_QUESTION),
     REPLACE_KIT(ConfirmationMessage.REPLACE_KIT_QUESTION),
     DELETE_KIT(ConfirmationMessage.DELETE_KIT_QUESTION),
     REMOVE_TEAM(ConfirmationMessage.REMOVE_TEAM_QUESTION),

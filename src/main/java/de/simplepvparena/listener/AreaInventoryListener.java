@@ -25,6 +25,8 @@ import org.jspecify.annotations.NullMarked;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.UUID;
+import java.util.function.Predicate;
 
 @NullMarked
 public final class AreaInventoryListener implements Listener {
@@ -32,6 +34,7 @@ public final class AreaInventoryListener implements Listener {
     private final Plugin plugin;
     private final AreaInventoryService areaInventoryService;
     private final List<EffectAreaPresence> presences = new ArrayList<>();
+    private Predicate<UUID> movementExemption = playerUniqueId -> false;
 
     public AreaInventoryListener(Plugin plugin, AreaInventoryService areaInventoryService,
                                  EffectAreaPresence... furtherPresences) {
@@ -112,7 +115,14 @@ public final class AreaInventoryListener implements Listener {
         }
     }
 
+    public void setMovementExemption(Predicate<UUID> movementExemption) {
+        this.movementExemption = Objects.requireNonNull(movementExemption, "movementExemption");
+    }
+
     private void reconcile(Player player, Location location) {
+        if (movementExemption.test(player.getUniqueId())) {
+            return;
+        }
         for (EffectAreaPresence presence : presences) {
             presence.reconcile(player, location);
         }
