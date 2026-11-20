@@ -939,7 +939,7 @@ arena-menu:
         - 'Klicke, um sie zu entfernen'
       reset-lore:
         - 'Shift-Klick löscht die Daten der Tafel: die Auto-Match-Siege'
-        - 'und das Ergebnis des letzten Turniers'
+        - 'und das letzte oder ein pausiertes Turnier'
     bracket-board:
       title: 'Turnierbaum holen'
       lore:
@@ -947,8 +947,8 @@ arena-menu:
         - 'Aufgestellt zeigt er, wer gerade kämpft, wer danach dran ist'
         - 'und den ganzen Baum, er aktualisiert sich von selbst'
       reset-lore:
-        - 'Shift-Klick leert den Baum des letzten Turniers'
-        - 'Nur, wenn gerade kein Turnier läuft'
+        - 'Shift-Klick leert den Baum, ein beendetes oder pausiertes'
+        - 'Turnier wird verworfen, nicht während ein Turnier läuft'
     clear-border-marks:
       title: 'Wandmarkierungen löschen'
       lore:
@@ -1059,12 +1059,12 @@ arena-menu:
     tool-inventory-full: 'Dein Inventar ist voll, das Werkzeug für die Platzierungstafel konnte nicht ausgegeben werden'
     click-a-block: 'Klicke mit Rechtsklick auf einen Block'
     data-reset: 'Die Daten der Platzierungstafel wurden gelöscht'
-    data-reset-tournament-kept: 'Die Auto-Match-Siege wurden gelöscht, das laufende Turnier bleibt auf der Tafel'
+    data-reset-tournament-kept: 'Die Auto-Match-Siege wurden gelöscht, das laufende Turnier bleibt auf der Tafel, pausiere es erst'
   bracket-board:
     handed-out: 'Der Turnierbaum liegt in deinem Inventar, stelle ihn mit Rechtsklick an eine Wand'
     inventory-full: 'Dein Inventar ist voll, der Turnierbaum konnte nicht ausgegeben werden'
     data-reset: 'Der Turnierbaum wurde geleert'
-    data-reset-tournament-running: 'Ein Turnier läuft gerade, brich es erst ab, um den Turnierbaum zu leeren'
+    data-reset-tournament-running: 'Ein Turnier läuft gerade, pausiere es oder warte das Ende des Matches ab, um den Turnierbaum zu leeren'
   diagnosis-input:
     description: 'die Diagnose mit einem höheren Zellenlimit'
     prompt:
@@ -2006,6 +2006,10 @@ plugin:
   items-adder-content-installed: 'Die Modelle der Platzierungstafel und des Turnierbaums wurden nach ItemsAdder/contents/simplepvparena geschrieben, die alten Dateien sind entfernt'
   items-adder-content-not-installed: 'Die Modelle der Tafeln konnten nicht nach ItemsAdder/contents/simplepvparena geschrieben werden, die Tafeln werden aus Blöcken gebaut'
   items-adder-pack-rebuilt: 'Die Modelle der Tafeln sind neu, das Ressourcenpaket von ItemsAdder wird mit /iazip neu gebaut'
+  items-adder-content-up-to-date: 'Die Modelle der Tafeln in ItemsAdder/contents/simplepvparena sind aktuell'
+  items-adder-content-no-folder: 'Es gibt keinen Ordner plugins/ItemsAdder, die Modelle der Tafeln werden nicht installiert und die Tafeln aus Blöcken gebaut'
+  items-adder-not-used: 'ItemsAdder ist installiert, wird aber nicht benutzt (items-adder.enabled ist false oder ItemsAdder war beim Start nicht aktiv), die Tafeln werden aus Blöcken gebaut'
+  items-adder-not-ready: 'ItemsAdder hat seine Inhalte nach 60 Sekunden noch nicht fertig geladen, die Tafeln bleiben aus Blöcken gebaut, bis es fertig ist. Prüfe das Log von ItemsAdder auf Fehler'
 placement:
   title:
     tournament: 'Turnier'

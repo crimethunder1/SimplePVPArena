@@ -46,7 +46,8 @@ public final class PlayerRespawnListener implements Listener {
             return;
         }
         boolean belongsToArena = matchService.findMatchOfPlayer(player.getUniqueId()).isPresent()
-                || spectatorService.findSpectatorMode(player.getUniqueId()).isPresent();
+                || spectatorService.findSpectatorMode(player.getUniqueId()).isPresent()
+                || matchService.isAwaitingRespawn(player.getUniqueId());
         if (!belongsToArena) {
             return;
         }

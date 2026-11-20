@@ -17,6 +17,7 @@ import de.simplepvparena.team.Team;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.title.Title;
 import net.kyori.adventure.util.Ticks;
+import org.bukkit.GameRules;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.Plugin;
@@ -77,6 +78,10 @@ public final class MatchService {
             Ticks.duration(SCORE_TITLE_FADE_IN_TICKS), Ticks.duration(SCORE_TITLE_STAY_TICKS),
             Ticks.duration(SCORE_TITLE_FADE_OUT_TICKS));
 
+    private static final int FORCED_RESPAWN_AFTER_TICKS = 20;
+    private static final int RESPAWN_GIVE_UP_TICKS = 600;
+    private static final long RESPAWN_SETTLE_TICKS = 2L;
+
     private final Plugin plugin;
     private final KitService kitService;
     private final SpectatorService spectatorService;
@@ -94,7 +99,8 @@ public final class MatchService {
     private @Nullable Match haltedMatch;
     private Consumer<String> adminNotifier = message -> { };
     private Consumer<Player> tribuneArrivalHandler = player -> { };
-    private Consumer<Match> firstRoundListener = match -> { };
+    private MatchIntro matchIntro = MatchIntro.NONE;
+    private final Set<UUID> playersAwaitingRespawn = new HashSet<>();
     private Consumer<Player> deadPlayerRespawner = player -> player.spigot().respawn();
     private @Nullable RoundCleaning roundCleaning;
     private @Nullable Match matchWarnedAboutTheRoundCleaning;
@@ -153,8 +159,8 @@ public final class MatchService {
         this.fighterChangeListener = Objects.requireNonNull(fighterChangeListener, "fighterChangeListener");
     }
 
-    public void setFirstRoundListener(Consumer<Match> firstRoundListener) {
-        this.firstRoundListener = Objects.requireNonNull(firstRoundListener, "firstRoundListener");
+    public void setMatchIntro(MatchIntro matchIntro) {
+        this.matchIntro = Objects.requireNonNull(matchIntro, "matchIntro");
     }
 
     public void setTribuneArrivalHandler(Consumer<Player> tribuneArrivalHandler) {
@@ -250,6 +256,7 @@ public final class MatchService {
             throw new IllegalStateException("match " + activeMatch.getMatchId() + " is still running in the arena");
         }
         activeMatch = match;
+        enableImmediateRespawn(match);
         fighterChangeListener.run();
         unequalTeamVoteService.begin(match, unequalTeamSettings, () -> beginFirstRound(match));
     }
@@ -259,9 +266,33 @@ public final class MatchService {
             return;
         }
         match.findTeamWithChosenFighters().ifPresent(team -> announceChosenFighters(match, team));
-        beginRound(match);
-        if (activeMatch == match && match.getState() == MatchState.RUNNING) {
-            firstRoundListener.accept(match);
+        int introTicks = playIntro(match);
+        if (introTicks <= 0) {
+            beginRound(match);
+            return;
+        }
+        plugin.getServer().getScheduler().runTaskLater(plugin, () -> {
+            if (activeMatch == match && match.getState() == MatchState.PREPARING) {
+                beginRound(match);
+            }
+        }, introTicks);
+    }
+
+    private int playIntro(Match match) {
+        try {
+            return matchIntro.play(match);
+        } catch (RuntimeException failure) {
+            plugin.getLogger().log(Level.WARNING, "The intro of match " + match.getMatchId()
+                    + " failed, the first round starts without it", failure);
+            return 0;
+        }
+    }
+
+    private void stopIntro() {
+        try {
+            matchIntro.stop();
+        } catch (RuntimeException failure) {
+            plugin.getLogger().log(Level.WARNING, "The intro could not be stopped", failure);
         }
     }
 
@@ -463,6 +494,7 @@ public final class MatchService {
         }
         Match cancelledMatch = activeMatch;
         haltedMatch = null;
+        stopIntro();
         unequalTeamVoteService.cancel();
         stopRoundTimer();
         stopStartAnimation();
@@ -555,10 +587,12 @@ public final class MatchService {
         Set<UUID> secondTeamPlayers = collectFighters(match, match.getSecondTeam());
         match.beginRound(firstTeamPlayers, secondTeamPlayers);
 
-        preparePlayers(match.getFirstTeam(), firstTeamPlayers, match.getArena().getFirstTeamSpawn());
-        preparePlayers(match.getSecondTeam(), secondTeamPlayers, match.getArena().getSecondTeamSpawn());
-        fighterColours.colourFighters(match);
-        matchProgressListener.run();
+        guard(match, "prepare the fighters of " + match.getFirstTeam().getTeamName(), () -> preparePlayers(
+                match.getFirstTeam(), firstTeamPlayers, match.getArena().getFirstTeamSpawn()));
+        guard(match, "prepare the fighters of " + match.getSecondTeam().getTeamName(), () -> preparePlayers(
+                match.getSecondTeam(), secondTeamPlayers, match.getArena().getSecondTeamSpawn()));
+        guard(match, "colour the fighters", () -> fighterColours.colourFighters(match));
+        guard(match, "refresh the placement", matchProgressListener);
         int roundCountdownSeconds = countdownSeconds;
         startGates.openAtRoundStart(remainingSeconds -> announceStartGateSecond(match, remainingSeconds));
         int gateCountdownSeconds = startGates.getCountdownSeconds();
@@ -823,6 +857,7 @@ public final class MatchService {
 
     private void finishMatch(Match match, String winnerTeamName, boolean decidedByAnAdmin) {
         haltedMatch = null;
+        stopIntro();
         unequalTeamVoteService.cancel();
         stopRoundTimer();
         stopStartAnimation();
@@ -934,6 +969,9 @@ public final class MatchService {
         for (Player player : collectOnlinePlayers(fighterUniqueIds)) {
             spectatorService.clearAssignment(player.getUniqueId());
             whenAlive(player, alive -> {
+                if (alive.isDead() || !isActiveFighter(alive.getUniqueId())) {
+                    return;
+                }
                 spawnLocation.ifPresent(alive::teleport);
                 kitService.applyKit(alive);
             });
@@ -950,6 +988,15 @@ public final class MatchService {
             }
         }
         fighterColours.clearColours();
+    }
+
+    private void guard(Match match, String step, Runnable action) {
+        try {
+            action.run();
+        } catch (RuntimeException failure) {
+            plugin.getLogger().log(Level.WARNING, "Round " + match.getRoundNumber() + " of match "
+                    + match.getMatchId() + " could not " + step + ", the round starts anyway", failure);
+        }
     }
 
     private void releaseParticipant(Match match, Player player) {
@@ -977,23 +1024,66 @@ public final class MatchService {
             resyncInventory(player);
             return;
         }
-        UUID playerUniqueId = player.getUniqueId();
-        plugin.getServer().getScheduler().runTask(plugin, () -> {
-            Player dead = plugin.getServer().getPlayer(playerUniqueId);
-            if (dead == null || !dead.isOnline()) {
+        playersAwaitingRespawn.add(player.getUniqueId());
+        awaitRespawn(player.getUniqueId(), action, 0);
+    }
+
+    public boolean isAwaitingRespawn(UUID playerUniqueId) {
+        return playersAwaitingRespawn.contains(playerUniqueId);
+    }
+
+    private void awaitRespawn(UUID playerUniqueId, Consumer<Player> action, int waitedTicks) {
+        plugin.getServer().getScheduler().runTaskLater(plugin, () -> {
+            Player player = plugin.getServer().getPlayer(playerUniqueId);
+            if (player == null || !player.isOnline()) {
+                playersAwaitingRespawn.remove(playerUniqueId);
                 return;
             }
-            if (dead.isDead()) {
-                deadPlayerRespawner.accept(dead);
+            if (player.isDead()) {
+                if (waitedTicks + 1 > RESPAWN_GIVE_UP_TICKS) {
+                    playersAwaitingRespawn.remove(playerUniqueId);
+                    plugin.getLogger().warning("The player " + player.getName() + " did not respawn within "
+                            + RESPAWN_GIVE_UP_TICKS + " ticks, the plugin stops waiting for them");
+                    return;
+                }
+                if (waitedTicks + 1 == FORCED_RESPAWN_AFTER_TICKS) {
+                    try {
+                        deadPlayerRespawner.accept(player);
+                    } catch (RuntimeException failure) {
+                        plugin.getLogger().log(Level.WARNING, "The player " + player.getName()
+                                + " could not be respawned", failure);
+                    }
+                }
+                awaitRespawn(playerUniqueId, action, waitedTicks + 1);
+                return;
             }
-            plugin.getServer().getScheduler().runTask(plugin, () -> {
+            plugin.getServer().getScheduler().runTaskLater(plugin, () -> {
+                playersAwaitingRespawn.remove(playerUniqueId);
                 Player alive = plugin.getServer().getPlayer(playerUniqueId);
                 if (alive != null && alive.isOnline() && !alive.isDead()) {
                     action.accept(alive);
                     resyncInventory(alive);
                 }
-            });
-        });
+            }, RESPAWN_SETTLE_TICKS);
+        }, 1L);
+    }
+
+    private void enableImmediateRespawn(Match match) {
+        Optional<String> worldName = match.getArena().getFirstTeamSpawn().map(PositionSnapshot::worldName)
+                .or(() -> match.getArena().getShape().map(shape -> shape.getWorldName()));
+        if (worldName.isEmpty()) {
+            return;
+        }
+        try {
+            org.bukkit.World world = plugin.getServer().getWorld(worldName.get());
+            if (world != null && !Boolean.TRUE.equals(world.getGameRuleValue(GameRules.IMMEDIATE_RESPAWN))) {
+                world.setGameRule(GameRules.IMMEDIATE_RESPAWN, Boolean.TRUE);
+                plugin.getLogger().info("The game rule immediate_respawn is now true in the world "
+                        + world.getName() + ", so a killed fighter never hangs on the death screen");
+            }
+        } catch (RuntimeException | LinkageError failure) {
+            plugin.getLogger().log(Level.FINE, "The game rule immediate_respawn could not be set", failure);
+        }
     }
 
     private static void resyncInventory(Player player) {

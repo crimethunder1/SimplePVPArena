@@ -30,7 +30,7 @@ public final class VersusIntroListener implements Listener {
 
     @EventHandler
     public void onPlayerQuit(PlayerQuitEvent event) {
-        introService.stopWatching(event.getPlayer());
+        introService.forget(event.getPlayer());
     }
 
     @EventHandler(priority = EventPriority.LOWEST)

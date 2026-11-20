@@ -271,6 +271,7 @@ public final class TournamentManager implements MatchCompletionHandler {
         matchIdsWarnedAboutMissingTeams.clear();
         finalMatchGate.reset();
         state = TournamentState.IDLE;
+        deleteSavedState();
         return true;
     }
 

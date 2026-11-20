@@ -39,6 +39,8 @@ import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 
 import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -116,35 +118,56 @@ public final class VersusIntroService {
         return camera != null && camera.getUniqueId().equals(entity.getUniqueId());
     }
 
-    public void play(Match match) {
+    public int play(Match match) {
         stop();
         try {
+            Set<UUID> teamMembers = new HashSet<>();
+            match.getTeams().forEach(team -> teamMembers.addAll(team.getMemberUniqueIds()));
             List<Player> audience = audienceSource.apply(match).stream()
                     .filter(player -> player.isOnline() && !player.isDead())
+                    .filter(player -> !teamMembers.contains(player.getUniqueId()))
                     .filter(player -> !activeFighter.test(player.getUniqueId()))
                     .toList();
             if (audience.isEmpty()) {
-                return;
+                plugin.getLogger().info("The versus intro of match " + match.getMatchId()
+                        + " is skipped: nobody outside of the two teams watches in the area of effect");
+                return 0;
             }
             Optional<Location> centre = findStageCentre(match);
             if (centre.isEmpty()) {
-                return;
+                plugin.getLogger().info("The versus intro of match " + match.getMatchId()
+                        + " is skipped: the arena has no tribune spawn");
+                return 0;
             }
             buildStage(centre.get(), match);
             for (Player player : audience) {
-                startWatching(player);
+                try {
+                    startWatching(player);
+                } catch (RuntimeException failure) {
+                    viewers.remove(player.getUniqueId());
+                    plugin.getLogger().log(Level.WARNING, "The player " + player.getName()
+                            + " could not join the versus intro", failure);
+                }
             }
             if (viewers.isEmpty()) {
                 removeStage();
-                return;
+                return 0;
             }
             tick = 0;
-            task = plugin.getServer().getScheduler().runTaskTimer(plugin, this::runTick, 1L, 1L);
+            task = plugin.getServer().getScheduler().runTaskTimer(plugin, this::runTickSafely, 1L, 1L);
+            plugin.getLogger().info("The versus intro of match " + match.getMatchId() + " starts for "
+                    + viewers.size() + " watching players at " + describe(centre.get()));
+            return VersusCameraPath.TOTAL_TICKS + 1;
         } catch (RuntimeException failure) {
             plugin.getLogger().log(Level.WARNING, "The versus intro of match " + match.getMatchId()
                     + " could not be shown, the match goes on without it", failure);
             stop();
+            return 0;
         }
+    }
+
+    public void forget(Player player) {
+        viewers.remove(player.getUniqueId());
     }
 
     public void stop() {
@@ -182,6 +205,15 @@ public final class VersusIntroService {
                 () -> player.getPersistentDataContainer().remove(returnKey));
     }
 
+    private void runTickSafely() {
+        try {
+            runTick();
+        } catch (RuntimeException failure) {
+            plugin.getLogger().log(Level.WARNING, "The versus intro ran into a failure and is stopped", failure);
+            stop();
+        }
+    }
+
     private void runTick() {
         tick++;
         ItemDisplay currentCamera = camera;
@@ -201,8 +233,19 @@ public final class VersusIntroService {
                 viewers.remove(viewer);
                 continue;
             }
-            if (tick >= TARGET_DELAY_TICKS && !currentCamera.equals(player.getSpectatorTarget())) {
-                player.setSpectatorTarget(currentCamera);
+            if (player.getGameMode() != GameMode.SPECTATOR) {
+                stopWatching(player);
+                continue;
+            }
+            try {
+                if (tick >= TARGET_DELAY_TICKS && currentCamera.isTrackedBy(player)
+                        && !currentCamera.equals(player.getSpectatorTarget())) {
+                    player.setSpectatorTarget(currentCamera);
+                }
+            } catch (RuntimeException failure) {
+                plugin.getLogger().log(Level.WARNING, "The camera of the versus intro could not be given to "
+                        + player.getName(), failure);
+                stopWatching(player);
             }
         }
         if (tick % SWING_PERIOD_TICKS == 0) {
@@ -231,12 +274,17 @@ public final class VersusIntroService {
     }
 
     private void restore(Player player, SavedState state) {
-        player.getPersistentDataContainer().remove(returnKey);
         try {
             if (player.getGameMode() == GameMode.SPECTATOR) {
                 player.setSpectatorTarget(null);
             }
-            player.teleport(state.location());
+            if (!player.teleport(state.location())) {
+                plugin.getLogger().warning("The player " + player.getName() + " could not be teleported back "
+                        + "from the versus intro, it is tried again on the next join");
+                player.setGameMode(state.gameMode());
+                return;
+            }
+            player.getPersistentDataContainer().remove(returnKey);
             player.setGameMode(state.gameMode());
             player.setAllowFlight(state.allowFlight());
             player.setFlying(state.allowFlight() && state.flying());
@@ -361,7 +409,6 @@ public final class VersusIntroService {
         Mannequin mannequin = centre.getWorld().spawn(location, Mannequin.class, entity -> {
             prepare(entity);
             entity.setGravity(false);
-            entity.setAI(false);
             entity.setImmovable(true);
             entity.setInvulnerable(true);
             entity.setSilent(true);
@@ -369,7 +416,7 @@ public final class VersusIntroService {
             entity.setProfile(ResolvableProfile.resolvableProfile(fighter.getPlayerProfile()));
             entity.customName(Component.text(fighter.getName()));
             entity.setCustomNameVisible(true);
-            entity.setDescription(Component.empty());
+            entity.setDescription(null);
             EntityEquipment equipment = entity.getEquipment();
             loadout.armour().forEach((slot, item) -> equipment.setItem(slot, item.clone()));
         });
@@ -500,6 +547,11 @@ public final class VersusIntroService {
         double x = centre.getX() + right * cos - forward * sin;
         double z = centre.getZ() + right * sin + forward * cos;
         return new Location(centre.getWorld(), x, centre.getY() + up, z);
+    }
+
+    private static String describe(Location location) {
+        return location.getWorld().getName() + " " + location.getBlockX() + "/" + location.getBlockY() + "/"
+                + location.getBlockZ();
     }
 
     private static TextColor colourOf(Team team, TextColor fallback) {

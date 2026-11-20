@@ -104,6 +104,7 @@ import de.simplepvparena.listener.StartGateListener;
 import de.simplepvparena.match.ConfiguredRoundStartEffects;
 import de.simplepvparena.match.FighterColours;
 import de.simplepvparena.match.Match;
+import de.simplepvparena.match.MatchIntro;
 import de.simplepvparena.match.MatchService;
 import de.simplepvparena.match.ScoreboardFighterColours;
 import de.simplepvparena.match.UnequalTeamVoteService;
@@ -197,6 +198,7 @@ public final class SimplePVPArenaPlugin extends JavaPlugin {
     private static final String CONFIGURATION_FILE_NAME = "config.yml";
     private static final long VISUALS_READINESS_CHECK_PERIOD_TICKS = 20L;
     private static final String ITEMS_ADDER_ZIP_COMMAND = "iazip";
+    private static final long ITEMS_ADDER_READINESS_WARNING_TICKS = 20L * 60L;
     private static final long STATION_BUTTON_CHECK_PERIOD_TICKS = 100L;
     private static final long STATION_COUNTER_PERIOD_TICKS = 20L;
     private static final long BRACKET_BOARD_PERIOD_TICKS = 20L;
@@ -217,6 +219,7 @@ public final class SimplePVPArenaPlugin extends JavaPlugin {
     private volatile boolean machineVisualsWereReady;
     private VersusIntroService versusIntroService;
     private boolean itemsAdderContentChanged;
+    private boolean itemsAdderFolderMissing;
     private boolean itemsAdderZipRequested;
     private IOException itemsAdderContentFailure;
     private ArenaBaselineFile arenaBaselineFile;
@@ -277,6 +280,7 @@ public final class SimplePVPArenaPlugin extends JavaPlugin {
         Path pluginsFolder = getDataFolder().toPath().toAbsolutePath().getParent();
         if (pluginsFolder == null || !Files.isDirectory(pluginsFolder.resolve(
                 ItemsAdderContentInstaller.ITEMS_ADDER_FOLDER))) {
+            itemsAdderFolderMissing = true;
             return;
         }
         try {
@@ -380,7 +384,18 @@ public final class SimplePVPArenaPlugin extends JavaPlugin {
         matchService.setArenaAudience(arenaAudience);
         versusIntroService = new VersusIntroService(this, arenaRegistry, kitService::getKitDefinition,
                 match -> arenaAudience.findMatchAudience(match.getTeams()), matchService::isActiveFighter);
-        matchService.setFirstRoundListener(versusIntroService::play);
+        matchService.setMatchIntro(new MatchIntro() {
+            @Override
+            public int play(Match match) {
+                return versusIntroService.play(match);
+            }
+
+            @Override
+            public void stop() {
+                versusIntroService.stop();
+            }
+        });
+        areaInventoryService.setMovementExemption(versusIntroService::isWatching);
         matchService.setUnequalTeamVoteService(new UnequalTeamVoteService(this, getServer()::getPlayer,
                 RandomGenerator.getDefault()));
 
@@ -500,7 +515,7 @@ public final class SimplePVPArenaPlugin extends JavaPlugin {
                                 new File(getDataFolder(), CONFIGURATION_FILE_NAME), getLogger()),
                         standingsBoardToolService, () -> bracketBoardService.createBoardItem(),
                         new BoardDataResetService(autoMatchLeaderboard, tournamentManager,
-                                this::onPlacementChanged)),
+                                matchService::hasActiveMatch, this::onPlacementChanged)),
                 new AdminMenuDependencies.KitServices(kitLibrary, kitSaveService),
                 new AdminMenuDependencies.RegistrationServices(registrationService, registrationStationService,
                         randomTeamFormation, teamModeSetting, new TeamModeConfigurationWriter(this::getConfig,
@@ -580,6 +595,7 @@ public final class SimplePVPArenaPlugin extends JavaPlugin {
         getServer().getScheduler().runTaskTimer(this, bracketBoardDisplays::refresh, BRACKET_BOARD_PERIOD_TICKS,
                 BRACKET_BOARD_PERIOD_TICKS);
         machineVisualsWereReady = configuredVisuals.getCustomVisuals().isReady();
+        watchItemsAdderReadiness();
         getServer().getScheduler().runTaskTimer(this, this::rebuildMachinesOnceVisualsAreReady,
                 VISUALS_READINESS_CHECK_PERIOD_TICKS, VISUALS_READINESS_CHECK_PERIOD_TICKS);
         getServer().getScheduler().runTaskTimer(this, registrationMachineDisplays::updateCounters,
@@ -802,7 +818,11 @@ public final class SimplePVPArenaPlugin extends JavaPlugin {
     }
 
     private void emptyInventoryOnTheTribune(Player player) {
-        if (!areaInventoryService.hasDeposited(player) || kitService.hasAppliedKit(player)) {
+        if (kitService.hasAppliedKit(player) || !areaInventoryService.isLockedAt(player.getLocation())) {
+            return;
+        }
+        areaInventoryService.depositNow(player);
+        if (!areaInventoryService.hasDeposited(player)) {
             return;
         }
         player.getInventory().clear();
@@ -816,7 +836,29 @@ public final class SimplePVPArenaPlugin extends JavaPlugin {
                     itemsAdderContentFailure);
         } else if (itemsAdderContentChanged) {
             getLogger().info(Messages.text(PluginMessage.ITEMS_ADDER_CONTENT_INSTALLED));
+        } else if (itemsAdderFolderMissing) {
+            getLogger().info(Messages.text(PluginMessage.ITEMS_ADDER_CONTENT_NO_FOLDER));
+        } else {
+            getLogger().info(Messages.text(PluginMessage.ITEMS_ADDER_CONTENT_UP_TO_DATE));
         }
+    }
+
+    private void watchItemsAdderReadiness() {
+        CustomVisuals customVisuals = configuredVisuals.getCustomVisuals();
+        if (!(customVisuals instanceof ItemsAdderVisuals)) {
+            if (getServer().getPluginManager().getPlugin(ItemsAdderContentInstaller.ITEMS_ADDER_FOLDER) != null) {
+                getLogger().warning(Messages.text(PluginMessage.ITEMS_ADDER_NOT_USED));
+            }
+            return;
+        }
+        if (customVisuals.isReady() && itemsAdderContentChanged) {
+            onItemsAdderLoaded();
+        }
+        getServer().getScheduler().runTaskLater(this, () -> {
+            if (!customVisuals.isReady()) {
+                getLogger().warning(Messages.text(PluginMessage.ITEMS_ADDER_NOT_READY));
+            }
+        }, ITEMS_ADDER_READINESS_WARNING_TICKS);
     }
 
     private void onItemsAdderLoaded() {

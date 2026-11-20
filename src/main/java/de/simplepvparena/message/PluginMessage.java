@@ -16,7 +16,11 @@ public enum PluginMessage implements MessageKey {
     ARENA_BASELINE_NOT_SAVED("plugin.arena-baseline-not-saved", "file"),
     ITEMS_ADDER_CONTENT_INSTALLED("plugin.items-adder-content-installed"),
     ITEMS_ADDER_CONTENT_NOT_INSTALLED("plugin.items-adder-content-not-installed"),
-    ITEMS_ADDER_PACK_REBUILT("plugin.items-adder-pack-rebuilt");
+    ITEMS_ADDER_PACK_REBUILT("plugin.items-adder-pack-rebuilt"),
+    ITEMS_ADDER_CONTENT_UP_TO_DATE("plugin.items-adder-content-up-to-date"),
+    ITEMS_ADDER_CONTENT_NO_FOLDER("plugin.items-adder-content-no-folder"),
+    ITEMS_ADDER_NOT_USED("plugin.items-adder-not-used"),
+    ITEMS_ADDER_NOT_READY("plugin.items-adder-not-ready");
 
     private final String path;
     private final Set<String> placeholderNames;

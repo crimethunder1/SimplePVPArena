@@ -939,7 +939,7 @@ arena-menu:
         - 'Click to remove it'
       reset-lore:
         - 'Shift-click deletes the data of the board: the auto match wins'
-        - 'and the result of the last tournament'
+        - 'and the last or a paused tournament'
     bracket-board:
       title: 'Get a tournament bracket'
       lore:
@@ -947,8 +947,8 @@ arena-menu:
         - 'Once set up it shows who fights now, who is next'
         - 'and the whole bracket, it updates by itself'
       reset-lore:
-        - 'Shift-click empties the bracket of the last tournament'
-        - 'Only while no tournament is running'
+        - 'Shift-click empties the bracket, a finished or paused'
+        - 'tournament is dropped, not while a tournament runs'
     clear-border-marks:
       title: 'Clear the border marks'
       lore:
@@ -1058,12 +1058,12 @@ arena-menu:
     tool-inventory-full: 'Your inventory is full, the standings board tool could not be handed out'
     click-a-block: 'Right click a block'
     data-reset: 'The data of the standings board was deleted'
-    data-reset-tournament-kept: 'The auto match wins were deleted, the running tournament stays on the board'
+    data-reset-tournament-kept: 'The auto match wins were deleted, the running tournament stays on the board, pause it first'
   bracket-board:
     handed-out: 'The tournament bracket is in your inventory, right click a wall to set it up'
     inventory-full: 'Your inventory is full, the tournament bracket could not be handed out'
     data-reset: 'The bracket board was emptied'
-    data-reset-tournament-running: 'A tournament is running, cancel it first to empty the bracket board'
+    data-reset-tournament-running: 'A tournament is running, pause it or wait for the end of the match to empty the bracket board'
   diagnosis-input:
     description: 'the diagnosis cell limit'
     prompt:
@@ -2005,6 +2005,10 @@ plugin:
   items-adder-content-installed: 'The models of the standings board and the bracket board were written to ItemsAdder/contents/simplepvparena, the old files are removed'
   items-adder-content-not-installed: 'The models of the boards could not be written to ItemsAdder/contents/simplepvparena, the boards are built from blocks'
   items-adder-pack-rebuilt: 'The models of the boards are new, the resource pack of ItemsAdder is rebuilt with /iazip'
+  items-adder-content-up-to-date: 'The models of the boards in ItemsAdder/contents/simplepvparena are up to date'
+  items-adder-content-no-folder: 'There is no folder plugins/ItemsAdder, the models of the boards are not installed and the boards are built from blocks'
+  items-adder-not-used: 'ItemsAdder is installed but not used (items-adder.enabled is false or ItemsAdder was not active at the start), the boards are built from blocks'
+  items-adder-not-ready: 'ItemsAdder has not finished loading its contents after 60 seconds, the boards stay built from blocks until it is done. Check the log of ItemsAdder for errors'
 placement:
   title:
     tournament: 'Tournament'

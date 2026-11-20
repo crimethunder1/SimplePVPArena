@@ -44,6 +44,7 @@ public final class AreaInventoryService implements EffectAreaPresence {
 
     private static final byte DEPOSITED_VALUE = 1;
 
+    private Predicate<UUID> movementExemption = playerUniqueId -> false;
     private final Plugin plugin;
     private final NamespacedKey depositedKey;
     private final Supplier<Optional<EffectArea>> effectAreaSource;
@@ -120,8 +121,15 @@ public final class AreaInventoryService implements EffectAreaPresence {
         reconcile(player, player.getLocation());
     }
 
+    public void setMovementExemption(Predicate<UUID> movementExemption) {
+        this.movementExemption = Objects.requireNonNull(movementExemption, "movementExemption");
+    }
+
     @Override
     public void reconcile(Player player, Location location) {
+        if (movementExemption.test(player.getUniqueId())) {
+            return;
+        }
         if (isWearingKit(player)) {
             return;
         }
@@ -155,6 +163,12 @@ public final class AreaInventoryService implements EffectAreaPresence {
 
     public boolean isWearingKit(Player player) {
         return kitWorn.test(player);
+    }
+
+    public void depositNow(Player player) {
+        if (!hasDeposited(player)) {
+            deposit(player);
+        }
     }
 
     private void deposit(Player player) {

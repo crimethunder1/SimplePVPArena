@@ -3,6 +3,7 @@ package de.simplepvparena.arena;
 import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.entity.ArmorStand;
+import org.bukkit.entity.Mannequin;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
@@ -82,7 +83,8 @@ public final class ArenaMobRemovalService {
     private static boolean isMob(Entity entity) {
         return entity instanceof LivingEntity
                 && !(entity instanceof Player)
-                && !(entity instanceof ArmorStand);
+                && !(entity instanceof ArmorStand)
+                && !(entity instanceof Mannequin);
     }
 
     private static boolean isInsideTheFightArea(Location location, World world, ArenaShape shape) {

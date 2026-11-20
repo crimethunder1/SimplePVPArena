@@ -47,13 +47,33 @@ class DeadFighterReleaseTest {
         assertFalse(harness.getKitService().hasAppliedKit(mate.player()), "the living mate is released at once");
         assertEquals(GameMode.ADVENTURE, mate.gameMode());
 
-        harness.runTick();
-        assertEquals(List.of("Fighter"), respawned, "the dead fighter is respawned on the next tick");
+        harness.advanceTicks(19);
+        assertEquals(List.of(), respawned, "the client gets a second to respawn by itself");
+        assertEquals(GameMode.SURVIVAL, fighter.gameMode());
 
-        harness.runTick();
+        harness.advanceTicks(1);
+        assertEquals(List.of("Fighter"), respawned, "then the dead fighter is respawned by the plugin");
+        assertEquals(GameMode.SURVIVAL, fighter.gameMode(), "and is given time to load the world");
+
+        harness.advanceTicks(3);
         assertFalse(harness.getKitService().hasAppliedKit(fighter.player()));
-        assertEquals(GameMode.ADVENTURE, fighter.gameMode(), "and then released to the tribune");
+        assertEquals(GameMode.ADVENTURE, fighter.gameMode(), "before being released to the tribune");
         assertTrue(fighter.inventoryUpdateCount() > 0, "with the inventory sent to the client again");
+    }
+
+    @Test
+    void waitsForAFighterWhoRespawnsByHimselfAndNeverForcesTheRespawn() {
+        fighter.setDead(true);
+        harness.getMatchService().forceResult(match.getMatchId(), match.getSecondTeam().getTeamName());
+        assertTrue(harness.getMatchService().isAwaitingRespawn(fighter.uniqueId()));
+
+        harness.advanceTicks(3);
+        fighter.setDead(false);
+        harness.advanceTicks(4);
+
+        assertEquals(List.of(), respawned);
+        assertEquals(GameMode.ADVENTURE, fighter.gameMode());
+        assertFalse(harness.getMatchService().isAwaitingRespawn(fighter.uniqueId()));
     }
 
     @Test
