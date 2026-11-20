@@ -19,6 +19,8 @@
         <junit.version>5.14.4</junit.version>
         <items.adder.api.version>4.0.18-beta-10</items.adder.api.version>
         <voicechat.api.version>2.6.0</voicechat.api.version>
+        <maven.build.timestamp.format>yyyy-MM-dd'T'HH.mm</maven.build.timestamp.format>
+        <build.stamp>${maven.build.timestamp}</build.stamp>
     </properties>
 
     <repositories>
