@@ -55,6 +55,7 @@ import de.simplepvparena.tournament.AutoMatchService;
 import de.simplepvparena.tournament.AutomaticArenaCleanup;
 import de.simplepvparena.tournament.TournamentManager;
 import net.kyori.adventure.text.Component;
+import org.bukkit.Material;
 import org.bukkit.Server;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.Plugin;
@@ -171,7 +172,8 @@ class AdminMenuSeamTest {
                             throw new UnsupportedOperationException("the margin is not written in this test");
                         },
                         new StandingsBoardToolService(plugin, arenaSetupService,
-                                material -> new RecordingItemStack(material, 1))),
+                                material -> new RecordingItemStack(material, 1)),
+                        () -> new RecordingItemStack(Material.PAINTING, 1)),
                 new AdminMenuDependencies.KitServices(kitLibrary,
                         new KitSaveService(kitLibrary, new FakeKitItemSerializer())),
                 new AdminMenuDependencies.RegistrationServices(registrationService,

@@ -35,6 +35,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.function.Supplier;
 
 @NullMarked
 final class ArenaAdminMenu implements AdminMenu {
@@ -53,10 +54,12 @@ final class ArenaAdminMenu implements AdminMenu {
     private static final int ARENA_START_GATE_SLOT = 20;
     private static final int ARENA_BORDER_PARTICLES_SLOT = 21;
     private static final int ARENA_STANDINGS_BOARD_SLOT = 23;
+    private static final int ARENA_BRACKET_BOARD_SLOT = 24;
     private static final int ARENA_CLEAR_START_GATE_MARKS_SLOT = 25;
     private static final Material START_GATE_TILE_MATERIAL = Material.IRON_BARS;
     private static final Material BORDER_PARTICLES_TILE_MATERIAL = Material.BLAZE_POWDER;
     private static final Material STANDINGS_BOARD_TILE_MATERIAL = Material.OAK_SIGN;
+    private static final Material BRACKET_BOARD_TILE_MATERIAL = Material.PAINTING;
     private static final Material SMALLER_EFFECT_AREA_TILE_MATERIAL = Material.RED_DYE;
     private static final Material LARGER_EFFECT_AREA_TILE_MATERIAL = Material.LIME_DYE;
 
@@ -72,13 +75,15 @@ final class ArenaAdminMenu implements AdminMenu {
     private final EffectMarginSetting effectMarginSetting;
     private final EffectMarginWriter effectMarginWriter;
     private final StandingsBoardToolService standingsBoardToolService;
+    private final Supplier<ItemStack> bracketBoardItemFactory;
 
     ArenaAdminMenu(AdminMenuNavigation navigation, ArenaSetupService arenaSetupService,
                    ArenaHeightMarkerService heightMarkerService, StartGateItemService gateItemService,
                    ChatInputService chatInputService, BorderParticleService borderParticleService,
                    ConfirmedBorderParticleWriter confirmedBorderParticleWriter, MarkClearing borderMarkClearing,
                    MarkClearing startGateMarkClearing, EffectMarginSetting effectMarginSetting,
-                   EffectMarginWriter effectMarginWriter, StandingsBoardToolService standingsBoardToolService) {
+                   EffectMarginWriter effectMarginWriter, StandingsBoardToolService standingsBoardToolService,
+                   Supplier<ItemStack> bracketBoardItemFactory) {
         this.navigation = Objects.requireNonNull(navigation, "navigation");
         this.arenaSetupService = Objects.requireNonNull(arenaSetupService, "arenaSetupService");
         this.heightMarkerService = Objects.requireNonNull(heightMarkerService, "heightMarkerService");
@@ -93,6 +98,7 @@ final class ArenaAdminMenu implements AdminMenu {
         this.effectMarginWriter = Objects.requireNonNull(effectMarginWriter, "effectMarginWriter");
         this.standingsBoardToolService = Objects.requireNonNull(standingsBoardToolService,
                 "standingsBoardToolService");
+        this.bracketBoardItemFactory = Objects.requireNonNull(bracketBoardItemFactory, "bracketBoardItemFactory");
     }
 
     @Override
@@ -133,6 +139,9 @@ final class ArenaAdminMenu implements AdminMenu {
                 Messages.text(ArenaMenuMessage.RESET_TITLE), buildResetTileLore()));
         canvas.set(ARENA_CLEAR_BORDER_MARKS_SLOT, MarkClearingTile.BORDER_MARKS.build(borderMarkClearing));
         canvas.set(ARENA_STANDINGS_BOARD_SLOT, buildStandingsBoardTile());
+        canvas.set(ARENA_BRACKET_BOARD_SLOT, MenuItems.create(BRACKET_BOARD_TILE_MATERIAL,
+                Messages.text(ArenaMenuMessage.BRACKET_BOARD_TITLE),
+                Messages.lines(ArenaMenuMessage.BRACKET_BOARD_LORE)));
         canvas.set(ARENA_CLEAR_START_GATE_MARKS_SLOT,
                 MarkClearingTile.START_GATE_MARKS.build(startGateMarkClearing));
         canvas.set(AdminMenuLayout.BACK_SLOT, MenuItems.back(MenuMessage.BACK_TO_MAIN_MENU));
@@ -164,6 +173,7 @@ final class ArenaAdminMenu implements AdminMenu {
             case ARENA_CLEAR_BORDER_MARKS_SLOT -> askForMarkClearingConfirmation(player, MarkClearingTile.BORDER_MARKS,
                     borderMarkClearing);
             case ARENA_STANDINGS_BOARD_SLOT -> switchStandingsBoard(player, holder);
+            case ARENA_BRACKET_BOARD_SLOT -> handOutBracketBoard(player);
             case ARENA_CLEAR_START_GATE_MARKS_SLOT -> askForMarkClearingConfirmation(player,
                     MarkClearingTile.START_GATE_MARKS, startGateMarkClearing);
             case AdminMenuLayout.BACK_SLOT -> navigation.open(player, AdminMenuHolder.main());
@@ -494,6 +504,16 @@ final class ArenaAdminMenu implements AdminMenu {
         }
         TournamentMessages.sendSuccess(player, Messages.text(ArenaMenuMessage.STANDINGS_BOARD_TOOL_HANDED_OUT));
         navigation.refresh(player, holder);
+    }
+
+    private void handOutBracketBoard(Player player) {
+        Map<Integer, ItemStack> itemsThatDidNotFit = player.getInventory().addItem(bracketBoardItemFactory.get());
+        if (!itemsThatDidNotFit.isEmpty()) {
+            TournamentMessages.sendWarning(player, Messages.text(ArenaMenuMessage.BRACKET_BOARD_INVENTORY_FULL));
+            return;
+        }
+        navigation.close(player);
+        TournamentMessages.sendSuccess(player, Messages.text(ArenaMenuMessage.BRACKET_BOARD_HANDED_OUT));
     }
 
     private List<String> buildResetTileLore() {

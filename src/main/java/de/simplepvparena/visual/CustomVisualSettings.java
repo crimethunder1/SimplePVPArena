@@ -13,7 +13,8 @@ public record CustomVisualSettings(boolean enabled,
                                    String totemItemIdentifier,
                                    String stationItemIdentifier,
                                    String stationTitleImageIdentifier,
-                                   String boardTitleImageIdentifier) {
+                                   String boardTitleImageIdentifier,
+                                   String bracketTitleImageIdentifier) {
 
     public static final String SECTION_CONFIGURATION_PATH = "items-adder";
     public static final String ENABLED_CONFIGURATION_PATH = SECTION_CONFIGURATION_PATH + ".enabled";
@@ -28,6 +29,8 @@ public record CustomVisualSettings(boolean enabled,
             + ".station-title-image";
     public static final String BOARD_TITLE_IMAGE_CONFIGURATION_PATH = SECTION_CONFIGURATION_PATH
             + ".board-title-image";
+    public static final String BRACKET_TITLE_IMAGE_CONFIGURATION_PATH = SECTION_CONFIGURATION_PATH
+            + ".bracket-title-image";
     public static final String MACHINE_PARTS_CONFIGURATION_PATH = SECTION_CONFIGURATION_PATH + ".machine-parts";
     public static final String MACHINE_PART_IDENTIFIER_PREFIX = "simplepvparena:machine_";
 
@@ -42,6 +45,7 @@ public record CustomVisualSettings(boolean enabled,
     public static final String SUGGESTED_STATION_ITEM_IDENTIFIER = "simplepvparena:station";
     public static final String SUGGESTED_STATION_TITLE_IMAGE_IDENTIFIER = "simplepvparena:station_title";
     public static final String SUGGESTED_BOARD_TITLE_IMAGE_IDENTIFIER = "simplepvparena:board_title";
+    public static final String SUGGESTED_BRACKET_TITLE_IMAGE_IDENTIFIER = "simplepvparena:bracket_title";
 
     public CustomVisualSettings {
         threeImageIdentifier = normalize(threeImageIdentifier);
@@ -52,18 +56,28 @@ public record CustomVisualSettings(boolean enabled,
         stationItemIdentifier = normalize(stationItemIdentifier);
         stationTitleImageIdentifier = normalize(stationTitleImageIdentifier);
         boardTitleImageIdentifier = normalize(boardTitleImageIdentifier);
+        bracketTitleImageIdentifier = normalize(bracketTitleImageIdentifier);
+    }
+
+    public CustomVisualSettings(boolean enabled, String threeImageIdentifier, String twoImageIdentifier,
+                                String oneImageIdentifier, String fightImageIdentifier, String totemItemIdentifier,
+                                String stationItemIdentifier, String stationTitleImageIdentifier,
+                                String boardTitleImageIdentifier) {
+        this(enabled, threeImageIdentifier, twoImageIdentifier, oneImageIdentifier, fightImageIdentifier,
+                totemItemIdentifier, stationItemIdentifier, stationTitleImageIdentifier, boardTitleImageIdentifier,
+                NO_IDENTIFIER);
     }
 
     public CustomVisualSettings(boolean enabled, String threeImageIdentifier, String twoImageIdentifier,
                                 String oneImageIdentifier, String fightImageIdentifier, String totemItemIdentifier,
                                 String stationItemIdentifier) {
         this(enabled, threeImageIdentifier, twoImageIdentifier, oneImageIdentifier, fightImageIdentifier,
-                totemItemIdentifier, stationItemIdentifier, NO_IDENTIFIER, NO_IDENTIFIER);
+                totemItemIdentifier, stationItemIdentifier, NO_IDENTIFIER, NO_IDENTIFIER, NO_IDENTIFIER);
     }
 
     public static CustomVisualSettings defaults() {
         return new CustomVisualSettings(DEFAULT_ENABLED, NO_IDENTIFIER, NO_IDENTIFIER, NO_IDENTIFIER, NO_IDENTIFIER,
-                NO_IDENTIFIER, NO_IDENTIFIER, NO_IDENTIFIER, NO_IDENTIFIER);
+                NO_IDENTIFIER, NO_IDENTIFIER, NO_IDENTIFIER, NO_IDENTIFIER, NO_IDENTIFIER);
     }
 
     private static String normalize(String identifier) {

@@ -63,6 +63,8 @@ class ArenaAdminMenuSnapshotTest {
                 22 | OAK_DOOR | Back | Returns to the main menu
                 23 | OAK_SIGN | Get the standings board tool | Puts the standings board tool into your inventory / \
                 The board shows the round, the match and the placement / of a tournament
+                24 | PAINTING | Get a tournament bracket | Puts a tournament bracket into your inventory / \
+                Once set up it shows who fights now, who is next / and the whole bracket, it updates by itself
                 25 | GRAY_DYE | Clear the start gate marks | Nothing is marked
                 """, fixture.describeLastMenu());
     }
@@ -150,6 +152,8 @@ class ArenaAdminMenuSnapshotTest {
                 22 | OAK_DOOR | Back | Returns to the main menu
                 23 | OAK_SIGN | Get the standings board tool | Puts the standings board tool into your inventory / \
                 The board shows the round, the match and the placement / of a tournament
+                24 | PAINTING | Get a tournament bracket | Puts a tournament bracket into your inventory / \
+                Once set up it shows who fights now, who is next / and the whole bracket, it updates by itself
                 25 | GRAY_DYE | Clear the start gate marks | Nothing is marked
                 """, fixture.describeLastMenu());
     }
@@ -212,6 +216,8 @@ class ArenaAdminMenuSnapshotTest {
                 22 | OAK_DOOR | Back | Returns to the main menu
                 23 | OAK_SIGN | Get the standings board tool | Puts the standings board tool into your inventory / \
                 The board shows the round, the match and the placement / of a tournament
+                24 | PAINTING | Get a tournament bracket | Puts a tournament bracket into your inventory / \
+                Once set up it shows who fights now, who is next / and the whole bracket, it updates by itself
                 25 | GRAY_DYE | Clear the start gate marks | Nothing is marked
                 """, fixture.describeLastMenu());
     }

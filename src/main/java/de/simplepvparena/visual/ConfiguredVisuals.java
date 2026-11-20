@@ -83,6 +83,11 @@ public final class ConfiguredVisuals implements CountdownImages {
                 settings.boardTitleImageIdentifier());
     }
 
+    public Optional<String> findBracketTitleImage() {
+        return findFontImage(CustomVisualSettings.BRACKET_TITLE_IMAGE_CONFIGURATION_PATH,
+                settings.bracketTitleImageIdentifier());
+    }
+
     public boolean playTotemAnimation(Player player) {
         String identifier = settings.totemItemIdentifier();
         if (!isAskable(identifier)) {

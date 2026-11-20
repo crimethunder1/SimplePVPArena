@@ -1,5 +1,6 @@
 package de.simplepvparena.placement;
 
+import de.simplepvparena.config.ServerMode;
 import de.simplepvparena.message.Messages;
 import de.simplepvparena.message.Placeholder;
 import de.simplepvparena.message.PlacementMessage;
@@ -34,11 +35,13 @@ public final class PlacementBoardText {
 
     private final Supplier<List<AutoMatchWins>> leaderboardSource;
     private final Supplier<Optional<String>> titleImageSource;
+    private final Supplier<ServerMode> serverModeSource;
 
     public PlacementBoardText(Supplier<List<AutoMatchWins>> leaderboardSource,
-                              Supplier<Optional<String>> titleImageSource) {
+                              Supplier<Optional<String>> titleImageSource, Supplier<ServerMode> serverModeSource) {
         this.leaderboardSource = Objects.requireNonNull(leaderboardSource, "leaderboardSource");
         this.titleImageSource = Objects.requireNonNull(titleImageSource, "titleImageSource");
+        this.serverModeSource = Objects.requireNonNull(serverModeSource, "serverModeSource");
     }
 
     public Optional<Component> build(PlacementStandings standings) {
@@ -60,7 +63,7 @@ public final class PlacementBoardText {
     }
 
     private String titleOf(PlacementStandings standings) {
-        if (standings.hasContent()) {
+        if (standings.hasContent() || !showsAutoMatches()) {
             return Messages.text(PlacementMessage.TOURNAMENT_TITLE);
         }
         return Messages.text(PlacementMessage.AUTO_MATCH_TITLE);
@@ -69,6 +72,10 @@ public final class PlacementBoardText {
     private List<Component> bodyOf(PlacementStandings standings) {
         if (standings.hasContent()) {
             return PlacementLines.boardLines(standings);
+        }
+        if (!showsAutoMatches()) {
+            return List.of(Component.text(Messages.text(PlacementMessage.NO_TOURNAMENT_YET), NamedTextColor.WHITE),
+                    Component.text(Messages.text(PlacementMessage.NO_TOURNAMENT_HINT), HINT_COLOUR));
         }
         List<AutoMatchWins> leaderboard = leaderboardSource.get();
         if (leaderboard.isEmpty()) {
@@ -85,6 +92,10 @@ public final class PlacementBoardText {
                     colourOf(place)));
         }
         return lines;
+    }
+
+    private boolean showsAutoMatches() {
+        return serverModeSource.get().allowsAutoMatches();
     }
 
     static TextColor colourOf(int place) {

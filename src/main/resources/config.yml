@@ -142,6 +142,8 @@ items-adder:
   station-title-image: ''
   # Image of ItemsAdder shown as the title of the standings board. Empty or an ID ItemsAdder does not know shows the bold title text. Suggested ID: simplepvparena:board_title.
   board-title-image: ''
+  # Image of ItemsAdder shown as the title of every tournament bracket board. Empty or an ID ItemsAdder does not know shows the bold title text. Suggested ID: simplepvparena:bracket_title.
+  bracket-title-image: ''
 
 # Live placement of the tournament and of the auto matches.
 placement:

@@ -30,6 +30,7 @@ import de.simplepvparena.team.TeamSizeWriter;
 import de.simplepvparena.tournament.AutoMatchModeWriter;
 import de.simplepvparena.tournament.AutoMatchService;
 import de.simplepvparena.tournament.TournamentManager;
+import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.Plugin;
 import org.jspecify.annotations.NullMarked;
 
@@ -70,7 +71,8 @@ public record AdminMenuDependencies(Plugin plugin,
                                 MarkClearing startGateMarkClearing,
                                 EffectMarginSetting effectMarginSetting,
                                 EffectMarginWriter effectMarginWriter,
-                                StandingsBoardToolService standingsBoardToolService) {
+                                StandingsBoardToolService standingsBoardToolService,
+                                Supplier<ItemStack> bracketBoardItemFactory) {
     }
 
     public record KitServices(KitLibrary kitLibrary, KitSaveService kitSaveService) {

@@ -935,6 +935,12 @@ arena-menu:
       remove-lore:
         - 'Stands at {position}'
         - 'Click to remove it'
+    bracket-board:
+      title: 'Get a tournament bracket'
+      lore:
+        - 'Puts a tournament bracket into your inventory'
+        - 'Once set up it shows who fights now, who is next'
+        - 'and the whole bracket, it updates by itself'
     clear-border-marks:
       title: 'Clear the border marks'
       lore:
@@ -1043,6 +1049,9 @@ arena-menu:
     tool-handed-out: 'The standings board tool is in your inventory'
     tool-inventory-full: 'Your inventory is full, the standings board tool could not be handed out'
     click-a-block: 'Right click a block'
+  bracket-board:
+    handed-out: 'The tournament bracket is in your inventory, right click a wall to set it up'
+    inventory-full: 'Your inventory is full, the tournament bracket could not be handed out'
   diagnosis-input:
     description: 'the diagnosis cell limit'
     prompt:
@@ -1975,6 +1984,8 @@ placement:
     auto-match: 'Auto match leaderboard'
   no-games-yet: 'No games played yet'
   no-games-hint: 'Register and fight for the first place!'
+  no-tournament-yet: 'No tournament yet'
+  no-tournament-hint: 'Register, the tournament starts soon!'
   wins-entry:
     one: '{place}. {player} - {count} win'
     other: '{place}. {player} - {count} wins'
@@ -1991,3 +2002,28 @@ placement:
     other: 'and {count} more'
   place: '{place}. {teams}'
   out-in-round: 'Out in round {round}: {teams}'
+  bracket:
+    title: 'Tournament bracket'
+    waiting-hint: 'The bracket appears as soon as the tournament starts'
+    now: 'Now: {firstTeam} against {secondTeam}'
+    now-none: 'Now: no fight at the moment'
+    next: 'Next: {firstTeam} against {secondTeam}'
+    next-open: 'Next: not decided yet'
+    champion: 'Winner: {team}'
+    round: 'Round {round}'
+    quarter-final: 'Quarter final'
+    semi-final: 'Semi final'
+    final: 'Final'
+    winner-column: 'Winner'
+    open-team: '???'
+    bye: 'Bye'
+    item-name: 'Tournament bracket'
+    item-lore:
+      - 'Right click a wall or the ground to set up a 6x4 board'
+      - 'It shows who fights whom now, who is next and the whole bracket'
+      - 'Its front faces you, breaking it removes it again'
+    placed: 'The tournament bracket is set up'
+    removed: 'The tournament bracket was removed'
+    no-room: 'There is no room for the tournament bracket here, it needs {width}x{height} free blocks'
+    not-loaded: 'The tournament brackets in {file} could not be read'
+    not-saved: 'The tournament brackets could not be written to {file}'

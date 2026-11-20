@@ -935,6 +935,12 @@ arena-menu:
       remove-lore:
         - 'Steht bei {position}'
         - 'Klicke, um sie zu entfernen'
+    bracket-board:
+      title: 'Turnierbaum holen'
+      lore:
+        - 'Legt einen Turnierbaum in dein Inventar'
+        - 'Aufgestellt zeigt er, wer gerade kämpft, wer danach dran ist'
+        - 'und den ganzen Baum, er aktualisiert sich von selbst'
     clear-border-marks:
       title: 'Wandmarkierungen löschen'
       lore:
@@ -1044,6 +1050,9 @@ arena-menu:
     tool-handed-out: 'Das Werkzeug für die Platzierungstafel liegt in deinem Inventar'
     tool-inventory-full: 'Dein Inventar ist voll, das Werkzeug für die Platzierungstafel konnte nicht ausgegeben werden'
     click-a-block: 'Klicke mit Rechtsklick auf einen Block'
+  bracket-board:
+    handed-out: 'Der Turnierbaum liegt in deinem Inventar, stelle ihn mit Rechtsklick an eine Wand'
+    inventory-full: 'Dein Inventar ist voll, der Turnierbaum konnte nicht ausgegeben werden'
   diagnosis-input:
     description: 'die Diagnose mit einem höheren Zellenlimit'
     prompt:
@@ -1976,6 +1985,8 @@ placement:
     auto-match: 'Auto-Match-Rangliste'
   no-games-yet: 'Noch keine Spiele'
   no-games-hint: 'Melde dich an und kämpfe um Platz 1!'
+  no-tournament-yet: 'Noch kein Turnier'
+  no-tournament-hint: 'Melde dich an, das Turnier startet bald!'
   wins-entry:
     one: '{place}. {player} - {count} Sieg'
     other: '{place}. {player} - {count} Siege'
@@ -1992,3 +2003,28 @@ placement:
     other: 'und {count} weitere'
   place: '{place}. {teams}'
   out-in-round: 'Ausgeschieden in Turnierrunde {round}: {teams}'
+  bracket:
+    title: 'Turnierbaum'
+    waiting-hint: 'Der Baum erscheint, sobald das Turnier startet'
+    now: 'Jetzt: {firstTeam} gegen {secondTeam}'
+    now-none: 'Jetzt: gerade kein Kampf'
+    next: 'Danach: {firstTeam} gegen {secondTeam}'
+    next-open: 'Danach: steht noch nicht fest'
+    champion: 'Sieger: {team}'
+    round: 'Runde {round}'
+    quarter-final: 'Viertelfinale'
+    semi-final: 'Halbfinale'
+    final: 'Finale'
+    winner-column: 'Sieger'
+    open-team: '???'
+    bye: 'Freilos'
+    item-name: 'Turnierbaum'
+    item-lore:
+      - 'Rechtsklick auf eine Wand oder den Boden stellt eine 6x4 große Tafel auf'
+      - 'Sie zeigt, wer gerade gegen wen kämpft, wer danach dran ist und den ganzen Baum'
+      - 'Die Front zeigt zu dir, abbauen entfernt sie wieder'
+    placed: 'Der Turnierbaum steht'
+    removed: 'Der Turnierbaum wurde entfernt'
+    no-room: 'Hier ist kein Platz für den Turnierbaum, er braucht {width}x{height} freie Blöcke'
+    not-loaded: 'Die Turnierbäume in {file} konnten nicht gelesen werden'
+    not-saved: 'Die Turnierbäume konnten nicht in {file} geschrieben werden'

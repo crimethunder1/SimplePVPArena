@@ -1,5 +1,6 @@
 package de.simplepvparena.placement;
 
+import de.simplepvparena.config.ServerMode;
 import de.simplepvparena.message.TournamentMessages;
 import de.simplepvparena.support.UseLanguage;
 import net.kyori.adventure.text.Component;
@@ -21,7 +22,9 @@ class PlacementBoardTextTest {
 
     private final List<AutoMatchWins> leaderboard = new ArrayList<>();
     private Optional<String> titleImage = Optional.empty();
-    private final PlacementBoardText boardText = new PlacementBoardText(() -> leaderboard, () -> titleImage);
+    private ServerMode serverMode = ServerMode.AUTO;
+    private final PlacementBoardText boardText = new PlacementBoardText(() -> leaderboard, () -> titleImage,
+            () -> serverMode);
 
     @Test
     @UseLanguage("en")
@@ -38,6 +41,16 @@ class PlacementBoardTextTest {
         leaderboard.add(new AutoMatchWins(UUID.randomUUID(), "Bot1", 1));
 
         assertEquals("\nAuto-Match-Rangliste\n" + LINE + "\n1. Bot3 - 2 Siege\n2. Bot1 - 1 Sieg\n" + LINE,
+                plain(PlacementStandings.none()));
+    }
+
+    @Test
+    @UseLanguage("de")
+    void showsNoAutoMatchLeaderboardInTheEventMode() {
+        serverMode = ServerMode.EVENT;
+        leaderboard.add(new AutoMatchWins(UUID.randomUUID(), "Bot3", 2));
+
+        assertEquals("Turnier\n" + LINE + "\nNoch kein Turnier\nMelde dich an, das Turnier startet bald!\n" + LINE,
                 plain(PlacementStandings.none()));
     }
 
