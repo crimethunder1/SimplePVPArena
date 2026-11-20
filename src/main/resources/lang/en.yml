@@ -1534,6 +1534,13 @@ visual:
   unknown-font-image: 'ItemsAdder has no font image {identifier}, set in {path} of config.yml, the own title of the plugin is shown instead'
   unknown-item: 'ItemsAdder has no item {identifier}, set in {path} of config.yml, the own effect of the plugin is used instead'
   lookup-failed: 'ItemsAdder could not hand out {identifier}, set in {path} of config.yml ({reason}), the own title or effect of the plugin is used instead'
+voice:
+  simple-voice-chat-used: 'SimpleVoiceChat was found, during a match the fighters only hear the other fighters and players with {permission}, {path} false in config.yml switches this off'
+  simple-voice-chat-service-missing: 'SimpleVoiceChat runs but offers no interface for plugins, the fighters keep hearing every player in the voice chat'
+  isolated: 'Voice chat: during the match you only hear the fighters, the spectators are muted for you'
+  left-group: 'Voice chat: you left your group for the match'
+  eliminated: 'Voice chat: you are out, you now hear your team and the spectators, the opponents no longer hear you'
+  group-refused: 'Voice chat: you cannot join a group during your match'
 command:
   menu-only-for-players:
     - 'The tournament administration is a menu'
@@ -1935,6 +1942,7 @@ config:
     items-adder-enabled-not-a-truth-value: '{path} must be true or false, falling back to {fallback}'
     items-adder-identifier-not-text: '{path} must be an ID in quotes such as {example} or empty, falling back to empty, the own title or effect of the plugin is used'
     placement-enabled-not-a-truth-value: '{path} must be true or false, falling back to {fallback}'
+    voice-chat-enabled-not-a-truth-value: '{path} must be true or false, falling back to {fallback}'
     clean-between-rounds-not-a-truth-value: '{path} must be true or false, falling back to {fallback}'
   reload:
     reloaded: 'config.yml was reloaded and applied'
@@ -1959,6 +1967,7 @@ config:
       border: 'the border particles, their limits and the confirmed border marker'
       items-adder: 'the IDs of the ItemsAdder images and items and whether they are used, a switch between ItemsAdder and the own visuals of the plugin needs a restart'
       placement: 'whether the placement is shown as a sidebar in the area of effect and as a board at the tribune'
+      voice-chat: 'whether the fighters only hear the fighters in SimpleVoiceChat, at once'
     untouched: 'The calculated fight area, the spawns, the border blocks, the teams and a running match stay untouched'
     unusable-entries: 'Entries that could not be used and fell back to their default:'
   notice:

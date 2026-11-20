@@ -80,4 +80,6 @@ public interface LiveConfiguration {
     void setPlacementSidebarEnabled(boolean enabled);
 
     void setPlacementBoardEnabled(boolean enabled);
+
+    void setVoiceChatIsolationEnabled(boolean enabled);
 }

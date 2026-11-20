@@ -30,7 +30,8 @@ public record ConfigurationReloadReport(List<String> problems) {
             ConfigMessage.AREA_INVENTORY_CATEGORY,
             ConfigMessage.BORDER_CATEGORY,
             ConfigMessage.ITEMS_ADDER_CATEGORY,
-            ConfigMessage.PLACEMENT_CATEGORY);
+            ConfigMessage.PLACEMENT_CATEGORY,
+            ConfigMessage.VOICE_CHAT_CATEGORY);
 
     private static final String ENTRY_INDENT = "  ";
 

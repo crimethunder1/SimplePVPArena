@@ -50,6 +50,7 @@ final class RecordingLiveConfiguration implements LiveConfiguration {
     static final String PLACEMENT_SIDEBAR_ENABLED = "placementSidebarEnabled";
     static final String PLACEMENT_BOARD_ENABLED = "placementBoardEnabled";
     static final String SERVER_MODE = "serverMode";
+    static final String VOICE_CHAT_ENABLED = "voiceChatIsolationEnabled";
 
     static final List<String> EVERY_APPLIED_VALUE = List.of(
             LANGUAGE,
@@ -61,7 +62,7 @@ final class RecordingLiveConfiguration implements LiveConfiguration {
             PARTICLE_PERIOD, PARTICLE_VIEW_RADIUS,
             PARTICLE_MAXIMUM_BLOCKS, PARTICLE_MAXIMUM_LINES, WALL_PREVIEW_DURATION, CONFIRMED_PARTICLE,
             CONFIRMED_PARTICLE_ENABLED, AREA_INVENTORY_ENABLED, CUSTOM_VISUALS, PLACEMENT_SIDEBAR_ENABLED,
-            PLACEMENT_BOARD_ENABLED);
+            PLACEMENT_BOARD_ENABLED, VOICE_CHAT_ENABLED);
 
     private final Map<String, Object> appliedValues = new LinkedHashMap<>();
     private final StartGateDuration startGateDuration = new StartGateDuration();
@@ -230,6 +231,11 @@ final class RecordingLiveConfiguration implements LiveConfiguration {
     @Override
     public void setPlacementBoardEnabled(boolean enabled) {
         appliedValues.put(PLACEMENT_BOARD_ENABLED, enabled);
+    }
+
+    @Override
+    public void setVoiceChatIsolationEnabled(boolean enabled) {
+        appliedValues.put(VOICE_CHAT_ENABLED, enabled);
     }
 
     @Override

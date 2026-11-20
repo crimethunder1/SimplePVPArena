@@ -61,6 +61,7 @@ public final class PluginLiveConfiguration implements LiveConfiguration {
     private final Consumer<CustomVisualSettings> customVisualSettingsApplier;
     private final Consumer<Boolean> placementSidebarEnabledApplier;
     private final Consumer<Boolean> placementBoardEnabledApplier;
+    private Consumer<Boolean> voiceChatIsolationEnabledApplier = enabled -> { };
     private final Consumer<ServerMode> serverModeApplier;
 
     public PluginLiveConfiguration(MatchService matchService,
@@ -320,5 +321,15 @@ public final class PluginLiveConfiguration implements LiveConfiguration {
     @Override
     public void setPlacementBoardEnabled(boolean enabled) {
         placementBoardEnabledApplier.accept(enabled);
+    }
+
+    public void setVoiceChatIsolationEnabledApplier(Consumer<Boolean> voiceChatIsolationEnabledApplier) {
+        this.voiceChatIsolationEnabledApplier = Objects.requireNonNull(voiceChatIsolationEnabledApplier,
+                "voiceChatIsolationEnabledApplier");
+    }
+
+    @Override
+    public void setVoiceChatIsolationEnabled(boolean enabled) {
+        voiceChatIsolationEnabledApplier.accept(enabled);
     }
 }

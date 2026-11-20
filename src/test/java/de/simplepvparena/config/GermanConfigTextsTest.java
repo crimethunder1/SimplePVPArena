@@ -98,6 +98,7 @@ class GermanConfigTextsTest {
                 "  die IDs der Bilder und Items aus ItemsAdder und ob sie genutzt werden, ein Wechsel zwischen "
                         + "ItemsAdder und den eigenen Anzeigen des Plugins braucht einen Neustart",
                 "  ob die Platzierung als Seitenleiste im Wirkungsbereich und als Tafel an der Tribüne gezeigt wird",
+                "  ob die Kämpfer im SimpleVoiceChat nur die Kämpfer hören, ab sofort",
                 "Die berechnete Kampffläche, die Spawns, die Wandblöcke, die Teams und ein laufendes Match bleiben "
                         + "unberührt",
                 "Einträge, die nicht genutzt werden konnten und auf ihren Standardwert zurückgefallen sind:",

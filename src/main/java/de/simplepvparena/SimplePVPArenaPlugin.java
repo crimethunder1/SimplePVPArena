@@ -112,6 +112,7 @@ import de.simplepvparena.message.MessageCatalogLoader;
 import de.simplepvparena.message.Messages;
 import de.simplepvparena.message.Placeholder;
 import de.simplepvparena.message.PluginMessage;
+import de.simplepvparena.message.VoiceMessage;
 import de.simplepvparena.placement.AutoMatchLeaderboard;
 import de.simplepvparena.placement.BracketBoardDisplays;
 import de.simplepvparena.placement.BracketBoardService;
@@ -158,16 +159,24 @@ import de.simplepvparena.visual.ConfiguredVisuals;
 import de.simplepvparena.visual.CustomVisuals;
 import de.simplepvparena.visual.CustomVisualsSelection;
 import de.simplepvparena.visual.ItemsAdderVisuals;
+import de.simplepvparena.voice.PlayerVoiceNotices;
+import de.simplepvparena.voice.SimpleVoiceChatBridge;
+import de.simplepvparena.voice.VoiceIsolation;
+import de.simplepvparena.voice.VoiceRoster;
 import org.bukkit.Tag;
 import org.bukkit.command.PluginCommand;
 import org.bukkit.configuration.ConfigurationSection;
+import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.jspecify.annotations.NullMarked;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.HashSet;
 import java.util.Optional;
+import java.util.Set;
+import java.util.UUID;
 import java.util.function.Consumer;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -246,6 +255,7 @@ public final class SimplePVPArenaPlugin extends JavaPlugin {
     private AutoMatchLeaderboard autoMatchLeaderboard;
     private FileAutoMatchLeaderboardStorage autoMatchLeaderboardStorage;
     private StandingsBoardToolService standingsBoardToolService;
+    private VoiceIsolation voiceIsolation;
 
     @SuppressWarnings("null")
     public SimplePVPArenaPlugin() {
@@ -479,6 +489,8 @@ public final class SimplePVPArenaPlugin extends JavaPlugin {
                         teamModeSetting::setTeamMode, areaInventoryService::setEnabled,
                         configuredVisuals::applySettings, placementSidebar::setEnabled, placementBoard::setEnabled,
                         serverModeSetting::setServerMode);
+        voiceIsolation = new VoiceIsolation(this::buildVoiceRoster, new PlayerVoiceNotices(getServer()::getPlayer));
+        liveConfiguration.setVoiceChatIsolationEnabledApplier(voiceIsolation::setEnabled);
         configurationReloadService = new ConfigurationReloadService(this::getConfig, this::reloadConfig,
                 liveConfiguration, getLogger()::warning);
         configurationReloadService.applyStoredConfiguration();
@@ -516,6 +528,7 @@ public final class SimplePVPArenaPlugin extends JavaPlugin {
 
         registerCommand();
         registerListeners();
+        hookSimpleVoiceChat();
         borderParticleService.start();
         arenaMobRemovalService.start();
         chatInputService.start();
@@ -570,6 +583,9 @@ public final class SimplePVPArenaPlugin extends JavaPlugin {
         }
         if (matchService != null) {
             matchService.cancelActiveMatch();
+        }
+        if (voiceIsolation != null) {
+            voiceIsolation.detach();
         }
         if (areaInventoryService != null) {
             areaInventoryService.stop();
@@ -713,6 +729,36 @@ public final class SimplePVPArenaPlugin extends JavaPlugin {
 
     public TournamentManager getTournamentManager() {
         return tournamentManager;
+    }
+
+    private VoiceRoster buildVoiceRoster() {
+        if (!matchService.hasActiveMatch()) {
+            return VoiceRoster.EMPTY;
+        }
+        Set<UUID> bypassPlayers = new HashSet<>();
+        for (Player player : getServer().getOnlinePlayers()) {
+            if (player.hasPermission(VoiceIsolation.BYPASS_PERMISSION_NAME)) {
+                bypassPlayers.add(player.getUniqueId());
+            }
+        }
+        return VoiceRoster.of(matchService.getActiveMatch(), matchService::isLeftOutOfTheChosenFighters,
+                bypassPlayers);
+    }
+
+    private void hookSimpleVoiceChat() {
+        if (!getServer().getPluginManager().isPluginEnabled(SimpleVoiceChatBridge.PLUGIN_NAME)) {
+            return;
+        }
+        if (!SimpleVoiceChatBridge.register(getServer(), voiceIsolation,
+                task -> getServer().getScheduler().runTask(this, task))) {
+            getLogger().warning(Messages.text(VoiceMessage.SIMPLE_VOICE_CHAT_SERVICE_MISSING));
+            return;
+        }
+        getLogger().info(Messages.text(VoiceMessage.SIMPLE_VOICE_CHAT_USED,
+                Placeholder.of("path", PluginSettings.VOICE_CHAT_ENABLED_PATH),
+                Placeholder.of("permission", VoiceIsolation.BYPASS_PERMISSION_NAME)));
+        getServer().getScheduler().runTaskTimer(this, voiceIsolation::refresh, VoiceIsolation.REFRESH_PERIOD_TICKS,
+                VoiceIsolation.REFRESH_PERIOD_TICKS);
     }
 
     private CustomVisuals createItemsAdderVisuals() {

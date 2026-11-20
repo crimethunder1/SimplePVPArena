@@ -1535,6 +1535,13 @@ visual:
   unknown-font-image: 'ItemsAdder kennt kein Schriftbild {identifier} aus {path} in config.yml, stattdessen erscheint der eigene Titel des Plugins'
   unknown-item: 'ItemsAdder kennt kein Item {identifier} aus {path} in config.yml, stattdessen gilt der eigene Effekt des Plugins'
   lookup-failed: 'ItemsAdder konnte {identifier} aus {path} in config.yml nicht liefern ({reason}), stattdessen gilt der eigene Titel oder Effekt des Plugins'
+voice:
+  simple-voice-chat-used: 'SimpleVoiceChat wurde gefunden, während eines Matches hören die Kämpfer nur die anderen Kämpfer und Spieler mit {permission}, mit {path} false in config.yml ist das aus'
+  simple-voice-chat-service-missing: 'SimpleVoiceChat läuft, bietet aber keine Schnittstelle für Plugins an, die Kämpfer hören im Voice-Chat weiterhin alle Spieler'
+  isolated: 'Voice-Chat: Du hörst während des Matches nur noch die Kämpfer, die Zuschauer sind für dich stumm'
+  left-group: 'Voice-Chat: Du hast deine Gruppe für das Match verlassen'
+  eliminated: 'Voice-Chat: Du bist raus, du hörst jetzt dein Team und die Zuschauer, die Gegner hören dich nicht mehr'
+  group-refused: 'Voice-Chat: Während deines Matches kannst du keiner Gruppe beitreten'
 command:
   menu-only-for-players:
     - 'Die Turnierverwaltung ist ein Menü'
@@ -1936,6 +1943,7 @@ config:
     items-adder-enabled-not-a-truth-value: '{path} muss true oder false sein, stattdessen gilt {fallback}'
     items-adder-identifier-not-text: '{path} muss eine ID in Anführungszeichen wie {example} oder leer sein, stattdessen bleibt der Wert leer und es gilt der eigene Titel oder Effekt des Plugins'
     placement-enabled-not-a-truth-value: '{path} muss true oder false sein, stattdessen gilt {fallback}'
+    voice-chat-enabled-not-a-truth-value: '{path} muss true oder false sein, stattdessen gilt {fallback}'
     clean-between-rounds-not-a-truth-value: '{path} muss true oder false sein, stattdessen gilt {fallback}'
   reload:
     reloaded: 'config.yml wurde neu geladen und angewendet'
@@ -1960,6 +1968,7 @@ config:
       border: 'die Wandpartikel, ihre Grenzen und die Markierung der bestätigten Arenawand'
       items-adder: 'die IDs der Bilder und Items aus ItemsAdder und ob sie genutzt werden, ein Wechsel zwischen ItemsAdder und den eigenen Anzeigen des Plugins braucht einen Neustart'
       placement: 'ob die Platzierung als Seitenleiste im Wirkungsbereich und als Tafel an der Tribüne gezeigt wird'
+      voice-chat: 'ob die Kämpfer im SimpleVoiceChat nur die Kämpfer hören, ab sofort'
     untouched: 'Die berechnete Kampffläche, die Spawns, die Wandblöcke, die Teams und ein laufendes Match bleiben unberührt'
     unusable-entries: 'Einträge, die nicht genutzt werden konnten und auf ihren Standardwert zurückgefallen sind:'
   notice:

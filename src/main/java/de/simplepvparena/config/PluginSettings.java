@@ -26,6 +26,7 @@ import de.simplepvparena.team.Team;
 import de.simplepvparena.team.TeamSizeSetting;
 import de.simplepvparena.tournament.AutoMatchSettings;
 import de.simplepvparena.visual.CustomVisualSettings;
+import de.simplepvparena.voice.VoiceIsolation;
 import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.configuration.ConfigurationSection;
 import org.jspecify.annotations.NullMarked;
@@ -68,7 +69,8 @@ public record PluginSettings(long roundResetDelayTicks,
                              CustomVisualSettings customVisualSettings,
                              boolean placementSidebarEnabled,
                              boolean placementBoardEnabled,
-                             ServerMode serverMode) {
+                             ServerMode serverMode,
+                             boolean voiceChatIsolationEnabled) {
 
     public static final String KIT_SECTION_PATH = "kit";
 
@@ -110,6 +112,7 @@ public record PluginSettings(long roundResetDelayTicks,
     public static final String BORDER_WALL_PREVIEW_SECONDS_PATH = "border.wall-preview-seconds";
     public static final String PLACEMENT_SIDEBAR_ENABLED_PATH = "placement.sidebar.enabled";
     public static final String PLACEMENT_BOARD_ENABLED_PATH = "placement.board.enabled";
+    public static final String VOICE_CHAT_ENABLED_PATH = "voice-chat.enabled";
 
     public static final long DEFAULT_ROUND_RESET_DELAY_TICKS = 100L;
     public static final int DEFAULT_WALL_PREVIEW_SECONDS = 4;
@@ -171,7 +174,8 @@ public record PluginSettings(long roundResetDelayTicks,
             CustomVisualSettings.TOTEM_ITEM_CONFIGURATION_PATH,
             CustomVisualSettings.STATION_ITEM_CONFIGURATION_PATH,
             PLACEMENT_SIDEBAR_ENABLED_PATH,
-            PLACEMENT_BOARD_ENABLED_PATH);
+            PLACEMENT_BOARD_ENABLED_PATH,
+            VOICE_CHAT_ENABLED_PATH);
 
     public static PluginSettings defaults() {
         return new PluginSettings(DEFAULT_ROUND_RESET_DELAY_TICKS,
@@ -205,7 +209,8 @@ public record PluginSettings(long roundResetDelayTicks,
                 CustomVisualSettings.defaults(),
                 DEFAULT_PLACEMENT_SIDEBAR_ENABLED,
                 DEFAULT_PLACEMENT_BOARD_ENABLED,
-                ServerMode.DEFAULT_MODE);
+                ServerMode.DEFAULT_MODE,
+                VoiceIsolation.DEFAULT_ENABLED);
     }
 
     public static PluginSettings read(ConfigurationSection configuration, Consumer<String> problemReporter) {
@@ -251,7 +256,8 @@ public record PluginSettings(long roundResetDelayTicks,
                         DEFAULT_PLACEMENT_SIDEBAR_ENABLED, problemReporter),
                 readPlacementEnabled(configuration, PLACEMENT_BOARD_ENABLED_PATH,
                         DEFAULT_PLACEMENT_BOARD_ENABLED, problemReporter),
-                readServerMode(configuration, problemReporter));
+                readServerMode(configuration, problemReporter),
+                readVoiceChatEnabled(configuration, problemReporter));
         readLanguage(configuration, problemReporter);
         return settings;
     }
@@ -315,6 +321,7 @@ public record PluginSettings(long roundResetDelayTicks,
         liveConfiguration.setCustomVisualSettings(customVisualSettings);
         liveConfiguration.setPlacementSidebarEnabled(placementSidebarEnabled);
         liveConfiguration.setPlacementBoardEnabled(placementBoardEnabled);
+        liveConfiguration.setVoiceChatIsolationEnabled(voiceChatIsolationEnabled);
     }
 
     public static boolean readItemsAdderEnabled(ConfigurationSection configuration,
@@ -800,5 +807,19 @@ public record PluginSettings(long roundResetDelayTicks,
         problemReporter.accept(Messages.text(ConfigMessage.PLACEMENT_ENABLED_NOT_A_TRUTH_VALUE,
                 Placeholder.of("path", path), Placeholder.of("fallback", defaultEnabled)));
         return defaultEnabled;
+    }
+
+    private static boolean readVoiceChatEnabled(ConfigurationSection configuration,
+                                                Consumer<String> problemReporter) {
+        if (!configuration.isSet(VOICE_CHAT_ENABLED_PATH)) {
+            return VoiceIsolation.DEFAULT_ENABLED;
+        }
+        if (configuration.isBoolean(VOICE_CHAT_ENABLED_PATH)) {
+            return configuration.getBoolean(VOICE_CHAT_ENABLED_PATH);
+        }
+        problemReporter.accept(Messages.text(ConfigMessage.VOICE_CHAT_ENABLED_NOT_A_TRUTH_VALUE,
+                Placeholder.of("path", VOICE_CHAT_ENABLED_PATH),
+                Placeholder.of("fallback", VoiceIsolation.DEFAULT_ENABLED)));
+        return VoiceIsolation.DEFAULT_ENABLED;
     }
 }

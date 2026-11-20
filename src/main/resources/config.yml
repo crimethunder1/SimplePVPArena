@@ -155,3 +155,8 @@ placement:
   board:
     # When true, the board shows the same and who is out in which round. false removes it, the place stays saved.
     enabled: true
+
+# SimpleVoiceChat during a match, only used when SimpleVoiceChat runs on the server.
+voice-chat:
+  # When true, the fighters only hear the other fighters and players with tournament.voice.bypass (default: operators), the spectators still hear the fighters. A fighter who is out hears his team and the spectators, the opponents no longer hear him. Fighters leave their group and cannot join one until the match ends. false lets everybody hear everybody.
+  enabled: true

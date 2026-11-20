@@ -18,12 +18,17 @@
         <paper.api.version>26.2.build.135-stable</paper.api.version>
         <junit.version>5.14.4</junit.version>
         <items.adder.api.version>4.0.18-beta-10</items.adder.api.version>
+        <voicechat.api.version>2.6.0</voicechat.api.version>
     </properties>
 
     <repositories>
         <repository>
             <id>papermc</id>
             <url>https://repo.papermc.io/repository/maven-public/</url>
+        </repository>
+        <repository>
+            <id>henkelmax</id>
+            <url>https://maven.maxhenkel.de/repository/public</url>
         </repository>
     </repositories>
 
@@ -38,6 +43,12 @@
             <groupId>beer.devs</groupId>
             <artifactId>itemsadder-api</artifactId>
             <version>${items.adder.api.version}</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>de.maxhenkel.voicechat</groupId>
+            <artifactId>voicechat-api</artifactId>
+            <version>${voicechat.api.version}</version>
             <scope>provided</scope>
         </dependency>
         <dependency>

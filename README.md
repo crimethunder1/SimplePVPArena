@@ -8,7 +8,7 @@ A Paper plugin that runs a team versus team single elimination tournament in one
 - A Paper server for Minecraft 26.2, built against `paper-api` 26.2.build.134-stable
 - Maven to build
 
-ViaVersion, ViaBackwards and ItemsAdder are optional soft dependencies, see "ItemsAdder (optional)" for the last one.
+ViaVersion, ViaBackwards, ItemsAdder and SimpleVoiceChat are optional soft dependencies, see "ItemsAdder (optional)" and "SimpleVoiceChat (optional)".
 
 ## Building
 
@@ -57,6 +57,7 @@ The team size sets how many players a new team has at most, 2 by default (`match
 | `/tournament team` | `tournament.view` | everyone | Opens the team choice again for a registered player, see "Choosing a team" |
 | `/tournament playagain` | `tournament.view` | the players of a finished auto match | Registers the player again while the question "Play again?" after an auto match is open, see "Auto match mode" |
 | `/tournament vote` | none | the players of the voting team | Opens the vote on who fights again while the larger team of a match votes, see "Teams with different numbers of players online" |
+| none | `tournament.voice.bypass` | op | The fighters of a running match hear this player in SimpleVoiceChat, see "SimpleVoiceChat (optional)" |
 
 The bracket menu shows a tile for every match of a round with its two teams and whether it waits for its teams, is ready to be played, runs or was won, and it names the champion once the tournament is over. It opens on the round of the running match, "Previous round" and "Next round" turn the pages. It only shows the bracket: a click on a match does nothing and nothing can be taken out. It reads the bracket when it opens and when the round is changed, an open menu does not follow a match that is decided meanwhile. The tile "Bracket" in the main menu of `/tournament` opens it as well, with a tile back to the main menu. Every other menu needs `tournament.admin`.
 
@@ -206,6 +207,12 @@ The team choice is closed while a tournament is running or paused. A team cannot
 | `sidebar.enabled` | `true` | Every player inside the area of effect sees the placement as a sidebar |
 | `board.enabled` | `true` | The standings board at the tribune is shown, false removes it and keeps its place |
 
+`voice-chat`, see "SimpleVoiceChat (optional)":
+
+| Value | Default | Effect |
+| --- | --- | --- |
+| `enabled` | `true` | The fighters of a running match only hear the fighters in SimpleVoiceChat, false lets everybody hear everybody |
+
 Changes can be applied while the server runs with the "Reload config.yml" item in the main menu of `/tournament`. A changed `team-size` is taken over only under the rules of the team menu, otherwise the old size stays and the log and the online admins read why. At the start of the server the value of `config.yml` is always taken over, also during a restored tournament; a team with more players is then named in the log and to the online admins and keeps its players. The reload leaves the calculated fight area, the spawns, the border blocks, the teams and a running match untouched. A value that cannot be used falls back to its default, the log and the answer of the reload name it.
 
 ## Files in the plugin folder
@@ -281,6 +288,18 @@ When the file cannot be written the player keeps the inventory, the plugin tries
 Creative admins can put items into chests inside the area. Those chests belong to the arena, the cleaning resets the ones inside the fight area.
 
 `arena.area-inventory.enabled: false` in `config.yml` turns it off. "Reload config.yml" then gives every inventory back at once.
+
+## SimpleVoiceChat (optional)
+
+When SimpleVoiceChat runs on the server and `voice-chat.enabled` is `true`, a running match keeps the fighters free of distraction:
+
+- The fighters hear the other fighters, their own team and the opponents, and players with `tournament.voice.bypass` (default: operators). Everybody else is muted for them.
+- Everybody who does not fight still hears the fighters as usual.
+- A fighter who is out of the round hears his team and the spectators again. His teammates still hear him, the opponents no longer hear him and he no longer hears them.
+- Reserves left out of the chosen fighters count as spectators.
+- At the start of the match every fighter leaves his group, and joining or creating a group is refused until the match is over.
+
+This lasts from the start of the match through the breaks between the rounds until the match is over or cancelled. Every fighter reads once per match what he hears. The log names SimpleVoiceChat at the start of the server when it is used. Built against `voicechat-api` 2.6.0, tested rules for SimpleVoiceChat 2.6.x.
 
 ## ItemsAdder (optional)
 
