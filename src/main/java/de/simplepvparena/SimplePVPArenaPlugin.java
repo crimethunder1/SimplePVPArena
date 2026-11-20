@@ -161,6 +161,8 @@ import de.simplepvparena.visual.CustomVisuals;
 import de.simplepvparena.visual.CustomVisualsSelection;
 import de.simplepvparena.intro.VersusIntroService;
 import de.simplepvparena.listener.VersusIntroListener;
+import de.simplepvparena.listener.PlacedBlockListener;
+import de.simplepvparena.arena.PlacedBlockTracker;
 import de.simplepvparena.visual.ItemsAdderContentInstaller;
 import de.simplepvparena.visual.ItemsAdderVisuals;
 import de.simplepvparena.voice.PlayerVoiceNotices;
@@ -198,6 +200,7 @@ public final class SimplePVPArenaPlugin extends JavaPlugin {
     private static final String CONFIGURATION_FILE_NAME = "config.yml";
     private static final long VISUALS_READINESS_CHECK_PERIOD_TICKS = 20L;
     private static final String ITEMS_ADDER_ZIP_COMMAND = "iazip";
+    private static final long ITEMS_ADDER_ZIP_DELAY_TICKS = 100L;
     private static final long ITEMS_ADDER_READINESS_WARNING_TICKS = 20L * 60L;
     private static final long STATION_BUTTON_CHECK_PERIOD_TICKS = 100L;
     private static final long STATION_COUNTER_PERIOD_TICKS = 20L;
@@ -851,9 +854,6 @@ public final class SimplePVPArenaPlugin extends JavaPlugin {
             }
             return;
         }
-        if (customVisuals.isReady() && itemsAdderContentChanged) {
-            onItemsAdderLoaded();
-        }
         getServer().getScheduler().runTaskLater(this, () -> {
             if (!customVisuals.isReady()) {
                 getLogger().warning(Messages.text(PluginMessage.ITEMS_ADDER_NOT_READY));
@@ -867,10 +867,10 @@ public final class SimplePVPArenaPlugin extends JavaPlugin {
             return;
         }
         itemsAdderZipRequested = true;
-        getServer().getScheduler().runTask(this, () -> {
+        getServer().getScheduler().runTaskLater(this, () -> {
             getLogger().info(Messages.text(PluginMessage.ITEMS_ADDER_PACK_REBUILT));
             getServer().dispatchCommand(getServer().getConsoleSender(), ITEMS_ADDER_ZIP_COMMAND);
-        });
+        }, ITEMS_ADDER_ZIP_DELAY_TICKS);
     }
 
     private CustomVisuals createItemsAdderVisuals() {
@@ -944,6 +944,10 @@ public final class SimplePVPArenaPlugin extends JavaPlugin {
                 new PlayerConnectionListener(matchService, spectatorService, arenaRegistry,
                         borderSelectorModes, kitService, getLogger()), this);
         getServer().getPluginManager().registerEvents(new PlayerDeathListener(matchService), this);
+        PlacedBlockTracker placedBlockTracker = new PlacedBlockTracker(getServer(), getLogger()::info);
+        matchService.setPlacedBlockReset(placedBlockTracker::restoreAll);
+        getServer().getPluginManager().registerEvents(
+                new PlacedBlockListener(matchService, arenaRegistry, placedBlockTracker), this);
         getServer().getPluginManager().registerEvents(new VersusIntroListener(versusIntroService), this);
         getServer().getPluginManager().registerEvents(
                 new PlayerRespawnListener(this, matchService, spectatorService, arenaRegistry), this);

@@ -100,6 +100,7 @@ public final class MatchService {
     private Consumer<String> adminNotifier = message -> { };
     private Consumer<Player> tribuneArrivalHandler = player -> { };
     private MatchIntro matchIntro = MatchIntro.NONE;
+    private Runnable placedBlockReset = () -> { };
     private final Set<UUID> playersAwaitingRespawn = new HashSet<>();
     private Consumer<Player> deadPlayerRespawner = player -> player.spigot().respawn();
     private @Nullable RoundCleaning roundCleaning;
@@ -157,6 +158,10 @@ public final class MatchService {
 
     public void setFighterChangeListener(Runnable fighterChangeListener) {
         this.fighterChangeListener = Objects.requireNonNull(fighterChangeListener, "fighterChangeListener");
+    }
+
+    public void setPlacedBlockReset(Runnable placedBlockReset) {
+        this.placedBlockReset = Objects.requireNonNull(placedBlockReset, "placedBlockReset");
     }
 
     public void setMatchIntro(MatchIntro matchIntro) {
@@ -285,6 +290,15 @@ public final class MatchService {
             plugin.getLogger().log(Level.WARNING, "The intro of match " + match.getMatchId()
                     + " failed, the first round starts without it", failure);
             return 0;
+        }
+    }
+
+    private void resetPlacedBlocks() {
+        try {
+            placedBlockReset.run();
+        } catch (RuntimeException failure) {
+            plugin.getLogger().log(Level.WARNING, "The blocks placed during the match could not be removed",
+                    failure);
         }
     }
 
@@ -495,6 +509,7 @@ public final class MatchService {
         Match cancelledMatch = activeMatch;
         haltedMatch = null;
         stopIntro();
+        resetPlacedBlocks();
         unequalTeamVoteService.cancel();
         stopRoundTimer();
         stopStartAnimation();
@@ -583,6 +598,7 @@ public final class MatchService {
         reconnectWindowsUsedThisRound.clear();
         stopStartAnimation();
         removeTemporaryEntities(match);
+        resetPlacedBlocks();
         Set<UUID> firstTeamPlayers = collectFighters(match, match.getFirstTeam());
         Set<UUID> secondTeamPlayers = collectFighters(match, match.getSecondTeam());
         match.beginRound(firstTeamPlayers, secondTeamPlayers);
@@ -825,6 +841,8 @@ public final class MatchService {
             for (Player player : collectOnlinePlayers(collectMembersWhoMayFight(match, team))) {
                 whenAlive(player, alive -> {
                     try {
+                        alive.getInventory().clear();
+                        alive.setItemOnCursor(null);
                         spectatorService.sendToTribune(alive);
                     } catch (RuntimeException failure) {
                         plugin.getLogger().log(Level.WARNING, "The fighter " + alive.getName()
@@ -858,6 +876,7 @@ public final class MatchService {
     private void finishMatch(Match match, String winnerTeamName, boolean decidedByAnAdmin) {
         haltedMatch = null;
         stopIntro();
+        resetPlacedBlocks();
         unequalTeamVoteService.cancel();
         stopRoundTimer();
         stopStartAnimation();

@@ -23,6 +23,7 @@ public final class PlayerDeathListener implements Listener {
         if (!matchService.isActiveFighter(player.getUniqueId())) {
             return;
         }
+        event.setKeepInventory(false);
         event.getDrops().clear();
         event.setDroppedExp(0);
         matchService.handlePlayerEliminated(player.getUniqueId());

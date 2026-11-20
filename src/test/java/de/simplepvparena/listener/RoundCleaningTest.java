@@ -66,7 +66,8 @@ class RoundCleaningTest {
         roundCleaning.finish();
         harness.advanceTicks(ROUND_RESET_DELAY_TICKS - 1);
         assertEquals(1, match.getRoundNumber(), "the pause between the rounds runs after the cleaning");
-        assertEquals(clearsBeforeThePoint, alphaFighter.inventoryClearCount(), "the kit is kept until the round");
+        assertEquals(clearsBeforeThePoint + 1, alphaFighter.inventoryClearCount(),
+                "the inventory is emptied once on the tribune and the kit comes back with the round");
 
         harness.advanceTicks(1);
         assertEquals(2, match.getRoundNumber());
@@ -79,7 +80,7 @@ class RoundCleaningTest {
     }
 
     @Test
-    void bringsTheLivingAndTheEliminatedFightersOfBothTeamsToTheTribuneWithoutTakingTheirKit() {
+    void bringsTheLivingAndTheEliminatedFightersOfBothTeamsToTheTribuneWithAnEmptyInventory() {
         startMatch();
         ArenaMatchHarness.FakePlayer bystander = harness.addPlayer("Bystander");
         Location insideTheFightArea = harness.at(5.5D, 5.5D);
@@ -93,7 +94,8 @@ class RoundCleaningTest {
             assertEquals(TRIBUNE_COORDINATE, fighter.location().getZ(), fighter.name() + " is on the tribune");
             assertEquals(GameMode.ADVENTURE, fighter.gameMode(), fighter.name());
         }
-        assertEquals(clearsBeforeThePoint, alphaFighter.inventoryClearCount(), "nobody loses the kit");
+        assertEquals(clearsBeforeThePoint + 1, alphaFighter.inventoryClearCount(),
+                "every fighter waits on the tribune with an empty inventory");
         assertEquals(insideTheFightArea, bystander.location(), "a spectator in the fight area stays where it is");
     }
 
@@ -360,7 +362,8 @@ class RoundCleaningTest {
             assertEquals(TRIBUNE_COORDINATE, fighter.location().getX(), fighter.name() + " is on the tribune");
             assertEquals(GameMode.ADVENTURE, fighter.gameMode(), fighter.name());
         }
-        assertEquals(clearsBeforeTheDraw, alphaFighter.inventoryClearCount(), "nobody loses the kit");
+        assertEquals(clearsBeforeTheDraw + 1, alphaFighter.inventoryClearCount(),
+                "every fighter waits on the tribune with an empty inventory");
         harness.advanceTicks(ROUND_RESET_DELAY_TICKS * 5);
         assertEquals(1, match.getRoundNumber(), "no round begins while the arena is cleaned");
         assertEquals(1, roundCleaning.startCount, "the draw cleans once");

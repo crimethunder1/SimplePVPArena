@@ -39,8 +39,6 @@ import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 
 import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.Set;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -121,16 +119,13 @@ public final class VersusIntroService {
     public int play(Match match) {
         stop();
         try {
-            Set<UUID> teamMembers = new HashSet<>();
-            match.getTeams().forEach(team -> teamMembers.addAll(team.getMemberUniqueIds()));
             List<Player> audience = audienceSource.apply(match).stream()
                     .filter(player -> player.isOnline() && !player.isDead())
-                    .filter(player -> !teamMembers.contains(player.getUniqueId()))
                     .filter(player -> !activeFighter.test(player.getUniqueId()))
                     .toList();
             if (audience.isEmpty()) {
                 plugin.getLogger().info("The versus intro of match " + match.getMatchId()
-                        + " is skipped: nobody outside of the two teams watches in the area of effect");
+                        + " is skipped: nobody is online in the area of effect");
                 return 0;
             }
             Optional<Location> centre = findStageCentre(match);
