@@ -16,7 +16,9 @@ public final class BracketBoardGeometry {
     public static final float HEADER_TOP = HEIGHT - FRAME - 0.08F;
     public static final float HEADER_SCALE = 0.5F;
     public static final float MAXIMUM_TREE_SCALE = 0.6F;
+    public static final float MINIMUM_TREE_SCALE = 0.35F;
 
+    static final int LINES_PER_SCROLL_BLOCK = 4;
     static final float PIXELS_PER_BLOCK = 40.0F;
     static final int LINE_PIXELS = 10;
     static final int PADDING_PIXELS = 2;
@@ -29,6 +31,13 @@ public final class BracketBoardGeometry {
 
     public static float textHeight(int lineCount, float scale) {
         return (lineCount * LINE_PIXELS + PADDING_PIXELS) * scale / PIXELS_PER_BLOCK;
+    }
+
+    public static int visibleBodyLines(int columnHeaderLines) {
+        int fittingLines = (int) Math.floor(((TREE_TOP - TREE_BOTTOM) * PIXELS_PER_BLOCK / MINIMUM_TREE_SCALE
+                - PADDING_PIXELS) / LINE_PIXELS);
+        int bodyLines = fittingLines - columnHeaderLines;
+        return Math.max(LINES_PER_SCROLL_BLOCK, bodyLines / LINES_PER_SCROLL_BLOCK * LINES_PER_SCROLL_BLOCK);
     }
 
     public static float treeScale(int lineCount) {

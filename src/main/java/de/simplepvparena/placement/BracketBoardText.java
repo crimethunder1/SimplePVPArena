@@ -22,6 +22,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
+import java.util.function.LongSupplier;
 import java.util.function.Supplier;
 
 @NullMarked
@@ -38,6 +39,7 @@ public final class BracketBoardText {
     private static final int COLUMN_HEADER_LINES = 2;
     private static final int LINES_PER_FIRST_ROUND_MATCH = 2;
     private static final int ROUNDS_WITH_A_NAME = 3;
+    static final long PAGE_MILLIS = 5000L;
 
     private static final TextColor TITLE_COLOUR = TournamentMessages.PREFIX_COLOUR;
     private static final TextColor DETAIL_COLOUR = TournamentMessages.DETAIL_COLOUR;
@@ -55,16 +57,18 @@ public final class BracketBoardText {
     private final Supplier<Optional<String>> runningMatchIdSource;
     private final Function<String, Optional<Team>> teamLookup;
     private final Supplier<Optional<String>> titleImageSource;
+    private final LongSupplier clock;
 
     public BracketBoardText(Supplier<TournamentState> stateSource, Supplier<Optional<Bracket>> bracketSource,
                             Supplier<Optional<String>> runningMatchIdSource,
                             Function<String, Optional<Team>> teamLookup,
-                            Supplier<Optional<String>> titleImageSource) {
+                            Supplier<Optional<String>> titleImageSource, LongSupplier clock) {
         this.stateSource = Objects.requireNonNull(stateSource, "stateSource");
         this.bracketSource = Objects.requireNonNull(bracketSource, "bracketSource");
         this.runningMatchIdSource = Objects.requireNonNull(runningMatchIdSource, "runningMatchIdSource");
         this.teamLookup = Objects.requireNonNull(teamLookup, "teamLookup");
         this.titleImageSource = Objects.requireNonNull(titleImageSource, "titleImageSource");
+        this.clock = Objects.requireNonNull(clock, "clock");
     }
 
     public BracketBoardView build() {
@@ -99,7 +103,7 @@ public final class BracketBoardText {
                     .orElseGet(() -> Component.text(Messages.text(PlacementMessage.BRACKET_NEXT_OPEN),
                             DETAIL_COLOUR)));
         }
-        return buildTree(bracket, joinLines(header), header.size(), running, next);
+        return buildTree(bracket, header, running, next);
     }
 
     static Optional<BracketMatch> findNextMatch(Bracket bracket, Optional<BracketMatch> running) {
@@ -111,11 +115,34 @@ public final class BracketBoardText {
                 .or(() -> waiting.stream().findFirst());
     }
 
-    private BracketBoardView buildTree(Bracket bracket, Component header, int headerLineCount,
-                                       Optional<BracketMatch> running, Optional<BracketMatch> next) {
+    static List<Integer> pageOffsets(int bodyLineCount, int visibleLineCount) {
+        if (bodyLineCount <= visibleLineCount) {
+            return List.of(0);
+        }
+        int stride = Math.max(BracketBoardGeometry.LINES_PER_SCROLL_BLOCK, visibleLineCount / 2
+                / BracketBoardGeometry.LINES_PER_SCROLL_BLOCK * BracketBoardGeometry.LINES_PER_SCROLL_BLOCK);
+        int lastOffset = bodyLineCount - visibleLineCount;
+        List<Integer> offsets = new ArrayList<>();
+        for (int offset = 0; offset < lastOffset; offset += stride) {
+            offsets.add(offset);
+        }
+        offsets.add(lastOffset);
+        return List.copyOf(offsets);
+    }
+
+    private BracketBoardView buildTree(Bracket bracket, List<Component> header, Optional<BracketMatch> running,
+                                       Optional<BracketMatch> next) {
         List<List<BracketMatch>> rounds = bracket.getRounds();
         int bodyLineCount = rounds.get(0).size() * LINES_PER_FIRST_ROUND_MATCH;
-        int lineCount = bodyLineCount + COLUMN_HEADER_LINES;
+        int visibleLineCount = Math.min(bodyLineCount, BracketBoardGeometry.visibleBodyLines(COLUMN_HEADER_LINES));
+        List<Integer> offsets = pageOffsets(bodyLineCount, visibleLineCount);
+        int page = (int) Math.floorMod(clock.getAsLong() / PAGE_MILLIS, (long) offsets.size());
+        int offset = offsets.get(page);
+        if (offsets.size() > 1) {
+            header.add(Component.text(Messages.text(PlacementMessage.BRACKET_PAGE, Placeholder.of("page", page + 1),
+                    Placeholder.of("pages", offsets.size())), DETAIL_COLOUR));
+        }
+        int lineCount = visibleLineCount + COLUMN_HEADER_LINES;
         int columnCount = rounds.size() + 1;
         int nameLength = BracketBoardGeometry.maximumNameLength(columnCount, lineCount);
         List<Component> columns = new ArrayList<>();
@@ -130,12 +157,13 @@ public final class BracketBoardText {
                 body[firstLine] = teamLine(match, BracketMatch.FIRST_SLOT_INDEX, connectorColour, nameLength);
                 body[firstLine + 1] = teamLine(match, BracketMatch.SECOND_SLOT_INDEX, connectorColour, nameLength);
             }
-            columns.add(column(roundName(roundIndex, rounds.size()), body));
+            columns.add(column(roundName(roundIndex, rounds.size()), body, offset, visibleLineCount));
         }
         Component[] championBody = blankBody(bodyLineCount);
         championBody[rounds.get(0).size() - 1] = championLine(bracket.getChampionTeamName(), nameLength);
-        columns.add(column(Messages.text(PlacementMessage.BRACKET_WINNER_COLUMN), championBody));
-        return new BracketBoardView(header, headerLineCount, columns, lineCount);
+        columns.add(column(Messages.text(PlacementMessage.BRACKET_WINNER_COLUMN), championBody, offset,
+                visibleLineCount));
+        return new BracketBoardView(joinLines(header), header.size(), columns, lineCount);
     }
 
     private static TextColor connectorColour(BracketMatch match, Optional<BracketMatch> running,
@@ -208,11 +236,11 @@ public final class BracketBoardText {
                         toTeam(match.getSecondTeamName().orElseThrow())));
     }
 
-    private static Component column(String title, Component[] body) {
+    private static Component column(String title, Component[] body, int offset, int visibleLineCount) {
         List<Component> lines = new ArrayList<>();
         lines.add(Component.text(title, TITLE_COLOUR, TextDecoration.BOLD));
         lines.add(Component.text(BLANK_LINE));
-        lines.addAll(Arrays.asList(body));
+        lines.addAll(Arrays.asList(body).subList(offset, offset + visibleLineCount));
         return joinLines(lines);
     }
 

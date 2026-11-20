@@ -6,10 +6,12 @@ import de.simplepvparena.tournament.Bracket;
 import de.simplepvparena.tournament.TournamentState;
 import org.junit.jupiter.api.Test;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class BracketBoardTextTest {
 
@@ -17,8 +19,9 @@ class BracketBoardTextTest {
     private Optional<Bracket> bracket = Optional.empty();
     private Optional<String> runningMatchId = Optional.empty();
     private Optional<String> titleImage = Optional.empty();
+    private long now;
     private final BracketBoardText boardText = new BracketBoardText(() -> state, () -> bracket,
-            () -> runningMatchId, teamName -> Optional.empty(), () -> titleImage);
+            () -> runningMatchId, teamName -> Optional.empty(), () -> titleImage, () -> now);
 
     @Test
     @UseLanguage("de")
@@ -109,13 +112,46 @@ class BracketBoardTextTest {
     }
 
     @Test
-    void fitsEveryColumnIntoTheTreeArea() {
-        int lineCount = 66;
-        float scale = BracketBoardGeometry.treeScale(lineCount);
+    void keepsTheTextReadableAndFitsTheVisibleLinesIntoTheTreeArea() {
+        int visibleLines = BracketBoardGeometry.visibleBodyLines(2);
+        float scale = BracketBoardGeometry.treeScale(visibleLines + 2);
 
-        assertEquals(BracketBoardGeometry.TREE_TOP - BracketBoardGeometry.TREE_BOTTOM,
-                BracketBoardGeometry.textHeight(lineCount, scale), 0.0001F);
+        assertEquals(28, visibleLines);
+        assertTrue(scale >= BracketBoardGeometry.MINIMUM_TREE_SCALE);
+        assertTrue(BracketBoardGeometry.textHeight(visibleLines + 2, scale)
+                <= BracketBoardGeometry.TREE_TOP - BracketBoardGeometry.TREE_BOTTOM + 0.0001F);
         assertEquals(BracketBoardGeometry.MAXIMUM_TREE_SCALE, BracketBoardGeometry.treeScale(6));
+    }
+
+    @Test
+    void splitsALargeTreeIntoOverlappingPagesThatEndAtTheBottom() {
+        assertEquals(List.of(0), BracketBoardText.pageOffsets(16, 28));
+        assertEquals(List.of(0, 4), BracketBoardText.pageOffsets(32, 28));
+        assertEquals(List.of(0, 12, 24, 36), BracketBoardText.pageOffsets(64, 28));
+    }
+
+    @Test
+    @UseLanguage("de")
+    void scrollsThroughABracketThatDoesNotFitAndStartsOverAtTheTop() {
+        List<String> teams = new ArrayList<>();
+        for (int number = 1; number <= 32; number++) {
+            teams.add(String.format("T%02d", number));
+        }
+        bracket = Optional.of(Bracket.createSingleElimination(teams));
+
+        BracketBoardView firstPage = boardText.build();
+        now = BracketBoardText.PAGE_MILLIS;
+        BracketBoardView secondPage = boardText.build();
+        now = 2 * BracketBoardText.PAGE_MILLIS;
+        BracketBoardView firstPageAgain = boardText.build();
+
+        assertTrue(plain(firstPage.header()).endsWith("\nBaum: Teil 1 von 2"));
+        assertTrue(plain(secondPage.header()).endsWith("\nBaum: Teil 2 von 2"));
+        assertEquals(30, firstPage.columnLineCount());
+        assertTrue(plain(firstPage.columns().get(0)).startsWith("Runde 1\n \n┌ T01\n└ T32\n┌ T16\n"));
+        assertTrue(plain(secondPage.columns().get(0)).startsWith("Runde 1\n \n┌ T08\n└ T25\n"));
+        assertEquals(30, plain(secondPage.columns().get(0)).split("\n", -1).length);
+        assertEquals(firstPage, firstPageAgain);
     }
 
     private static String plain(net.kyori.adventure.text.Component text) {

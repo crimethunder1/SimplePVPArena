@@ -502,7 +502,7 @@ public final class SimplePVPArenaPlugin extends JavaPlugin {
         BracketBoardText bracketBoardText = new BracketBoardText(tournamentManager::getState,
                 tournamentManager::getBracket,
                 () -> matchService.getActiveMatch().filter(match -> !match.isAutoMatch()).map(Match::getMatchId),
-                teamRegistry::findTeam, configuredVisuals::findBracketTitleImage);
+                teamRegistry::findTeam, configuredVisuals::findBracketTitleImage, System::currentTimeMillis);
         bracketBoardDisplays = new BracketBoardDisplays(this, bracketBoards, getServer()::getWorld,
                 bracketBoardText::build, configuredVisuals::findMachinePart);
         bracketBoardService = new BracketBoardService(this, bracketBoards, bracketBoardDisplays,

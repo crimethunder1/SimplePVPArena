@@ -2010,6 +2010,7 @@ placement:
     next: 'Next: {firstTeam} against {secondTeam}'
     next-open: 'Next: not decided yet'
     champion: 'Winner: {team}'
+    page: 'Bracket: part {page} of {pages}'
     round: 'Round {round}'
     quarter-final: 'Quarter final'
     semi-final: 'Semi final'

@@ -30,6 +30,7 @@ public enum PlacementMessage implements MessageKey {
     BRACKET_NEXT("placement.bracket.next", "firstTeam", "secondTeam"),
     BRACKET_NEXT_OPEN("placement.bracket.next-open"),
     BRACKET_CHAMPION("placement.bracket.champion", "team"),
+    BRACKET_PAGE("placement.bracket.page", "page", "pages"),
     BRACKET_ROUND("placement.bracket.round", "round"),
     BRACKET_QUARTER_FINAL("placement.bracket.quarter-final"),
     BRACKET_SEMI_FINAL("placement.bracket.semi-final"),

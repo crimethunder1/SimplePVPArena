@@ -2011,6 +2011,7 @@ placement:
     next: 'Danach: {firstTeam} gegen {secondTeam}'
     next-open: 'Danach: steht noch nicht fest'
     champion: 'Sieger: {team}'
+    page: 'Baum: Teil {page} von {pages}'
     round: 'Runde {round}'
     quarter-final: 'Viertelfinale'
     semi-final: 'Halbfinale'
