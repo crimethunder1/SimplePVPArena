@@ -47,6 +47,12 @@ import static de.simplepvparena.placement.BracketBoardGeometry.TREE_TOP;
 public final class BracketBoardDisplays {
 
     public static final String MARKER_KEY_NAME = "bracket_board_display";
+    public static final String MODEL = "bracket_board";
+    public static final String GLOW_MODEL = "bracket_board_glow";
+    public static final float MODEL_SCALE = 4.0F;
+    public static final float MODEL_ANCHOR_Y = 2.0F;
+    public static final float MODEL_ANCHOR_Z = -0.85F;
+    private static final Vector3f MODEL_ANCHOR = new Vector3f(0.0F, MODEL_ANCHOR_Y, MODEL_ANCHOR_Z);
 
     private static final byte MARKER_VALUE = 1;
     private static final int CHUNK_SHIFT = 4;
@@ -72,11 +78,14 @@ public final class BracketBoardDisplays {
     private final Function<String, World> worldLookup;
     private final Supplier<BracketBoardView> viewSource;
     private final Function<String, Optional<ItemStack>> partLook;
+    private final Function<String, Optional<ItemStack>> modelLook;
     private final Map<BracketBoard, BoardDisplay> displays = new LinkedHashMap<>();
 
     public BracketBoardDisplays(Plugin plugin, BracketBoards boards, Function<String, World> worldLookup,
                                 Supplier<BracketBoardView> viewSource,
-                                Function<String, Optional<ItemStack>> partLook) {
+                                Function<String, Optional<ItemStack>> partLook,
+                                Function<String, Optional<ItemStack>> modelLook) {
+        this.modelLook = Objects.requireNonNull(modelLook, "modelLook");
         this.markerKey = new NamespacedKey(Objects.requireNonNull(plugin, "plugin"), MARKER_KEY_NAME);
         this.boards = Objects.requireNonNull(boards, "boards");
         this.worldLookup = Objects.requireNonNull(worldLookup, "worldLookup");
@@ -160,7 +169,40 @@ public final class BracketBoardDisplays {
         Quaternionf turn = turnOf(board.facing());
         Location origin = new Location(world, board.frontCentreX(), board.blockY(), board.frontCentreZ());
         List<Entity> frame = new ArrayList<>();
+        Optional<ItemStack> model = modelLook.apply(MODEL);
+        if (model.isPresent()) {
+            frame.add(model(origin, turn, model.get(), false));
+            modelLook.apply(GLOW_MODEL).ifPresent(glow -> frame.add(model(origin, turn, glow, true)));
+        } else {
+            addFrameParts(frame, origin, turn);
+        }
 
+        TextDisplay header = world.spawn(origin, TextDisplay.class, text -> {
+            prepareText(text);
+            text.setAlignment(TextDisplay.TextAlignment.CENTER);
+            text.setLineWidth(HEADER_LINE_WIDTH);
+            text.text(view.header());
+            text.setTransformation(headerTransformation(turn, view));
+        });
+        List<TextDisplay> columns = new ArrayList<>(spawnColumns(origin, turn, view));
+        displays.put(board, new BoardDisplay(origin, List.copyOf(frame), header, columns, view));
+    }
+
+    private Entity model(Location origin, Quaternionf turn, ItemStack item, boolean bright) {
+        Transformation transformation = new Transformation(turn.transform(new Vector3f(MODEL_ANCHOR)),
+                new Quaternionf(turn), new Vector3f(MODEL_SCALE), new Quaternionf());
+        return origin.getWorld().spawn(origin, ItemDisplay.class, display -> {
+            mark(display);
+            display.setItemStack(item);
+            display.setItemDisplayTransform(ItemDisplay.ItemDisplayTransform.NONE);
+            display.setTransformation(transformation);
+            if (bright) {
+                display.setBrightness(FULL_BRIGHTNESS);
+            }
+        });
+    }
+
+    private void addFrameParts(List<Entity> frame, Location origin, Quaternionf turn) {
         frame.add(block(origin, Material.NETHERITE_BLOCK, PART_METAL, box(turn,
                 new Vector3f(-HALF_WIDTH + 0.01F, 0.01F, BACK + 0.01F),
                 new Vector3f(2 * HALF_WIDTH - 0.02F, HEIGHT - 0.02F, PANEL_FRONT - BACK - 0.01F)), false));
@@ -187,16 +229,6 @@ public final class BracketBoardDisplays {
                     new Vector3f(lampX, HEIGHT, TRIM_FRONT - LAMP_SIZE - 0.02F),
                     new Vector3f(LAMP_SIZE, LAMP_SIZE, LAMP_SIZE)), true));
         }
-
-        TextDisplay header = world.spawn(origin, TextDisplay.class, text -> {
-            prepareText(text);
-            text.setAlignment(TextDisplay.TextAlignment.CENTER);
-            text.setLineWidth(HEADER_LINE_WIDTH);
-            text.text(view.header());
-            text.setTransformation(headerTransformation(turn, view));
-        });
-        List<TextDisplay> columns = new ArrayList<>(spawnColumns(origin, turn, view));
-        displays.put(board, new BoardDisplay(origin, List.copyOf(frame), header, columns, view));
     }
 
     private List<TextDisplay> spawnColumns(Location origin, Quaternionf turn, BracketBoardView view) {

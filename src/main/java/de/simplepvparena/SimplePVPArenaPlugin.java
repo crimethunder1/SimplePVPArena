@@ -393,7 +393,8 @@ public final class SimplePVPArenaPlugin extends JavaPlugin {
                 serverModeSetting::getServerMode);
         placementBoard = new PlacementBoard(this, arenaRegistry.getArena()::getStandingsBoard, getServer()::getWorld,
                 new PaperPlacementBoardEntities(this, part -> configuredVisuals == null ? Optional.empty()
-                        : configuredVisuals.findMachinePart(part)),
+                        : configuredVisuals.findMachinePart(part), model -> configuredVisuals == null
+                        ? Optional.empty() : configuredVisuals.findBoardModel(model)),
                 placementService::findStandings, placementBoardText::build);
         matchService.setMatchProgressListener(this::onPlacementChanged);
         arenaSetupService.setStandingsBoardListener(placementBoard::refresh);
@@ -504,7 +505,7 @@ public final class SimplePVPArenaPlugin extends JavaPlugin {
                 () -> matchService.getActiveMatch().filter(match -> !match.isAutoMatch()).map(Match::getMatchId),
                 teamRegistry::findTeam, configuredVisuals::findBracketTitleImage, System::currentTimeMillis);
         bracketBoardDisplays = new BracketBoardDisplays(this, bracketBoards, getServer()::getWorld,
-                bracketBoardText::build, configuredVisuals::findMachinePart);
+                bracketBoardText::build, configuredVisuals::findMachinePart, configuredVisuals::findBoardModel);
         bracketBoardService = new BracketBoardService(this, bracketBoards, bracketBoardDisplays,
                 new FileBracketBoardStorage(new File(getDataFolder(), FileBracketBoardStorage.FILE_NAME).toPath()),
                 getLogger()::warning);

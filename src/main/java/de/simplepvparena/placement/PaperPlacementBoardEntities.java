@@ -38,6 +38,9 @@ public final class PaperPlacementBoardEntities implements PlacementBoardEntities
     public static final String MARKER_KEY_NAME = "placement_board_display";
     public static final String PART_MARKER_KEY_NAME = "placement_board_part";
     public static final int LINE_WIDTH = 230;
+    public static final String MODEL = "standings_board";
+    public static final String GLOW_MODEL = "standings_board_glow";
+    public static final float MODEL_SCALE = 4.0F;
 
     private static final byte MARKER_VALUE = 1;
     private static final double CENTRE_ABOVE_THE_LOCATION = 4.0D;
@@ -79,6 +82,7 @@ public final class PaperPlacementBoardEntities implements PlacementBoardEntities
     private final NamespacedKey markerKey;
     private final NamespacedKey partKey;
     private final Function<String, Optional<ItemStack>> partLook;
+    private final Function<String, Optional<ItemStack>> modelLook;
     private final Map<UUID, Cube> cubes = new HashMap<>();
 
     public PaperPlacementBoardEntities(Plugin plugin) {
@@ -86,10 +90,16 @@ public final class PaperPlacementBoardEntities implements PlacementBoardEntities
     }
 
     public PaperPlacementBoardEntities(Plugin plugin, Function<String, Optional<ItemStack>> partLook) {
+        this(plugin, partLook, model -> Optional.empty());
+    }
+
+    public PaperPlacementBoardEntities(Plugin plugin, Function<String, Optional<ItemStack>> partLook,
+                                       Function<String, Optional<ItemStack>> modelLook) {
         this.plugin = Objects.requireNonNull(plugin, "plugin");
         this.markerKey = new NamespacedKey(plugin, MARKER_KEY_NAME);
         this.partKey = new NamespacedKey(plugin, PART_MARKER_KEY_NAME);
         this.partLook = Objects.requireNonNull(partLook, "partLook");
+        this.modelLook = Objects.requireNonNull(modelLook, "modelLook");
     }
 
     @Override
@@ -97,44 +107,19 @@ public final class PaperPlacementBoardEntities implements PlacementBoardEntities
         Location centre = location.clone().add(0.0D, CENTRE_ABOVE_THE_LOCATION, 0.0D);
         centre.setYaw(0.0F);
         centre.setPitch(0.0F);
-        Quaternionf flat = new Quaternionf();
         List<Entity> parts = new ArrayList<>();
-        Entity core = part(centre, Material.NETHERITE_BLOCK, PART_METAL, box(flat,
-                new Vector3f(-HALF_WIDTH + 0.01F, -HALF_HEIGHT, -HALF_WIDTH + 0.01F),
-                new Vector3f(2 * HALF_WIDTH - 0.02F, 2 * HALF_HEIGHT, 2 * HALF_WIDTH - 0.02F)), false, markerKey);
-        parts.add(core);
-        parts.add(part(centre, Material.POLISHED_BLACKSTONE, PART_PANEL, box(flat,
-                new Vector3f(-0.8F, HALF_HEIGHT, -0.8F), new Vector3f(1.6F, 0.2F, 1.6F)), false, partKey));
-        parts.add(part(centre, Material.NETHERITE_BLOCK, PART_METAL, box(flat,
-                new Vector3f(-0.5F, HALF_HEIGHT + 0.2F, -0.5F), new Vector3f(1.0F, 0.15F, 1.0F)), false, partKey));
-        for (float antennaX : new float[] {1.9F, -1.96F}) {
-            parts.add(part(centre, Material.IRON_BLOCK, PART_TRIM, box(flat,
-                    new Vector3f(antennaX, HALF_HEIGHT, -0.03F), new Vector3f(0.06F, 1.2F, 0.06F)), false, partKey));
-            parts.add(part(centre, Material.SEA_LANTERN, PART_LAMP, box(flat,
-                    new Vector3f(antennaX - 0.04F, HALF_HEIGHT + 1.2F, -0.07F), new Vector3f(0.14F, 0.14F, 0.14F)),
-                    true, partKey));
+        Optional<ItemStack> model = modelLook.apply(MODEL);
+        Entity core;
+        if (model.isPresent()) {
+            core = model(centre, model.get(), false, markerKey);
+            parts.add(core);
+            modelLook.apply(GLOW_MODEL).ifPresent(glow -> parts.add(model(centre, glow, true, partKey)));
+        } else {
+            core = addFrameParts(parts, centre);
         }
-        addThruster(parts, centre, flat, 0.0F, CENTRE_THRUSTER_SIZE);
         List<TextDisplay> screens = new ArrayList<>();
         for (int side = 0; side < SIDES; side++) {
             Quaternionf turn = sideTurn(side);
-            parts.add(part(centre, Material.BLACK_CONCRETE, PART_GLASS, box(turn,
-                    new Vector3f(-HALF_WIDTH, SCREEN_BOTTOM, HALF_WIDTH),
-                    new Vector3f(2 * HALF_WIDTH, SCREEN_TOP - SCREEN_BOTTOM, 0.06F)), false, partKey));
-            parts.add(part(centre, Material.SEA_LANTERN, PART_LAMP, box(turn,
-                    new Vector3f(-2.85F, -HALF_HEIGHT, 2.98F), new Vector3f(5.7F, 0.1F, 0.04F)), true, partKey));
-            parts.add(part(centre, Material.IRON_BLOCK, PART_TRIM, box(turn,
-                    new Vector3f(2.93F, -HALF_HEIGHT, 2.93F), new Vector3f(0.14F, 2 * HALF_HEIGHT, 0.14F)),
-                    false, partKey));
-            float rimLength = side % 2 == 0 ? 2 * TRIM_HALF_WIDTH : 2 * (TRIM_HALF_WIDTH - TRIM_HEIGHT);
-            for (float rimBottom : new float[] {HALF_HEIGHT, -HALF_HEIGHT - TRIM_HEIGHT}) {
-                parts.add(part(centre, Material.IRON_BLOCK, PART_TRIM, box(turn,
-                        new Vector3f(-rimLength / 2, rimBottom, TRIM_HALF_WIDTH - TRIM_HEIGHT),
-                        new Vector3f(rimLength, TRIM_HEIGHT, TRIM_HEIGHT)), false, partKey));
-            }
-            parts.add(part(centre, Material.SEA_LANTERN, PART_LAMP, box(turn,
-                    new Vector3f(2.5F, HALF_HEIGHT, 2.5F), new Vector3f(0.22F, 0.2F, 0.22F)), true, partKey));
-            addThruster(parts, centre, turn, CORNER_THRUSTER, CORNER_THRUSTER_SIZE);
             TextDisplay screen = centre.getWorld().spawn(centre, TextDisplay.class, display -> {
                 mark(display, partKey);
                 display.setBillboard(Display.Billboard.FIXED);
@@ -161,6 +146,60 @@ public final class PaperPlacementBoardEntities implements PlacementBoardEntities
                 FLAME_PERIOD_TICKS);
         cubes.put(core.getUniqueId(), cube);
         return core;
+    }
+
+    private Entity addFrameParts(List<Entity> parts, Location centre) {
+        Quaternionf flat = new Quaternionf();
+        Entity core = part(centre, Material.NETHERITE_BLOCK, PART_METAL, box(flat,
+                new Vector3f(-HALF_WIDTH + 0.01F, -HALF_HEIGHT, -HALF_WIDTH + 0.01F),
+                new Vector3f(2 * HALF_WIDTH - 0.02F, 2 * HALF_HEIGHT, 2 * HALF_WIDTH - 0.02F)), false, markerKey);
+        parts.add(core);
+        parts.add(part(centre, Material.POLISHED_BLACKSTONE, PART_PANEL, box(flat,
+                new Vector3f(-0.8F, HALF_HEIGHT, -0.8F), new Vector3f(1.6F, 0.2F, 1.6F)), false, partKey));
+        parts.add(part(centre, Material.NETHERITE_BLOCK, PART_METAL, box(flat,
+                new Vector3f(-0.5F, HALF_HEIGHT + 0.2F, -0.5F), new Vector3f(1.0F, 0.15F, 1.0F)), false, partKey));
+        for (float antennaX : new float[] {1.9F, -1.96F}) {
+            parts.add(part(centre, Material.IRON_BLOCK, PART_TRIM, box(flat,
+                    new Vector3f(antennaX, HALF_HEIGHT, -0.03F), new Vector3f(0.06F, 1.2F, 0.06F)), false, partKey));
+            parts.add(part(centre, Material.SEA_LANTERN, PART_LAMP, box(flat,
+                    new Vector3f(antennaX - 0.04F, HALF_HEIGHT + 1.2F, -0.07F), new Vector3f(0.14F, 0.14F, 0.14F)),
+                    true, partKey));
+        }
+        addThruster(parts, centre, flat, 0.0F, CENTRE_THRUSTER_SIZE);
+        for (int side = 0; side < SIDES; side++) {
+            Quaternionf turn = sideTurn(side);
+            parts.add(part(centre, Material.BLACK_CONCRETE, PART_GLASS, box(turn,
+                    new Vector3f(-HALF_WIDTH, SCREEN_BOTTOM, HALF_WIDTH),
+                    new Vector3f(2 * HALF_WIDTH, SCREEN_TOP - SCREEN_BOTTOM, 0.06F)), false, partKey));
+            parts.add(part(centre, Material.SEA_LANTERN, PART_LAMP, box(turn,
+                    new Vector3f(-2.85F, -HALF_HEIGHT, 2.98F), new Vector3f(5.7F, 0.1F, 0.04F)), true, partKey));
+            parts.add(part(centre, Material.IRON_BLOCK, PART_TRIM, box(turn,
+                    new Vector3f(2.93F, -HALF_HEIGHT, 2.93F), new Vector3f(0.14F, 2 * HALF_HEIGHT, 0.14F)),
+                    false, partKey));
+            float rimLength = side % 2 == 0 ? 2 * TRIM_HALF_WIDTH : 2 * (TRIM_HALF_WIDTH - TRIM_HEIGHT);
+            for (float rimBottom : new float[] {HALF_HEIGHT, -HALF_HEIGHT - TRIM_HEIGHT}) {
+                parts.add(part(centre, Material.IRON_BLOCK, PART_TRIM, box(turn,
+                        new Vector3f(-rimLength / 2, rimBottom, TRIM_HALF_WIDTH - TRIM_HEIGHT),
+                        new Vector3f(rimLength, TRIM_HEIGHT, TRIM_HEIGHT)), false, partKey));
+            }
+            parts.add(part(centre, Material.SEA_LANTERN, PART_LAMP, box(turn,
+                    new Vector3f(2.5F, HALF_HEIGHT, 2.5F), new Vector3f(0.22F, 0.2F, 0.22F)), true, partKey));
+            addThruster(parts, centre, turn, CORNER_THRUSTER, CORNER_THRUSTER_SIZE);
+        }
+        return core;
+    }
+
+    private Entity model(Location centre, ItemStack item, boolean bright, NamespacedKey key) {
+        return centre.getWorld().spawn(centre, ItemDisplay.class, display -> {
+            mark(display, key);
+            display.setItemStack(item);
+            display.setItemDisplayTransform(ItemDisplay.ItemDisplayTransform.NONE);
+            display.setTransformation(new Transformation(new Vector3f(), new Quaternionf(),
+                    new Vector3f(MODEL_SCALE), new Quaternionf()));
+            if (bright) {
+                display.setBrightness(FULL_BRIGHTNESS);
+            }
+        });
     }
 
     @Override
