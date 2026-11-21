@@ -20,6 +20,22 @@ match:
   sudden-death-damage-increase-per-second: 1.0
   # When true, the rounds of the final have no time limit and no sudden death.
   disable-sudden-death-in-final: true
+  # Laser ring of sudden death: poles rise along a circle in the arena, lasers connect them and the circle shrinks. Only fighters touching the lasers or standing outside of them take damage, the two sudden-death-damage values above are then unused.
+  laser-zone:
+    # When false, sudden death damages every fighter every second as before.
+    enabled: true
+    # Seconds the circle takes to shrink from the largest circle that fits into the arena down to minimum-radius. At least 1.
+    shrink-seconds: 90
+    # Radius in blocks the circle stops shrinking at. At least 1.5.
+    minimum-radius: 3.0
+    # Seconds between two hits of the same fighter in the lasers. At least 1.
+    damage-interval-seconds: 3
+    # Damage of a hit while touching the lasers, 2.0 are one heart.
+    minimum-damage: 1.0
+    # Damage of a hit at maximum-damage-distance or farther outside the circle.
+    maximum-damage: 4.0
+    # Blocks outside the circle at which a hit reaches maximum-damage, the damage grows evenly up to there in half hearts. At least 0.5.
+    maximum-damage-distance: 6.0
   # Seconds a placed start gate takes to open layer by layer at the start of a round. At least 1.
   start-gate-duration-seconds: 10
   # Seconds of the countdown right before the fight of every round, 0 to 10. The fighters are blind and cannot be hurt, the time limit of the round starts after it. 0 turns it off.

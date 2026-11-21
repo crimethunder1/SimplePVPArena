@@ -160,6 +160,7 @@ import de.simplepvparena.visual.ConfiguredVisuals;
 import de.simplepvparena.visual.CustomVisuals;
 import de.simplepvparena.visual.CustomVisualsSelection;
 import de.simplepvparena.intro.VersusIntroService;
+import de.simplepvparena.laser.LaserZoneService;
 import de.simplepvparena.listener.VersusIntroListener;
 import de.simplepvparena.listener.PlacedBlockListener;
 import de.simplepvparena.arena.PlacedBlockTracker;
@@ -221,6 +222,7 @@ public final class SimplePVPArenaPlugin extends JavaPlugin {
     private BracketBoardService bracketBoardService;
     private volatile boolean machineVisualsWereReady;
     private VersusIntroService versusIntroService;
+    private LaserZoneService laserZoneService;
     private boolean itemsAdderContentChanged;
     private boolean itemsAdderFolderMissing;
     private boolean itemsAdderZipRequested;
@@ -399,6 +401,9 @@ public final class SimplePVPArenaPlugin extends JavaPlugin {
             }
         });
         areaInventoryService.setMovementExemption(versusIntroService::isWatching);
+        laserZoneService = new LaserZoneService(this, model -> configuredVisuals == null ? Optional.empty()
+                : configuredVisuals.findLaserModel(model));
+        matchService.setSuddenDeathZone(laserZoneService);
         matchService.setUnequalTeamVoteService(new UnequalTeamVoteService(this, getServer()::getPlayer,
                 RandomGenerator.getDefault()));
 
@@ -613,6 +618,9 @@ public final class SimplePVPArenaPlugin extends JavaPlugin {
     public void onDisable() {
         if (versusIntroService != null) {
             versusIntroService.stop();
+        }
+        if (laserZoneService != null) {
+            laserZoneService.stop();
         }
         if (chatInputService != null) {
             chatInputService.stop();

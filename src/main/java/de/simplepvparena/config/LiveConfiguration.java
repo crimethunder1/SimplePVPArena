@@ -2,6 +2,7 @@ package de.simplepvparena.config;
 
 import de.simplepvparena.arena.ArenaCleaningParticleSettings;
 import de.simplepvparena.border.ConfirmedBorderParticleSettings;
+import de.simplepvparena.match.LaserZoneSettings;
 import de.simplepvparena.match.RoundTimeoutSettings;
 import de.simplepvparena.match.TeamColourSettings;
 import de.simplepvparena.match.UnequalTeamSettings;
@@ -20,6 +21,8 @@ public interface LiveConfiguration {
     void setRoundTimeoutSettings(RoundTimeoutSettings roundTimeoutSettings);
 
     void setSuddenDeathDisabledInFinal(boolean suddenDeathDisabledInFinal);
+
+    void setLaserZoneSettings(LaserZoneSettings laserZoneSettings);
 
     void setStartGateDurationSeconds(int durationSeconds);
 

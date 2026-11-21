@@ -1499,6 +1499,9 @@ match:
     title: 'Sudden Death'
     subtitle: 'Beide Teams nehmen Schaden, bis eines von ihnen fällt'
     started: 'Das Zeitlimit von Runde {round} in Match {match} ist abgelaufen, der Sudden Death hat begonnen'
+    laser-subtitle: 'Die Laser-Zone fährt hoch und zieht sich zusammen'
+    laser-fighter-hint: 'Laser-Zone aktiv, bleib innerhalb des Rings'
+    laser-started: 'Das Zeitlimit von Runde {round} in Match {match} ist abgelaufen, die Laser-Zone zieht sich zusammen'
   title:
     round-draw: 'Runde {round} ist unentschieden'
     round-won: '{team} gewinnt Runde {round}'
@@ -2005,7 +2008,7 @@ plugin:
   arena-baseline-not-saved: 'Der saubere Zustand der Arena konnte nicht in {file} gespeichert werden, nach einem Neustart fehlt er'
   items-adder-content-installed: 'Die Modelle der Platzierungstafel und des Turnierbaums wurden nach ItemsAdder/contents/simplepvparena geschrieben, die alten Dateien sind entfernt'
   items-adder-content-not-installed: 'Die Modelle der Tafeln konnten nicht nach ItemsAdder/contents/simplepvparena geschrieben werden, die Tafeln werden aus Blöcken gebaut'
-  items-adder-pack-rebuilt: 'Die Modelle der Tafeln sind neu, das Ressourcenpaket von ItemsAdder wird mit /iazip neu gebaut'
+  items-adder-pack-rebuilt: 'Die Modelle der Tafeln und der Laser-Zone sind neu, das Ressourcenpaket von ItemsAdder wird mit /iazip neu gebaut'
   items-adder-content-up-to-date: 'Die Modelle der Tafeln in ItemsAdder/contents/simplepvparena sind aktuell'
   items-adder-content-no-folder: 'Es gibt keinen Ordner plugins/ItemsAdder, die Modelle der Tafeln werden nicht installiert und die Tafeln aus Blöcken gebaut'
   items-adder-not-used: 'ItemsAdder ist installiert, wird aber nicht benutzt (items-adder.enabled ist false oder ItemsAdder war beim Start nicht aktiv), die Tafeln werden aus Blöcken gebaut'

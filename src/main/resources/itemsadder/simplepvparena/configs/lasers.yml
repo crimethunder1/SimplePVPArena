@@ -1,0 +1,26 @@
+info:
+  namespace: simplepvparena
+
+# Generiert von CraftCoreTools/simplepvparena_laser_gen.py, nicht von Hand aendern.
+# Das Plugin SimplePVPArena sucht diese IDs selbst (items-adder.enabled: true) und baut die Laser-Zone des
+# Sudden Death dann aus diesen Modellen statt aus einzelnen Bloecken. laser_pole_glow und laser_beam werden
+# immer voll hell gezeigt.
+items:
+  laser_pole:
+    display_name: "Laser-Stange (Modell)"
+    resource:
+      material: PAPER
+      generate: false
+      model_path: item/laser/laser_pole
+  laser_pole_glow:
+    display_name: "Laser-Stange (Leuchtteile)"
+    resource:
+      material: PAPER
+      generate: false
+      model_path: item/laser/laser_pole_glow
+  laser_beam:
+    display_name: "Laserstrahl (Modell)"
+    resource:
+      material: PAPER
+      generate: false
+      model_path: item/laser/laser_beam

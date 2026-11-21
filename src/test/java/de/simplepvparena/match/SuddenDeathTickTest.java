@@ -133,6 +133,43 @@ class SuddenDeathTickTest {
         assertEquals(Set.copyOf(firstTickOrder), Set.copyOf(secondTickOrder));
     }
 
+    @Test
+    void damagesOnlyTheTargetedFightersWhoAreStillActive() {
+        RoundParticipants participants = createParticipants();
+        participants.eliminate(secondTeamPlayerTwo);
+        List<UUID> damagedPlayers = new ArrayList<>();
+
+        Optional<RoundOutcome> outcome = suddenDeathTick.applyTo(participants,
+                List.of(firstTeamPlayerOne, secondTeamPlayerTwo), damagedPlayers::add);
+
+        assertTrue(outcome.isEmpty());
+        assertEquals(List.of(firstTeamPlayerOne), damagedPlayers);
+    }
+
+    @Test
+    void endsTheRoundAsSuddenDeathWhenATargetedFighterFalls() {
+        RoundParticipants participants = new RoundParticipants("alpha", List.of(firstTeamPlayerOne),
+                "bravo", List.of(secondTeamPlayerOne));
+        List<UUID> damagedPlayers = new ArrayList<>();
+
+        Optional<RoundOutcome> outcome = suddenDeathTick.applyTo(participants, List.of(secondTeamPlayerOne),
+                playerUniqueId -> killPlayer(participants, damagedPlayers, playerUniqueId));
+
+        assertTrue(outcome.isPresent());
+        assertFalse(outcome.get().isDraw());
+        assertEquals("alpha", outcome.get().winnerTeamName().orElseThrow());
+        assertTrue(outcome.get().fromSuddenDeath());
+    }
+
+    @Test
+    void doesNothingWithoutTargets() {
+        RoundParticipants participants = createParticipants();
+        List<UUID> damagedPlayers = new ArrayList<>();
+
+        assertTrue(suddenDeathTick.applyTo(participants, List.of(), damagedPlayers::add).isEmpty());
+        assertTrue(damagedPlayers.isEmpty());
+    }
+
     private void killPlayer(RoundParticipants participants, List<UUID> damagedPlayers, UUID playerUniqueId) {
         damagedPlayers.add(playerUniqueId);
         participants.eliminate(playerUniqueId);

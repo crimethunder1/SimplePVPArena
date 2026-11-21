@@ -13,6 +13,7 @@ import de.simplepvparena.border.BorderWallPreview;
 import de.simplepvparena.border.ConfirmedBorderParticleSettings;
 import de.simplepvparena.gate.StartGateDuration;
 import de.simplepvparena.match.MatchService;
+import de.simplepvparena.match.LaserZoneSettings;
 import de.simplepvparena.match.RoundTimeoutSettings;
 import de.simplepvparena.match.TeamColourSettings;
 import de.simplepvparena.match.UnequalTeamSettings;
@@ -40,6 +41,7 @@ import java.util.function.IntConsumer;
 public record PluginSettings(long roundResetDelayTicks,
                              RoundTimeoutSettings roundTimeoutSettings,
                              boolean suddenDeathDisabledInFinal,
+                             LaserZoneSettings laserZoneSettings,
                              int startGateDurationSeconds,
                              int countdownSeconds,
                              int reconnectSeconds,
@@ -82,6 +84,13 @@ public record PluginSettings(long roundResetDelayTicks,
     public static final String SUDDEN_DEATH_DAMAGE_PER_SECOND_PATH = "match.sudden-death-damage-per-second";
     public static final String SUDDEN_DEATH_DAMAGE_INCREASE_PATH = "match.sudden-death-damage-increase-per-second";
     public static final String DISABLE_SUDDEN_DEATH_IN_FINAL_PATH = "match.disable-sudden-death-in-final";
+    public static final String LASER_ZONE_ENABLED_PATH = "match.laser-zone.enabled";
+    public static final String LASER_ZONE_SHRINK_SECONDS_PATH = "match.laser-zone.shrink-seconds";
+    public static final String LASER_ZONE_MINIMUM_RADIUS_PATH = "match.laser-zone.minimum-radius";
+    public static final String LASER_ZONE_DAMAGE_INTERVAL_PATH = "match.laser-zone.damage-interval-seconds";
+    public static final String LASER_ZONE_MINIMUM_DAMAGE_PATH = "match.laser-zone.minimum-damage";
+    public static final String LASER_ZONE_MAXIMUM_DAMAGE_PATH = "match.laser-zone.maximum-damage";
+    public static final String LASER_ZONE_MAXIMUM_DAMAGE_DISTANCE_PATH = "match.laser-zone.maximum-damage-distance";
     public static final String START_GATE_DURATION_SECONDS_PATH = "match.start-gate-duration-seconds";
     public static final String COUNTDOWN_SECONDS_PATH = "match.countdown-seconds";
     public static final String RECONNECT_SECONDS_PATH = "match.reconnect-seconds";
@@ -129,6 +138,13 @@ public record PluginSettings(long roundResetDelayTicks,
             SUDDEN_DEATH_DAMAGE_PER_SECOND_PATH,
             SUDDEN_DEATH_DAMAGE_INCREASE_PATH,
             DISABLE_SUDDEN_DEATH_IN_FINAL_PATH,
+            LASER_ZONE_ENABLED_PATH,
+            LASER_ZONE_SHRINK_SECONDS_PATH,
+            LASER_ZONE_MINIMUM_RADIUS_PATH,
+            LASER_ZONE_DAMAGE_INTERVAL_PATH,
+            LASER_ZONE_MINIMUM_DAMAGE_PATH,
+            LASER_ZONE_MAXIMUM_DAMAGE_PATH,
+            LASER_ZONE_MAXIMUM_DAMAGE_DISTANCE_PATH,
             START_GATE_DURATION_SECONDS_PATH,
             COUNTDOWN_SECONDS_PATH,
             RECONNECT_SECONDS_PATH,
@@ -181,6 +197,7 @@ public record PluginSettings(long roundResetDelayTicks,
         return new PluginSettings(DEFAULT_ROUND_RESET_DELAY_TICKS,
                 RoundTimeoutSettings.defaults(),
                 MatchService.DEFAULT_SUDDEN_DEATH_DISABLED_IN_FINAL,
+                LaserZoneSettings.defaults(),
                 StartGateDuration.DEFAULT_SECONDS,
                 MatchService.DEFAULT_COUNTDOWN_SECONDS,
                 MatchService.DEFAULT_RECONNECT_SECONDS,
@@ -223,6 +240,7 @@ public record PluginSettings(long roundResetDelayTicks,
                 readRoundTimeoutSettings(configuration, problemReporter),
                 configuration.getBoolean(DISABLE_SUDDEN_DEATH_IN_FINAL_PATH,
                         shipped.suddenDeathDisabledInFinal()),
+                readLaserZoneSettings(configuration),
                 readStartGateDurationSeconds(configuration, problemReporter),
                 readCountdownSeconds(configuration, problemReporter),
                 readReconnectSeconds(configuration, problemReporter),
@@ -291,6 +309,7 @@ public record PluginSettings(long roundResetDelayTicks,
         liveConfiguration.setRoundResetDelayTicks(roundResetDelayTicks);
         liveConfiguration.setRoundTimeoutSettings(roundTimeoutSettings);
         liveConfiguration.setSuddenDeathDisabledInFinal(suddenDeathDisabledInFinal);
+        liveConfiguration.setLaserZoneSettings(laserZoneSettings);
         liveConfiguration.setStartGateDurationSeconds(startGateDurationSeconds);
         liveConfiguration.setCountdownSeconds(countdownSeconds);
         liveConfiguration.setReconnectSeconds(reconnectSeconds);
@@ -699,6 +718,18 @@ public record PluginSettings(long roundResetDelayTicks,
                 configuration.getDouble(SUDDEN_DEATH_DAMAGE_PER_SECOND_PATH, defaultSettings.suddenDeathBaseDamage()),
                 configuration.getDouble(SUDDEN_DEATH_DAMAGE_INCREASE_PATH,
                         defaultSettings.suddenDeathDamageIncreasePerSecond()));
+    }
+
+    static LaserZoneSettings readLaserZoneSettings(ConfigurationSection configuration) {
+        LaserZoneSettings defaults = LaserZoneSettings.defaults();
+        return new LaserZoneSettings(
+                configuration.getBoolean(LASER_ZONE_ENABLED_PATH, defaults.enabled()),
+                configuration.getInt(LASER_ZONE_SHRINK_SECONDS_PATH, defaults.shrinkSeconds()),
+                configuration.getDouble(LASER_ZONE_MINIMUM_RADIUS_PATH, defaults.minimumRadius()),
+                configuration.getInt(LASER_ZONE_DAMAGE_INTERVAL_PATH, defaults.damageIntervalSeconds()),
+                configuration.getDouble(LASER_ZONE_MINIMUM_DAMAGE_PATH, defaults.minimumDamage()),
+                configuration.getDouble(LASER_ZONE_MAXIMUM_DAMAGE_PATH, defaults.maximumDamage()),
+                configuration.getDouble(LASER_ZONE_MAXIMUM_DAMAGE_DISTANCE_PATH, defaults.maximumDamageDistance()));
     }
 
     private static TeamColourSettings readTeamColourSettings(ConfigurationSection configuration,

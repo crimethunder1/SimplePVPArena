@@ -113,6 +113,9 @@ public final class MatchService {
     private @Nullable ScheduledRoundTimer activeRoundTimer;
     private @Nullable StartAnimation activeStartAnimation;
     private boolean insideSuddenDeathTick;
+    private SuddenDeathZone suddenDeathZone = SuddenDeathZone.NONE;
+    private LaserZoneSettings laserZoneSettings = LaserZoneSettings.defaults();
+    private boolean suddenDeathZoneActive;
     private long roundResetDelayTicks = DEFAULT_ROUND_RESET_DELAY_TICKS;
     private RoundTimeoutSettings roundTimeoutSettings = RoundTimeoutSettings.defaults();
     private boolean suddenDeathDisabledInFinal = DEFAULT_SUDDEN_DEATH_DISABLED_IN_FINAL;
@@ -206,6 +209,18 @@ public final class MatchService {
 
     public RoundTimeoutSettings getRoundTimeoutSettings() {
         return roundTimeoutSettings;
+    }
+
+    public void setSuddenDeathZone(SuddenDeathZone suddenDeathZone) {
+        this.suddenDeathZone = Objects.requireNonNull(suddenDeathZone, "suddenDeathZone");
+    }
+
+    public void setLaserZoneSettings(LaserZoneSettings laserZoneSettings) {
+        this.laserZoneSettings = Objects.requireNonNull(laserZoneSettings, "laserZoneSettings");
+    }
+
+    public LaserZoneSettings getLaserZoneSettings() {
+        return laserZoneSettings;
     }
 
     public void setSuddenDeathDisabledInFinal(boolean suddenDeathDisabledInFinal) {
@@ -934,6 +949,16 @@ public final class MatchService {
             activeRoundTimer.task().cancel();
             activeRoundTimer = null;
         }
+        stopSuddenDeathZone();
+    }
+
+    private void stopSuddenDeathZone() {
+        suddenDeathZoneActive = false;
+        try {
+            suddenDeathZone.stop();
+        } catch (RuntimeException failure) {
+            plugin.getLogger().log(Level.WARNING, "The sudden death zone could not be stopped", failure);
+        }
     }
 
     private void handleRoundTimerTick(Match match) {
@@ -945,9 +970,92 @@ public final class MatchService {
         switch (roundTimer.tick()) {
             case WARNING -> announceActionBarToMatch(match,
                     Messages.plural(MatchMessage.SUDDEN_DEATH_WARNING, roundTimer.getRemainingSeconds()));
-            case SUDDEN_DEATH_STARTED -> announceSuddenDeathStart(match);
-            case SUDDEN_DEATH_DAMAGE -> applySuddenDeathDamage(match, roundTimer.getCurrentSuddenDeathDamage());
+            case SUDDEN_DEATH_STARTED -> startSuddenDeath(match);
+            case SUDDEN_DEATH_DAMAGE -> {
+                if (!suddenDeathZoneActive) {
+                    applySuddenDeathDamage(match, roundTimer.getCurrentSuddenDeathDamage());
+                }
+            }
             case RUNNING, PAUSED -> { }
+        }
+    }
+
+    private void startSuddenDeath(Match match) {
+        suddenDeathZoneActive = laserZoneSettings.enabled() && startSuddenDeathZone(match);
+        if (suddenDeathZoneActive) {
+            announceLaserZoneStart(match);
+            return;
+        }
+        announceSuddenDeathStart(match);
+    }
+
+    private boolean startSuddenDeathZone(Match match) {
+        SuddenDeathZoneHost host = new SuddenDeathZoneHost() {
+            @Override
+            public Set<UUID> activeFighters() {
+                return match.getRoundParticipants().map(RoundParticipants::getAllActivePlayers).orElse(Set.of());
+            }
+
+            @Override
+            public boolean paused() {
+                ScheduledRoundTimer scheduledTimer = activeRoundTimer;
+                return scheduledTimer != null && scheduledTimer.timer().isPaused();
+            }
+
+            @Override
+            public void damage(Map<UUID, Double> damageByFighter) {
+                applySuddenDeathZoneDamage(match, damageByFighter);
+            }
+
+            @Override
+            public void zoneFailed() {
+                suddenDeathZoneActive = false;
+            }
+        };
+        try {
+            return suddenDeathZone.start(match, laserZoneSettings, host);
+        } catch (RuntimeException failure) {
+            plugin.getLogger().log(Level.WARNING, "The laser zone of match " + match.getMatchId()
+                    + " could not be started, sudden death damages every fighter instead", failure);
+            stopSuddenDeathZone();
+            return false;
+        }
+    }
+
+    private void announceLaserZoneStart(Match match) {
+        Title title = Title.title(Component.text(Messages.text(MatchMessage.SUDDEN_DEATH_TITLE),
+                        TournamentMessages.ERROR_COLOUR),
+                Component.text(Messages.text(MatchMessage.LASER_ZONE_SUBTITLE), TournamentMessages.DETAIL_COLOUR),
+                SUDDEN_DEATH_TITLE_TIMES);
+        Component fighterHint = Component.text(Messages.text(MatchMessage.LASER_ZONE_FIGHTER_HINT),
+                TournamentMessages.WARNING_COLOUR);
+        forEachAreaAudience(match, player -> {
+            if (isActiveFighter(player.getUniqueId())) {
+                player.sendActionBar(fighterHint);
+            } else {
+                player.showTitle(title);
+            }
+        });
+        announceWarningToMatch(match, Messages.text(MatchMessage.LASER_ZONE_STARTED,
+                Placeholder.of("round", match.getRoundNumber()), Placeholder.of("match", match.getMatchId())));
+    }
+
+    private void applySuddenDeathZoneDamage(Match match, Map<UUID, Double> damageByFighter) {
+        Optional<RoundParticipants> roundParticipants = match.getRoundParticipants();
+        if (roundParticipants.isEmpty() || match.getState() != MatchState.RUNNING || damageByFighter.isEmpty()) {
+            return;
+        }
+        Optional<RoundOutcome> outcome;
+        insideSuddenDeathTick = true;
+        try {
+            outcome = suddenDeathTick.applyTo(roundParticipants.get(), damageByFighter.keySet(),
+                    fighterUniqueId -> damagePlayer(fighterUniqueId, damageByFighter.getOrDefault(fighterUniqueId,
+                            0.0D)));
+        } finally {
+            insideSuddenDeathTick = false;
+        }
+        if (match.getState() == MatchState.RUNNING) {
+            outcome.ifPresent(roundOutcome -> concludeRound(match, roundOutcome));
         }
     }
 
@@ -978,7 +1086,7 @@ public final class MatchService {
 
     private void damagePlayer(UUID playerUniqueId, double damageAmount) {
         Player player = plugin.getServer().getPlayer(playerUniqueId);
-        if (player != null && player.isOnline()) {
+        if (player != null && player.isOnline() && damageAmount > 0.0D) {
             player.damage(damageAmount);
         }
     }

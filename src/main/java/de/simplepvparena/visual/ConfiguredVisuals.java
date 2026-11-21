@@ -78,6 +78,11 @@ public final class ConfiguredVisuals implements CountdownImages {
                 CustomVisualSettings.BOARD_MODEL_IDENTIFIER_PREFIX + model);
     }
 
+    public Optional<ItemStack> findLaserModel(String model) {
+        return findItem(CustomVisualSettings.LASER_MODELS_CONFIGURATION_PATH,
+                CustomVisualSettings.BOARD_MODEL_IDENTIFIER_PREFIX + model);
+    }
+
     public Optional<String> findStationTitleImage() {
         return findFontImage(CustomVisualSettings.STATION_TITLE_IMAGE_CONFIGURATION_PATH,
                 settings.stationTitleImageIdentifier());

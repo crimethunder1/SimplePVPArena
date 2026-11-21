@@ -1498,6 +1498,9 @@ match:
     title: 'Sudden death'
     subtitle: 'Both teams take damage until one of them falls'
     started: 'The time limit of round {round} in match {match} is over, sudden death has started'
+    laser-subtitle: 'The laser zone rises and closes in'
+    laser-fighter-hint: 'Laser zone active, stay inside the ring'
+    laser-started: 'The time limit of round {round} in match {match} is over, the laser zone closes in'
   title:
     round-draw: 'Round {round} is a draw'
     round-won: '{team} wins round {round}'
@@ -2004,7 +2007,7 @@ plugin:
   arena-baseline-not-saved: 'The clean state of the arena could not be saved to {file}, it is missing after a restart'
   items-adder-content-installed: 'The models of the standings board and the bracket board were written to ItemsAdder/contents/simplepvparena, the old files are removed'
   items-adder-content-not-installed: 'The models of the boards could not be written to ItemsAdder/contents/simplepvparena, the boards are built from blocks'
-  items-adder-pack-rebuilt: 'The models of the boards are new, the resource pack of ItemsAdder is rebuilt with /iazip'
+  items-adder-pack-rebuilt: 'The models of the boards and the laser zone are new, the resource pack of ItemsAdder is rebuilt with /iazip'
   items-adder-content-up-to-date: 'The models of the boards in ItemsAdder/contents/simplepvparena are up to date'
   items-adder-content-no-folder: 'There is no folder plugins/ItemsAdder, the models of the boards are not installed and the boards are built from blocks'
   items-adder-not-used: 'ItemsAdder is installed but not used (items-adder.enabled is false or ItemsAdder was not active at the start), the boards are built from blocks'

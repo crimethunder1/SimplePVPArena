@@ -15,6 +15,7 @@ import de.simplepvparena.border.ConfirmedBorderParticleSettings;
 import de.simplepvparena.gate.StartGateDuration;
 import de.simplepvparena.match.FighterColours;
 import de.simplepvparena.match.MatchService;
+import de.simplepvparena.match.LaserZoneSettings;
 import de.simplepvparena.match.RoundTimeoutSettings;
 import de.simplepvparena.match.TeamColourSettings;
 import de.simplepvparena.match.UnequalTeamSettings;
@@ -140,6 +141,11 @@ public final class PluginLiveConfiguration implements LiveConfiguration {
     @Override
     public void setSuddenDeathDisabledInFinal(boolean suddenDeathDisabledInFinal) {
         matchService.setSuddenDeathDisabledInFinal(suddenDeathDisabledInFinal);
+    }
+
+    @Override
+    public void setLaserZoneSettings(LaserZoneSettings laserZoneSettings) {
+        matchService.setLaserZoneSettings(laserZoneSettings);
     }
 
     @Override

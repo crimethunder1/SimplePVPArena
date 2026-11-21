@@ -3,6 +3,7 @@ package de.simplepvparena.config;
 import de.simplepvparena.arena.ArenaCleaningParticleSettings;
 import de.simplepvparena.border.ConfirmedBorderParticleSettings;
 import de.simplepvparena.gate.StartGateDuration;
+import de.simplepvparena.match.LaserZoneSettings;
 import de.simplepvparena.match.RoundTimeoutSettings;
 import de.simplepvparena.match.TeamColourSettings;
 import de.simplepvparena.match.UnequalTeamSettings;
@@ -21,6 +22,7 @@ final class RecordingLiveConfiguration implements LiveConfiguration {
     static final String ROUND_RESET_DELAY = "roundResetDelayTicks";
     static final String ROUND_TIMEOUT = "roundTimeoutSettings";
     static final String SUDDEN_DEATH_IN_FINAL = "suddenDeathDisabledInFinal";
+    static final String LASER_ZONE = "laserZoneSettings";
     static final String START_GATE_DURATION = "startGateDurationSeconds";
     static final String COUNTDOWN_SECONDS = "countdownSeconds";
     static final String RECONNECT_SECONDS = "reconnectSeconds";
@@ -54,7 +56,7 @@ final class RecordingLiveConfiguration implements LiveConfiguration {
 
     static final List<String> EVERY_APPLIED_VALUE = List.of(
             LANGUAGE,
-            ROUND_RESET_DELAY, ROUND_TIMEOUT, SUDDEN_DEATH_IN_FINAL, START_GATE_DURATION, COUNTDOWN_SECONDS,
+            ROUND_RESET_DELAY, ROUND_TIMEOUT, SUDDEN_DEATH_IN_FINAL, LASER_ZONE, START_GATE_DURATION, COUNTDOWN_SECONDS,
             RECONNECT_SECONDS, UNEQUAL_TEAMS, CLEAN_BETWEEN_ROUNDS, TEAM_COLOURS, TEAM_SIZE, SERVER_MODE, AUTO_MATCH,
             TEAM_MODE,
             CLEANING_BLOCKS_PER_TICK, BASELINE_BLOCKS_PER_TICK, BASELINE_DEPTH_BELOW_FLOOR,
@@ -85,6 +87,15 @@ final class RecordingLiveConfiguration implements LiveConfiguration {
     @Override
     public void setSuddenDeathDisabledInFinal(boolean suddenDeathDisabledInFinal) {
         appliedValues.put(SUDDEN_DEATH_IN_FINAL, suddenDeathDisabledInFinal);
+    }
+
+    @Override
+    public void setLaserZoneSettings(LaserZoneSettings laserZoneSettings) {
+        appliedValues.put(LASER_ZONE, laserZoneSettings);
+    }
+
+    LaserZoneSettings laserZoneSettings() {
+        return (LaserZoneSettings) appliedValues.get(LASER_ZONE);
     }
 
     @Override

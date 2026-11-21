@@ -27,7 +27,9 @@ public final class ItemsAdderContentInstaller {
     public static final String NAMESPACE = "simplepvparena";
     public static final List<String> OWNED_FOLDERS = List.of(
             "resourcepack/assets/simplepvparena/models/item/board",
-            "resourcepack/assets/simplepvparena/textures/item/board");
+            "resourcepack/assets/simplepvparena/textures/item/board",
+            "resourcepack/assets/simplepvparena/models/item/laser",
+            "resourcepack/assets/simplepvparena/textures/item/laser");
 
     private final Path namespaceFolder;
 

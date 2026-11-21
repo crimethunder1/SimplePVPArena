@@ -35,6 +35,7 @@ public record CustomVisualSettings(boolean enabled,
     public static final String MACHINE_PART_IDENTIFIER_PREFIX = "simplepvparena:machine_";
     public static final String BOARD_MODELS_CONFIGURATION_PATH = SECTION_CONFIGURATION_PATH + ".board-models";
     public static final String BOARD_MODEL_IDENTIFIER_PREFIX = "simplepvparena:";
+    public static final String LASER_MODELS_CONFIGURATION_PATH = SECTION_CONFIGURATION_PATH + ".laser-models";
 
     public static final boolean DEFAULT_ENABLED = true;
     public static final String NO_IDENTIFIER = "";
