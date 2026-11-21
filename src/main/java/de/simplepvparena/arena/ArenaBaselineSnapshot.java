@@ -31,9 +31,18 @@ public final class ArenaBaselineSnapshot implements ArenaCleaningTarget {
     private final int distinctMaterialCount;
     private final int distinctBlockStateCount;
     private final long nonAirBlockCount;
+    private final ArenaHeadroom headroom;
 
     ArenaBaselineSnapshot(ArenaShape shape, int depthBelowFloor, short[] paletteIndexes, BlockData[] palette,
                           BitSet blockEntityPaletteIndexes, Map<Integer, BlockState> blockEntitiesByBlockIndex) {
+        this(shape, depthBelowFloor, paletteIndexes, palette, blockEntityPaletteIndexes, blockEntitiesByBlockIndex,
+                ArenaHeadroom.ASSUMED_EMPTY);
+    }
+
+    private ArenaBaselineSnapshot(ArenaShape shape, int depthBelowFloor, short[] paletteIndexes, BlockData[] palette,
+                                  BitSet blockEntityPaletteIndexes, Map<Integer, BlockState> blockEntitiesByBlockIndex,
+                                  ArenaHeadroom headroom) {
+        this.headroom = Objects.requireNonNull(headroom, "headroom");
         this.shape = Objects.requireNonNull(shape, "shape");
         this.depthBelowFloor = depthBelowFloor;
         this.capturedVolume = shape.withFloorLoweredBy(depthBelowFloor);
@@ -72,6 +81,16 @@ public final class ArenaBaselineSnapshot implements ArenaCleaningTarget {
 
     public ArenaShape getCapturedVolume() {
         return capturedVolume;
+    }
+
+    /** The blocks above the wall top that belong to the arena, every other block up there is cleaned to air. */
+    public ArenaHeadroom getHeadroom() {
+        return headroom;
+    }
+
+    public ArenaBaselineSnapshot withHeadroom(ArenaHeadroom headroom) {
+        return new ArenaBaselineSnapshot(shape, depthBelowFloor, paletteIndexes, palette, blockEntityPaletteIndexes,
+                blockEntitiesByBlockIndex, headroom);
     }
 
     public int getDepthBelowFloor() {

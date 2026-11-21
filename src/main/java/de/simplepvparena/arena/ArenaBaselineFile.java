@@ -11,6 +11,7 @@ import org.bukkit.structure.Structure;
 import org.bukkit.structure.StructureManager;
 import org.bukkit.util.BlockVector;
 import org.jspecify.annotations.NullMarked;
+import org.jspecify.annotations.Nullable;
 
 import java.io.File;
 import java.io.IOException;
@@ -26,17 +27,22 @@ public final class ArenaBaselineFile {
 
     public static final String STRUCTURE_FILE_NAME = "arena-baseline.nbt";
     public static final String KEY_FILE_NAME = "arena-baseline.yml";
+    public static final String HEADROOM_FILE_NAME = "arena-baseline-headroom.nbt";
 
     private static final String KEY_PATH = "key";
+    private static final String HEADROOM_KEY_PATH = "headroom-key";
+    private static final String NO_HEADROOM = "none";
 
     private final Server server;
     private final File structureFile;
     private final File keyFile;
+    private final File headroomFile;
 
     public ArenaBaselineFile(Server server, File dataFolder) {
         this.server = Objects.requireNonNull(server, "server");
         this.structureFile = new File(dataFolder, STRUCTURE_FILE_NAME);
         this.keyFile = new File(dataFolder, KEY_FILE_NAME);
+        this.headroomFile = new File(dataFolder, HEADROOM_FILE_NAME);
     }
 
     public void save(ArenaBaselineSnapshot snapshot) throws IOException {
@@ -56,6 +62,9 @@ public final class ArenaBaselineFile {
         structureManager.saveStructure(structureFile, structure);
         YamlConfiguration key = new YamlConfiguration();
         key.set(KEY_PATH, describeKey(snapshot.getShape(), snapshot.getDepthBelowFloor()));
+        if (snapshot.getHeadroom().isRecorded()) {
+            key.set(HEADROOM_KEY_PATH, saveHeadroom(world, snapshot.getShape()));
+        }
         Files.writeString(keyFile.toPath(), key.saveToString(), StandardCharsets.UTF_8);
     }
 
@@ -88,7 +97,67 @@ public final class ArenaBaselineFile {
                 builder.record(blockX, blockY, blockZ, state.getBlockData(), () -> state);
             }
         }
-        return builder.isComplete() ? Optional.of(builder.build()) : Optional.empty();
+        if (!builder.isComplete()) {
+            return Optional.empty();
+        }
+        return Optional.of(builder.build().withHeadroom(loadHeadroom(shape, key.getString(HEADROOM_KEY_PATH))));
+    }
+
+    private String saveHeadroom(World world, ArenaShape shape) throws IOException {
+        Optional<ArenaShape> headroom = ArenaHeadroom.volumeAbove(shape, world.getMaxHeight() - 1);
+        if (headroom.isEmpty()) {
+            Files.deleteIfExists(headroomFile.toPath());
+            return NO_HEADROOM;
+        }
+        ArenaShape volume = headroom.get();
+        RegionBoundary boundary = volume.getBoundingBox();
+        StructureManager structureManager = server.getStructureManager();
+        Structure structure = structureManager.createStructure();
+        structure.fill(new Location(world, boundary.getMinimumX(), volume.getFloorY(), boundary.getMinimumZ()),
+                new BlockVector(boundary.getMaximumX() - boundary.getMinimumX() + 1,
+                        volume.getWallTopY() - volume.getFloorY() + 1,
+                        boundary.getMaximumZ() - boundary.getMinimumZ() + 1), false);
+        structureManager.saveStructure(headroomFile, structure);
+        return describeHeadroomKey(volume);
+    }
+
+    /**
+     * Reads the blocks above the wall top that belonged to the arena when the baseline was taken. A baseline of an
+     * older version has none, its headroom is then assumed to be empty.
+     */
+    private ArenaHeadroom loadHeadroom(ArenaShape shape, @Nullable String storedKey) throws IOException {
+        World world = server.getWorld(shape.getWorldName());
+        if (storedKey == null || world == null) {
+            return ArenaHeadroom.ASSUMED_EMPTY;
+        }
+        Optional<ArenaShape> headroom = ArenaHeadroom.volumeAbove(shape, world.getMaxHeight() - 1);
+        if (headroom.isEmpty()) {
+            return NO_HEADROOM.equals(storedKey) ? ArenaHeadroom.builder().build() : ArenaHeadroom.ASSUMED_EMPTY;
+        }
+        ArenaShape volume = headroom.get();
+        if (!describeHeadroomKey(volume).equals(storedKey) || !headroomFile.isFile()) {
+            return ArenaHeadroom.ASSUMED_EMPTY;
+        }
+        List<Palette> palettes = server.getStructureManager().loadStructure(headroomFile).getPalettes();
+        if (palettes.isEmpty()) {
+            return ArenaHeadroom.ASSUMED_EMPTY;
+        }
+        RegionBoundary boundary = volume.getBoundingBox();
+        ArenaHeadroom.Builder builder = ArenaHeadroom.builder();
+        for (BlockState state : palettes.getFirst().getBlocks()) {
+            int blockX = boundary.getMinimumX() + state.getX();
+            int blockY = volume.getFloorY() + state.getY();
+            int blockZ = boundary.getMinimumZ() + state.getZ();
+            if (volume.findBlockIndex(blockX, blockY, blockZ) >= 0L) {
+                builder.record(blockX, blockY, blockZ, state.getBlockData(), () -> state);
+            }
+        }
+        return builder.build();
+    }
+
+    static String describeHeadroomKey(ArenaShape headroom) {
+        return headroom.getWorldName() + "|" + headroom.getFloorY() + "|" + headroom.getWallTopY() + "|"
+                + headroom.getCellCount() + "|" + Arrays.hashCode(headroom.getCells());
     }
 
     static String describeKey(ArenaShape shape, int depthBelowFloor) {

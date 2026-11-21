@@ -114,8 +114,8 @@ class ArenaHeightMarkerCalculationTest {
 
         assertEquals(Material.COBWEB, fixture.harness.getBlock(0, FLOOR_Y - 1, 0),
                 "the cleaning reaches below the wall, where the marked volume is");
-        assertEquals(Material.COBWEB, fixture.harness.getBlock(0, WALL_TOP_Y, 0),
-                "and it stops at the marked ceiling, although the wall stands above it");
+        assertEquals(Material.AIR, fixture.harness.getBlock(0, WALL_TOP_Y, 0),
+                "and it cleans above the marked ceiling as well, where the fighters may still build");
     }
 
     @Test
@@ -175,16 +175,25 @@ class ArenaHeightMarkerCalculationTest {
         Fixture fixture = new Fixture();
         fixture.markHeights(FLOOR_Y - 2, WALL_BOTTOM_Y);
         fixture.harness.setBlock(0, FLOOR_Y - 1, 0, Material.COBWEB);
+        fixture.harness.setBlock(1, WALL_TOP_Y + 3, 1, Material.GLOWSTONE);
         fixture.calculateFrom(WALL_BOTTOM_Y);
 
         fixture.harness.setBlock(0, FLOOR_Y - 1, 0, Material.STONE);
         fixture.harness.setBlock(0, WALL_TOP_Y, 0, Material.COBWEB);
+        fixture.harness.setBlock(-1, WALL_BOTTOM_Y + ArenaFightRegion.SEARCHED_BLOCKS_ABOVE_THE_WALL_TOP, -1,
+                Material.DIRT);
+        fixture.harness.setBlock(1, WALL_TOP_Y + 3, 1, Material.AIR);
         fixture.clean();
 
         assertEquals(Material.COBWEB, fixture.harness.getBlock(0, FLOOR_Y - 1, 0),
                 "the baseline of the marked volume reaches below the wall and is restored");
-        assertEquals(Material.COBWEB, fixture.harness.getBlock(0, WALL_TOP_Y, 0),
-                "above the marked ceiling nothing is cleaned, although the wall stands there");
+        assertEquals(Material.AIR, fixture.harness.getBlock(0, WALL_TOP_Y, 0),
+                "a block added above the marked ceiling after the baseline is cleaned as well");
+        assertEquals(Material.AIR, fixture.harness.getBlock(-1,
+                        WALL_BOTTOM_Y + ArenaFightRegion.SEARCHED_BLOCKS_ABOVE_THE_WALL_TOP, -1),
+                "up to the highest block the fighters may build at");
+        assertEquals(Material.GLOWSTONE, fixture.harness.getBlock(1, WALL_TOP_Y + 3, 1),
+                "a block that stood above the ceiling when the baseline was taken is put back");
     }
 
     private static void assertArrayEqualsAsCells(ArenaShape expectedShape, ArenaShape actualShape) {

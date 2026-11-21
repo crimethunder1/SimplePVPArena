@@ -103,7 +103,7 @@ public final class ArenaCleaningService {
         ArenaShape shape = plan.getCleanedVolume();
         ArenaCleaningTarget cleaningTarget = plan.getTarget();
         CleaningRun run = new CleaningRun(plan.getVolume(), shape,
-                ArenaCleaningLayerSchedule.of(shape.getHeight(), animationDurationTicks));
+                ArenaCleaningLayerSchedule.of(shape.getHeight(), animationDurationTicks), plan.getHeadroomTarget());
         activeTask = plugin.getServer().getScheduler().runTaskTimer(plugin,
                 () -> runNextTick(run, cleaningTarget, completionHandler),
                 BATCH_PERIOD_TICKS, BATCH_PERIOD_TICKS);
@@ -123,12 +123,17 @@ public final class ArenaCleaningService {
         }
         try {
             removeTemporaryEntitiesOnce(world, run);
-            showFloodedLayer(world, run);
-            if (run.phase.writesBlocks()) {
-                clearCurrentLayer(world, run, cleaningTarget);
+            if (!run.layersFinished) {
+                showFloodedLayer(world, run);
+                if (run.phase.writesBlocks()) {
+                    clearCurrentLayer(world, run, cleaningTarget);
+                }
+                run.endTickOfLayer();
             }
-            run.endTickOfLayer();
-            if (!run.finished) {
+            if (run.layersFinished && !run.headroomFinished) {
+                clearHeadroom(world, run);
+            }
+            if (!run.layersFinished || !run.headroomFinished) {
                 return;
             }
             run.clearedBorderMarkCount += cleanedArenaHandler.onArenaCleaned(world, shape);
@@ -161,6 +166,40 @@ public final class ArenaCleaningService {
             remainingBlocksOfThisTick -= batch.length;
             run.checkedBlockCount += batch.length;
             run.changedBlockCount += writeBatch(world, run.shape.getWorldName(), batch, cleaningTarget);
+        }
+    }
+
+    /**
+     * Cleans the blocks above the wall top up to the height the fighters may build at, so towers above the wall
+     * are gone as well. Only the blocks recorded there with the baseline stay.
+     */
+    private void clearHeadroom(World world, CleaningRun run) {
+        if (run.headroomCursor == null) {
+            Optional<ArenaShape> headroom = ArenaHeadroom.volumeAbove(run.fightArea, world.getMaxHeight() - 1);
+            if (headroom.isEmpty()) {
+                run.headroomFinished = true;
+                return;
+            }
+            run.headroomCursor = new ArenaShapeBlockCursor(headroom.get());
+        }
+        ArenaShapeBlockCursor cursor = run.headroomCursor;
+        int remainingBlocksOfThisTick = blocksPerTick;
+        while (remainingBlocksOfThisTick > 0 && cursor.hasRemainingBlocks()) {
+            long[] batch = cursor.nextBatch(remainingBlocksOfThisTick);
+            remainingBlocksOfThisTick -= batch.length;
+            run.changedHeadroomBlockCount += writeBatch(world, run.shape.getWorldName(), batch, run.headroomTarget);
+        }
+        if (cursor.hasRemainingBlocks()) {
+            return;
+        }
+        run.headroomFinished = true;
+        run.changedBlockCount += run.changedHeadroomBlockCount;
+        if (run.changedHeadroomBlockCount > 0L) {
+            plugin.getLogger().info("The arena cleaning removed " + run.changedHeadroomBlockCount
+                    + " blocks above the wall top (Y " + cursor.getShape().getFloorY() + " to "
+                    + cursor.getShape().getWallTopY() + ")"
+                    + (run.headroomTarget.isRecorded() ? "" : ", no headroom was recorded with the baseline, "
+                    + "everything up there is cleaned to air"));
         }
     }
 
@@ -240,12 +279,16 @@ public final class ArenaCleaningService {
         private final ArenaCleaningLayerSchedule schedule;
         private final ArenaShapeBlockCursor cursor;
         private final int layerBlockCount;
+        private final ArenaHeadroom headroomTarget;
+        private @Nullable ArenaShapeBlockCursor headroomCursor;
+        private boolean headroomFinished;
+        private long changedHeadroomBlockCount;
 
         private ArenaCleaningPhase phase;
         private int layerIndex;
         private long ticksSpentInLayer;
         private long remainingBlocksOfLayer;
-        private boolean finished;
+        private boolean layersFinished;
 
         private long checkedBlockCount;
         private long changedBlockCount;
@@ -254,7 +297,9 @@ public final class ArenaCleaningService {
         private boolean visualEffectStopped;
         private boolean temporaryEntitiesRemoved;
 
-        private CleaningRun(ArenaShape fightArea, ArenaShape shape, ArenaCleaningLayerSchedule schedule) {
+        private CleaningRun(ArenaShape fightArea, ArenaShape shape, ArenaCleaningLayerSchedule schedule,
+                            ArenaHeadroom headroomTarget) {
+            this.headroomTarget = headroomTarget;
             this.fightArea = fightArea;
             this.shape = shape;
             this.schedule = schedule;
@@ -298,7 +343,7 @@ public final class ArenaCleaningService {
             }
             layerIndex = 0;
             if (phase.writesBlocks()) {
-                finished = true;
+                layersFinished = true;
                 return;
             }
             phase = ArenaCleaningPhase.CLEAR;

@@ -95,14 +95,16 @@ public final class ArenaBaselineService {
         }
         ArenaBaselineSnapshotBuilder builder = new ArenaBaselineSnapshotBuilder(shape, depthBelowFloor);
         ArenaShapeBlockCursor cursor = new ArenaShapeBlockCursor(builder.getCapturedVolume());
+        CaptureRun run = new CaptureRun(cursor, builder);
         activeTask = plugin.getServer().getScheduler().runTaskTimer(plugin,
-                () -> captureNextBatch(cursor, builder, completionHandler),
+                () -> captureNextBatch(run, completionHandler),
                 BATCH_PERIOD_TICKS, BATCH_PERIOD_TICKS);
         return true;
     }
 
-    private void captureNextBatch(ArenaShapeBlockCursor cursor, ArenaBaselineSnapshotBuilder builder,
-                                  Consumer<ArenaBaselineReport> completionHandler) {
+    private void captureNextBatch(CaptureRun run, Consumer<ArenaBaselineReport> completionHandler) {
+        ArenaShapeBlockCursor cursor = run.cursor;
+        ArenaBaselineSnapshotBuilder builder = run.builder;
         ArenaShape shape = cursor.getShape();
         World world = plugin.getServer().getWorld(shape.getWorldName());
         if (world == null) {
@@ -124,7 +126,22 @@ public final class ArenaBaselineService {
             if (cursor.hasRemainingBlocks()) {
                 return;
             }
-            snapshot = builder.build();
+            if (!run.headroomStarted) {
+                run.headroomStarted = true;
+                run.headroomCursor = ArenaHeadroom.volumeAbove(builder.getShape(), world.getMaxHeight() - 1)
+                        .map(ArenaShapeBlockCursor::new)
+                        .orElse(null);
+            }
+            ArenaShapeBlockCursor headroomCursor = run.headroomCursor;
+            while (remainingBlocksOfThisTick > 0 && headroomCursor != null && headroomCursor.hasRemainingBlocks()) {
+                long[] batch = headroomCursor.nextBatch(remainingBlocksOfThisTick);
+                remainingBlocksOfThisTick -= batch.length;
+                readHeadroomBatch(world, batch, run.headroomBuilder);
+            }
+            if (headroomCursor != null && headroomCursor.hasRemainingBlocks()) {
+                return;
+            }
+            snapshot = builder.build().withHeadroom(run.headroomBuilder.build());
         } catch (RuntimeException failure) {
             plugin.getLogger().log(Level.SEVERE, "The baseline of the fight area in " + shape.getWorldName()
                     + " could not be taken", failure);
@@ -154,10 +171,34 @@ public final class ArenaBaselineService {
         }
     }
 
+    private void readHeadroomBatch(World world, long[] batch, ArenaHeadroom.Builder headroomBuilder) {
+        for (long encodedPosition : batch) {
+            int blockX = BlockPositionCodec.decodeX(encodedPosition);
+            int blockY = BlockPositionCodec.decodeY(encodedPosition);
+            int blockZ = BlockPositionCodec.decodeZ(encodedPosition);
+            Block block = world.getBlockAt(blockX, blockY, blockZ);
+            headroomBuilder.record(blockX, blockY, blockZ, block.getBlockData(), () -> block.getState(true));
+        }
+    }
+
     public void stopCapture() {
         if (activeTask != null) {
             activeTask.cancel();
             activeTask = null;
+        }
+    }
+
+    private static final class CaptureRun {
+
+        private final ArenaShapeBlockCursor cursor;
+        private final ArenaBaselineSnapshotBuilder builder;
+        private final ArenaHeadroom.Builder headroomBuilder = ArenaHeadroom.builder();
+        private @Nullable ArenaShapeBlockCursor headroomCursor;
+        private boolean headroomStarted;
+
+        private CaptureRun(ArenaShapeBlockCursor cursor, ArenaBaselineSnapshotBuilder builder) {
+            this.cursor = cursor;
+            this.builder = builder;
         }
     }
 }

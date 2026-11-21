@@ -104,6 +104,7 @@ final class ArenaMatchHarness {
     ArenaMatchHarness(Function<Plugin, KitService> kitServiceFactory) {
         this.world = proxy(World.class, (method, arguments) -> switch (method.getName()) {
             case "getName" -> WORLD_NAME;
+            case "getMaxHeight" -> 320;
             case "getBlockAt" -> createBlock((Integer) arguments[0], (Integer) arguments[1], (Integer) arguments[2]);
             case "dropItem" -> {
                 droppedItems.add(new DroppedItem((Location) arguments[0], (ItemStack) arguments[1]));

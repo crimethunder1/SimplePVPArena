@@ -24,6 +24,8 @@ import java.util.logging.Logger;
 
 final class FakeServerHarness {
 
+    static final int WORLD_MAXIMUM_HEIGHT = 320;
+
     private final String worldName;
     private final Map<Long, BlockData> blocks = new HashMap<>();
     private final Map<Long, String> blockEntityContents = new HashMap<>();
@@ -178,6 +180,7 @@ final class FakeServerHarness {
     private Object createWorld() {
         return proxy(World.class, (method, arguments) -> switch (method.getName()) {
             case "getName" -> worldName;
+            case "getMaxHeight" -> WORLD_MAXIMUM_HEIGHT;
             case "getBlockAt" -> createBlock((Integer) arguments[0], (Integer) arguments[1],
                     (Integer) arguments[2]);
             case "getNearbyEntities" -> {

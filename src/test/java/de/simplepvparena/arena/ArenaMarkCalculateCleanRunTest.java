@@ -64,8 +64,9 @@ class ArenaMarkCalculateCleanRunTest {
 
         assertEquals(Material.AIR, fixture.harness.getBlock(0, MARKED_LOWEST_Y, 0),
                 "the block below the wall is inside the marked volume and is cleaned");
-        assertEquals(Material.COBWEB, fixture.harness.getBlock(0, WALL_TOP_Y, 0),
-                "the block at the top of the wall lies above the marked ceiling and is left alone");
+        assertEquals(Material.AIR, fixture.harness.getBlock(0, WALL_TOP_Y, 0),
+                "the block at the top of the wall lies above the marked ceiling, where the fighters may still "
+                        + "build, and is cleaned as well");
     }
 
     @Test

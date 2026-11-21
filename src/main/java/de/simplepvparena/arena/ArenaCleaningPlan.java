@@ -50,6 +50,13 @@ public final class ArenaCleaningPlan {
         return baseline == null ? ArenaCleaningTarget.EMPTY_ARENA : baseline;
     }
 
+    /**
+     * Target of the blocks above the wall top: the blocks recorded there with the baseline, air everywhere else.
+     */
+    public ArenaHeadroom getHeadroomTarget() {
+        return baseline == null ? ArenaHeadroom.ASSUMED_EMPTY : baseline.getHeadroom();
+    }
+
     public boolean restoresABaseline() {
         return baseline != null;
     }
