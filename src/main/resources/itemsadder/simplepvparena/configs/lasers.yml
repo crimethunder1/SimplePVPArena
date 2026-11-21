@@ -3,21 +3,45 @@ info:
 
 # Generiert von CraftCoreTools/simplepvparena_laser_gen.py, nicht von Hand aendern.
 # Das Plugin SimplePVPArena sucht diese IDs selbst (items-adder.enabled: true) und baut die Laser-Zone des
-# Sudden Death dann aus diesen Modellen statt aus einzelnen Bloecken. laser_pole_glow und laser_beam werden
+# Sudden Death dann aus diesen Modellen statt aus einzelnen Bloecken. Die _glow-Modelle und laser_beam werden
 # immer voll hell gezeigt.
 items:
-  laser_pole:
-    display_name: "Laser-Stange (Modell)"
+  laser_pole_base:
+    display_name: "Laser-Stange Fuss (Modell)"
     resource:
       material: PAPER
       generate: false
-      model_path: item/laser/laser_pole
-  laser_pole_glow:
-    display_name: "Laser-Stange (Leuchtteile)"
+      model_path: item/laser/laser_pole_base
+  laser_pole_base_glow:
+    display_name: "Laser-Stange Fuss (Leuchtteile)"
     resource:
       material: PAPER
       generate: false
-      model_path: item/laser/laser_pole_glow
+      model_path: item/laser/laser_pole_base_glow
+  laser_pole_section:
+    display_name: "Laser-Stange Segment (Modell)"
+    resource:
+      material: PAPER
+      generate: false
+      model_path: item/laser/laser_pole_section
+  laser_pole_section_glow:
+    display_name: "Laser-Stange Segment (Leuchtteile)"
+    resource:
+      material: PAPER
+      generate: false
+      model_path: item/laser/laser_pole_section_glow
+  laser_pole_cap:
+    display_name: "Laser-Stange Kappe (Modell)"
+    resource:
+      material: PAPER
+      generate: false
+      model_path: item/laser/laser_pole_cap
+  laser_pole_cap_glow:
+    display_name: "Laser-Stange Kappe (Leuchtteile)"
+    resource:
+      material: PAPER
+      generate: false
+      model_path: item/laser/laser_pole_cap_glow
   laser_beam:
     display_name: "Laserstrahl (Modell)"
     resource:

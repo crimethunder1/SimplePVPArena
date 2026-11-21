@@ -15,10 +15,11 @@ import java.util.Optional;
 import java.util.function.Supplier;
 
 /**
- * The blocks above the wall top of the fight area, up to the height the fighters may still build at
- * ({@link ArenaFightRegion#findHighestBlockY(ArenaShape)}). The baseline only covers the fight area up to the wall
- * top, so towers the fighters build higher stayed after a cleaning. The headroom keeps the few blocks that belonged
- * there when the baseline was taken, every other block in it is cleaned to air.
+ * The blocks above the wall top of the fight area, up to the top of the world: the fighters may build in the columns
+ * of the fight area at any height. The baseline only covers the fight area up to the wall top, so towers the fighters
+ * built higher stayed after a cleaning. The headroom keeps the few blocks that belonged there when the baseline was
+ * taken, every other block in it is cleaned to air. Only the columns that hold a block above the wall top are walked,
+ * so a high headroom costs nothing while it is empty.
  */
 @NullMarked
 public final class ArenaHeadroom implements ArenaCleaningTarget {
@@ -36,14 +37,22 @@ public final class ArenaHeadroom implements ArenaCleaningTarget {
         this.recorded = recorded;
     }
 
-    /** The volume above the wall top the fighters may build in, empty when the world ends below it. */
+    /** The volume above the wall top up to the top of the world, empty when the world ends below it. */
     public static Optional<ArenaShape> volumeAbove(ArenaShape fightArea, int worldMaximumY) {
         int lowestY = fightArea.getWallTopY() + 1;
-        int highestY = Math.min(ArenaFightRegion.findHighestBlockY(fightArea), worldMaximumY);
-        if (highestY < lowestY) {
+        if (worldMaximumY < lowestY) {
             return Optional.empty();
         }
-        return Optional.of(fightArea.withVerticalExtent(lowestY, highestY));
+        return Optional.of(fightArea.withVerticalExtent(lowestY, worldMaximumY));
+    }
+
+    /** Highest recorded block, or the given value when nothing was recorded. */
+    public int findHighestRecordedY(int fallbackY) {
+        int highestY = fallbackY;
+        for (long position : blocks.keySet()) {
+            highestY = Math.max(highestY, BlockPositionCodec.decodeY(position));
+        }
+        return highestY;
     }
 
     public static Builder builder() {

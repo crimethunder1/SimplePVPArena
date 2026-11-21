@@ -105,6 +105,7 @@ final class ArenaMatchHarness {
         this.world = proxy(World.class, (method, arguments) -> switch (method.getName()) {
             case "getName" -> WORLD_NAME;
             case "getMaxHeight" -> 320;
+            case "getHighestBlockYAt" -> findHighestBlockY((Integer) arguments[0], (Integer) arguments[1]);
             case "getBlockAt" -> createBlock((Integer) arguments[0], (Integer) arguments[1], (Integer) arguments[2]);
             case "dropItem" -> {
                 droppedItems.add(new DroppedItem((Location) arguments[0], (ItemStack) arguments[1]));
@@ -455,6 +456,18 @@ final class ArenaMatchHarness {
 
     void setBlock(int blockX, int blockY, int blockZ, Material material) {
         blockMaterials.put(BlockPositionCodec.encode(blockX, blockY, blockZ), material);
+    }
+
+    int findHighestBlockY(int blockX, int blockZ) {
+        int highestY = -64;
+        for (Map.Entry<Long, Material> block : blockMaterials.entrySet()) {
+            long position = block.getKey();
+            if (BlockPositionCodec.decodeX(position) == blockX && BlockPositionCodec.decodeZ(position) == blockZ
+                    && !block.getValue().isAir()) {
+                highestY = Math.max(highestY, BlockPositionCodec.decodeY(position));
+            }
+        }
+        return highestY;
     }
 
     Material findMaterial(int blockX, int blockY, int blockZ) {

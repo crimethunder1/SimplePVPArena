@@ -180,8 +180,7 @@ class ArenaHeightMarkerCalculationTest {
 
         fixture.harness.setBlock(0, FLOOR_Y - 1, 0, Material.STONE);
         fixture.harness.setBlock(0, WALL_TOP_Y, 0, Material.COBWEB);
-        fixture.harness.setBlock(-1, WALL_BOTTOM_Y + ArenaFightRegion.SEARCHED_BLOCKS_ABOVE_THE_WALL_TOP, -1,
-                Material.DIRT);
+        fixture.harness.setBlock(-1, 250, -1, Material.DIRT);
         fixture.harness.setBlock(1, WALL_TOP_Y + 3, 1, Material.AIR);
         fixture.clean();
 
@@ -189,9 +188,8 @@ class ArenaHeightMarkerCalculationTest {
                 "the baseline of the marked volume reaches below the wall and is restored");
         assertEquals(Material.AIR, fixture.harness.getBlock(0, WALL_TOP_Y, 0),
                 "a block added above the marked ceiling after the baseline is cleaned as well");
-        assertEquals(Material.AIR, fixture.harness.getBlock(-1,
-                        WALL_BOTTOM_Y + ArenaFightRegion.SEARCHED_BLOCKS_ABOVE_THE_WALL_TOP, -1),
-                "up to the highest block the fighters may build at");
+        assertEquals(Material.AIR, fixture.harness.getBlock(-1, 250, -1),
+                "however high the fighters built");
         assertEquals(Material.GLOWSTONE, fixture.harness.getBlock(1, WALL_TOP_Y + 3, 1),
                 "a block that stood above the ceiling when the baseline was taken is put back");
     }

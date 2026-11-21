@@ -25,6 +25,7 @@ import java.util.logging.Logger;
 final class FakeServerHarness {
 
     static final int WORLD_MAXIMUM_HEIGHT = 320;
+    static final int WORLD_MINIMUM_HEIGHT = -64;
 
     private final String worldName;
     private final Map<Long, BlockData> blocks = new HashMap<>();
@@ -181,6 +182,7 @@ final class FakeServerHarness {
         return proxy(World.class, (method, arguments) -> switch (method.getName()) {
             case "getName" -> worldName;
             case "getMaxHeight" -> WORLD_MAXIMUM_HEIGHT;
+            case "getHighestBlockYAt" -> findHighestBlockY((Integer) arguments[0], (Integer) arguments[1]);
             case "getBlockAt" -> createBlock((Integer) arguments[0], (Integer) arguments[1],
                     (Integer) arguments[2]);
             case "getNearbyEntities" -> {
@@ -250,6 +252,18 @@ final class FakeServerHarness {
             }
             default -> throw new UnsupportedOperationException("BlockState." + method.getName());
         });
+    }
+
+    int findHighestBlockY(int blockX, int blockZ) {
+        int highestY = WORLD_MINIMUM_HEIGHT;
+        for (Map.Entry<Long, BlockData> block : blocks.entrySet()) {
+            long position = block.getKey();
+            if (BlockPositionCodec.decodeX(position) == blockX && BlockPositionCodec.decodeZ(position) == blockZ
+                    && !block.getValue().getMaterial().isAir()) {
+                highestY = Math.max(highestY, BlockPositionCodec.decodeY(position));
+            }
+        }
+        return highestY;
     }
 
     private BlockData readBlockData(long encodedPosition) {

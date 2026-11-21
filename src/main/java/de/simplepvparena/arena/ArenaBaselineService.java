@@ -128,17 +128,16 @@ public final class ArenaBaselineService {
             }
             if (!run.headroomStarted) {
                 run.headroomStarted = true;
-                run.headroomCursor = ArenaHeadroom.volumeAbove(builder.getShape(), world.getMaxHeight() - 1)
-                        .map(ArenaShapeBlockCursor::new)
-                        .orElse(null);
+                int worldTopY = world.getMaxHeight() - 1;
+                run.headroomWalk = builder.getShape().getWallTopY() >= worldTopY ? null
+                        : new ArenaHeadroomWalk(builder.getShape(), worldTopY, Integer.MIN_VALUE);
             }
-            ArenaShapeBlockCursor headroomCursor = run.headroomCursor;
-            while (remainingBlocksOfThisTick > 0 && headroomCursor != null && headroomCursor.hasRemainingBlocks()) {
-                long[] batch = headroomCursor.nextBatch(remainingBlocksOfThisTick);
-                remainingBlocksOfThisTick -= batch.length;
-                readHeadroomBatch(world, batch, run.headroomBuilder);
+            ArenaHeadroomWalk headroomWalk = run.headroomWalk;
+            if (headroomWalk != null && remainingBlocksOfThisTick > 0) {
+                readHeadroomBatch(world, headroomWalk.nextBatch(world, remainingBlocksOfThisTick),
+                        run.headroomBuilder);
             }
-            if (headroomCursor != null && headroomCursor.hasRemainingBlocks()) {
+            if (headroomWalk != null && headroomWalk.hasRemainingBlocks()) {
                 return;
             }
             snapshot = builder.build().withHeadroom(run.headroomBuilder.build());
@@ -193,7 +192,7 @@ public final class ArenaBaselineService {
         private final ArenaShapeBlockCursor cursor;
         private final ArenaBaselineSnapshotBuilder builder;
         private final ArenaHeadroom.Builder headroomBuilder = ArenaHeadroom.builder();
-        private @Nullable ArenaShapeBlockCursor headroomCursor;
+        private @Nullable ArenaHeadroomWalk headroomWalk;
         private boolean headroomStarted;
 
         private CaptureRun(ArenaShapeBlockCursor cursor, ArenaBaselineSnapshotBuilder builder) {

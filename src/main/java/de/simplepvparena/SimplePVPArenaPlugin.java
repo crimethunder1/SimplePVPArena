@@ -5,7 +5,6 @@ import de.simplepvparena.arena.AreaInventoryService;
 import de.simplepvparena.arena.Arena;
 import de.simplepvparena.arena.ArenaAudience;
 import de.simplepvparena.arena.ArenaBaselineFile;
-import de.simplepvparena.arena.ArenaFightRegion;
 import de.simplepvparena.arena.ArenaBaselineRegistry;
 import de.simplepvparena.arena.ArenaBaselineSnapshot;
 import de.simplepvparena.arena.ArenaBaselineService;
@@ -755,10 +754,9 @@ public final class SimplePVPArenaPlugin extends JavaPlugin {
                             Placeholder.of("file", ArenaBaselineFile.STRUCTURE_FILE_NAME)));
                     if (!snapshot.getHeadroom().isRecorded()) {
                         getLogger().warning("The arena baseline was taken by an older version and holds no blocks "
-                                + "above the wall top: every cleaning now clears the "
-                                + ArenaFightRegion.SEARCHED_BLOCKS_ABOVE_THE_WALL_TOP + " blocks above the wall top "
-                                + "of the fight area to air. Take the baseline again to keep blocks that belong up "
-                                + "there, for example a roof.");
+                                + "above the wall top: every cleaning now clears everything above the wall top of "
+                                + "the fight area to air, up to the top of the world. Calculate the fight area again "
+                                + "to keep blocks that belong up there, for example a roof.");
                     }
                 });
             } catch (IOException | RuntimeException failure) {

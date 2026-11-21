@@ -170,34 +170,30 @@ public final class ArenaCleaningService {
     }
 
     /**
-     * Cleans the blocks above the wall top up to the height the fighters may build at, so towers above the wall
-     * are gone as well. Only the blocks recorded there with the baseline stay.
+     * Cleans the blocks above the wall top up to the top of the world, so towers above the wall are gone however
+     * high they were built. Only the blocks recorded there with the baseline stay.
      */
     private void clearHeadroom(World world, CleaningRun run) {
-        if (run.headroomCursor == null) {
-            Optional<ArenaShape> headroom = ArenaHeadroom.volumeAbove(run.fightArea, world.getMaxHeight() - 1);
-            if (headroom.isEmpty()) {
+        int worldTopY = world.getMaxHeight() - 1;
+        if (run.headroomWalk == null) {
+            if (run.fightArea.getWallTopY() >= worldTopY) {
                 run.headroomFinished = true;
                 return;
             }
-            run.headroomCursor = new ArenaShapeBlockCursor(headroom.get());
+            run.headroomWalk = new ArenaHeadroomWalk(run.fightArea, worldTopY,
+                    run.headroomTarget.findHighestRecordedY(Integer.MIN_VALUE));
         }
-        ArenaShapeBlockCursor cursor = run.headroomCursor;
-        int remainingBlocksOfThisTick = blocksPerTick;
-        while (remainingBlocksOfThisTick > 0 && cursor.hasRemainingBlocks()) {
-            long[] batch = cursor.nextBatch(remainingBlocksOfThisTick);
-            remainingBlocksOfThisTick -= batch.length;
-            run.changedHeadroomBlockCount += writeBatch(world, run.shape.getWorldName(), batch, run.headroomTarget);
-        }
-        if (cursor.hasRemainingBlocks()) {
+        ArenaHeadroomWalk walk = run.headroomWalk;
+        long[] batch = walk.nextBatch(world, blocksPerTick);
+        run.changedHeadroomBlockCount += writeBatch(world, run.shape.getWorldName(), batch, run.headroomTarget);
+        if (walk.hasRemainingBlocks()) {
             return;
         }
         run.headroomFinished = true;
         run.changedBlockCount += run.changedHeadroomBlockCount;
         if (run.changedHeadroomBlockCount > 0L) {
             plugin.getLogger().info("The arena cleaning removed " + run.changedHeadroomBlockCount
-                    + " blocks above the wall top (Y " + cursor.getShape().getFloorY() + " to "
-                    + cursor.getShape().getWallTopY() + ")"
+                    + " blocks above the wall top (Y " + (run.fightArea.getWallTopY() + 1) + " to " + worldTopY + ")"
                     + (run.headroomTarget.isRecorded() ? "" : ", no headroom was recorded with the baseline, "
                     + "everything up there is cleaned to air"));
         }
@@ -280,7 +276,7 @@ public final class ArenaCleaningService {
         private final ArenaShapeBlockCursor cursor;
         private final int layerBlockCount;
         private final ArenaHeadroom headroomTarget;
-        private @Nullable ArenaShapeBlockCursor headroomCursor;
+        private @Nullable ArenaHeadroomWalk headroomWalk;
         private boolean headroomFinished;
         private long changedHeadroomBlockCount;
 

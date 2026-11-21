@@ -31,6 +31,7 @@ public final class ArenaBaselineFile {
 
     private static final String KEY_PATH = "key";
     private static final String HEADROOM_KEY_PATH = "headroom-key";
+    private static final String HEADROOM_TOP_PATH = "headroom-top";
     private static final String NO_HEADROOM = "none";
 
     private final Server server;
@@ -63,7 +64,9 @@ public final class ArenaBaselineFile {
         YamlConfiguration key = new YamlConfiguration();
         key.set(KEY_PATH, describeKey(snapshot.getShape(), snapshot.getDepthBelowFloor()));
         if (snapshot.getHeadroom().isRecorded()) {
-            key.set(HEADROOM_KEY_PATH, saveHeadroom(world, snapshot.getShape()));
+            int headroomTopY = snapshot.getHeadroom().findHighestRecordedY(Integer.MIN_VALUE);
+            key.set(HEADROOM_KEY_PATH, saveHeadroom(world, snapshot.getShape(), headroomTopY));
+            key.set(HEADROOM_TOP_PATH, headroomTopY);
         }
         Files.writeString(keyFile.toPath(), key.saveToString(), StandardCharsets.UTF_8);
     }
@@ -100,11 +103,14 @@ public final class ArenaBaselineFile {
         if (!builder.isComplete()) {
             return Optional.empty();
         }
-        return Optional.of(builder.build().withHeadroom(loadHeadroom(shape, key.getString(HEADROOM_KEY_PATH))));
+        return Optional.of(builder.build().withHeadroom(loadHeadroom(shape, key.getString(HEADROOM_KEY_PATH),
+                key.getInt(HEADROOM_TOP_PATH, Integer.MIN_VALUE))));
     }
 
-    private String saveHeadroom(World world, ArenaShape shape) throws IOException {
-        Optional<ArenaShape> headroom = ArenaHeadroom.volumeAbove(shape, world.getMaxHeight() - 1);
+    /** Saves the recorded blocks above the wall top, from the wall top up to the highest of them. */
+    private String saveHeadroom(World world, ArenaShape shape, int headroomTopY) throws IOException {
+        Optional<ArenaShape> headroom = ArenaHeadroom.volumeAbove(shape,
+                Math.min(headroomTopY, world.getMaxHeight() - 1));
         if (headroom.isEmpty()) {
             Files.deleteIfExists(headroomFile.toPath());
             return NO_HEADROOM;
@@ -125,14 +131,17 @@ public final class ArenaBaselineFile {
      * Reads the blocks above the wall top that belonged to the arena when the baseline was taken. A baseline of an
      * older version has none, its headroom is then assumed to be empty.
      */
-    private ArenaHeadroom loadHeadroom(ArenaShape shape, @Nullable String storedKey) throws IOException {
-        World world = server.getWorld(shape.getWorldName());
-        if (storedKey == null || world == null) {
+    private ArenaHeadroom loadHeadroom(ArenaShape shape, @Nullable String storedKey, int headroomTopY)
+            throws IOException {
+        if (storedKey == null) {
             return ArenaHeadroom.ASSUMED_EMPTY;
         }
-        Optional<ArenaShape> headroom = ArenaHeadroom.volumeAbove(shape, world.getMaxHeight() - 1);
+        if (NO_HEADROOM.equals(storedKey)) {
+            return ArenaHeadroom.builder().build();
+        }
+        Optional<ArenaShape> headroom = ArenaHeadroom.volumeAbove(shape, headroomTopY);
         if (headroom.isEmpty()) {
-            return NO_HEADROOM.equals(storedKey) ? ArenaHeadroom.builder().build() : ArenaHeadroom.ASSUMED_EMPTY;
+            return ArenaHeadroom.ASSUMED_EMPTY;
         }
         ArenaShape volume = headroom.get();
         if (!describeHeadroomKey(volume).equals(storedKey) || !headroomFile.isFile()) {
